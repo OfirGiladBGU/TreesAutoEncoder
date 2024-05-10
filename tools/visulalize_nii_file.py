@@ -38,7 +38,7 @@ def plot_3d_data(data_3d, idx):
     plt.close('all')
 
 
-def project_3d_to_2d(data_3d):
+def project_3d_to_2d(data_3d, apply_cropping=False):
     # Front projection (XY plane)
     front_image = np.max(data_3d, axis=2)
 
@@ -48,13 +48,19 @@ def project_3d_to_2d(data_3d):
     # Left projection (YZ plane)
     left_image = np.max(data_3d, axis=0)
 
+    # Apply Cropping
+    if apply_cropping:
+        front_image = front_image[0:64, 0:64]
+        up_image = up_image[90:154, 0:64]
+        left_image = left_image[0:64, 0:64]
+
     return front_image, up_image, left_image
 
 
-def save_images(front_image, up_image, left_image, output_idx):
-    plt.imsave(f"front_image_{output_idx}.png", front_image, cmap="gray")
-    plt.imsave(f"up_image_{output_idx}.png", up_image, cmap="gray")
-    plt.imsave(f"left_image_{output_idx}.png", left_image, cmap="gray")
+def save_images(front_image, up_image, left_image, output_idx, output_folder="./"):
+    plt.imsave(f"{output_folder}/front_{output_idx}.png", front_image, cmap="gray")
+    plt.imsave(f"{output_folder}/up_{output_idx}.png", up_image, cmap="gray")
+    plt.imsave(f"{output_folder}/left_{output_idx}.png", left_image, cmap="gray")
 
 
 def test_plot_3d_data():
@@ -69,14 +75,40 @@ def test_project_3d_to_2d():
     output_idx = 1
     ct_numpy = convert_nii_to_numpy(data_file=data_file)
 
-    front_image, up_image, left_image = project_3d_to_2d(ct_numpy)
+    front_image, up_image, left_image = project_3d_to_2d(ct_numpy, apply_cropping=False)
     save_images(front_image, up_image, left_image, output_idx)
+
+
+def export_images():
+    import os
+    folder_path = "../skel_np"
+    data_filepaths = os.listdir(folder_path)
+
+    output_folder = "./cropped_src_images"
+    os.makedirs(output_folder, exist_ok=True)
+
+    for data_filepath in data_filepaths:
+        output_idx = data_filepath.split(".")[0]
+        data_filepath = os.path.join(folder_path, data_filepath)
+        ct_numpy = convert_nii_to_numpy(data_file=data_filepath)
+
+        front_image, up_image, left_image = project_3d_to_2d(ct_numpy, apply_cropping=True)
+        save_images(
+            front_image=front_image,
+            up_image=up_image,
+            left_image=left_image,
+            output_idx=output_idx,
+            output_folder=output_folder
+        )
 
 
 def main():
     # test_plot_3d_data()
-    test_project_3d_to_2d()
+    # test_project_3d_to_2d()
+    export_images()
 
 
 if __name__ == "__main__":
+    # TODO:
+    # 1. Make sure "skel_np" folder is present in the root directory
     main()
