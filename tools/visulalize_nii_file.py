@@ -38,11 +38,44 @@ def plot_3d_data(data_3d, idx):
     plt.close('all')
 
 
-def main():
-    data_file = r"C:\Users\Ofir Gilad\PycharmProjects\Auto Encoder\skel_np\PA000005.nii.gz"
+def project_3d_to_2d(data_3d):
+    # Front projection (XY plane)
+    front_image = np.max(data_3d, axis=2)
+
+    # Up projection (XZ plane)
+    up_image = np.max(data_3d, axis=1)
+
+    # Left projection (YZ plane)
+    left_image = np.max(data_3d, axis=0)
+
+    return front_image, up_image, left_image
+
+
+def save_images(front_image, up_image, left_image, output_idx):
+    plt.imsave(f"front_image_{output_idx}.png", front_image, cmap="gray")
+    plt.imsave(f"up_image_{output_idx}.png", up_image, cmap="gray")
+    plt.imsave(f"left_image_{output_idx}.png", left_image, cmap="gray")
+
+
+def test_plot_3d_data():
+    data_file = "../skel_np/PA000005.nii.gz"
     output_idx = 1
     ct_numpy = convert_nii_to_numpy(data_file=data_file)
     plot_3d_data(data_3d=ct_numpy, idx=output_idx)
+
+
+def test_project_3d_to_2d():
+    data_file = "../skel_np/PA000016.nii.gz"
+    output_idx = 1
+    ct_numpy = convert_nii_to_numpy(data_file=data_file)
+
+    front_image, up_image, left_image = project_3d_to_2d(ct_numpy)
+    save_images(front_image, up_image, left_image, output_idx)
+
+
+def main():
+    # test_plot_3d_data()
+    test_project_3d_to_2d()
 
 
 if __name__ == "__main__":
