@@ -3,3 +3,4 @@ pip3 install imageio
 pip install scipy
 pip install nibabel
 pip install matplotlib
+pip install opencv-python
