@@ -92,7 +92,7 @@ class CNN_Decoder(nn.Module):
         x = self.fc(x)
         x = x.view(-1, self.fc_output_dim, 1, 1)
         x = self.deconv(x)
-        return x.view(-1, self.input_width*self.input_height)
+        return x.view(-1, self.input_width * self.input_height)
 
 
 # Model
@@ -100,9 +100,14 @@ class Network(nn.Module):
     def __init__(self, args):
         super(Network, self).__init__()
 
-        output_size = args.embedding_size
-        self.encoder = CNN_Encoder(output_size)
-        self.decoder = CNN_Decoder(args.embedding_size)
+        self.output_size = args.embedding_size
+        if args.dataset == 'Trees':
+            self.input_size = (1, 64, 64)
+        else:
+            self.input_size = (1, 28, 28)
+
+        self.encoder = CNN_Encoder(output_size=self.output_size, input_size=self.input_size)
+        self.decoder = CNN_Decoder(embedding_size=self.output_size, input_size=self.input_size)
 
     def encode(self, x):
         return self.encoder(x)
@@ -111,5 +116,5 @@ class Network(nn.Module):
         return self.decoder(z)
 
     def forward(self, x):
-        z = self.encode(x.view(-1, 784))
+        z = self.encode(x.view(-1, self.input_size[1] * self.input_size[2]))
         return self.decode(z)

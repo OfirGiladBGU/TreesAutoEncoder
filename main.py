@@ -33,15 +33,28 @@ def predict_model(model):
 
         sample = torch.randn(64, args.embedding_size).to(trainer.device)
         sample = model.decode(sample).cpu()
-        save_image(sample.view(64, 1, 28, 28),
-                   '{}/sample_{}.png'.format(args.results_path, args.dataset))
-        save_image(interpolations.view(-1, 1, 28, 28),
-                   '{}/interpolations_{}.png'.format(args.results_path, args.dataset), nrow=images_per_row)
-        interpolations = interpolations.cpu()
-        interpolations = np.reshape(interpolations.data.numpy(), (-1, 28, 28))
-        interpolations = ndimage.zoom(interpolations, 5, order=1)
-        interpolations *= 256
-        imageio.mimsave('{}/animation_{}.gif'.format(args.results_path, args.dataset), interpolations.astype(np.uint8))
+
+        if args.dataset != 'Trees':
+            save_image(sample.view(64, 1, 28, 28),
+                       '{}/sample_{}.png'.format(args.results_path, args.dataset))
+            save_image(interpolations.view(-1, 1, 28, 28),
+                       '{}/interpolations_{}.png'.format(args.results_path, args.dataset), nrow=images_per_row)
+            interpolations = interpolations.cpu()
+            interpolations = np.reshape(interpolations.data.numpy(), (-1, 28, 28))
+            interpolations = ndimage.zoom(interpolations, 5, order=1)
+            interpolations *= 256
+            imageio.mimsave('{}/animation_{}.gif'.format(args.results_path, args.dataset), interpolations.astype(np.uint8))
+        else:
+            save_image(sample.view(64, 1, 64, 64),
+                       '{}/sample_{}.png'.format(args.results_path, args.dataset))
+            save_image(interpolations.view(-1, 1, 64, 64),
+                       '{}/interpolations_{}.png'.format(args.results_path, args.dataset), nrow=images_per_row)
+            interpolations = interpolations.cpu()
+            interpolations = np.reshape(interpolations.data.numpy(), (-1, 64, 64))
+            interpolations = ndimage.zoom(interpolations, 5, order=1)
+            interpolations *= 256
+            imageio.mimsave('{}/animation_{}.gif'.format(args.results_path, args.dataset),
+                            interpolations.astype(np.uint8))
 
 
 def main():
