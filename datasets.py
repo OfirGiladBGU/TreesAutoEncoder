@@ -44,8 +44,8 @@ class TreesDataset(object):
         src_path = os.path.join(str(os.path.dirname(__file__)), "tools", "cropped_src_images")
         dst_path = os.path.join(str(os.path.dirname(__file__)), "tools", "cropped_dst_images")
 
-        src_trees_dataloader = TreesCustomDataloader(data_path=src_path)
-        dst_trees_dataloader = TreesCustomDataloader(data_path=dst_path)
+        src_trees_dataloader = TreesCustomDataloader(data_path=src_path, args=args)
+        dst_trees_dataloader = TreesCustomDataloader(data_path=dst_path, args=args)
 
         self.train_input_loader, self.test_input_loader = src_trees_dataloader.get_dataloader()
         self.train_target_loader, self.test_target_loader = dst_trees_dataloader.get_dataloader()

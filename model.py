@@ -66,27 +66,59 @@ class CNN_Decoder(nn.Module):
             nn.ReLU(True)
         )
 
-        self.deconv = nn.Sequential(
-            # input is Z, going into a convolution
-            nn.ConvTranspose2d(self.fc_output_dim, self.channel_mult*4,
-                               4, 1, 0, bias=False),
-            nn.BatchNorm2d(self.channel_mult*4),
-            nn.ReLU(True),
-            # state size. self.channel_mult*32 x 4 x 4
-            nn.ConvTranspose2d(self.channel_mult*4, self.channel_mult*2,
-                               3, 2, 1, bias=False),
-            nn.BatchNorm2d(self.channel_mult*2),
-            nn.ReLU(True),
-            # state size. self.channel_mult*16 x 7 x 7
-            nn.ConvTranspose2d(self.channel_mult*2, self.channel_mult*1,
-                               4, 2, 1, bias=False),
-            nn.BatchNorm2d(self.channel_mult*1),
-            nn.ReLU(True),
-            # state size. self.channel_mult*8 x 14 x 14
-            nn.ConvTranspose2d(self.channel_mult*1, self.output_channels, 4, 2, 1, bias=False),
-            nn.Sigmoid()
-            # state size. self.output_channels x 28 x 28
-        )
+        if input_size == (1, 28, 28):
+            self.deconv = nn.Sequential(
+                # input is Z, going into a convolution
+                nn.ConvTranspose2d(self.fc_output_dim, self.channel_mult * 4,
+                                   4, 1, 0, bias=False),
+                nn.BatchNorm2d(self.channel_mult * 4),
+                nn.ReLU(True),
+                # state size. self.channel_mult*32 x 4 x 4
+                nn.ConvTranspose2d(self.channel_mult * 4, self.channel_mult * 2,
+                                   3, 2, 1, bias=False),
+                nn.BatchNorm2d(self.channel_mult*2),
+                nn.ReLU(True),
+                # state size. self.channel_mult*16 x 7 x 7
+                nn.ConvTranspose2d(self.channel_mult * 2, self.channel_mult * 1,
+                                   4, 2, 1, bias=False),
+                nn.BatchNorm2d(self.channel_mult*1),
+                nn.ReLU(True),
+                # state size. self.channel_mult*8 x 14 x 14
+                nn.ConvTranspose2d(self.channel_mult * 1, self.output_channels,
+                                   4, 2, 1, bias=False),
+                nn.Sigmoid()
+                # state size. self.output_channels x 28 x 28
+            )
+        elif input_size == (1, 64, 64):
+            self.deconv = nn.Sequential(
+                # input is Z, going into a convolution
+                nn.ConvTranspose2d(self.fc_output_dim, self.channel_mult * 4,
+                                   4, 1, 0, bias=False),
+                nn.BatchNorm2d(self.channel_mult * 4),
+                nn.ReLU(True),
+                # state size: self.channel_mult*32 x 4 x 4
+                nn.ConvTranspose2d(self.channel_mult * 4, self.channel_mult * 2,
+                                   4, 2, 1, bias=False),  # Changed kernel size to 4
+                nn.BatchNorm2d(self.channel_mult * 2),
+                nn.ReLU(True),
+                # state size: self.channel_mult*16 x 8 x 8  (upsampled by a factor of 2)
+                nn.ConvTranspose2d(self.channel_mult * 2, self.channel_mult * 1,
+                                   4, 2, 1, bias=False),  # Changed kernel size to 4
+                nn.BatchNorm2d(self.channel_mult * 1),
+                nn.ReLU(True),
+                # state size: self.channel_mult*8 x 16 x 16  (upsampled by a factor of 2)
+                nn.ConvTranspose2d(self.channel_mult * 1, self.channel_mult * 1,
+                                   4, 2, 1, bias=False),  # Changed kernel size to 4
+                nn.BatchNorm2d(self.channel_mult * 1),
+                nn.ReLU(True),
+                # state size: self.channel_mult*8 x 32 x 32  (upsampled by a factor of 2)
+                nn.ConvTranspose2d(self.channel_mult * 1, self.output_channels,
+                                   4, 2, 1, bias=False),  # Changed kernel size to 4
+                nn.Sigmoid()
+                # state size: self.output_channels x 64 x 64  (upsampled by a factor of 2)
+            )
+        else:
+            raise ValueError("Invalid input size")
 
     def forward(self, x):
         x = self.fc(x)

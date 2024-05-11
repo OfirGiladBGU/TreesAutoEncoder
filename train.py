@@ -45,8 +45,11 @@ class Trainer(object):
             print("Dataset not supported")
             sys.exit()
 
-    def loss_function(self, recon_x, x):
-        BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
+    def loss_function(self, recon_x, x, args):
+        if args.dataset != 'Trees':
+            BCE = F.binary_cross_entropy(recon_x, x.view(-1, 28 * 28), reduction='sum')
+        else:
+            BCE = F.binary_cross_entropy(recon_x, x.view(-1, 64 * 64), reduction='sum')
         return BCE
 
     def _train(self, epoch):
@@ -56,6 +59,12 @@ class Trainer(object):
             input_data = input_data.to(self.device)
             target_data = target_data.to(self.device)
 
+            # Fix for Trees dataset
+            if input_data.dtype != torch.float32:
+                input_data = input_data.float()
+            if target_data.dtype != torch.float32:
+                target_data = target_data.float()
+
             # # For Equality Check
             # res = torch.eq(input_data, target_data)
             # print(res.max())
@@ -63,7 +72,7 @@ class Trainer(object):
 
             self.optimizer.zero_grad()
             recon_batch = self.model(input_data)
-            loss = self.loss_function(recon_batch, target_data)
+            loss = self.loss_function(recon_batch, target_data, self.args)
             loss.backward()
             train_loss += loss.item()
             self.optimizer.step()
@@ -85,7 +94,7 @@ class Trainer(object):
                 target_data = target_data.to(self.device)
 
                 recon_batch = self.model(input_data)
-                test_loss += self.loss_function(recon_batch, target_data).item()
+                test_loss += self.loss_function(recon_batch, target_data, self.args).item()
 
         test_loss /= len(self.test_input_loader.dataset)
         print('====> Test set loss: {:.4f}'.format(test_loss))
