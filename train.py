@@ -93,6 +93,11 @@ class Trainer(object):
                 input_data = input_data.to(self.device)
                 target_data = target_data.to(self.device)
 
+                if input_data.dtype != torch.float32:
+                    input_data = input_data.float()
+                if target_data.dtype != torch.float32:
+                    target_data = target_data.float()
+
                 recon_batch = self.model(input_data)
                 test_loss += self.loss_function(recon_batch, target_data, self.args).item()
 
@@ -107,5 +112,6 @@ class Trainer(object):
         except (KeyboardInterrupt, SystemExit):
             print("Manual Interruption")
 
+        print("Saving Model Weights")
         model_parameters = copy.deepcopy(self.model.state_dict())
         torch.save(model_parameters, self.args.weights_filepath)

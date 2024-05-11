@@ -28,6 +28,10 @@ def predict_model(model):
     with torch.no_grad():
         images, _ = next(iter(trainer.test_input_loader))
         images = images.to(trainer.device)
+
+        if images.dtype != torch.float32:
+            images = images.float()
+
         images_per_row = 16
         interpolations = get_interpolations(args, model, trainer.device, images, images_per_row)
 
@@ -68,7 +72,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Main function to call training for different AutoEncoders')
     parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                         help='input batch size for training (default: 128)')
-    parser.add_argument('--epochs', type=int, default=1, metavar='N',
+    parser.add_argument('--epochs', type=int, default=3, metavar='N',
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='enables CUDA training')
@@ -80,10 +84,10 @@ if __name__ == "__main__":
                         help='how many batches to wait before logging training status')
     parser.add_argument('--results-path', type=str, default='results/', metavar='N',
                         help='Where to store images')
-    parser.add_argument('--dataset', type=str, default='MNIST', metavar='N',
-                        help='Which dataset to use')
-    # parser.add_argument('--dataset', type=str, default='Trees', metavar='N',
+    # parser.add_argument('--dataset', type=str, default='MNIST', metavar='N',
     #                     help='Which dataset to use')
+    parser.add_argument('--dataset', type=str, default='Trees', metavar='N',
+                        help='Which dataset to use')
     parser.add_argument('--weights-filepath', type=str, default='Network.pth', metavar='N',
                         help='Which dataset to use')
 

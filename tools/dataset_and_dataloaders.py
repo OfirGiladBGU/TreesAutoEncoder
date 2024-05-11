@@ -1,4 +1,6 @@
 import os
+
+import numpy as np
 import torch
 import cv2
 
@@ -18,6 +20,8 @@ class TreesCustomDataset(torch.utils.data.Dataset):
         data_file = os.path.join(self.data_path, self.data_files[idx])
         image_numpy = cv2.imread(data_file)
         image_numpy = cv2.cvtColor(image_numpy, cv2.COLOR_BGR2GRAY)
+        image_numpy.astype(dtype=np.float32)
+        image_numpy = image_numpy / image_numpy.max()
 
         if self.transform:
             image_numpy = self.transform(image_numpy)
