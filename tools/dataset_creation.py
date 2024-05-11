@@ -132,7 +132,6 @@ def create_dataset_src_images():
             image_output_filepath = f"{filename}_{idx}{ext}"
             cv2.imwrite(image_output_filepath, image_i)
 
-        break
 
 ###############
 # Dst Dataset #
@@ -159,7 +158,7 @@ def create_dataset_dst_images():
 
 def main():
     # create_dataset_original_images()
-    # create_dataset_src_images()
+    create_dataset_src_images()
     create_dataset_dst_images()
 
 
