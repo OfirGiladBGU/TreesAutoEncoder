@@ -90,7 +90,7 @@ def randomly_remove_white_points(image, num_points=10):
 ####################
 def create_dataset_original_images():
     folder_path = "../skel_np"
-    org_folder = "./cropped_original_images"
+    org_folder = "./original_cropped_images"
 
     os.makedirs(org_folder, exist_ok=True)
     data_filepaths = os.listdir(folder_path)
@@ -114,7 +114,7 @@ def create_dataset_original_images():
 ###############
 def create_dataset_src_images():
     random_crops_count = 10
-    org_folder = "./cropped_original_images"
+    org_folder = "./original_cropped_images"
     src_folder = "./cropped_src_images"
 
     os.makedirs(src_folder, exist_ok=True)
@@ -149,8 +149,11 @@ def create_dataset_dst_images():
 
         unique, counts = np.unique(image, return_counts=True)
         dict_result = dict(zip(unique, counts))
-        num_points = int(dict_result[255] / 2)
-        image = randomly_remove_white_points(image, num_points=num_points)
+        try:
+            num_points = int(dict_result[255] / 2)
+            image = randomly_remove_white_points(image, num_points=num_points)
+        except:
+            pass
 
         image_output_filepath = image_filepath.replace(src_folder, dst_folder)
         cv2.imwrite(image_output_filepath, image)
