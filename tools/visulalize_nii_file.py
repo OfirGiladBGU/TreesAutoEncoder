@@ -57,12 +57,6 @@ def project_3d_to_2d(data_3d, apply_cropping=False):
     return front_image, up_image, left_image
 
 
-def save_images(front_image, up_image, left_image, output_idx, output_folder="./"):
-    plt.imsave(f"{output_folder}/front_{output_idx}.png", front_image, cmap="gray")
-    plt.imsave(f"{output_folder}/up_{output_idx}.png", up_image, cmap="gray")
-    plt.imsave(f"{output_folder}/left_{output_idx}.png", left_image, cmap="gray")
-
-
 def test_plot_3d_data():
     data_file = "../skel_np/PA000005.nii.gz"
     output_idx = 1
@@ -71,12 +65,16 @@ def test_plot_3d_data():
 
 
 def test_project_3d_to_2d():
-    data_file = "../skel_np/PA000016.nii.gz"
+    data_file = "../skel_np/PA000005.nii.gz"
     output_idx = 1
     ct_numpy = convert_nii_to_numpy(data_file=data_file)
 
     front_image, up_image, left_image = project_3d_to_2d(ct_numpy, apply_cropping=False)
-    save_images(front_image, up_image, left_image, output_idx)
+
+    output_folder = "./"
+    plt.imsave(f"{output_folder}/front_{output_idx}.png", front_image, cmap="gray")
+    plt.imsave(f"{output_folder}/up_{output_idx}.png", up_image, cmap="gray")
+    plt.imsave(f"{output_folder}/left_{output_idx}.png", left_image, cmap="gray")
 
 
 def main():
