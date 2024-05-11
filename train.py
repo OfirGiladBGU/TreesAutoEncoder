@@ -5,7 +5,7 @@ from torch.nn import functional as F
 import sys
 import copy
 
-from datasets import MNIST, EMNIST, FashionMNIST
+from datasets import MNIST, EMNIST, FashionMNIST, TreesDataset
 
 
 class Trainer(object):
@@ -14,11 +14,18 @@ class Trainer(object):
         self.device = torch.device("cuda" if args.cuda else "cpu")
         self._init_dataset()
 
-        self.train_input_loader = self.data.train_loader
-        self.train_target_loader = self.data.train_loader
+        if isinstance(self.data, TreesDataset):
+            self.train_input_loader = self.data.train_input_loader
+            self.train_target_loader = self.data.train_target_loader
 
-        self.test_input_loader = self.data.test_loader
-        self.test_target_loader = self.data.test_loader
+            self.test_input_loader = self.data.test_input_loader
+            self.test_target_loader = self.data.test_target_loader
+        else:
+            self.train_input_loader = self.data.train_loader
+            self.train_target_loader = copy.deepcopy(self.data.train_loader)
+
+            self.test_input_loader = self.data.test_loader
+            self.test_target_loader = copy.deepcopy(self.data.test_loader)
 
         self.model = model
         self.model.to(self.device)
@@ -31,6 +38,9 @@ class Trainer(object):
             self.data = EMNIST(self.args)
         elif self.args.dataset == 'FashionMNIST':
             self.data = FashionMNIST(self.args)
+        # Custom Dataset
+        elif self.args.dataset == 'Trees':
+            self.data = TreesDataset(self.args)
         else:
             print("Dataset not supported")
             sys.exit()
@@ -45,6 +55,11 @@ class Trainer(object):
         for batch_idx, ((input_data, _), (target_data, _)) in enumerate(zip(self.train_input_loader, self.train_target_loader)):
             input_data = input_data.to(self.device)
             target_data = target_data.to(self.device)
+
+            # # For Equality Check
+            # res = torch.eq(input_data, target_data)
+            # print(res.max())
+            # print(res.min())
 
             self.optimizer.zero_grad()
             recon_batch = self.model(input_data)
