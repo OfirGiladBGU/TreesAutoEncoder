@@ -21,7 +21,9 @@ class TreesCustomDataset(torch.utils.data.Dataset):
         image_numpy = cv2.imread(data_file)
         image_numpy = cv2.cvtColor(image_numpy, cv2.COLOR_BGR2GRAY)
         image_numpy.astype(dtype=np.float32)
-        image_numpy = image_numpy / image_numpy.max()
+
+        if image_numpy.max() > 0:
+            image_numpy = image_numpy / image_numpy.max()
 
         if self.transform:
             image_numpy = self.transform(image_numpy)
@@ -41,13 +43,13 @@ class TreesCustomDataloader:
         Return Train and Val Dataloaders for the given parameters.
 
         Returns:
-            train_dataloader: Train loader with 0.7 of the data.
-            val_dataloader: Val loader with 0.3 of the data.
+            train_dataloader: Train loader with 0.9 of the data.
+            val_dataloader: Val loader with 0.1 of the data.
         """
 
         tree_dataset = TreesCustomDataset(self.data_path, self.transform)
         dataset_size = len(tree_dataset)
-        train_size = int(dataset_size * 0.7)
+        train_size = int(dataset_size * 0.9)
         val_size = dataset_size - train_size
 
         train_data, test_data = torch.utils.data.random_split(tree_dataset, [train_size, val_size])
