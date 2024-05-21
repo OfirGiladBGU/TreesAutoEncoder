@@ -80,14 +80,20 @@ class Trainer(object):
         self.model.train()
         train_loss = 0
         for batch_idx, ((input_data, _), (target_data, _)) in enumerate(zip(self.train_input_loader, self.train_target_loader)):
+            target_data = input_data.clone()
             input_data = input_data.to(self.device)
-            target_data = input_data.copy().to(self.device)
+            target_data = target_data.to(self.device)
 
             # Fix for Trees dataset
             if input_data.dtype != torch.float32:
                 input_data = input_data.float()
             if target_data.dtype != torch.float32:
                 target_data = target_data.float()
+
+            # # For Equality Check
+            # res = torch.eq(input_data, target_data)
+            # print(res.max())
+            # print(res.min())
 
             self.create_holes(input_data)
 
