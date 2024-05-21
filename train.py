@@ -80,7 +80,6 @@ class Trainer(object):
         self.model.train()
         train_loss = 0
         for batch_idx, ((input_data, _), (target_data, _)) in enumerate(zip(self.train_input_loader, self.train_target_loader)):
-            target_data = input_data.clone()
             input_data = input_data.to(self.device)
             target_data = target_data.to(self.device)
 
