@@ -1,3 +1,5 @@
+import numpy as np
+import random
 import torch
 import torch.utils.data
 from torch import optim
@@ -6,6 +8,8 @@ import sys
 import copy
 
 from datasets import MNIST, EMNIST, FashionMNIST, TreesDataset
+
+from torchvision.utils import save_image
 
 
 class Trainer(object):
@@ -52,18 +56,40 @@ class Trainer(object):
             BCE = F.binary_cross_entropy(recon_x, x.view(-1, 64 * 64), reduction='sum')
         return BCE
 
+    def zero_out_radius(self, tensor, point, radius):
+        x, y = point[1], point[2]  # Get the coordinates
+        for i in range(max(0, x - radius), min(tensor.size(1), x + radius + 1)):
+            for j in range(max(0, y - radius), min(tensor.size(2), y + radius + 1)):
+                if (i - x) ** 2 + (j - y) ** 2 <= radius ** 2:
+                    tensor[0, i, j] = 0
+
+    def create_holes(self, target_data):
+        for idx in range(len(target_data)):
+            white_points = torch.nonzero(target_data[idx] > 0.6)
+
+            if white_points.size(0) > 0:
+                # Randomly select one of the non-zero points
+                random_point = random.choice(white_points)
+                radius = random.randint(3, 5)
+                self.zero_out_radius(target_data[idx], random_point, radius)
+
+                # plt.imshow(target_data[idx].permute(1, 2, 0))
+                # save_image(target_data[idx], 'img1.png')
+
     def _train(self, epoch):
         self.model.train()
         train_loss = 0
         for batch_idx, ((input_data, _), (target_data, _)) in enumerate(zip(self.train_input_loader, self.train_target_loader)):
             input_data = input_data.to(self.device)
-            target_data = target_data.to(self.device)
+            target_data = input_data.copy().to(self.device)
 
             # Fix for Trees dataset
             if input_data.dtype != torch.float32:
                 input_data = input_data.float()
             if target_data.dtype != torch.float32:
                 target_data = target_data.float()
+
+            self.create_holes(input_data)
 
             # # For Equality Check
             # res = torch.eq(input_data, target_data)
@@ -97,6 +123,8 @@ class Trainer(object):
                     input_data = input_data.float()
                 if target_data.dtype != torch.float32:
                     target_data = target_data.float()
+
+                self.create_holes(input_data)
 
                 recon_batch = self.model(input_data)
                 test_loss += self.loss_function(recon_batch, target_data, self.args).item()

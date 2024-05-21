@@ -7,6 +7,7 @@ def get_interpolations(args, model, device, images, images_per_row=20):
     with torch.no_grad():
         def interpolate(t1, t2, num_interps):
             alpha = np.linspace(0, 1, num_interps + 2)
+            alpha = [0 for _ in alpha]
             interps = []
             for a in alpha:
                 interps.append(a * t2.view(1, -1) + (1 - a) * t1.view(1, -1))
