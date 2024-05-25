@@ -3,6 +3,7 @@ import nibabel as nib
 import cv2
 import random
 import os
+import pandas as pd
 
 
 #########
@@ -53,7 +54,8 @@ def crop_black_area(image):
     print(f"Top-left: ({min_x}, {min_y})")
     print(f"Bottom-right: ({max_x}, {max_y})")
 
-    return cropped_image
+    crop_dim = (min_x, min_y, max_x, max_y)
+    return cropped_image, crop_dim
 
 
 def crop_randomly(image, crop_size=64):
@@ -91,7 +93,9 @@ def randomly_remove_white_points(image, num_points=10):
 def create_dataset_original_images():
     folder_path = "../skel_np"
     org_folder = "./original_cropped_images"
+    crop_info_filepath = "./crop_info.csv"
 
+    crop_data = dict()
     os.makedirs(org_folder, exist_ok=True)
     data_filepaths = os.listdir(folder_path)
     for data_filepath in data_filepaths:
@@ -100,13 +104,23 @@ def create_dataset_original_images():
         ct_numpy = convert_nii_to_numpy(data_file=data_filepath)
 
         front_image, up_image, left_image = project_3d_to_2d(ct_numpy)
-        front_image = crop_black_area(front_image)
-        up_image = crop_black_area(up_image)
-        left_image = crop_black_area(left_image)
+        front_image, front_dim = crop_black_area(front_image)
+        up_image, up_dim = crop_black_area(up_image)
+        left_image, left_dim = crop_black_area(left_image)
+
+        crop_data[output_idx] = {
+            "filename": f"{output_idx}.nii.gz",
+            "front": str(front_dim).replace(",", ";"),
+            "up": str(up_dim).replace(",", ";"),
+            "left": str(left_dim).replace(",", ";")
+        }
 
         cv2.imwrite(f"{org_folder}/front_{output_idx}.png", front_image)
         cv2.imwrite(f"{org_folder}/up_{output_idx}.png", up_image)
         cv2.imwrite(f"{org_folder}/left_{output_idx}.png", left_image)
+
+    df = pd.DataFrame(list(crop_data.values()))
+    df.to_csv(crop_info_filepath, index=False)
 
 
 ###############
@@ -160,9 +174,9 @@ def create_dataset_dst_images():
 
 
 def main():
-    # create_dataset_original_images()
-    create_dataset_src_images()
-    create_dataset_dst_images()
+    create_dataset_original_images()
+    # create_dataset_src_images()
+    # create_dataset_dst_images()
 
 
 if __name__ == "__main__":
