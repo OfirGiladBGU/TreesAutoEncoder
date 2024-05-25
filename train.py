@@ -76,12 +76,21 @@ class Trainer(object):
                 # plt.imshow(target_data[idx].permute(1, 2, 0))
                 # save_image(target_data[idx], 'img1.png')
 
+    def apply_threshold(self, tensor, threshold):
+        tensor[tensor < threshold] = 0.0
+        tensor[tensor >= threshold] = 1.0
+
+    # TODO: In the future, use the input data to create the target data with holes (and use only 1 dataloader)
     def _train(self, epoch):
         self.model.train()
         train_loss = 0
         for batch_idx, ((input_data, _), (target_data, _)) in enumerate(zip(self.train_input_loader, self.train_target_loader)):
             input_data = input_data.to(self.device)
             target_data = target_data.to(self.device)
+
+            # TODO: Threshold
+            self.apply_threshold(input_data, 0.5)
+            self.apply_threshold(target_data, 0.5)
 
             # Fix for Trees dataset
             if input_data.dtype != torch.float32:
@@ -105,6 +114,7 @@ class Trainer(object):
             recon_batch = self.model(input_data)
             loss = self.loss_function(recon_batch, target_data, self.args)
             loss.backward()
+
             train_loss += loss.item()
             self.optimizer.step()
             if batch_idx % self.args.log_interval == 0:
@@ -123,6 +133,10 @@ class Trainer(object):
             for i, ((input_data, _), (target_data, _)) in enumerate(zip(self.test_input_loader, self.test_target_loader)):
                 input_data = input_data.to(self.device)
                 target_data = target_data.to(self.device)
+
+                # TODO: Threshold
+                self.apply_threshold(input_data, 0.5)
+                self.apply_threshold(target_data, 0.5)
 
                 if input_data.dtype != torch.float32:
                     input_data = input_data.float()

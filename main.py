@@ -28,6 +28,10 @@ def predict_model(model):
         input_images = input_images.to(trainer.device)
         target_images = target_images.to(trainer.device)
 
+        # TODO: Threshold
+        trainer.apply_threshold(input_images, 0.5)
+        trainer.apply_threshold(target_images, 0.5)
+
         if input_images.dtype != torch.float32:
             input_images = input_images.float()
         if target_images.dtype != torch.float32:
@@ -38,6 +42,9 @@ def predict_model(model):
 
         model.eval()
         output_images = model(input_images)
+
+        # TODO: Threshold
+        trainer.apply_threshold(output_images, 0.5)
 
         # Detach the images from the cuda and move them to CPU
         if trainer.args.cuda:
