@@ -73,6 +73,18 @@ def crop_3d(data_3d):
     return cropped_data_3d
 
 
+def crop_mini_cubes(cropped_data_3d, size=(28, 28, 28)):
+    mini_cubes = []
+    for i in range(0, cropped_data_3d.shape[0], size[0]):
+        for j in range(0, cropped_data_3d.shape[1], size[1]):
+            for k in range(0, cropped_data_3d.shape[2], size[2]):
+                # print(i, j, k)
+                mini_cube = cropped_data_3d[i:i+size[0], j:j+size[1], k:k+size[2]]
+                mini_cubes.append(mini_cube)
+
+    return mini_cubes
+
+
 # def crop_randomly(image, crop_size=64):
 #     # Get image dimensions
 #     height, width = image.shape
@@ -107,7 +119,7 @@ def crop_3d(data_3d):
 ####################
 def create_dataset_original_images():
     folder_path = "../skel_np"
-    org_folder = "./original_cropped_images_v2"
+    org_folder = "./mini_cropped_images"
 
     os.makedirs(org_folder, exist_ok=True)
     data_filepaths = os.listdir(folder_path)
@@ -117,18 +129,25 @@ def create_dataset_original_images():
         ct_numpy = convert_nii_to_numpy(data_file=data_filepath)
 
         cropped_data_3d = crop_3d(ct_numpy)
-        cropped_data_3d[cropped_data_3d > 0.5] = 255
+        cropped_data_3d[cropped_data_3d > 0] = 255
+        mini_cubes = crop_mini_cubes(cropped_data_3d)
+        print("Total Mini Cubes:", len(mini_cubes))
 
-        # projections = project_3d_to_2d(cropped_data_3d, front=True, up=True, left=True)
-        # front_image = projections["front_image"]
-        # up_image = projections["up_image"]
-        # left_image = projections["left_image"]
+        white_points_threshold = 0
+        for mini_box_id, mini_cube in enumerate(mini_cubes):
+            projections = project_3d_to_2d(mini_cube, front=True, up=True, left=True)
+            front_image = projections["front_image"]
+            up_image = projections["up_image"]
+            left_image = projections["left_image"]
 
-        # cv2.imwrite(f"{org_folder}/front_{output_idx}.png", front_image)
-        # cv2.imwrite(f"{org_folder}/up_{output_idx}.png", up_image)
-        # cv2.imwrite(f"{org_folder}/left_{output_idx}.png", left_image)
+            if np.count_nonzero(front_image) > white_points_threshold:
+                cv2.imwrite(f"{org_folder}/front_{output_idx}_{mini_box_id}.png", front_image)
 
-        break
+            if np.count_nonzero(up_image) > white_points_threshold:
+                cv2.imwrite(f"{org_folder}/up_{output_idx}_{mini_box_id}.png", up_image)
+
+            if np.count_nonzero(left_image) > white_points_threshold:
+                cv2.imwrite(f"{org_folder}/left_{output_idx}_{mini_box_id}.png", left_image)
 
 
 ###############
