@@ -79,6 +79,12 @@ def crop_mini_cubes(cropped_data_3d, size=(28, 28, 28)):
         for j in range(0, cropped_data_3d.shape[1], size[1]):
             for k in range(0, cropped_data_3d.shape[2], size[2]):
                 # print(i, j, k)
+                if (
+                    i + size[0] > cropped_data_3d.shape[0] or
+                    j + size[1] > cropped_data_3d.shape[1] or
+                    k + size[2] > cropped_data_3d.shape[2]
+                ):
+                    continue
                 mini_cube = cropped_data_3d[i:i+size[0], j:j+size[1], k:k+size[2]]
                 mini_cubes.append(mini_cube)
 

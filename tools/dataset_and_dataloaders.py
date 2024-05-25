@@ -19,6 +19,7 @@ class TreesCustomDataset(torch.utils.data.Dataset):
         data_file = os.path.join(self.data_path, self.data_files[idx])
         image_numpy = cv2.imread(data_file)
         image_numpy = cv2.cvtColor(image_numpy, cv2.COLOR_BGR2GRAY)
+        image_numpy = np.expand_dims(image_numpy, axis=0)
         image_numpy.astype(dtype=np.float32)
 
         if image_numpy.max() > 0:

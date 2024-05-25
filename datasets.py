@@ -49,3 +49,12 @@ class TreesDataset(object):
 
         self.train_input_loader, self.test_input_loader = src_trees_dataloader.get_dataloader()
         self.train_target_loader, self.test_target_loader = dst_trees_dataloader.get_dataloader()
+
+
+class TreesDatasetV2(object):
+    def __init__(self, args):
+        src_path = os.path.join(str(os.path.dirname(__file__)), "tools", "mini_cropped_images")
+
+        trees_dataloader = TreesCustomDataloader(data_path=src_path, args=args)
+
+        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()

@@ -7,7 +7,7 @@ from torch.nn import functional as F
 import sys
 import copy
 
-from datasets import MNIST, EMNIST, FashionMNIST, TreesDataset
+from datasets import MNIST, EMNIST, FashionMNIST, TreesDataset, TreesDatasetV2
 
 from torchvision.utils import save_image
 
@@ -45,6 +45,8 @@ class Trainer(object):
         # Custom Dataset
         elif self.args.dataset == 'Trees':
             self.data = TreesDataset(self.args)
+        elif self.args.dataset == 'TreesV2':
+            self.data = TreesDatasetV2(self.args)
         else:
             print("Dataset not supported")
             sys.exit()
@@ -77,8 +79,8 @@ class Trainer(object):
                 # save_image(target_data[idx], 'img1.png')
 
     def apply_threshold(self, tensor, threshold):
-        tensor[tensor < threshold] = 0.0
         tensor[tensor >= threshold] = 1.0
+        tensor[tensor < threshold] = 0.0
 
     # TODO: In the future, use the input data to create the target data with holes (and use only 1 dataloader)
     def _train(self, epoch):
