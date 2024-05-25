@@ -1,8 +1,7 @@
-import os
-
 import numpy as np
 import torch
 import cv2
+import os
 
 
 class TreesCustomDataset(torch.utils.data.Dataset):
