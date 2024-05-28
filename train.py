@@ -15,7 +15,8 @@ from torchvision.utils import save_image
 class Trainer(object):
     def __init__(self, args, model):
         self.args = args
-        self.device = torch.device("cuda" if args.cuda else "cpu")
+        # self.device = torch.device("cuda" if args.cuda else "cpu")
+        self.device = torch.device("cpu")
         self._init_dataset()
 
         if isinstance(self.data, TreesDataset):
@@ -53,7 +54,11 @@ class Trainer(object):
 
     def loss_function(self, recon_x, x, args):
         if args.dataset != 'Trees':
-            BCE = F.binary_cross_entropy(recon_x, x.view(-1, 28 * 28), reduction='sum')
+            # BCE = F.binary_cross_entropy(recon_x, x.view(-1, 28 * 28), reduction='sum')
+            BCE = (
+                0.5 * F.binary_cross_entropy(recon_x, x.view(-1, 28 * 28), reduction='sum') +
+                0.5 * F.l1_loss(recon_x, x.view(-1, 28 * 28), reduction='sum')
+            )
         else:
             BCE = F.binary_cross_entropy(recon_x, x.view(-1, 64 * 64), reduction='sum')
         return BCE
