@@ -15,19 +15,25 @@ def convert_nii_to_numpy(data_file):
     return ct_numpy
 
 
-def project_3d_to_2d(data_3d, front=False, up=False, left=False):
+def project_3d_to_2d(data_3d, front=False, front_cut=-1, up=False, up_cut=-1, left=False, left_cut=-1):
     projections = dict()
 
     # Front projection (XY plane)
     if front:
+        if front_cut != -1:
+            data_3d = data_3d[:, :, 0:front_cut]
         projections["front_image"] = np.max(data_3d, axis=2)
 
     # Up projection (XZ plane)
     if up:
+        if up_cut != -1:
+            data_3d = data_3d[:, 0:up_cut, :]
         projections["up_image"] = np.max(data_3d, axis=1)
 
     # Left projection (YZ plane)
     if left:
+        if left_cut != -1:
+            data_3d = data_3d[0:left_cut, :, :]
         projections["left_image"] = np.max(data_3d, axis=0)
 
     return projections
@@ -74,10 +80,11 @@ def crop_3d(data_3d):
 
 
 def crop_mini_cubes(cropped_data_3d, size=(28, 28, 28)):
+    step = 14
     mini_cubes = []
-    for i in range(0, cropped_data_3d.shape[0], size[0]):
-        for j in range(0, cropped_data_3d.shape[1], size[1]):
-            for k in range(0, cropped_data_3d.shape[2], size[2]):
+    for i in range(0, cropped_data_3d.shape[0], step):
+        for j in range(0, cropped_data_3d.shape[1], step):
+            for k in range(0, cropped_data_3d.shape[2], step):
                 # print(i, j, k)
                 if (
                     i + size[0] > cropped_data_3d.shape[0] or
@@ -91,41 +98,15 @@ def crop_mini_cubes(cropped_data_3d, size=(28, 28, 28)):
     return mini_cubes
 
 
-# def crop_randomly(image, crop_size=64):
-#     # Get image dimensions
-#     height, width = image.shape
-#
-#     # Randomly select top-left corner coordinates
-#     x = np.random.randint(0, width - crop_size)
-#     y = np.random.randint(0, height - crop_size)
-#
-#     # Crop the 64x64 area
-#     cropped_area = image[y:y + crop_size, x:x + crop_size]
-#
-#     return cropped_area
-
-
-# def randomly_remove_white_points(image, num_points=10):
-#     # Find the white pixels
-#     white_pixels = np.where(image == 255)
-#
-#     # Randomly select 'num_points' indices
-#     selected_indices = random.sample(range(len(white_pixels[0])), num_points)
-#
-#     # Change the selected white pixels to black (0)
-#     for idx in selected_indices:
-#         x, y = white_pixels[0][idx], white_pixels[1][idx]
-#         image[x, y] = 0
-#
-#     return image
-
-
 ####################
 # Original Dataset #
 ####################
 def create_dataset_original_images():
     folder_path = "../skel_np"
     org_folder = "./mini_cropped_images"
+
+    white_points_upper_threshold = 28 * 28 * 0.5
+    white_points_lower_threshold = 10
 
     os.makedirs(org_folder, exist_ok=True)
     data_filepaths = os.listdir(folder_path)
@@ -139,77 +120,24 @@ def create_dataset_original_images():
         mini_cubes = crop_mini_cubes(cropped_data_3d)
         print("Total Mini Cubes:", len(mini_cubes))
 
-        white_points_threshold = 0
         for mini_box_id, mini_cube in enumerate(mini_cubes):
             projections = project_3d_to_2d(mini_cube, front=True, up=True, left=True)
             front_image = projections["front_image"]
             up_image = projections["up_image"]
             left_image = projections["left_image"]
 
-            if np.count_nonzero(front_image) > white_points_threshold:
+            if white_points_upper_threshold > np.count_nonzero(front_image) > white_points_lower_threshold:
                 cv2.imwrite(f"{org_folder}/front_{output_idx}_{mini_box_id}.png", front_image)
 
-            if np.count_nonzero(up_image) > white_points_threshold:
+            if white_points_upper_threshold > np.count_nonzero(up_image) > white_points_lower_threshold:
                 cv2.imwrite(f"{org_folder}/up_{output_idx}_{mini_box_id}.png", up_image)
 
-            if np.count_nonzero(left_image) > white_points_threshold:
+            if white_points_upper_threshold > np.count_nonzero(left_image) > white_points_lower_threshold:
                 cv2.imwrite(f"{org_folder}/left_{output_idx}_{mini_box_id}.png", left_image)
-
-
-###############
-# Src Dataset #
-###############
-# def create_dataset_src_images():
-#     random_crops_count = 10
-#     org_folder = "./original_cropped_images"
-#     src_folder = "./cropped_src_images"
-#
-#     os.makedirs(src_folder, exist_ok=True)
-#     image_filepaths = os.listdir(org_folder)
-#     for image_filepath in image_filepaths:
-#         image_filepath = os.path.join(org_folder, image_filepath)
-#         image = cv2.imread(image_filepath)
-#         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-#
-#         for idx in range(random_crops_count):
-#             image_i = crop_randomly(image, crop_size=64)
-#
-#             image_output_filepath = image_filepath.replace(org_folder, src_folder)
-#             filename, ext = os.path.splitext(image_output_filepath)
-#             image_output_filepath = f"{filename}_{idx}{ext}"
-#             cv2.imwrite(image_output_filepath, image_i)
-
-
-###############
-# Dst Dataset #
-###############
-# def create_dataset_dst_images():
-#     src_folder = "./cropped_src_images"
-#     dst_folder = "./cropped_dst_images"
-#
-#     os.makedirs(dst_folder, exist_ok=True)
-#     image_filepaths = os.listdir(src_folder)
-#     for image_filepath in image_filepaths:
-#         image_filepath = os.path.join(src_folder, image_filepath)
-#         image = cv2.imread(image_filepath)
-#         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-#
-#         unique, counts = np.unique(image, return_counts=True)
-#         dict_result = dict(zip(unique, counts))
-#         try:
-#             num_points = int(dict_result[255] / 2)
-#             image = randomly_remove_white_points(image, num_points=num_points)
-#         except:
-#             pass
-#
-#         image_output_filepath = image_filepath.replace(src_folder, dst_folder)
-#         cv2.imwrite(image_output_filepath, image)
 
 
 def main():
     create_dataset_original_images()
-    # create_dataset_src_images()
-    # create_dataset_dst_images()
 
 
 if __name__ == "__main__":
