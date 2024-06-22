@@ -20,19 +20,49 @@ def project_3d_to_2d(data_3d, front=False, front_cut=-1, up=False, up_cut=-1, le
     if front:
         if front_cut != -1:
             data_3d = data_3d[:, :, 0:front_cut]
-        projections["front_image"] = np.max(data_3d, axis=2)
+        # Option 1
+        # projections["front_image"] = np.max(data_3d, axis=2)
+
+        # Option 2
+        depth_projection = np.argmax(data_3d, axis=2)
+        max_projection = np.max(data_3d, axis=2)
+        axis_size = data_3d.shape[2]
+
+        projections["front_image"] = np.where(max_projection > 0,
+                                              (255 * (1 - (depth_projection / axis_size))).astype(int),
+                                              0)
 
     # Up projection (XZ plane)
     if up:
         if up_cut != -1:
             data_3d = data_3d[:, 0:up_cut, :]
-        projections["up_image"] = np.max(data_3d, axis=1)
+        # Option 1
+        # projections["up_image"] = np.max(data_3d, axis=1)
+
+        # Option 2
+        depth_projection = np.argmax(data_3d, axis=1)
+        max_projection = np.max(data_3d, axis=1)
+        axis_size = data_3d.shape[1]
+
+        projections["up_image"] = np.where(max_projection > 0,
+                                           (255 * (1 - (depth_projection / axis_size))).astype(int),
+                                           0)
 
     # Left projection (YZ plane)
     if left:
         if left_cut != -1:
             data_3d = data_3d[0:left_cut, :, :]
-        projections["left_image"] = np.max(data_3d, axis=0)
+        # Option 1
+        # projections["left_image"] = np.max(data_3d, axis=0)
+
+        # Option 2
+        depth_projection = np.argmax(data_3d, axis=0)
+        max_projection = np.max(data_3d, axis=0)
+        axis_size = data_3d.shape[0]
+
+        projections["left_image"] = np.where(max_projection > 0,
+                                             (255 * (1 - (depth_projection / axis_size))).astype(int),
+                                             0)
 
     return projections
 
