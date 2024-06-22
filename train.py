@@ -110,7 +110,8 @@ class Trainer(object):
             # print(res.max())
             # print(res.min())
 
-            self.create_holes(input_data)
+            if self.args.dataset != 'Trees':
+                self.create_holes(input_data)
 
             # # For Equality Check
             # res = torch.eq(input_data, target_data)
@@ -150,7 +151,8 @@ class Trainer(object):
                 if target_data.dtype != torch.float32:
                     target_data = target_data.float()
 
-                self.create_holes(input_data)
+                if self.args.dataset != 'Trees':
+                    self.create_holes(input_data)
 
                 recon_batch = self.model(input_data)
                 test_loss += self.loss_function(recon_batch, target_data, self.args).item()

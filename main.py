@@ -38,7 +38,8 @@ def predict_model(model):
             target_images = target_images.float()
 
         # Create holes in the input images
-        trainer.create_holes(input_images)
+        if args.dataset != 'Trees':
+            trainer.create_holes(input_images)
 
         model.eval()
         output_images = model(input_images)
@@ -88,7 +89,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Main function to call training for different AutoEncoders')
     parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                         help='input batch size for training (default: 128)')
-    parser.add_argument('--epochs', type=int, default=1, metavar='N',
+    parser.add_argument('--epochs', type=int, default=10, metavar='N',
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='enables CUDA training')
@@ -103,6 +104,8 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', type=str, default='MNIST', metavar='N',
                         help='Which dataset to use')
     # parser.add_argument('--dataset', type=str, default='Trees', metavar='N',
+    #                     help='Which dataset to use')
+    # parser.add_argument('--dataset', type=str, default='TreesV2', metavar='N',
     #                     help='Which dataset to use')
     parser.add_argument('--weights-filepath', type=str, default='Network.pth', metavar='N',
                         help='Which dataset to use')
