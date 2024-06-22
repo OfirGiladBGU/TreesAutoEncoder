@@ -169,7 +169,7 @@ def create_dataset_original_images():
     size = (64, 64, 64)
     step = 32
     white_points_upper_threshold = 64 * 64 * 0.8
-    white_points_lower_threshold = 0
+    white_points_lower_threshold = 64 * 64 * 0.1
 
     os.makedirs(org_folder1, exist_ok=True)
     os.makedirs(org_folder2, exist_ok=True)
@@ -196,8 +196,11 @@ def create_dataset_original_images():
         mini_cubes1 = crop_mini_cubes(cropped_data_3d_1, size=size, step=step)
         mini_cubes2 = crop_mini_cubes(cropped_data_3d_2, size=size, step=step)
 
-        print("Total Mini Cubes:", len(mini_cubes1))
-        print("Total Mini Cubes:", len(mini_cubes2))
+        print(
+            f"File: {output_idx}\n"
+            f"Total Mini Cubes 1: {len(mini_cubes1)}\n"
+            f"Total Mini Cubes 2: {len(mini_cubes2)}"
+        )
 
         for mini_box_id, (mini_cube1, mini_cube2) in enumerate(zip(mini_cubes1, mini_cubes2)):
             projections1 = project_3d_to_2d(mini_cube1, front=True, up=True, left=True)
@@ -231,12 +234,11 @@ def create_dataset_original_images():
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id}_front.png", front_image2)
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id}_up.png", up_image2)
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id}_left.png", left_image2)
-        break
 
 
 def main():
-    create_dataset_depth_2d_projections()
-    # create_dataset_original_images()
+    # create_dataset_depth_2d_projections()
+    create_dataset_original_images()
 
 
 if __name__ == "__main__":
