@@ -65,6 +65,10 @@ class Trainer(object):
             )
         else:
             LOSS = F.mse_loss(recon_x, x.view(-1, 64 * 64))
+            # LOSS = (
+            #     0.5 * F.mse_loss(recon_x, x.view(-1, 64 * 64)) +
+            #     0.5 * F.l1_loss(recon_x, x.view(-1, 64 * 64), reduction='sum')
+            # )
         return LOSS
 
     def zero_out_radius(self, tensor, point, radius):
