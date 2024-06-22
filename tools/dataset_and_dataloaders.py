@@ -52,7 +52,11 @@ class TreesCustomDataloader:
         train_size = int(dataset_size * 0.9)
         val_size = dataset_size - train_size
 
-        train_data, test_data = torch.utils.data.random_split(tree_dataset, [train_size, val_size])
+        # train_data, test_data = torch.utils.data.random_split(tree_dataset, [train_size, val_size])
+
+        # Non random split
+        train_data = torch.utils.data.Subset(tree_dataset, indices=range(0, train_size))
+        test_data = torch.utils.data.Subset(tree_dataset, indices=range(train_size, train_size + val_size))
 
         # Create dataloaders
         if self.args is not None:

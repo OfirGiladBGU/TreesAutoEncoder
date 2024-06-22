@@ -21,6 +21,12 @@ def predict_model(model):
     model.load_state_dict(torch.load(args.weights_filepath))
     trainer = Trainer(args=args, model=model)
 
+    # Set size
+    if args.dataset != 'Trees':
+        image_size = 28
+    else:
+        image_size = 64
+
     with torch.no_grad():
         # Get the images from the test loader
         input_images, _ = next(iter(trainer.test_input_loader))
@@ -61,15 +67,15 @@ def predict_model(model):
         for i in range(rows):
             # Input
             ax.append(fig.add_subplot(rows, columns, i * 3 + 1))
-            plt.imshow(input_images[i].reshape(28, 28), cmap="gray")
+            plt.imshow(input_images[i].reshape(image_size, image_size), cmap="gray")
 
             # Target
             ax.append(fig.add_subplot(rows, columns, i * 3 + 2))
-            plt.imshow(target_images[i].reshape(28, 28), cmap="gray")
+            plt.imshow(target_images[i].reshape(image_size, image_size), cmap="gray")
 
             # Output
             ax.append(fig.add_subplot(rows, columns, i * 3 + 3))
-            plt.imshow(output_images[i].reshape(28, 28), cmap="gray")
+            plt.imshow(output_images[i].reshape(image_size, image_size), cmap="gray")
 
         ax[0].set_title("Input:")
         ax[1].set_title("Target:")
