@@ -34,7 +34,10 @@ class Trainer(object):
 
         self.model = model
         self.model.to(self.device)
-        self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
+        if args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
+            self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
+        else:
+            self.optimizer = optim.Adadelta(self.model.parameters())
 
     def _init_dataset(self):
         if self.args.dataset == 'MNIST':
@@ -53,15 +56,16 @@ class Trainer(object):
             sys.exit()
 
     def loss_function(self, recon_x, x, args):
-        if args.dataset != 'Trees':
-            # BCE = F.binary_cross_entropy(recon_x, x.view(-1, 28 * 28), reduction='sum')
-            BCE = (
+        if args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
+            LOSS = F.binary_cross_entropy(recon_x, x.view(-1, 28 * 28), reduction='sum')
+        elif args.dataset == 'TreesV2':
+            LOSS = (
                 0.5 * F.binary_cross_entropy(recon_x, x.view(-1, 28 * 28), reduction='sum') +
                 0.5 * F.l1_loss(recon_x, x.view(-1, 28 * 28), reduction='sum')
             )
         else:
-            BCE = F.binary_cross_entropy(recon_x, x.view(-1, 64 * 64), reduction='sum')
-        return BCE
+            LOSS = F.mse_loss(recon_x, x.view(-1, 64 * 64))
+        return LOSS
 
     def zero_out_radius(self, tensor, point, radius):
         x, y = point[1], point[2]  # Get the coordinates

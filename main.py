@@ -29,8 +29,12 @@ def predict_model(model):
 
     with torch.no_grad():
         # Get the images from the test loader
-        input_images, _ = next(iter(trainer.test_input_loader))
-        target_images, _ = next(iter(trainer.test_target_loader))
+        batch_num = 2
+        input = iter(trainer.test_input_loader)
+        target = iter(trainer.test_target_loader)
+        for i in range(batch_num):
+            input_images, _ = next(input)
+            target_images, _ = next(target)
         input_images = input_images.to(trainer.device)
         target_images = target_images.to(trainer.device)
 
@@ -107,10 +111,10 @@ if __name__ == "__main__":
                         help='how many batches to wait before logging training status')
     parser.add_argument('--results-path', type=str, default='results/', metavar='N',
                         help='Where to store images')
-    parser.add_argument('--dataset', type=str, default='MNIST', metavar='N',
-                        help='Which dataset to use')
-    # parser.add_argument('--dataset', type=str, default='Trees', metavar='N',
+    # parser.add_argument('--dataset', type=str, default='MNIST', metavar='N',
     #                     help='Which dataset to use')
+    parser.add_argument('--dataset', type=str, default='Trees', metavar='N',
+                        help='Which dataset to use')
     # parser.add_argument('--dataset', type=str, default='TreesV2', metavar='N',
     #                     help='Which dataset to use')
     parser.add_argument('--weights-filepath', type=str, default='Network.pth', metavar='N',

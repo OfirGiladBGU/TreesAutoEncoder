@@ -41,8 +41,13 @@ class FashionMNIST(object):
 # Custom Dataset
 class TreesDataset(object):
     def __init__(self, args):
-        src_path = os.path.join(str(os.path.dirname(__file__)), "tools", "cropped_src_images")
-        dst_path = os.path.join(str(os.path.dirname(__file__)), "tools", "cropped_dst_images")
+        # Option 1
+        # src_path = os.path.join(str(os.path.dirname(__file__)), "tools", "cropped_src_images")
+        # dst_path = os.path.join(str(os.path.dirname(__file__)), "tools", "cropped_dst_images")
+
+        # Option 2
+        src_path = os.path.join(str(os.path.dirname(__file__)), "tools", "parse_preds_mini_cropped")
+        dst_path = os.path.join(str(os.path.dirname(__file__)), "tools", "parse_labels_mini_cropped")
 
         src_trees_dataloader = TreesCustomDataloader(data_path=src_path, args=args)
         dst_trees_dataloader = TreesCustomDataloader(data_path=dst_path, args=args)
