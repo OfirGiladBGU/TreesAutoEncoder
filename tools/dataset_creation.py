@@ -115,9 +115,9 @@ def create_dataset_original_images():
             "left": str(left_dim).replace(",", ";")
         }
 
-        cv2.imwrite(f"{org_folder}/front_{output_idx}.png", front_image)
-        cv2.imwrite(f"{org_folder}/up_{output_idx}.png", up_image)
-        cv2.imwrite(f"{org_folder}/left_{output_idx}.png", left_image)
+        cv2.imwrite(f"{org_folder}/{output_idx}_front.png", front_image)
+        cv2.imwrite(f"{org_folder}/{output_idx}_up.png", up_image)
+        cv2.imwrite(f"{org_folder}/{output_idx}_left.png", left_image)
 
     df = pd.DataFrame(list(crop_data.values()))
     df.to_csv(crop_info_filepath, index=False)

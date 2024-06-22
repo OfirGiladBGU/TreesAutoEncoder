@@ -1,9 +1,7 @@
 import numpy as np
 import nibabel as nib
 import cv2
-import random
 import os
-import pandas as pd
 
 
 #########
@@ -127,13 +125,13 @@ def create_dataset_original_images():
             left_image = projections["left_image"]
 
             if white_points_upper_threshold > np.count_nonzero(front_image) > white_points_lower_threshold:
-                cv2.imwrite(f"{org_folder}/front_{output_idx}_{mini_box_id}.png", front_image)
+                cv2.imwrite(f"{org_folder}/{output_idx}_{mini_box_id}_front.png", front_image)
 
             if white_points_upper_threshold > np.count_nonzero(up_image) > white_points_lower_threshold:
-                cv2.imwrite(f"{org_folder}/up_{output_idx}_{mini_box_id}.png", up_image)
+                cv2.imwrite(f"{org_folder}/{output_idx}_{mini_box_id}_up.png", up_image)
 
             if white_points_upper_threshold > np.count_nonzero(left_image) > white_points_lower_threshold:
-                cv2.imwrite(f"{org_folder}/left_{output_idx}_{mini_box_id}.png", left_image)
+                cv2.imwrite(f"{org_folder}/{output_idx}_{mini_box_id}_left.png", left_image)
 
 
 def main():

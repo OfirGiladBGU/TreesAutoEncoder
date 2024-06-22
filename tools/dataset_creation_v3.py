@@ -1,9 +1,7 @@
 import numpy as np
 import nibabel as nib
 import cv2
-import random
 import os
-import pandas as pd
 
 
 #########
@@ -165,14 +163,14 @@ def create_dataset_original_images():
 
             if condition1 and condition2:
                 # Folder1
-                cv2.imwrite(f"{org_folder1}/front_{output_idx}_{mini_box_id}.png", front_image1)
-                cv2.imwrite(f"{org_folder1}/up_{output_idx}_{mini_box_id}.png", up_image1)
-                cv2.imwrite(f"{org_folder1}/left_{output_idx}_{mini_box_id}.png", left_image1)
+                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id}_front.png", front_image1)
+                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id}_up.png", up_image1)
+                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id}_left.png", left_image1)
 
                 # Folder2
-                cv2.imwrite(f"{org_folder2}/front_{output_idx}_{mini_box_id}.png", front_image2)
-                cv2.imwrite(f"{org_folder2}/up_{output_idx}_{mini_box_id}.png", up_image2)
-                cv2.imwrite(f"{org_folder2}/left_{output_idx}_{mini_box_id}.png", left_image2)
+                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id}_front.png", front_image2)
+                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id}_up.png", up_image2)
+                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id}_left.png", left_image2)
         break
 
 
