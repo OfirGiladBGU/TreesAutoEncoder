@@ -125,6 +125,37 @@ def crop_mini_cubes(cropped_data_3d, size=(28, 28, 28), step=14):
     return mini_cubes
 
 
+##################
+# 2D Projections #
+##################
+def create_dataset_depth_2d_projections():
+    # folder_path = "../parse2022/labels"
+    # org_folder = "./parse_labels_2d"
+
+    folder_path = "../parse2022/preds"
+    org_folder = "./parse_preds_2d"
+
+    os.makedirs(org_folder, exist_ok=True)
+    data_filepaths = os.listdir(folder_path)
+    for data_filepath in data_filepaths:
+        output_idx = data_filepath.split(".")[0]
+        data_filepath = os.path.join(folder_path, data_filepath)
+        ct_numpy = convert_nii_to_numpy(data_file=data_filepath)
+
+        projection = project_3d_to_2d(ct_numpy, front=True, up=True, left=True)
+        front_image = projection["front_image"]
+        up_image = projection["up_image"]
+        left_image = projection["left_image"]
+
+        # front_image, front_dim = crop_black_area(front_image)
+        # up_image, up_dim = crop_black_area(up_image)
+        # left_image, left_dim = crop_black_area(left_image)
+
+        cv2.imwrite(f"{org_folder}/{output_idx}_front.png", front_image)
+        cv2.imwrite(f"{org_folder}/{output_idx}_up.png", up_image)
+        cv2.imwrite(f"{org_folder}/{output_idx}_left.png", left_image)
+
+
 ####################
 # Original Dataset #
 ####################
@@ -169,7 +200,6 @@ def create_dataset_original_images():
         print("Total Mini Cubes:", len(mini_cubes2))
 
         for mini_box_id, (mini_cube1, mini_cube2) in enumerate(zip(mini_cubes1, mini_cubes2)):
-
             projections1 = project_3d_to_2d(mini_cube1, front=True, up=True, left=True)
             front_image1 = projections1["front_image"]
             up_image1 = projections1["up_image"]
@@ -205,7 +235,8 @@ def create_dataset_original_images():
 
 
 def main():
-    create_dataset_original_images()
+    create_dataset_depth_2d_projections()
+    # create_dataset_original_images()
 
 
 if __name__ == "__main__":
