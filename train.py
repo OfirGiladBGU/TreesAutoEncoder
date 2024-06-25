@@ -69,6 +69,7 @@ class Trainer(object):
             #     0.5 * F.mse_loss(recon_x, x.view(-1, 64 * 64)) +
             #     0.5 * F.l1_loss(recon_x, x.view(-1, 64 * 64), reduction='sum')
             # )
+            # TODO: MIOU, Total Variation, SSIM, F1, EMD
         return LOSS
 
     def zero_out_radius(self, tensor, point, radius):
@@ -104,8 +105,8 @@ class Trainer(object):
             target_data = target_data.to(self.device)
 
             # TODO: Threshold
-            self.apply_threshold(input_data, 0.5)
-            self.apply_threshold(target_data, 0.5)
+            # self.apply_threshold(input_data, 0.5)
+            # self.apply_threshold(target_data, 0.5)
 
             # Fix for Trees dataset
             if input_data.dtype != torch.float32:
@@ -151,8 +152,8 @@ class Trainer(object):
                 target_data = target_data.to(self.device)
 
                 # TODO: Threshold
-                self.apply_threshold(input_data, 0.5)
-                self.apply_threshold(target_data, 0.5)
+                # self.apply_threshold(input_data, 0.5)
+                # self.apply_threshold(target_data, 0.5)
 
                 if input_data.dtype != torch.float32:
                     input_data = input_data.float()
