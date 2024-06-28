@@ -39,7 +39,7 @@ class FashionMNIST(object):
 
 
 # Custom Dataset
-class TreesDataset(object):
+class TreesDatasetV1(object):
     def __init__(self, args):
         # Option 1
         # src_path = os.path.join(str(os.path.dirname(__file__)), "tools", "cropped_src_images")
@@ -49,17 +49,15 @@ class TreesDataset(object):
         src_path = os.path.join(str(os.path.dirname(__file__)), "tools", "parse_preds_mini_cropped")
         dst_path = os.path.join(str(os.path.dirname(__file__)), "tools", "parse_labels_mini_cropped")
 
-        src_trees_dataloader = TreesCustomDataloader(data_path=src_path, args=args)
-        dst_trees_dataloader = TreesCustomDataloader(data_path=dst_path, args=args)
-
-        self.train_input_loader, self.test_input_loader = src_trees_dataloader.get_dataloader()
-        self.train_target_loader, self.test_target_loader = dst_trees_dataloader.get_dataloader()
+        data_paths = [src_path, dst_path]
+        trees_dataloader = TreesCustomDataloader(data_paths=data_paths, args=args)
+        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
 class TreesDatasetV2(object):
     def __init__(self, args):
         src_path = os.path.join(str(os.path.dirname(__file__)), "tools", "mini_cropped_images")
+        data_paths = [src_path]
 
-        trees_dataloader = TreesCustomDataloader(data_path=src_path, args=args)
-
+        trees_dataloader = TreesCustomDataloader(data_paths=data_paths, args=args)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()

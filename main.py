@@ -22,7 +22,7 @@ def predict_model(model):
     trainer = Trainer(args=args, model=model)
 
     # Set size
-    if args.dataset != 'Trees':
+    if args.dataset != 'TreesV1':
         image_size = 28
     else:
         image_size = 64
@@ -30,12 +30,12 @@ def predict_model(model):
     with torch.no_grad():
         # Get the images from the test loader
         batch_num = 2
-        input = iter(trainer.test_input_loader)
-        target = iter(trainer.test_target_loader)
+        data = iter(trainer.test_loader)
         for i in range(batch_num):
-            input_images, _ = next(input)
-            target_images, _ = next(target)
+            input_images, target_images = next(data)
         input_images = input_images.to(trainer.device)
+        if args.dataset != 'TreesV1':
+            target_images = input_images.clone().detach()
         target_images = target_images.to(trainer.device)
 
         # TODO: Threshold
@@ -48,7 +48,7 @@ def predict_model(model):
             target_images = target_images.float()
 
         # Create holes in the input images
-        if args.dataset != 'Trees':
+        if args.dataset != 'TreesV1':
             trainer.create_holes(input_images)
 
         model.eval()
@@ -91,7 +91,7 @@ def predict_model(model):
 def main():
     model = Network(args)
 
-    # train_model(model=model)
+    train_model(model=model)
     predict_model(model=model)
 
 
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Main function to call training for different AutoEncoders')
     parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                         help='input batch size for training (default: 128)')
-    parser.add_argument('--epochs', type=int, default=10, metavar='N',
+    parser.add_argument('--epochs', type=int, default=1, metavar='N',
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='enables CUDA training')
@@ -113,7 +113,7 @@ if __name__ == "__main__":
                         help='Where to store images')
     # parser.add_argument('--dataset', type=str, default='MNIST', metavar='N',
     #                     help='Which dataset to use')
-    parser.add_argument('--dataset', type=str, default='Trees', metavar='N',
+    parser.add_argument('--dataset', type=str, default='TreesV1', metavar='N',
                         help='Which dataset to use')
     # parser.add_argument('--dataset', type=str, default='TreesV2', metavar='N',
     #                     help='Which dataset to use')

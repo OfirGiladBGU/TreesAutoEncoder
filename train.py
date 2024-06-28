@@ -7,7 +7,7 @@ from torch.nn import functional as F
 import sys
 import copy
 
-from datasets import MNIST, EMNIST, FashionMNIST, TreesDataset, TreesDatasetV2
+from datasets import MNIST, EMNIST, FashionMNIST, TreesDatasetV1, TreesDatasetV2
 
 from torchvision.utils import save_image
 
@@ -19,18 +19,9 @@ class Trainer(object):
         self.device = torch.device("cpu")
         self._init_dataset()
 
-        if isinstance(self.data, TreesDataset):
-            self.train_input_loader = self.data.train_input_loader
-            self.train_target_loader = self.data.train_target_loader
-
-            self.test_input_loader = self.data.test_input_loader
-            self.test_target_loader = self.data.test_target_loader
-        else:
-            self.train_input_loader = self.data.train_loader
-            self.train_target_loader = copy.deepcopy(self.data.train_loader)
-
-            self.test_input_loader = self.data.test_loader
-            self.test_target_loader = copy.deepcopy(self.data.test_loader)
+        # Get loaders
+        self.train_loader = self.data.train_loader
+        self.test_loader = self.data.test_loader
 
         self.model = model
         self.model.to(self.device)
@@ -47,8 +38,8 @@ class Trainer(object):
         elif self.args.dataset == 'FashionMNIST':
             self.data = FashionMNIST(self.args)
         # Custom Dataset
-        elif self.args.dataset == 'Trees':
-            self.data = TreesDataset(self.args)
+        elif self.args.dataset == 'TreesV1':
+            self.data = TreesDatasetV1(self.args)
         elif self.args.dataset == 'TreesV2':
             self.data = TreesDatasetV2(self.args)
         else:
@@ -100,8 +91,10 @@ class Trainer(object):
     def _train(self, epoch):
         self.model.train()
         train_loss = 0
-        for batch_idx, ((input_data, _), (target_data, _)) in enumerate(zip(self.train_input_loader, self.train_target_loader)):
+        for batch_idx, (input_data, target_data) in enumerate(self.train_loader):
             input_data = input_data.to(self.device)
+            if self.args.dataset != 'TreesV1':
+                target_data = input_data.clone().detach()
             target_data = target_data.to(self.device)
 
             # TODO: Threshold
@@ -119,7 +112,7 @@ class Trainer(object):
             # print(res.max())
             # print(res.min())
 
-            if self.args.dataset != 'Trees':
+            if self.args.dataset != 'TreesV1':
                 self.create_holes(input_data)
 
             # # For Equality Check
@@ -136,19 +129,21 @@ class Trainer(object):
             self.optimizer.step()
             if batch_idx % self.args.log_interval == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                    epoch, batch_idx * len(input_data), len(self.train_input_loader.dataset),
-                    100. * batch_idx / len(self.train_input_loader),
+                    epoch, batch_idx * len(input_data), len(self.train_loader.dataset),
+                    100. * batch_idx / len(self.train_loader),
                     loss.item() / len(input_data)))
 
         print('====> Epoch: {} Average loss: {:.4f}'.format(
-              epoch, train_loss / len(self.train_input_loader.dataset)))
+              epoch, train_loss / len(self.train_loader.dataset)))
 
     def _test(self):
         self.model.eval()
         test_loss = 0
         with torch.no_grad():
-            for i, ((input_data, _), (target_data, _)) in enumerate(zip(self.test_input_loader, self.test_target_loader)):
+            for i, (input_data, target_data) in enumerate(self.test_loader):
                 input_data = input_data.to(self.device)
+                if self.args.dataset != 'TreesV1':
+                    target_data = input_data.clone().detach()
                 target_data = target_data.to(self.device)
 
                 # TODO: Threshold
@@ -160,13 +155,13 @@ class Trainer(object):
                 if target_data.dtype != torch.float32:
                     target_data = target_data.float()
 
-                if self.args.dataset != 'Trees':
+                if self.args.dataset != 'TreesV1':
                     self.create_holes(input_data)
 
                 recon_batch = self.model(input_data)
                 test_loss += self.loss_function(recon_batch, target_data, self.args).item()
 
-        test_loss /= len(self.test_input_loader.dataset)
+        test_loss /= len(self.test_loader.dataset)
         print('====> Test set loss: {:.4f}'.format(test_loss))
 
     def train(self):

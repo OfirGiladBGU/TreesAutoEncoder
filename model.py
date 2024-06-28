@@ -133,7 +133,7 @@ class Network(nn.Module):
         super(Network, self).__init__()
 
         self.output_size = args.embedding_size
-        if args.dataset == 'Trees':
+        if args.dataset == 'TreesV1':
             self.input_size = (1, 64, 64)
         else:
             self.input_size = (1, 28, 28)
