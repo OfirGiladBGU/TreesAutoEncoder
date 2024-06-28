@@ -11,6 +11,8 @@ from datasets import MNIST, EMNIST, FashionMNIST, TreesDatasetV1, TreesDatasetV2
 
 from torchvision.utils import save_image
 
+import pytorch_ssim
+
 
 class Trainer(object):
     def __init__(self, args, model):
@@ -60,6 +62,9 @@ class Trainer(object):
             #     0.5 * F.mse_loss(recon_x, x.view(-1, 64 * 64)) +
             #     0.5 * F.l1_loss(recon_x, x.view(-1, 64 * 64), reduction='sum')
             # )
+
+            # LOSS = pytorch_ssim.ssim(recon_x.view(-1, 1, 64, 64), x.view(-1, 1, 64, 64))
+
             # TODO: MIOU, Total Variation, SSIM, F1, EMD
         return LOSS
 
