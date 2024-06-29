@@ -13,6 +13,12 @@ def reconstruction_loss(out, target):
 
 # From VGG Loss
 def perceptual_loss(out, target, device):
+    # Change shapes to 3 channels
+    resized_out_x = out.view(-1, 1, 64, 64)
+    rgb_out = resized_out_x.repeat(1, 3, 1, 1)
+    resized_target = target.view(-1, 1, 64, 64)
+    rgb_target = resized_target.repeat(1, 3, 1, 1)
+
     crit = vgg_loss.WeightedLoss(
         losses=[
             vgg_loss.VGGLoss(shift=2),
@@ -22,7 +28,7 @@ def perceptual_loss(out, target, device):
         weights=[1, 40, 10]
     ).to(device)
 
-    loss = crit(out, target)
+    loss = crit(rgb_out, rgb_target)
     return loss
 
 

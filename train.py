@@ -56,10 +56,13 @@ class Trainer(object):
             )
         elif self.args.dataset == 'TreesV1':
             # TODO: MIOU, Total Variation, SSIM, F1, EMD
-            LOSS = (
-                F.mse_loss(recon_x, x.view(-1, 64 * 64)) +
-                loss_functions.edge_loss(recon_x.view(-1, 1, 64, 64), x.view(-1, 1, 64, 64), device=self.args.device)
-            )
+
+            LOSS = loss_functions.perceptual_loss(recon_x, x, device=self.args.device)
+
+            # LOSS = (
+            #     F.mse_loss(recon_x, x.view(-1, 64 * 64)) +
+            #     loss_functions.edge_loss(recon_x.view(-1, 1, 64, 64), x, device=self.args.device)
+            # )
             # LOSS = (
             #     0.5 * F.mse_loss(recon_x, x.view(-1, 64 * 64)) +
             #     0.5 * F.l1_loss(recon_x, x.view(-1, 64 * 64), reduction='sum')
