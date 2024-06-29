@@ -42,10 +42,11 @@ def predict_model(model):
         # trainer.apply_threshold(input_images, 0.5)
         # trainer.apply_threshold(target_images, 0.5)
 
-        if input_images.dtype != torch.float32:
-            input_images = input_images.float()
-        if target_images.dtype != torch.float32:
-            target_images = target_images.float()
+        # Fix for Trees dataset - Fixed problem
+        # if input_images.dtype != torch.float32:
+        #     input_images = input_images.float()
+        # if target_images.dtype != torch.float32:
+        #     target_images = target_images.float()
 
         # Create holes in the input images
         if args.dataset != 'TreesV1':

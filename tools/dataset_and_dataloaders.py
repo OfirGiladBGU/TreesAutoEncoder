@@ -1,4 +1,4 @@
-import numpy as np
+# import numpy as np
 import torch
 import cv2
 import os
@@ -30,11 +30,11 @@ class TreesCustomDataset(torch.utils.data.Dataset):
         data_file1 = os.path.join(self.data_paths[0], self.data_files1[idx])
         image_numpy1 = cv2.imread(data_file1)
         image_numpy1 = cv2.cvtColor(image_numpy1, cv2.COLOR_BGR2GRAY)
-        image_numpy1 = np.expand_dims(image_numpy1, axis=0)
-        image_numpy1.astype(dtype=np.float32)
+        # image_numpy1 = np.expand_dims(image_numpy1, axis=0)
+        # image_numpy1.astype(dtype=np.float32)
 
-        if image_numpy1.max() > 0:
-            image_numpy1 = image_numpy1 / image_numpy1.max()
+        # if image_numpy1.max() > 0:
+        #     image_numpy1 = image_numpy1 / image_numpy1.max()
 
         if self.transform is not None:
             image_numpy1 = self.transform(image_numpy1)
@@ -46,11 +46,11 @@ class TreesCustomDataset(torch.utils.data.Dataset):
             data_file2 = os.path.join(self.data_paths[1], self.data_files2[idx])
             image_numpy2 = cv2.imread(data_file2)
             image_numpy2 = cv2.cvtColor(image_numpy2, cv2.COLOR_BGR2GRAY)
-            image_numpy2 = np.expand_dims(image_numpy2, axis=0)
-            image_numpy2.astype(dtype=np.float32)
+            # image_numpy2 = np.expand_dims(image_numpy2, axis=0)
+            # image_numpy2.astype(dtype=np.float32)
 
-            if image_numpy2.max() > 0:
-                image_numpy2 = image_numpy2 / image_numpy2.max()
+            # if image_numpy2.max() > 0:
+            #     image_numpy2 = image_numpy2 / image_numpy2.max()
 
             if self.transform is not None:
                 image_numpy2 = self.transform(image_numpy2)

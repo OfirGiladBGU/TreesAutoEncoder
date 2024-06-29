@@ -28,6 +28,7 @@ class Trainer(object):
             self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
         else:
             self.optimizer = optim.Adadelta(self.model.parameters())
+            # self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
 
     def _init_dataset(self):
         if self.args.dataset == 'MNIST':
@@ -94,18 +95,18 @@ class Trainer(object):
         for batch_idx, (input_data, target_data) in enumerate(self.train_loader):
             input_data = input_data.to(self.device)
             if self.args.dataset != 'TreesV1':
-                target_data = input_data.clone().detach()
+                target_data = input_data.clone()
             target_data = target_data.to(self.device)
 
             # TODO: Threshold
             # self.apply_threshold(input_data, 0.5)
             # self.apply_threshold(target_data, 0.5)
 
-            # Fix for Trees dataset
-            if input_data.dtype != torch.float32:
-                input_data = input_data.float()
-            if target_data.dtype != torch.float32:
-                target_data = target_data.float()
+            # Fix for Trees dataset - Fixed problem
+            # if input_data.dtype != torch.float32:
+            #     input_data = input_data.float()
+            # if target_data.dtype != torch.float32:
+            #     target_data = target_data.float()
 
             # # For Equality Check
             # res = torch.eq(input_data, target_data)
@@ -143,7 +144,7 @@ class Trainer(object):
             for i, (input_data, target_data) in enumerate(self.test_loader):
                 input_data = input_data.to(self.device)
                 if self.args.dataset != 'TreesV1':
-                    target_data = input_data.clone().detach()
+                    target_data = input_data.clone()
                 target_data = target_data.to(self.device)
 
                 # TODO: Threshold

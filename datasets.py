@@ -54,7 +54,7 @@ class TreesDatasetV1(object):
         dst_path = os.path.join(str(os.path.dirname(__file__)), "tools", "parse_labels_mini_cropped_v2")
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader(data_paths=data_paths, args=args)
+        trees_dataloader = TreesCustomDataloader(data_paths=data_paths, args=args, transform=transforms.ToTensor())
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
@@ -63,5 +63,5 @@ class TreesDatasetV2(object):
         src_path = os.path.join(str(os.path.dirname(__file__)), "tools", "mini_cropped_images")
         data_paths = [src_path]
 
-        trees_dataloader = TreesCustomDataloader(data_paths=data_paths, args=args)
+        trees_dataloader = TreesCustomDataloader(data_paths=data_paths, args=args, transform=transforms.ToTensor())
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
