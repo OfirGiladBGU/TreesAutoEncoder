@@ -3,6 +3,27 @@ import torch
 import torch.nn as nn
 
 import pytorch_ssim
+import vgg_loss
+
+
+def reconstruction_loss(out, target):
+    mse_loss = torch.nn.MSELoss()
+    return mse_loss(out, target)
+
+
+# From VGG Loss
+def perceptual_loss(out, target, device):
+    crit = vgg_loss.WeightedLoss(
+        losses=[
+            vgg_loss.VGGLoss(shift=2),
+            nn.MSELoss(),
+            vgg_loss.TVLoss(p=1)
+        ],
+        weights=[1, 40, 10]
+    ).to(device)
+
+    loss = crit(out, target)
+    return loss
 
 
 def edge_loss(out, target, device):
@@ -38,6 +59,12 @@ def edge_loss(out, target, device):
     g_2 = torch.sqrt(torch.pow(g2_x, 2) + torch.pow(g2_y, 2))
 
     return torch.mean((g_1 - g_2).pow(2))
+
+
+# From VGG Loss
+def total_variation_lost(out, target, device):
+    tv_loss = vgg_loss.TVLoss(p=2).to(device)
+    return tv_loss(out, target)
 
 
 def ssim_loss(out, target, input_size=(1, 64, 64)):
