@@ -101,7 +101,7 @@ if __name__ == "__main__":
                         help='input batch size for training (default: 128)')
     parser.add_argument('--epochs', type=int, default=1, metavar='N',
                         help='number of epochs to train (default: 10)')
-    parser.add_argument('--no-cuda', action='store_true', default=False,
+    parser.add_argument('--no-cuda', action='store_true', default=True,
                         help='enables CUDA training')
     parser.add_argument('--seed', type=int, default=42, metavar='S',
                         help='random seed (default: 1)')
@@ -122,5 +122,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
+    args.device = torch.device("cuda" if args.cuda else "cpu")
     torch.manual_seed(args.seed)
     main()
