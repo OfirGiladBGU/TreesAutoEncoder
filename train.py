@@ -93,10 +93,8 @@ class Trainer(object):
         self.model.train()
         train_loss = 0
         for batch_idx, (input_data, target_data) in enumerate(self.train_loader):
-            input_data = input_data.to(self.device)
             if self.args.dataset != 'TreesV1':
                 target_data = input_data.clone()
-            target_data = target_data.to(self.device)
 
             # TODO: Threshold
             # self.apply_threshold(input_data, 0.5)
@@ -113,8 +111,12 @@ class Trainer(object):
             # print(res.max())
             # print(res.min())
 
+            # Notice: Faster on CPU
             if self.args.dataset != 'TreesV1':
                 self.create_holes(input_data)
+
+            input_data = input_data.to(self.device)
+            target_data = target_data.to(self.device)
 
             # # For Equality Check
             # res = torch.eq(input_data, target_data)
