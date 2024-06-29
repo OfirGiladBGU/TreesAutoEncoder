@@ -1,4 +1,3 @@
-import numpy as np
 import random
 import torch
 import torch.utils.data
@@ -8,6 +7,7 @@ import sys
 import copy
 
 from datasets import MNIST, EMNIST, FashionMNIST, TreesDatasetV1, TreesDatasetV2
+import loss_functions
 
 from torchvision.utils import save_image
 
@@ -46,22 +46,27 @@ class Trainer(object):
             print("Dataset not supported")
             sys.exit()
 
-    def loss_function(self, recon_x, x, args):
-        if args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
+    def loss_function(self, recon_x, x):
+        if self.args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
             LOSS = F.binary_cross_entropy(recon_x, x.view(-1, 28 * 28), reduction='sum')
-        elif args.dataset == 'TreesV2':
+        elif self.args.dataset == 'TreesV2':
             LOSS = (
                 0.5 * F.binary_cross_entropy(recon_x, x.view(-1, 28 * 28), reduction='sum') +
                 0.5 * F.l1_loss(recon_x, x.view(-1, 28 * 28), reduction='sum')
             )
-        else:
-            LOSS = F.mse_loss(recon_x, x.view(-1, 64 * 64))
+        elif self.args.dataset == 'TreesV1':
+            # TODO: MIOU, Total Variation, SSIM, F1, EMD
+            LOSS = (
+                F.mse_loss(recon_x, x.view(-1, 64 * 64)) +
+                loss_functions.edge_loss(recon_x.view(-1, 1, 64, 64), x.view(-1, 1, 64, 64), device=self.args.device)
+            )
             # LOSS = (
             #     0.5 * F.mse_loss(recon_x, x.view(-1, 64 * 64)) +
             #     0.5 * F.l1_loss(recon_x, x.view(-1, 64 * 64), reduction='sum')
             # )
+        else:
+            raise NotImplementedError
 
-            # TODO: MIOU, Total Variation, SSIM, F1, EMD
         return LOSS
 
     def zero_out_radius(self, tensor, point, radius):
@@ -125,7 +130,7 @@ class Trainer(object):
 
             self.optimizer.zero_grad()
             recon_batch = self.model(input_data)
-            loss = self.loss_function(recon_batch, target_data, self.args)
+            loss = self.loss_function(recon_batch, target_data)
             loss.backward()
 
             train_loss += loss.item()
@@ -162,7 +167,7 @@ class Trainer(object):
                     self.create_holes(input_data)
 
                 recon_batch = self.model(input_data)
-                test_loss += self.loss_function(recon_batch, target_data, self.args).item()
+                test_loss += self.loss_function(recon_batch, target_data).item()
 
         test_loss /= len(self.test_loader.dataset)
         print('====> Test set loss: {:.4f}'.format(test_loss))
