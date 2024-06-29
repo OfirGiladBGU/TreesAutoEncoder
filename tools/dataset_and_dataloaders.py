@@ -90,7 +90,7 @@ class TreesCustomDataloader:
             kwargs = {'num_workers': 1, 'pin_memory': True} if self.args.cuda else {}
             self.train_dataloader = torch.utils.data.DataLoader(
                 train_data,
-                batch_size=self.args.batch_size, shuffle=False, **kwargs)
+                batch_size=self.args.batch_size, shuffle=True, **kwargs)
             self.test_dataloader = torch.utils.data.DataLoader(
                 test_data,
                 batch_size=self.args.batch_size, shuffle=False, **kwargs
@@ -98,7 +98,7 @@ class TreesCustomDataloader:
         else:
             self.train_dataloader = torch.utils.data.DataLoader(
                 train_data,
-                batch_size=1, shuffle=False)
+                batch_size=1, shuffle=True)
             self.test_dataloader = torch.utils.data.DataLoader(
                 test_data,
                 batch_size=1, shuffle=False
