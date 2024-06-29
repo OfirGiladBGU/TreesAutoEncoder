@@ -128,3 +128,18 @@ def f1_loss(out, target, input_size=(1, 64, 64)):
     scaled_target = scaled_target.int()
 
     return multiclass_f1_score(scaled_out, scaled_target, num_classes=255)
+
+
+def earth_mover_distance(out, target, input_size=(1, 64, 64)):
+    reshaped_out = out.view(-1, input_size[1] * input_size[2])
+    reshaped_target = target.view(-1, input_size[1] * input_size[2])
+
+    scaled_out = reshaped_out * 255
+    scaled_out = scaled_out.int()
+
+    scaled_target = reshaped_target * 255
+    scaled_target = scaled_target.int()
+
+    y_pred = scaled_out
+    y_true = scaled_target
+    return torch.mean(torch.square(torch.cumsum(y_true, dim=-1) - torch.cumsum(y_pred, dim=-1)), dim=-1)
