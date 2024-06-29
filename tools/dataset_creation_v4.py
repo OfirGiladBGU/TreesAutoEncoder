@@ -112,7 +112,8 @@ def create_dataset_original_images():
     data_filepaths1 = sorted(os.listdir(folder_path1))
     data_filepaths2 = sorted(os.listdir(folder_path2))
 
-    for data_filepath1, data_filepath2 in zip(data_filepaths1, data_filepaths2):
+    for batch_idx, (data_filepath1, data_filepath2) in enumerate(zip(data_filepaths1, data_filepaths2)):
+        batch_idx += 1
         output_idx = data_filepath1.split(".")[0]
 
         data_filepath1 = os.path.join(folder_path1, data_filepath1)
@@ -174,7 +175,8 @@ def create_dataset_original_images():
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id}_up.png", up_image2)
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id}_left.png", left_image2)
 
-        # break
+        if batch_idx == 20:
+            break
 
 
 def main():
