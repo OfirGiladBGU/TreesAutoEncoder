@@ -3,6 +3,7 @@ import os
 import torch
 
 from model import Network
+from vgg_demo_model import VGGDemoNetwork
 from train import Trainer
 import matplotlib.pyplot as plt
 
@@ -91,6 +92,8 @@ def predict_model(model):
 
 def main():
     model = Network(args)
+    # model = VGGDemoNetwork(args)
+    # model.load_state_dict(torch.load(args.weights_filepath))
 
     train_model(model=model)
     predict_model(model=model)
