@@ -24,6 +24,8 @@ class Trainer(object):
 
         self.model = model
         self.model.to(self.device)
+        self.input_size = model.input_size
+
         if args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
             self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
         else:
@@ -58,7 +60,7 @@ class Trainer(object):
             )
         elif self.args.dataset == 'TreesV1':
             # TODO: MIOU, Total Variation, SSIM, F1, EMD
-            LOSS = loss_functions.perceptual_loss(recon_x, x, device=self.args.device)
+            LOSS = loss_functions.perceptual_loss(recon_x, x, device=self.args.device, input_size=self.input_size)
 
             # LOSS = (
             #     F.mse_loss(recon_x, x.view(-1, 64 * 64)) +
@@ -97,7 +99,6 @@ class Trainer(object):
         tensor[tensor >= threshold] = 1.0
         tensor[tensor < threshold] = 0.0
 
-    # TODO: In the future, use the input data to create the target data with holes (and use only 1 dataloader)
     def _train(self, epoch):
         self.model.train()
         train_loss = 0
