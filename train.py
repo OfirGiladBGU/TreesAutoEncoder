@@ -29,9 +29,9 @@ class Trainer(object):
         if args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
             self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
         else:
-            # For Network
+            # For ae / gap_cnn
             self.optimizer = optim.Adadelta(self.model.parameters())
-            # For VGGDemoNetwork
+            # For vgg_ae_demo
             # self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
 
     def _init_dataset(self):

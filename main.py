@@ -2,8 +2,10 @@ import argparse
 import os
 import torch
 
-from model import Network
-from vgg_demo_model import VGGDemoNetwork
+from models.ae_model import Network
+# from models.vgg_demo_model import Network
+# from models.gap_cnn import Network
+
 from train import Trainer
 import matplotlib.pyplot as plt
 
@@ -92,7 +94,6 @@ def predict_model(model):
 
 def main():
     model = Network(args)
-    # model = VGGDemoNetwork(args)
     # model.load_state_dict(torch.load(args.weights_filepath))
 
     train_model(model=model)
@@ -103,7 +104,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Main function to call training for different AutoEncoders')
     parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                         help='input batch size for training (default: 128)')
-    parser.add_argument('--epochs', type=int, default=10, metavar='N',
+    parser.add_argument('--epochs', type=int, default=1, metavar='N',
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='enables CUDA training')
@@ -128,4 +129,12 @@ if __name__ == "__main__":
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")
     torch.manual_seed(args.seed)
+
+    if args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
+        args.input_size = (1, 28, 28)
+    if args.dataset == 'TreesV1':
+        args.input_size = (1, 64, 64)
+    if args.dataset == 'TreesV2':
+        args.input_size = (1, 28, 28)
+
     main()

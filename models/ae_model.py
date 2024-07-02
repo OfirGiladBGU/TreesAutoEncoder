@@ -131,12 +131,10 @@ class CNN_Decoder(nn.Module):
 class Network(nn.Module):
     def __init__(self, args):
         super(Network, self).__init__()
+        self.model_name = 'ae'
+        self.input_size = args.input_size
 
         self.output_size = args.embedding_size
-        if args.dataset == 'TreesV1':
-            self.input_size = (1, 64, 64)
-        else:
-            self.input_size = (1, 28, 28)
 
         self.encoder = CNN_Encoder(output_size=self.output_size, input_size=self.input_size)
         self.decoder = CNN_Decoder(embedding_size=self.output_size, input_size=self.input_size)

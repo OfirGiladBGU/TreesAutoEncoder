@@ -2,14 +2,11 @@ from torch import nn
 
 
 # Model
-class VGGDemoNetwork(nn.Module):
+class Network(nn.Module):
     def __init__(self, args):
-        super(VGGDemoNetwork, self).__init__()
-
-        if args.dataset == 'TreesV1':
-            self.input_size = (1, 64, 64)
-        else:
-            self.input_size = (1, 32, 32)
+        super(Network, self).__init__()
+        self.model_name = 'vgg_ae_demo'
+        self.input_size = args.input_size
 
         # Original
         if self.input_size == (3, 32, 32):
