@@ -21,7 +21,7 @@ def reshape_inputs(input_images, target_images, input_size):
 # GPT Suggestions #
 ###################
 def reconstruction_loss(out, target):
-    mse_loss = torch.nn.MSELoss()
+    mse_loss = torch.nn.MSELoss(reduction='sum')
     return mse_loss(out, target) / (out.size(0) * out.size(1))
 
 
@@ -93,8 +93,19 @@ def mean_iou(out, target):
     return miou(scaled_out, scaled_target)
 
 
-def total_variation_lost(out, target, device):
-    tv_loss = vgg_loss.TVLoss(p=2).to(device)
+def total_variation_lost(out, target, p, device):
+    """
+    ``p=1`` yields the vectorial total variation norm. It is a generalization
+    of the originally proposed (isotropic) 2D total variation norm (see
+    (see https://en.wikipedia.org/wiki/Total_variation_denoising) for color
+    images. On images with a single channel it is equal to the 2D TV norm.
+
+    ``p=2`` yields a variant that is often used for smoothing out noise in
+    reconstructions of images from neural network feature maps (see Mahendran
+    and Vevaldi, "Understanding Deep Image Representations by Inverting
+    Them", https://arxiv.org/abs/1412.0035)
+    """
+    tv_loss = vgg_loss.TVLoss(p=p).to(device)
     return tv_loss(out, target)
 
 
