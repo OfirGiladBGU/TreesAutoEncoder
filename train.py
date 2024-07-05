@@ -52,15 +52,20 @@ class Trainer(object):
 
     def loss_function(self, recon_x, x):
         if self.args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
-            LOSS = F.binary_cross_entropy(recon_x, x.view(-1, 28 * 28), reduction='sum')
+            recon_x, x = loss_functions.reshape_inputs(recon_x, x, input_size=(28 * 28, ))
+            LOSS = F.binary_cross_entropy(recon_x, x, reduction='sum')
         elif self.args.dataset == 'TreesV2':
+            recon_x, x = loss_functions.reshape_inputs(recon_x, x, input_size=(28 * 28, ))
             LOSS = (
-                0.5 * F.binary_cross_entropy(recon_x, x.view(-1, 28 * 28), reduction='sum') +
-                0.5 * F.l1_loss(recon_x, x.view(-1, 28 * 28), reduction='sum')
+                0.5 * F.binary_cross_entropy(recon_x, x, reduction='sum') +
+                0.5 * F.l1_loss(recon_x, x, reduction='sum')
             )
         elif self.args.dataset == 'TreesV1':
             # TODO: MIOU, Total Variation, SSIM, F1, EMD
-            LOSS = loss_functions.perceptual_loss(recon_x, x, device=self.args.device, input_size=self.input_size)
+            LOSS = loss_functions.perceptual_loss(recon_x, x, device=self.args.device)
+
+            # gap_cnn
+            # LOSS = F.mse_loss(recon_x, x)
 
             # LOSS = (
             #     F.mse_loss(recon_x, x.view(-1, 64 * 64)) +
