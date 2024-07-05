@@ -7,8 +7,9 @@ class Network(nn.Module):
         super(Network, self).__init__()
         self.model_name = 'gap_cnn'
         self.input_size = args.input_size
+        self.c = self.input_size[0]
 
-        self.layer1 = nn.Conv2d(in_channels=1, out_channels=24, kernel_size=5, stride=2, padding=2)  # scale: 1/2
+        self.layer1 = nn.Conv2d(in_channels=self.c, out_channels=24, kernel_size=5, stride=2, padding=2)  # scale: 1/2
         self.layer2 = nn.Conv2d(in_channels=24, out_channels=64, kernel_size=3, stride=2, padding=1)  # scale: 1/4
         self.layer3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1)  # scale: 1/4
         self.layer4 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=2, padding=1)  # scale: 1/8
@@ -31,7 +32,7 @@ class Network(nn.Module):
         self.layer14U = nn.Upsample(scale_factor=2, mode='nearest')  # scale: 1
         self.layer14 = nn.Conv2d(in_channels=4, out_channels=2, kernel_size=3, stride=1, padding=1)  # scale: 1
         self.layer15 = nn.Conv2d(in_channels=2, out_channels=1, kernel_size=3, stride=1, padding=1)  # scale: 1
-        self.layer16 = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=3, stride=1, padding=1)  # scale: 1
+        self.layer16 = nn.Conv2d(in_channels=1, out_channels=self.c, kernel_size=3, stride=1, padding=1)  # scale: 1
 
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()

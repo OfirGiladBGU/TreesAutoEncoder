@@ -130,7 +130,7 @@ if __name__ == "__main__":
     args.dataset = 'TreesV1'
     # args.dataset = 'TreesV2'
 
-    args.epoch = 10
+    args.epochs = 2
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")
