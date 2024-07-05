@@ -2,7 +2,8 @@ import argparse
 import os
 import torch
 
-from models.ae_model import Network
+# from models.ae_model import Network
+from models.ae_v2_model import Network
 # from models.vgg_demo_model import Network
 # from models.gap_cnn import Network
 
@@ -131,7 +132,7 @@ if __name__ == "__main__":
     args.dataset = 'TreesV1'
     # args.dataset = 'TreesV2'
 
-    args.epochs = 2
+    args.epochs = 5
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")

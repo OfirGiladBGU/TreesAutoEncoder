@@ -31,9 +31,9 @@ class Trainer(object):
             self.optimizer = optim.Adam(self.model.parameters())
         else:
             # For ae / gap_cnn
-            self.optimizer = optim.Adadelta(self.model.parameters())
-            # For vgg_ae_demo
-            # self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
+            # self.optimizer = optim.Adadelta(self.model.parameters())
+            # For vgg_ae_demo / ae_v2
+            self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
 
     def _init_dataset(self):
         if self.args.dataset == 'MNIST':
@@ -52,7 +52,7 @@ class Trainer(object):
         else:
             raise Exception("Dataset not supported")
 
-    def loss_function(self, out, target):
+    def loss_function(self, out, target, original=None):
         if self.args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
             out, target = loss_functions.reshape_inputs(out, target, input_size=(28 * 28, ))
             LOSS = F.binary_cross_entropy(out, target, reduction='sum')
@@ -70,13 +70,16 @@ class Trainer(object):
         elif self.args.dataset == 'TreesV1':
             # TODO: MIOU, Total Variation, SSIM, F1, EMD
 
-            LOSS = (
-                40 * loss_functions.reconstruction_loss(out, target) +
-                10 * loss_functions.total_variation_lost(out, target, p=1,  device=self.args.device)
-            )
+            # ae
+            # LOSS = (
+            #     40 * loss_functions.reconstruction_loss(out, target) +
+            #     10 * loss_functions.total_variation_lost(out, target, p=1,  device=self.args.device)
+            # )
 
-            # gap_cnn
-            # LOSS = F.mse_loss(out, target)
+            # gap_cnn / ae_v2
+            LOSS = F.mse_loss(out, target)
+
+            # LOSS = loss_functions.fill_holes_loss(out, target, original)
 
             # LOSS = loss_functions.perceptual_loss(out, target, device=self.args.device)
 
@@ -154,7 +157,7 @@ class Trainer(object):
 
             self.optimizer.zero_grad()
             recon_batch = self.model(input_data)
-            loss = self.loss_function(recon_batch, target_data)
+            loss = self.loss_function(out=recon_batch, target=target_data, original=input_data)
             loss.backward()
 
             train_loss += loss.item()
@@ -182,16 +185,16 @@ class Trainer(object):
                 # self.apply_threshold(input_data, 0.5)
                 # self.apply_threshold(target_data, 0.5)
 
-                if input_data.dtype != torch.float32:
-                    input_data = input_data.float()
-                if target_data.dtype != torch.float32:
-                    target_data = target_data.float()
+                # if input_data.dtype != torch.float32:
+                #     input_data = input_data.float()
+                # if target_data.dtype != torch.float32:
+                #     target_data = target_data.float()
 
                 if self.args.dataset != 'TreesV1' and self.args.dataset != 'CIFAR10':
                     self.create_holes(input_data)
 
                 recon_batch = self.model(input_data)
-                test_loss += self.loss_function(recon_batch, target_data).item()
+                test_loss += self.loss_function(out=recon_batch, target=target_data, original=input_data).item()
 
         test_loss /= len(self.test_loader.dataset)
         print('====> Test set loss: {:.4f}'.format(test_loss))
