@@ -25,10 +25,7 @@ def predict_model(model):
     trainer = Trainer(args=args, model=model)
 
     # Set size
-    if args.dataset != 'TreesV1':
-        image_size = 28
-    else:
-        image_size = 64
+    image_size = args.input_size[1]
 
     with torch.no_grad():
         # Get the images from the test loader
@@ -89,7 +86,7 @@ def predict_model(model):
         ax[1].set_title("Target:")
         ax[2].set_title("Output:")
         fig.tight_layout()
-        plt.savefig(os.path.join(args.results_path, f'output_{args.dataset}.png'))
+        plt.savefig(os.path.join(args.results_path, f'output_{args.dataset}_{model.model_name}.png'))
 
 
 def main():
