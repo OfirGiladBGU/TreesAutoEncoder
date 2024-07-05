@@ -78,6 +78,7 @@ class Trainer(object):
 
             # gap_cnn / ae_v2
             LOSS = F.mse_loss(out, target)
+            # LOSS = F.mse_loss(out, target, reduction='sum')
 
             # LOSS = loss_functions.fill_holes_loss(out, target, original)
 
