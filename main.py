@@ -22,7 +22,8 @@ def predict_model(model):
     except:
         os.mkdir(args.results_path)
 
-    model.load_state_dict(torch.load(args.weights_filepath))
+    if os.path.exists(args.weights_filepath):
+        model.load_state_dict(torch.load(args.weights_filepath))
     trainer = Trainer(args=args, model=model)
 
     with torch.no_grad():
