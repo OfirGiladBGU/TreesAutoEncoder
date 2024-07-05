@@ -3,10 +3,9 @@ import torch
 import torch.utils.data
 from torch import optim
 from torch.nn import functional as F
-import sys
 import copy
 
-from datasets import MNIST, EMNIST, FashionMNIST, TreesDatasetV1, TreesDatasetV2
+from datasets import MNIST, EMNIST, FashionMNIST, CIFAR10, TreesDatasetV1, TreesDatasetV2
 import loss_functions
 
 from torchvision.utils import save_image
@@ -28,6 +27,8 @@ class Trainer(object):
 
         if args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
             self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
+        elif args.dataset == 'CIFAR10':
+            self.optimizer = optim.Adam(self.model.parameters())
         else:
             # For ae / gap_cnn
             self.optimizer = optim.Adadelta(self.model.parameters())
@@ -41,25 +42,31 @@ class Trainer(object):
             self.data = EMNIST(self.args)
         elif self.args.dataset == 'FashionMNIST':
             self.data = FashionMNIST(self.args)
+        elif self.args.dataset == 'CIFAR10':
+            self.data = CIFAR10(self.args)
         # Custom Dataset
         elif self.args.dataset == 'TreesV1':
             self.data = TreesDatasetV1(self.args)
         elif self.args.dataset == 'TreesV2':
             self.data = TreesDatasetV2(self.args)
         else:
-            print("Dataset not supported")
-            sys.exit()
+            raise Exception("Dataset not supported")
 
     def loss_function(self, out, target):
         if self.args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
             out, target = loss_functions.reshape_inputs(out, target, input_size=(28 * 28, ))
             LOSS = F.binary_cross_entropy(out, target, reduction='sum')
+
+        elif self.args.dataset == 'CIFAR10':
+            LOSS = loss_functions.perceptual_loss(out, target, channels=3, device=self.args.device)
+
         elif self.args.dataset == 'TreesV2':
             out, target = loss_functions.reshape_inputs(out, target, input_size=(28 * 28, ))
             LOSS = (
                 0.5 * F.binary_cross_entropy(out, target, reduction='sum') +
                 0.5 * F.l1_loss(out, target, reduction='sum')
             )
+
         elif self.args.dataset == 'TreesV1':
             # TODO: MIOU, Total Variation, SSIM, F1, EMD
 
@@ -134,7 +141,7 @@ class Trainer(object):
             # print(res.min())
 
             # Notice: Faster on CPU
-            if self.args.dataset != 'TreesV1':
+            if self.args.dataset != 'TreesV1' and self.args.dataset != 'CIFAR10':
                 self.create_holes(input_data)
 
             input_data = input_data.to(self.device)
@@ -180,7 +187,7 @@ class Trainer(object):
                 if target_data.dtype != torch.float32:
                     target_data = target_data.float()
 
-                if self.args.dataset != 'TreesV1':
+                if self.args.dataset != 'TreesV1' and self.args.dataset != 'CIFAR10':
                     self.create_holes(input_data)
 
                 recon_batch = self.model(input_data)

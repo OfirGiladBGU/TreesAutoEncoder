@@ -38,6 +38,17 @@ class FashionMNIST(object):
             batch_size=args.batch_size, shuffle=False, **kwargs)
 
 
+class CIFAR10(object):
+    def __init__(self, args):
+        tf = transforms.ToTensor()
+        train_set = datasets.CIFAR10('data/cifar10', download=True, transform=tf)
+        self.train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True,
+                                                        num_workers=2, pin_memory=True)
+        test_set = datasets.CIFAR10('data/cifar10', train=False, transform=tf)
+        self.test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.batch_size,
+                                                       num_workers=2, pin_memory=True)
+
+
 # Custom Dataset
 class TreesDatasetV1(object):
     def __init__(self, args):

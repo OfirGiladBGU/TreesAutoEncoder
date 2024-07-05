@@ -8,6 +8,7 @@ from models.ae_model import Network
 
 from train import Trainer
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def train_model(model):
@@ -23,9 +24,6 @@ def predict_model(model):
 
     model.load_state_dict(torch.load(args.weights_filepath))
     trainer = Trainer(args=args, model=model)
-
-    # Set size
-    image_size = args.input_size[1]
 
     with torch.no_grad():
         # Get the images from the test loader
@@ -49,7 +47,7 @@ def predict_model(model):
         #     target_images = target_images.float()
 
         # Create holes in the input images
-        if args.dataset != 'TreesV1':
+        if args.dataset != 'TreesV1' and args.dataset != 'CIFAR10':
             trainer.create_holes(input_images)
 
         model.eval()
@@ -72,15 +70,18 @@ def predict_model(model):
         for i in range(rows):
             # Input
             ax.append(fig.add_subplot(rows, columns, i * 3 + 1))
-            plt.imshow(input_images[i].reshape(image_size, image_size), cmap="gray")
+            npimg = input_images[i].numpy()
+            plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
 
             # Target
             ax.append(fig.add_subplot(rows, columns, i * 3 + 2))
-            plt.imshow(target_images[i].reshape(image_size, image_size), cmap="gray")
+            npimg = target_images[i].numpy()
+            plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
 
             # Output
             ax.append(fig.add_subplot(rows, columns, i * 3 + 3))
-            plt.imshow(output_images[i].reshape(image_size, image_size), cmap="gray")
+            npimg = output_images[i].numpy()
+            plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
 
         ax[0].set_title("Input:")
         ax[1].set_title("Target:")
@@ -106,7 +107,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Main function to call training for different AutoEncoders')
     parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                         help='input batch size for training (default: 128)')
-    parser.add_argument('--epochs', type=int, default=1, metavar='N',
+    parser.add_argument('--epochs', type=int, default=2, metavar='N',
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='enables CUDA training')
@@ -118,22 +119,25 @@ if __name__ == "__main__":
                         help='how many batches to wait before logging training status')
     parser.add_argument('--results-path', type=str, default='results/', metavar='N',
                         help='Where to store images')
-    # parser.add_argument('--dataset', type=str, default='MNIST', metavar='N',
-    #                     help='Which dataset to use')
-    parser.add_argument('--dataset', type=str, default='TreesV1', metavar='N',
+    parser.add_argument('--dataset', type=str, default='MNIST', metavar='N',
                         help='Which dataset to use')
-    # parser.add_argument('--dataset', type=str, default='TreesV2', metavar='N',
-    #                     help='Which dataset to use')
     parser.add_argument('--weights-filepath', type=str, default='Network.pth', metavar='N',
                         help='Which dataset to use')
 
     args = parser.parse_args()
+    # args.dataset = 'MNIST'
+    # args.dataset = 'CIFAR10'
+    args.dataset = 'TreesV1'
+    # args.dataset = 'TreesV2'
+
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")
     torch.manual_seed(args.seed)
 
     if args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
         args.input_size = (1, 28, 28)
+    if args.dataset == 'CIFAR10':
+        args.input_size = (3, 32, 32)
     if args.dataset == 'TreesV1':
         args.input_size = (1, 64, 64)
     if args.dataset == 'TreesV2':

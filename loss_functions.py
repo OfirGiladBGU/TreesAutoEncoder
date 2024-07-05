@@ -26,10 +26,16 @@ def reconstruction_loss(out, target):
 
 
 # From VGG Loss
-def perceptual_loss(out, target, device):
-    # Change shapes to 3 channels
-    rgb_out = out.repeat(1, 3, 1, 1)
-    rgb_target = target.repeat(1, 3, 1, 1)
+def perceptual_loss(out, target, channels, device):
+    if channels == 1:
+        # Change shapes to 3 channels
+        rgb_out = out.repeat(1, 3, 1, 1)
+        rgb_target = target.repeat(1, 3, 1, 1)
+    elif channels == 3:
+        rgb_out = out
+        rgb_target = target
+    else:
+        raise ValueError("Channels must be 1 or 3")
 
     crit = vgg_loss.WeightedLoss(
         losses=[

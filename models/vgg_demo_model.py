@@ -10,7 +10,7 @@ class Network(nn.Module):
 
         # Original
         if self.input_size == (3, 32, 32):
-            encoder = nn.Sequential(
+            self.encoder = nn.Sequential(
                 nn.Conv2d(3, 16, 3, padding=1), nn.ReLU(),
                 nn.Conv2d(16, 16, 3, padding=1), nn.ReLU(),
                 nn.AvgPool2d(2, ceil_mode=True),
@@ -23,7 +23,7 @@ class Network(nn.Module):
                 nn.Flatten(),
                 nn.Linear(1024, 128), nn.Tanh(),
             )
-            decoder = nn.Sequential(
+            self.decoder = nn.Sequential(
                 nn.Linear(128, 1024), nn.ReLU(),
                 nn.Unflatten(-1, (64, 4, 4)),
                 nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
@@ -38,7 +38,7 @@ class Network(nn.Module):
             )
         # Modified
         elif self.input_size == (1, 64, 64):
-            encoder = nn.Sequential(
+            self.encoder = nn.Sequential(
                 nn.Conv2d(1, 16, 3, padding=1), nn.ReLU(),
                 nn.Conv2d(16, 16, 3, padding=1), nn.ReLU(),
                 nn.AvgPool2d(2, ceil_mode=True),  # 1x64x64 -> 16x32x32
@@ -54,7 +54,7 @@ class Network(nn.Module):
                 nn.Flatten(),  # 128x4x4 -> 2048
                 nn.Linear(2048, 256), nn.Tanh(),  # 2048 -> 256
             )
-            decoder = nn.Sequential(
+            self.decoder = nn.Sequential(
                 nn.Linear(256, 2048), nn.ReLU(),  # 256 -> 2048
                 nn.Unflatten(-1, (128, 4, 4)),  # 2048 -> 128x4x4
                 nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 128x4x4 -> 128x8x8
@@ -73,7 +73,7 @@ class Network(nn.Module):
         else:
             raise ValueError(f'Invalid input size: {self.input_size}')
 
-        self.model = nn.Sequential(encoder, decoder)
-
     def forward(self, x):
-        return self.model(x)
+        x = self.encoder(x)
+        x = self.decoder(x)
+        return x
