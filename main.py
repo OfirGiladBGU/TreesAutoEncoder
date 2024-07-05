@@ -91,6 +91,11 @@ def predict_model(model):
 
 def main():
     model = Network(args)
+
+    # Update save path
+    filepath, ext = os.path.splitext(args.weights_filepath)
+    args.weights_filepath = f"{filepath}_{model.model_name}{ext}"
+
     # model.load_state_dict(torch.load(args.weights_filepath))
 
     train_model(model=model)

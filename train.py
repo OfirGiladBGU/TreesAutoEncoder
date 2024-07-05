@@ -50,30 +50,37 @@ class Trainer(object):
             print("Dataset not supported")
             sys.exit()
 
-    def loss_function(self, recon_x, x):
+    def loss_function(self, out, target):
         if self.args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
-            recon_x, x = loss_functions.reshape_inputs(recon_x, x, input_size=(28 * 28, ))
-            LOSS = F.binary_cross_entropy(recon_x, x, reduction='sum')
+            out, target = loss_functions.reshape_inputs(out, target, input_size=(28 * 28, ))
+            LOSS = F.binary_cross_entropy(out, target, reduction='sum')
         elif self.args.dataset == 'TreesV2':
-            recon_x, x = loss_functions.reshape_inputs(recon_x, x, input_size=(28 * 28, ))
+            out, target = loss_functions.reshape_inputs(out, target, input_size=(28 * 28, ))
             LOSS = (
-                0.5 * F.binary_cross_entropy(recon_x, x, reduction='sum') +
-                0.5 * F.l1_loss(recon_x, x, reduction='sum')
+                0.5 * F.binary_cross_entropy(out, target, reduction='sum') +
+                0.5 * F.l1_loss(out, target, reduction='sum')
             )
         elif self.args.dataset == 'TreesV1':
             # TODO: MIOU, Total Variation, SSIM, F1, EMD
-            LOSS = loss_functions.perceptual_loss(recon_x, x, device=self.args.device)
+
+            LOSS = (
+                40 * loss_functions.reconstruction_loss(out, target) +
+                10 * loss_functions.total_variation_lost(out, target, p=1,  device=self.args.device)
+            )
 
             # gap_cnn
-            # LOSS = F.mse_loss(recon_x, x)
+            # LOSS = F.mse_loss(out, target)
+
+            # LOSS = loss_functions.perceptual_loss(out, target, device=self.args.device)
 
             # LOSS = (
-            #     F.mse_loss(recon_x, x.view(-1, 64 * 64)) +
-            #     loss_functions.edge_loss(recon_x.view(-1, 1, 64, 64), x, device=self.args.device)
+            #     loss_functions.reconstruction_loss(out, target) +
+            #     loss_functions.edge_loss(out, target, device=self.args.device)
             # )
+
             # LOSS = (
-            #     0.5 * F.mse_loss(recon_x, x.view(-1, 64 * 64)) +
-            #     0.5 * F.l1_loss(recon_x, x.view(-1, 64 * 64), reduction='sum')
+            #     0.5 *  loss_functions.reconstruction_loss(out, target) +
+            #     0.5 * F.l1_loss(out, target, reduction='sum')
             # )
         else:
             raise NotImplementedError
