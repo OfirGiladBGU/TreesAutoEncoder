@@ -132,7 +132,7 @@ if __name__ == "__main__":
     args.dataset = 'TreesV1'
     # args.dataset = 'TreesV2'
 
-    args.epochs = 5
+    args.epochs = 1
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     if args.dataset == 'CIFAR10':
         args.input_size = (3, 32, 32)
     if args.dataset == 'TreesV1':
-        args.input_size = (1, 64, 64)
+        args.input_size = (1, 32, 32)
     if args.dataset == 'TreesV2':
         args.input_size = (1, 28, 28)
 

@@ -179,13 +179,13 @@ def create_dataset_depth_2d_projections():
 ####################
 def create_dataset_original_images():
     folder_path1 = "../parse2022/preds"
-    org_folder1 = "./parse_preds_mini_cropped_v3"
+    org_folder1 = "./parse_preds_mini_cropped_v4"
 
     folder_path2 = "../parse2022/labels"
-    org_folder2 = "./parse_labels_mini_cropped_v3"
+    org_folder2 = "./parse_labels_mini_cropped_v4"
 
-    size = (28, 28, 28)
-    step = 14
+    size = (32, 32, 32)
+    step = 16
     white_points_upper_threshold = size[0] * size[0] * 0.8
     white_points_lower_threshold = size[0] * size[0] * 0.1
 
@@ -289,7 +289,7 @@ def create_dataset_original_images():
                 # convert_numpy_to_nii_gz(mini_cube1, save_name="1", save=True)
                 # convert_numpy_to_nii_gz(mini_cube2, save_name="2", save=True)
 
-        if batch_idx == 1:
+        if batch_idx == 10:
             break
 
 
