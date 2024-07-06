@@ -26,8 +26,8 @@ def _calculate_depth_projection(data_3d, axis):
 def project_3d_to_2d(data_3d,
                      front=False,
                      back=False,
-                     up=False,
-                     down=False,
+                     top=False,
+                     bottom=False,
                      left=False,
                      right=False):
     projections = dict()
@@ -42,31 +42,31 @@ def project_3d_to_2d(data_3d,
 
     # Back projection (XY plane)
     if back:
-        flipped_data_3d = data_3d[:, :, ::-1]
+        rotated_data_3d = np.rot90(data_3d, k=2, axes=(2, 1))
 
         # Option 1
         # projections["back_image"] = np.max(flipped_data_3d, axis=2)
 
         # Option 2
-        projections["back_image"] = _calculate_depth_projection(flipped_data_3d, axis=2)
+        projections["back_image"] = _calculate_depth_projection(rotated_data_3d, axis=2)
 
-    # Up projection (XZ plane)
-    if up:
+    # Top projection (XZ plane)
+    if top:
         # Option 1
-        # projections["up_image"] = np.max(data_3d, axis=1)
+        # projections["top_image"] = np.max(data_3d, axis=1)
 
         # Option 2
-        projections["up_image"] = _calculate_depth_projection(data_3d, axis=1)
+        projections["top_image"] = _calculate_depth_projection(data_3d, axis=1)
 
-    # Down projection (XZ plane)
-    if down:
-        flipped_data_3d = data_3d[:, ::-1, :]
+    # Bottom projection (XZ plane)
+    if bottom:
+        rotated_data_3d = np.rot90(data_3d, k=2, axes=(1, 0))
 
         # Option 1
-        # projections["down_image"] = np.max(flipped_data_3d, axis=1)
+        # projections["bottom_image"] = np.max(rotated_data_3d, axis=1)
 
         # Option 2
-        projections["down_image"] = _calculate_depth_projection(flipped_data_3d, axis=1)
+        projections["bottom_image"] = _calculate_depth_projection(rotated_data_3d, axis=1)
 
     # Left projection (YZ plane)
     if left:
@@ -78,13 +78,13 @@ def project_3d_to_2d(data_3d,
 
     # Right projection (YZ plane)
     if right:
-        flipped_data_3d = data_3d[::-1, :, :]
+        rotated_data_3d = np.rot90(data_3d, k=2, axes=(0, 2))
 
         # Option 1
-        # projections["right_image"] = np.max(flipped_data_3d, axis=0)
+        # projections["right_image"] = np.max(rotated_data_3d, axis=0)
 
         # Option 2
-        projections["right_image"] = _calculate_depth_projection(flipped_data_3d, axis=0)
+        projections["right_image"] = _calculate_depth_projection(rotated_data_3d, axis=0)
 
     return projections
 
@@ -163,44 +163,44 @@ def create_dataset_original_images():
 
         for mini_box_id, (mini_cube1, mini_cube2) in enumerate(zip(mini_cubes1, mini_cubes2)):
             projections1 = project_3d_to_2d(mini_cube1,
-                                            front=True, back=True, up=True, down=True, left=True, right=True)
+                                            front=True, back=True, top=True, bottom=True, left=True, right=True)
             front_image1 = projections1["front_image"]
             back_image1 = projections1["back_image"]
-            up_image1 = projections1["up_image"]
-            down_image1 = projections1["down_image"]
+            top_image1 = projections1["top_image"]
+            bottom_image1 = projections1["bottom_image"]
             left_image1 = projections1["left_image"]
             right_image1 = projections1["right_image"]
 
             projections2 = project_3d_to_2d(mini_cube2,
-                                            front=True, back=True, up=True, down=True, left=True, right=True)
+                                            front=True, back=True, top=True, bottom=True, left=True, right=True)
             front_image2 = projections2["front_image"]
             back_image2 = projections2["back_image"]
-            up_image2 = projections2["up_image"]
-            down_image2 = projections2["down_image"]
+            top_image2 = projections2["top_image"]
+            bottom_image2 = projections2["bottom_image"]
             left_image2 = projections2["left_image"]
             right_image2 = projections2["right_image"]
 
             # Repair the images
             front_image1 = image_outlier_removal(front_image1, front_image2)
             back_image2 = image_outlier_removal(back_image1, back_image2)
-            up_image1 = image_outlier_removal(up_image1, up_image2)
-            down_image1 = image_outlier_removal(down_image1, down_image2)
+            top_image1 = image_outlier_removal(top_image1, top_image2)
+            bottom_image1 = image_outlier_removal(bottom_image1, bottom_image2)
             left_image1 = image_outlier_removal(left_image1, left_image2)
             right_image1 = image_outlier_removal(right_image1, right_image2)
 
             condition1 = (
                 white_points_upper_threshold > np.count_nonzero(front_image1) > white_points_lower_threshold and
                 white_points_upper_threshold > np.count_nonzero(back_image1) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(up_image1) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(down_image1) > white_points_lower_threshold and
+                white_points_upper_threshold > np.count_nonzero(top_image1) > white_points_lower_threshold and
+                white_points_upper_threshold > np.count_nonzero(bottom_image1) > white_points_lower_threshold and
                 white_points_upper_threshold > np.count_nonzero(left_image1) > white_points_lower_threshold and
                 white_points_upper_threshold > np.count_nonzero(right_image1) > white_points_lower_threshold
             )
             condition2 = (
                 white_points_upper_threshold > np.count_nonzero(front_image2) > white_points_lower_threshold and
                 white_points_upper_threshold > np.count_nonzero(back_image2) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(up_image2) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(down_image2) > white_points_lower_threshold and
+                white_points_upper_threshold > np.count_nonzero(top_image2) > white_points_lower_threshold and
+                white_points_upper_threshold > np.count_nonzero(bottom_image2) > white_points_lower_threshold and
                 white_points_upper_threshold > np.count_nonzero(left_image2) > white_points_lower_threshold and
                 white_points_upper_threshold > np.count_nonzero(right_image2) > white_points_lower_threshold
             )
@@ -210,18 +210,20 @@ def create_dataset_original_images():
                 # Folder1
                 cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_front.png", front_image1)
                 cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_back.png", back_image1)
-                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_up.png", up_image1)
-                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_down.png", down_image1)
+                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_top.png", top_image1)
+                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_bottom.png", bottom_image1)
                 cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_left.png", left_image1)
                 cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_right.png", right_image1)
 
                 # Folder2
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_front.png", front_image2)
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_back.png", back_image2)
-                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_up.png", up_image2)
-                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_down.png", down_image2)
+                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_top.png", top_image2)
+                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_bottom.png", bottom_image2)
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_left.png", left_image2)
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_right.png", right_image2)
+
+                break
 
         if batch_idx == 1:
             break
