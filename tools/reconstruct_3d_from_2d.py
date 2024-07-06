@@ -59,7 +59,7 @@ def reverse_rotations(numpy_image, view_type):
 
 
 def reconstruct_3d_from_2d(format_of_2d_images):
-    images_6_views = ['top', 'front', 'right']
+    images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
     data_3d_list = list()
     for image_view in images_6_views:
         image_path = format_of_2d_images.replace("<VIEW>", image_view)
