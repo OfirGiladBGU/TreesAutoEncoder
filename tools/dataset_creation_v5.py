@@ -266,7 +266,9 @@ def create_dataset_original_images():
                 white_points_upper_threshold > np.count_nonzero(right_image2) > white_points_lower_threshold
             )
 
-            if mini_box_id==3253 or condition1 and condition2:
+            # if mini_box_id==3253 or condition1 and condition2:
+
+            if condition1 and condition2:
                 mini_box_id_str = str(mini_box_id).zfill(total_cubes_digits_count)
                 # Folder1
                 cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_front.png", front_image1)
@@ -284,8 +286,8 @@ def create_dataset_original_images():
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_left.png", left_image2)
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_right.png", right_image2)
 
-                convert_numpy_to_nii_gz(mini_cube1, save_name="1", save=True)
-                convert_numpy_to_nii_gz(mini_cube2, save_name="2", save=True)
+                # convert_numpy_to_nii_gz(mini_cube1, save_name="1", save=True)
+                # convert_numpy_to_nii_gz(mini_cube2, save_name="2", save=True)
 
         if batch_idx == 1:
             break
