@@ -113,6 +113,40 @@ def image_outlier_removal(pred, label):
     return repaired_image
 
 
+##################
+# 2D Projections #
+##################
+def create_dataset_depth_2d_projections():
+    folder_path = "../parse2022/labels"
+    org_folder = "./parse_labels_2d"
+
+    # folder_path = "../parse2022/preds"
+    # org_folder = "./parse_preds_2d"
+
+    os.makedirs(org_folder, exist_ok=True)
+    data_filepaths = os.listdir(folder_path)
+    for data_filepath in data_filepaths:
+        output_idx = data_filepath.split(".")[0]
+        data_filepath = os.path.join(folder_path, data_filepath)
+        ct_numpy = convert_nii_to_numpy(data_file=data_filepath)
+
+        projection = project_3d_to_2d(ct_numpy,
+                                      front=True, back=True, top=True, bottom=True, left=True, right=True)
+        front_image = projection["front_image"]
+        back_image = projection["back_image"]
+        top_image = projection["top_image"]
+        bottom_image = projection["bottom_image"]
+        left_image = projection["left_image"]
+        right_image = projection["right_image"]
+
+        cv2.imwrite(f"{org_folder}/{output_idx}_front.png", front_image)
+        cv2.imwrite(f"{org_folder}/{output_idx}_back.png", back_image)
+        cv2.imwrite(f"{org_folder}/{output_idx}_top.png", top_image)
+        cv2.imwrite(f"{org_folder}/{output_idx}_bottom.png", bottom_image)
+        cv2.imwrite(f"{org_folder}/{output_idx}_left.png", left_image)
+        cv2.imwrite(f"{org_folder}/{output_idx}_right.png", right_image)
+
+
 ####################
 # Original Dataset #
 ####################
@@ -230,6 +264,7 @@ def create_dataset_original_images():
 
 
 def main():
+    # create_dataset_depth_2d_projections()
     create_dataset_original_images()
 
 
