@@ -71,13 +71,13 @@ class Trainer(object):
             # TODO: MIOU, Total Variation, SSIM, F1, EMD
 
             # ae
-            # LOSS = (
-            #     40 * loss_functions.reconstruction_loss(out, target) +
-            #     10 * loss_functions.total_variation_lost(out, target, p=1,  device=self.args.device)
-            # )
+            LOSS = (
+                40 * loss_functions.reconstruction_loss(out, target) +
+                10 * loss_functions.total_variation_lost(out, target, p=1,  device=self.args.device)
+            )
 
             # gap_cnn / ae_v2
-            LOSS = F.mse_loss(out, target)
+            # LOSS = F.mse_loss(out, target)
             # LOSS = F.mse_loss(out, target, reduction='sum')
 
             # LOSS = loss_functions.fill_holes_loss(out, target, original)
