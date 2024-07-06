@@ -103,8 +103,8 @@ def create_dataset_original_images():
 
     size = (64, 64, 64)
     step = 32
-    white_points_upper_threshold = 64 * 64 * 0.8
-    white_points_lower_threshold = 64 * 64 * 0.1
+    white_points_upper_threshold = size[0] * size[0] * 0.8
+    white_points_lower_threshold = size[0] * size[0] * 0.1
 
     os.makedirs(org_folder1, exist_ok=True)
     os.makedirs(org_folder2, exist_ok=True)
@@ -175,7 +175,7 @@ def create_dataset_original_images():
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id}_up.png", up_image2)
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id}_left.png", left_image2)
 
-        if batch_idx == 20:
+        if batch_idx == 10:
             break
 
 
