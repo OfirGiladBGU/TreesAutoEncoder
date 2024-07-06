@@ -115,6 +115,7 @@ def project_3d_to_2d(data_3d,
 
     return projections
 
+
 def crop_mini_cubes(cropped_data_3d, size=(28, 28, 28), step=14):
     mini_cubes = []
     for i in range(0, cropped_data_3d.shape[0], step):
