@@ -19,7 +19,15 @@ def reverse_rotations(numpy_image, view_type):
             gray_value = int(numpy_image[i, j])
             if gray_value > 0:
                 rescale_gray_value = int(numpy_image.shape[0] * (1 - (gray_value / 255)))
-                data_3d[i, j, rescale_gray_value] = 255
+
+                if view_type in ["front", "back"]:
+                    data_3d[i, j, rescale_gray_value] = 255
+                elif view_type in ["top", "bottom"]:
+                    data_3d[rescale_gray_value, i, j] = 255
+                elif view_type in ["right", "left"]:
+                    data_3d[i, rescale_gray_value, j] = 255
+                else:
+                    raise ValueError("Invalid view type")
 
     # Reverse the rotations
     if view_type == "front":
@@ -51,7 +59,7 @@ def reverse_rotations(numpy_image, view_type):
 
 
 def reconstruct_3d_from_2d(format_of_2d_images):
-    images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
+    images_6_views = ['top', 'front', 'right']
     data_3d_list = list()
     for image_view in images_6_views:
         image_path = format_of_2d_images.replace("<VIEW>", image_view)
