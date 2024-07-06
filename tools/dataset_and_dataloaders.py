@@ -4,7 +4,7 @@ import cv2
 import os
 
 
-class TreesCustomDataset(torch.utils.data.Dataset):
+class TreesCustomDatasetV1(torch.utils.data.Dataset):
     def __init__(self, data_paths: list, transform=None):
         self.data_paths = data_paths
         self.transform = transform
@@ -58,6 +58,59 @@ class TreesCustomDataset(torch.utils.data.Dataset):
             return image_numpy1, image_numpy2
 
 
+class TreesCustomDatasetV2(torch.utils.data.Dataset):
+    def __init__(self, data_paths: list, transform=None):
+        self.data_paths = data_paths
+        self.transform = transform
+
+        self.paths_count = len(data_paths)
+        if self.paths_count == 1:
+            self.data_files1 = os.listdir(data_paths[0])
+            self.data_files1.sort()
+        elif self.paths_count == 2:
+            self.data_files1 = os.listdir(data_paths[0])
+            self.data_files1.sort()
+            self.data_files2 = os.listdir(data_paths[1])
+            self.data_files2.sort()
+        else:
+            raise ValueError("Invalid number of data paths")
+
+        self.scans_count = int(len(self.data_files1) / 6)
+
+    def __len__(self):
+        return self.scans_count
+
+    def __getitem__(self, idx):
+        data_idx = idx * 6
+
+        batch1 = list()
+        batch2 = list()
+        for i in range(6):
+            data_file1 = os.path.join(self.data_paths[0], self.data_files1[data_idx + i])
+            image_numpy1 = cv2.imread(data_file1)
+            image_numpy1 = cv2.cvtColor(image_numpy1, cv2.COLOR_BGR2GRAY)
+
+            if self.transform is not None:
+                image_numpy1 = self.transform(image_numpy1)
+
+            if self.paths_count == 1:
+                batch1.append(image_numpy1)
+                batch2.append(-1)
+
+            elif self.paths_count == 2:
+                data_file2 = os.path.join(self.data_paths[1], self.data_files2[data_idx + i])
+                image_numpy2 = cv2.imread(data_file2)
+                image_numpy2 = cv2.cvtColor(image_numpy2, cv2.COLOR_BGR2GRAY)
+
+                if self.transform is not None:
+                    image_numpy2 = self.transform(image_numpy2)
+
+                batch1.append(image_numpy1)
+                batch2.append(image_numpy2)
+
+        return batch1, batch2
+
+
 class TreesCustomDataloader:
     def __init__(self, data_paths, args, transform=None):
         self.data_paths = data_paths
@@ -74,7 +127,7 @@ class TreesCustomDataloader:
             val_dataloader: Val loader with 0.1 of the data.
         """
 
-        tree_dataset = TreesCustomDataset(self.data_paths, self.transform)
+        tree_dataset = TreesCustomDatasetV1(self.data_paths, self.transform)
         dataset_size = len(tree_dataset)
         train_size = int(dataset_size * 0.9)
         val_size = dataset_size - train_size
