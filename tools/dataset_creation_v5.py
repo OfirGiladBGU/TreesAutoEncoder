@@ -13,6 +13,13 @@ def convert_nii_to_numpy(data_file):
     return ct_numpy
 
 
+def convert_numpy_to_nii_gz(numpy_array, save_name="", save=False):
+    ct_nii_gz = nib.Nifti1Image(numpy_array, affine=np.eye(4))
+    if save and save_name != "":
+        nib.save(ct_nii_gz, f"{save_name}.nii.gz")
+    return ct_nii_gz
+
+
 def _calculate_depth_projection(data_3d, axis):
     depth_projection = np.argmax(data_3d, axis=axis)
     max_projection = np.max(data_3d, axis=axis)
@@ -21,6 +28,8 @@ def _calculate_depth_projection(data_3d, axis):
     return np.where(max_projection > 0,
                     (255 * (1 - (depth_projection / axis_size))).astype(int),
                     0)
+
+    # return (255 * (1 - (depth_projection / axis_size))).astype(int)
 
 
 def project_3d_to_2d(data_3d,
@@ -32,59 +41,77 @@ def project_3d_to_2d(data_3d,
                      right=False):
     projections = dict()
 
+    rotated_data_3d = data_3d
+    rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 2))
+    rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(1, 2))
+    rotated_data_3d = np.flip(rotated_data_3d, axis=1)
+
     # Front projection (XY plane)
     if front:
+        flipped_data_3d = rotated_data_3d
+
         # Option 1
         # projections["front_image"] = np.max(data_3d, axis=2)
 
         # Option 2
-        projections["front_image"] = _calculate_depth_projection(data_3d, axis=2)
+        projections["front_image"] = _calculate_depth_projection(flipped_data_3d, axis=2)
 
     # Back projection (XY plane)
     if back:
-        rotated_data_3d = np.rot90(data_3d, k=2, axes=(2, 1))
+        flipped_data_3d = rotated_data_3d
+        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(1, 2))
 
         # Option 1
         # projections["back_image"] = np.max(flipped_data_3d, axis=2)
 
         # Option 2
-        projections["back_image"] = _calculate_depth_projection(rotated_data_3d, axis=2)
+        projections["back_image"] = _calculate_depth_projection(flipped_data_3d, axis=2)
 
-    # Top projection (XZ plane)
-    if top:
-        # Option 1
-        # projections["top_image"] = np.max(data_3d, axis=1)
-
-        # Option 2
-        projections["top_image"] = _calculate_depth_projection(data_3d, axis=1)
-
-    # Bottom projection (XZ plane)
-    if bottom:
-        rotated_data_3d = np.rot90(data_3d, k=2, axes=(1, 0))
+        # Right projection (YZ plane)
+    if right:
+        flipped_data_3d = rotated_data_3d
+        flipped_data_3d = np.flip(flipped_data_3d, axis=1)
 
         # Option 1
-        # projections["bottom_image"] = np.max(rotated_data_3d, axis=1)
+        # projections["right_image"] = np.max(flipped_data_3d, axis=0)
 
         # Option 2
-        projections["bottom_image"] = _calculate_depth_projection(rotated_data_3d, axis=1)
+        projections["right_image"] = _calculate_depth_projection(flipped_data_3d, axis=1)
 
     # Left projection (YZ plane)
     if left:
+        flipped_data_3d = rotated_data_3d
+        flipped_data_3d = np.flip(flipped_data_3d, axis=1)
+        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(1, 2))
+
         # Option 1
         # projections["left_image"] = np.max(data_3d, axis=0)
 
         # Option 2
-        projections["left_image"] = _calculate_depth_projection(data_3d, axis=0)
+        projections["left_image"] = _calculate_depth_projection(flipped_data_3d, axis=1)
 
-    # Right projection (YZ plane)
-    if right:
-        rotated_data_3d = np.rot90(data_3d, k=2, axes=(0, 2))
+    # Top projection (XZ plane)
+    if top:
+        flipped_data_3d = rotated_data_3d
+        flipped_data_3d = np.rot90(flipped_data_3d, k=1, axes=(1, 2))
 
         # Option 1
-        # projections["right_image"] = np.max(rotated_data_3d, axis=0)
+        # projections["top_image"] = np.max(data_3d, axis=1)
 
         # Option 2
-        projections["right_image"] = _calculate_depth_projection(rotated_data_3d, axis=0)
+        projections["top_image"] = _calculate_depth_projection(flipped_data_3d, axis=0)
+
+    # Bottom projection (XZ plane)
+    if bottom:
+        flipped_data_3d = rotated_data_3d
+        flipped_data_3d = np.rot90(flipped_data_3d, k=1, axes=(1, 2))
+        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(0, 1))
+
+        # Option 1
+        # projections["bottom_image"] = np.max(flipped_data_3d, axis=1)
+
+        # Option 2
+        projections["bottom_image"] = _calculate_depth_projection(flipped_data_3d, axis=0)
 
     return projections
 
@@ -145,6 +172,7 @@ def create_dataset_depth_2d_projections():
         cv2.imwrite(f"{org_folder}/{output_idx}_bottom.png", bottom_image)
         cv2.imwrite(f"{org_folder}/{output_idx}_left.png", left_image)
         cv2.imwrite(f"{org_folder}/{output_idx}_right.png", right_image)
+        break
 
 
 ####################
@@ -239,7 +267,7 @@ def create_dataset_original_images():
                 white_points_upper_threshold > np.count_nonzero(right_image2) > white_points_lower_threshold
             )
 
-            if condition1 and condition2:
+            if mini_box_id==3253 or condition1 and condition2:
                 mini_box_id_str = str(mini_box_id).zfill(total_cubes_digits_count)
                 # Folder1
                 cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_front.png", front_image1)
@@ -256,6 +284,9 @@ def create_dataset_original_images():
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_bottom.png", bottom_image2)
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_left.png", left_image2)
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_right.png", right_image2)
+
+                convert_numpy_to_nii_gz(mini_cube1, save_name="1", save=True)
+                convert_numpy_to_nii_gz(mini_cube2, save_name="2", save=True)
 
                 break
 
