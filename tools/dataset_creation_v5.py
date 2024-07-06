@@ -67,29 +67,6 @@ def project_3d_to_2d(data_3d,
         # Option 2
         projections["back_image"] = _calculate_depth_projection(flipped_data_3d, axis=2)
 
-        # Right projection (YZ plane)
-    if right:
-        flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.flip(flipped_data_3d, axis=1)
-
-        # Option 1
-        # projections["right_image"] = np.max(flipped_data_3d, axis=0)
-
-        # Option 2
-        projections["right_image"] = _calculate_depth_projection(flipped_data_3d, axis=1)
-
-    # Left projection (YZ plane)
-    if left:
-        flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.flip(flipped_data_3d, axis=1)
-        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(1, 2))
-
-        # Option 1
-        # projections["left_image"] = np.max(data_3d, axis=0)
-
-        # Option 2
-        projections["left_image"] = _calculate_depth_projection(flipped_data_3d, axis=1)
-
     # Top projection (XZ plane)
     if top:
         flipped_data_3d = rotated_data_3d
@@ -113,8 +90,30 @@ def project_3d_to_2d(data_3d,
         # Option 2
         projections["bottom_image"] = _calculate_depth_projection(flipped_data_3d, axis=0)
 
-    return projections
+    # Right projection (YZ plane)
+    if right:
+        flipped_data_3d = rotated_data_3d
+        flipped_data_3d = np.flip(flipped_data_3d, axis=1)
 
+        # Option 1
+        # projections["right_image"] = np.max(flipped_data_3d, axis=0)
+
+        # Option 2
+        projections["right_image"] = _calculate_depth_projection(flipped_data_3d, axis=1)
+
+    # Left projection (YZ plane)
+    if left:
+        flipped_data_3d = rotated_data_3d
+        flipped_data_3d = np.flip(flipped_data_3d, axis=1)
+        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(1, 2))
+
+        # Option 1
+        # projections["left_image"] = np.max(data_3d, axis=0)
+
+        # Option 2
+        projections["left_image"] = _calculate_depth_projection(flipped_data_3d, axis=1)
+
+    return projections
 
 def crop_mini_cubes(cropped_data_3d, size=(28, 28, 28), step=14):
     mini_cubes = []
@@ -172,7 +171,6 @@ def create_dataset_depth_2d_projections():
         cv2.imwrite(f"{org_folder}/{output_idx}_bottom.png", bottom_image)
         cv2.imwrite(f"{org_folder}/{output_idx}_left.png", left_image)
         cv2.imwrite(f"{org_folder}/{output_idx}_right.png", right_image)
-        break
 
 
 ####################
@@ -287,8 +285,6 @@ def create_dataset_original_images():
 
                 convert_numpy_to_nii_gz(mini_cube1, save_name="1", save=True)
                 convert_numpy_to_nii_gz(mini_cube2, save_name="2", save=True)
-
-                break
 
         if batch_idx == 1:
             break
