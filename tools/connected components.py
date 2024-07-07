@@ -11,9 +11,9 @@ src = cv2.imread('./parse_preds_mini_cropped_v4/PA000005_vessel_02570_right.png'
 # print(output)
 
 
-_, thresh = cv2.threshold(src,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+_, thresh = cv2.threshold(src, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 connectivity = 4  # You need to choose 4 or 8 for connectivity type
-num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(thresh , connectivity , cv2.CV_32S)
+num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(thresh, connectivity, cv2.CV_32S)
 
 print(num_labels)
 print(labels)
