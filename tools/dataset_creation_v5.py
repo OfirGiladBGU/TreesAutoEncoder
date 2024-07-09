@@ -140,6 +140,17 @@ def image_outlier_removal(pred, label):
     return repaired_image
 
 
+def image_missing_connected_components_removal(pred, label):
+    pred_missing_components = np.maximum(label - pred, 0)
+
+    threshold_image = pred_missing_components.astype(np.uint8)
+    threshold_image[threshold_image > 0] = 255
+    connectivity = 4
+    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(threshold_image, connectivity, cv2.CV_32S)
+
+    return True
+
+
 ##################
 # 2D Projections #
 ##################
@@ -243,7 +254,7 @@ def create_dataset_original_images():
 
             # Repair the images
             front_image1 = image_outlier_removal(front_image1, front_image2)
-            back_image2 = image_outlier_removal(back_image1, back_image2)
+            back_image1 = image_outlier_removal(back_image1, back_image2)
             top_image1 = image_outlier_removal(top_image1, top_image2)
             bottom_image1 = image_outlier_removal(bottom_image1, bottom_image2)
             left_image1 = image_outlier_removal(left_image1, left_image2)
