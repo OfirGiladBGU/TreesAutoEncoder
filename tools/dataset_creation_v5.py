@@ -136,8 +136,8 @@ def crop_mini_cubes(cropped_data_3d, size=(28, 28, 28), step=14):
 
 def image_outlier_removal(pred, label):
     image_outlier = np.maximum(pred - label, 0)
-    repaired_image = pred - image_outlier
-    return repaired_image
+    repaired_pred = pred - image_outlier
+    return repaired_pred
 
 
 def image_missing_connected_components_removal(pred, label):
@@ -148,7 +148,15 @@ def image_missing_connected_components_removal(pred, label):
     connectivity = 4
     num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(threshold_image, connectivity, cv2.CV_32S)
 
-    return True
+    area_threshold = 10
+    for i in range(num_labels):
+        if stats[i, cv2.CC_STAT_AREA] < area_threshold:
+            # Set as 0 pixels of connected component with area smaller than 10 pixels
+            pred_missing_components[labels == i] = 0
+
+    # Remove from the label the missing connected components in the pred that are have area bigger than 10 pixels
+    repaired_label = label - pred_missing_components
+    return repaired_label
 
 
 ##################
@@ -252,13 +260,21 @@ def create_dataset_original_images():
             left_image2 = projections2["left_image"]
             right_image2 = projections2["right_image"]
 
-            # Repair the images
+            # Repair the preds
             front_image1 = image_outlier_removal(front_image1, front_image2)
             back_image1 = image_outlier_removal(back_image1, back_image2)
             top_image1 = image_outlier_removal(top_image1, top_image2)
             bottom_image1 = image_outlier_removal(bottom_image1, bottom_image2)
             left_image1 = image_outlier_removal(left_image1, left_image2)
             right_image1 = image_outlier_removal(right_image1, right_image2)
+
+            # Repair the labels
+            front_image2 = image_missing_connected_components_removal(front_image1, front_image2)
+            back_image2 = image_missing_connected_components_removal(back_image1, back_image2)
+            top_image2 = image_missing_connected_components_removal(top_image1, top_image2)
+            bottom_image2 = image_missing_connected_components_removal(bottom_image1, bottom_image2)
+            left_image2 = image_missing_connected_components_removal(left_image1, left_image2)
+            right_image2 = image_missing_connected_components_removal(right_image1, right_image2)
 
             condition1 = (
                 white_points_upper_threshold > np.count_nonzero(front_image1) > white_points_lower_threshold and
@@ -281,7 +297,7 @@ def create_dataset_original_images():
 
             if condition1 and condition2:
                 mini_box_id_str = str(mini_box_id).zfill(total_cubes_digits_count)
-                # Folder1
+                # Folder1 - preds
                 cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_front.png", front_image1)
                 cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_back.png", back_image1)
                 cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_top.png", top_image1)
@@ -289,7 +305,7 @@ def create_dataset_original_images():
                 cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_left.png", left_image1)
                 cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_right.png", right_image1)
 
-                # Folder2
+                # Folder2 - labels
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_front.png", front_image2)
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_back.png", back_image2)
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_top.png", top_image2)
