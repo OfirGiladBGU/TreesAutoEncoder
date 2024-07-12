@@ -66,7 +66,7 @@ def predict_model(model):
 
         # Create a grid of images
         columns = 3
-        rows = 16
+        rows = 25
         fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
         ax = []
         for i in range(rows):
@@ -132,7 +132,7 @@ if __name__ == "__main__":
     args.dataset = 'TreesV1'
     # args.dataset = 'TreesV2'
 
-    args.epochs = 1
+    args.epochs = 10
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")
@@ -144,6 +144,7 @@ if __name__ == "__main__":
         args.input_size = (3, 32, 32)
     if args.dataset == 'TreesV1':
         args.input_size = (1, 32, 32)
+        # args.input_size = (1, 64, 64)
     if args.dataset == 'TreesV2':
         args.input_size = (1, 28, 28)
 

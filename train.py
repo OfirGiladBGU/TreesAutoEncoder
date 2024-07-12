@@ -53,6 +53,13 @@ class Trainer(object):
             raise Exception("Dataset not supported")
 
     def loss_function(self, out, target, original=None):
+        """
+        :param out: model output on the 'original' input
+        :param target: the target data that the model should output
+        :param original: the original input data for the model
+        :return:
+        """
+
         if self.args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
             out, target = loss_functions.reshape_inputs(out, target, input_size=(28 * 28, ))
             LOSS = F.binary_cross_entropy(out, target, reduction='sum')
@@ -73,7 +80,8 @@ class Trainer(object):
             # ae
             LOSS = (
                 40 * loss_functions.reconstruction_loss(out, target) +
-                10 * loss_functions.total_variation_lost(out, target, p=1,  device=self.args.device)
+                10 * loss_functions.total_variation_lost(out, target, p=1,  device=self.args.device) +
+                10 * loss_functions.unfilled_holes_loss(out, target, original)
             )
 
             # gap_cnn / ae_v2

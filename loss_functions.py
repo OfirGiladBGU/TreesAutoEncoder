@@ -141,3 +141,16 @@ def earth_mover_distance(out, target, input_size=(1, 64, 64)):
     y_pred = scaled_out
     y_true = scaled_target
     return torch.mean(torch.square(torch.cumsum(y_true, dim=-1) - torch.cumsum(y_pred, dim=-1)), dim=-1)
+
+
+def unfilled_holes_loss(out, target, original):
+    target_holes = target - original
+    target_holes[target_holes < 0] = 0
+
+    out_holes = out - original
+    out_holes[out_holes < 0] = 0
+
+    unfilled_holes = target_holes - out_holes
+    unfilled_holes[unfilled_holes < 0] = 0
+    diff = torch.sum(unfilled_holes)
+    return diff
