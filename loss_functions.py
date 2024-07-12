@@ -144,13 +144,26 @@ def earth_mover_distance(out, target, input_size=(1, 64, 64)):
 
 
 def unfilled_holes_loss(out, target, original):
-    target_holes = target - original
-    target_holes[target_holes < 0] = 0
+    target_filled_holes = target - original
+    target_filled_holes[target_filled_holes < 0] = 0
 
-    out_holes = out - original
-    out_holes[out_holes < 0] = 0
+    out_missing_holes = target_filled_holes - out
+    out_missing_holes[out_missing_holes < 0] = 0
 
-    unfilled_holes = target_holes - out_holes
-    unfilled_holes[unfilled_holes < 0] = 0
-    diff = torch.sum(unfilled_holes)
+    diff = torch.sum(out_missing_holes)
     return diff
+
+
+# TODO: fix
+def weighted_pixels_diff_loss(out, original):
+    output_diff = out - original
+
+    misclassified_pixels = output_diff
+    misclassified_pixels[original == 0] = 0
+    misclassified_pixels_error = torch.sum(torch.abs(misclassified_pixels))
+
+    new_pixels_error = output_diff
+    new_pixels_error[original != 0] = 0
+    new_pixels_error = torch.sum(torch.abs(new_pixels_error))
+
+    return 0.8 * misclassified_pixels_error + 0.2 * new_pixels_error
