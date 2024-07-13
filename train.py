@@ -78,10 +78,15 @@ class Trainer(object):
             # TODO: MIOU, Total Variation, SSIM, F1, EMD
 
             # ae
+            # LOSS = (
+            #     40 * loss_functions.reconstruction_loss(out, target) +
+            #     10 * loss_functions.total_variation_lost(out, target, p=1,  device=self.args.device) +
+            #     10 * loss_functions.unfilled_holes_loss(out, target, original)
+            # )
+
             LOSS = (
-                40 * loss_functions.reconstruction_loss(out, target) +
-                10 * loss_functions.total_variation_lost(out, target, p=1,  device=self.args.device) +
-                10 * loss_functions.unfilled_holes_loss(out, target, original)
+                20 * loss_functions.unfilled_holes_loss(out, target, original) +
+                10 * loss_functions.weighted_pixels_diff_loss(out, target, original)
             )
 
             # gap_cnn / ae_v2
