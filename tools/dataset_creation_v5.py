@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.ndimage import label
 import nibabel as nib
 import cv2
 import os
@@ -18,6 +19,21 @@ def convert_numpy_to_nii_gz(numpy_array, save_name="", save=False):
     if save and save_name != "":
         nib.save(ct_nii_gz, f"{save_name}.nii.gz")
     return ct_nii_gz
+
+
+def connected_components_3d(data_3d):
+    # Define the structure for connectivity
+    # Here, we use a structure that connects each voxel to its immediate neighbors
+    structure = np.ones((3, 3, 3), dtype=np.int8)  # 26-connectivity
+
+    # Label connected components
+    labeled_array, num_features = label(data_3d, structure=structure)
+
+    # print("Labeled Array:")
+    # print(labeled_array)
+    print("Number of features:", num_features)
+
+    return labeled_array, num_features
 
 
 def _calculate_depth_projection(data_3d, axis):
@@ -157,6 +173,26 @@ def image_missing_connected_components_removal(pred, label):
     # Remove from the label the missing connected components in the pred that are have area bigger than 10 pixels
     repaired_label = label - pred_missing_components
     return repaired_label
+
+
+#################
+# 3D Components #
+#################
+def convert_to_3d_components():
+    folder_path = "../parse2022/preds"
+    org_folder = "../parse2022/preds_components"
+
+    os.makedirs(org_folder, exist_ok=True)
+    data_filepaths = os.listdir(folder_path)
+    for data_filepath in data_filepaths:
+        data_filepath = os.path.join(folder_path, data_filepath)
+        ct_numpy = convert_nii_to_numpy(data_file=data_filepath)
+        data_3d_components, _ = connected_components_3d(data_3d=ct_numpy)
+
+        # Save results
+        new_filepath = data_filepath.replace('preds', 'preds_components')
+        output_save_name = os.path.splitext(os.path.splitext(new_filepath)[0])[0]  # To remove '.nii.gz'
+        convert_numpy_to_nii_gz(numpy_array=data_3d_components, save_name=output_save_name, save=True)
 
 
 ##################
@@ -321,6 +357,7 @@ def create_dataset_original_images():
 
 
 def main():
+    # convert_to_3d_components()
     # create_dataset_depth_2d_projections()
     create_dataset_original_images()
 
