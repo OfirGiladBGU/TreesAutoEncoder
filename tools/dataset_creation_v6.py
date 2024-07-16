@@ -487,6 +487,7 @@ def create_dataset_original_images():
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_right.png", right_image2)
 
                 # Folder3 - components
+                io.imshow(front_components)
                 plt.savefig(f"{org_folder3}/{output_idx}_{mini_box_id_str}_front_components.png")
                 io.imshow(back_components)
                 plt.savefig(f"{org_folder3}/{output_idx}_{mini_box_id_str}_back_components.png")
