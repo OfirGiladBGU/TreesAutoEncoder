@@ -4,6 +4,10 @@ import nibabel as nib
 import cv2
 import os
 
+from skimage import color
+from skimage import io
+import matplotlib.pyplot as plt
+import skimage
 
 #########
 # Utils #
@@ -327,11 +331,12 @@ def create_dataset_original_images():
 
     size = (32, 32, 32)
     step = 16
-    # white_points_upper_threshold = size[0] * size[0] * 0.8
-    # white_points_lower_threshold = size[0] * size[0] * 0.1
+    white_points_upper_threshold = size[0] * size[0] * 0.9
+    white_points_lower_threshold = size[0] * size[0] * 0.1
 
     os.makedirs(org_folder1, exist_ok=True)
     os.makedirs(org_folder2, exist_ok=True)
+    os.makedirs(org_folder3, exist_ok=True)
 
     data_filepaths1 = sorted(os.listdir(folder_path1))
     data_filepaths2 = sorted(os.listdir(folder_path2))
@@ -347,7 +352,7 @@ def create_dataset_original_images():
 
         data_filepath1 = os.path.join(folder_path1, data_filepath1)
         data_filepath2 = os.path.join(folder_path2, data_filepath2)
-        data_filepath3 = os.path.join(folder_path2, data_filepath3)
+        data_filepath3 = os.path.join(folder_path3, data_filepath3)
 
         ct_numpy1 = convert_nii_to_numpy(data_file=data_filepath1)
         ct_numpy2 = convert_nii_to_numpy(data_file=data_filepath2)
@@ -373,14 +378,16 @@ def create_dataset_original_images():
 
         total_cubes_digits_count = len(str(len(mini_cubes1)))
 
-        for mini_box_id in range(total_cubes_digits_count):
+        for mini_box_id in range(len(mini_cubes1)):
             mini_cube1 = mini_cubes1[mini_box_id]
             mini_cube2 = mini_cubes2[mini_box_id]
             mini_cube3 = mini_cubes3[mini_box_id]
 
             # check that there are 2 or more components to connect
             components_3d_indices = np.unique(mini_cube3)
-            components_3d_count = np.sum(components_3d_indices[components_3d_indices != 0])
+            components_3d_indices = list(components_3d_indices)
+            components_3d_indices.remove(0)
+            components_3d_count = len(components_3d_indices)
             if components_3d_count < 2:
                 continue
 
@@ -420,12 +427,18 @@ def create_dataset_original_images():
             right_image1 = image_outlier_removal(right_image1, right_image2)
 
             # Repair the components according to preds
-            front_components = np.where(front_image1 > 0, front_components, 0)
-            back_components = np.where(back_image1 > 0, back_components, 0)
-            top_components = np.where(top_image1 > 0, top_components, 0)
-            bottom_components = np.where(bottom_image1 > 0, bottom_components, 0)
-            left_components = np.where(left_image1 > 0, left_components, 0)
-            right_components = np.where(right_image1 > 0, right_components, 0)
+            front_components = color.label2rgb(label=np.where(front_image1 > 0, front_components, 0))
+            back_components = color.label2rgb(label=np.where(back_image1 > 0, back_components, 0))
+            top_components = color.label2rgb(label=np.where(top_image1 > 0, top_components, 0))
+            bottom_components = color.label2rgb(label=np.where(bottom_image1 > 0, bottom_components, 0))
+            left_components = color.label2rgb(label=np.where(left_image1 > 0, left_components, 0))
+            right_components = color.label2rgb(label=np.where(right_image1 > 0, right_components, 0))
+
+            # from skimage import io
+            # import matplotlib.pyplot as plt
+            # io.imshow(color.label2rgb(front_image1))
+            # plt.show()
+
 
             # Repair the labels
             front_image2 = image_missing_connected_components_removal(front_image1, front_image2)
@@ -435,63 +448,75 @@ def create_dataset_original_images():
             left_image2 = image_missing_connected_components_removal(left_image1, left_image2)
             right_image2 = image_missing_connected_components_removal(right_image1, right_image2)
 
-            # condition1 = (
-            #     white_points_upper_threshold > np.count_nonzero(front_image1) > white_points_lower_threshold and
-            #     white_points_upper_threshold > np.count_nonzero(back_image1) > white_points_lower_threshold and
-            #     white_points_upper_threshold > np.count_nonzero(top_image1) > white_points_lower_threshold and
-            #     white_points_upper_threshold > np.count_nonzero(bottom_image1) > white_points_lower_threshold and
-            #     white_points_upper_threshold > np.count_nonzero(left_image1) > white_points_lower_threshold and
-            #     white_points_upper_threshold > np.count_nonzero(right_image1) > white_points_lower_threshold
-            # )
-            # condition2 = (
-            #     white_points_upper_threshold > np.count_nonzero(front_image2) > white_points_lower_threshold and
-            #     white_points_upper_threshold > np.count_nonzero(back_image2) > white_points_lower_threshold and
-            #     white_points_upper_threshold > np.count_nonzero(top_image2) > white_points_lower_threshold and
-            #     white_points_upper_threshold > np.count_nonzero(bottom_image2) > white_points_lower_threshold and
-            #     white_points_upper_threshold > np.count_nonzero(left_image2) > white_points_lower_threshold and
-            #     white_points_upper_threshold > np.count_nonzero(right_image2) > white_points_lower_threshold
-            # )
+            condition1 = (
+                white_points_upper_threshold > np.count_nonzero(front_image1) > white_points_lower_threshold and
+                white_points_upper_threshold > np.count_nonzero(back_image1) > white_points_lower_threshold and
+                white_points_upper_threshold > np.count_nonzero(top_image1) > white_points_lower_threshold and
+                white_points_upper_threshold > np.count_nonzero(bottom_image1) > white_points_lower_threshold and
+                white_points_upper_threshold > np.count_nonzero(left_image1) > white_points_lower_threshold and
+                white_points_upper_threshold > np.count_nonzero(right_image1) > white_points_lower_threshold
+            )
+            condition2 = (
+                white_points_upper_threshold > np.count_nonzero(front_image2) > white_points_lower_threshold and
+                white_points_upper_threshold > np.count_nonzero(back_image2) > white_points_lower_threshold and
+                white_points_upper_threshold > np.count_nonzero(top_image2) > white_points_lower_threshold and
+                white_points_upper_threshold > np.count_nonzero(bottom_image2) > white_points_lower_threshold and
+                white_points_upper_threshold > np.count_nonzero(left_image2) > white_points_lower_threshold and
+                white_points_upper_threshold > np.count_nonzero(right_image2) > white_points_lower_threshold
+            )
 
             # if mini_box_id==3253 or condition1 and condition2:
 
-            # if condition1 and condition2:
-            mini_box_id_str = str(mini_box_id).zfill(total_cubes_digits_count)
+            if condition1 and condition2:
+                mini_box_id_str = str(mini_box_id).zfill(total_cubes_digits_count)
 
-            # Folder1 - preds
-            cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_front.png", front_image1)
-            cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_back.png", back_image1)
-            cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_top.png", top_image1)
-            cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_bottom.png", bottom_image1)
-            cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_left.png", left_image1)
-            cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_right.png", right_image1)
+                # Folder1 - preds
+                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_front.png", front_image1)
+                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_back.png", back_image1)
+                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_top.png", top_image1)
+                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_bottom.png", bottom_image1)
+                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_left.png", left_image1)
+                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_right.png", right_image1)
 
-            # Folder2 - labels
-            cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_front.png", front_image2)
-            cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_back.png", back_image2)
-            cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_top.png", top_image2)
-            cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_bottom.png", bottom_image2)
-            cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_left.png", left_image2)
-            cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_right.png", right_image2)
+                # Folder2 - labels
+                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_front.png", front_image2)
+                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_back.png", back_image2)
+                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_top.png", top_image2)
+                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_bottom.png", bottom_image2)
+                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_left.png", left_image2)
+                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_right.png", right_image2)
 
-            # Folder3 - components
-            cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_front_components.png", front_components)
-            cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_back_components.png", back_components)
-            cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_top_components.png", top_components)
-            cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_bottom_components.png", bottom_components)
-            cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_left_components.png", left_components)
-            cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_right_components.png", right_components)
+                # Folder3 - components
+                plt.savefig(f"{org_folder3}/{output_idx}_{mini_box_id_str}_front_components.png")
+                io.imshow(back_components)
+                plt.savefig(f"{org_folder3}/{output_idx}_{mini_box_id_str}_back_components.png")
+                io.imshow(top_components)
+                plt.savefig(f"{org_folder3}/{output_idx}_{mini_box_id_str}_top_components.png")
+                io.imshow(bottom_components)
+                plt.savefig(f"{org_folder3}/{output_idx}_{mini_box_id_str}_bottom_components.png")
+                io.imshow(left_components)
+                plt.savefig(f"{org_folder3}/{output_idx}_{mini_box_id_str}_left_components.png")
+                io.imshow(right_components)
+                plt.savefig(f"{org_folder3}/{output_idx}_{mini_box_id_str}_right_components.png")
 
-            # convert_numpy_to_nii_gz(mini_cube1, save_name="1", save=True)
-            # convert_numpy_to_nii_gz(mini_cube2, save_name="2", save=True)
+                # cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_front_components.png", front_components)
+                # cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_back_components.png", back_components)
+                # cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_top_components.png", top_components)
+                # cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_bottom_components.png", bottom_components)
+                # cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_left_components.png", left_components)
+                # cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_right_components.png", right_components)
+
+                # convert_numpy_to_nii_gz(mini_cube1, save_name="1", save=True)
+                # convert_numpy_to_nii_gz(mini_cube2, save_name="2", save=True)
 
         if batch_idx == 10:
             break
 
 
 def main():
-    convert_to_3d_components()
+    # convert_to_3d_components()
     # create_dataset_depth_2d_projections()
-    # create_dataset_original_images()
+    create_dataset_original_images()
 
 
 if __name__ == "__main__":
