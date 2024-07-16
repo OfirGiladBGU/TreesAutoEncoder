@@ -3,11 +3,7 @@ from scipy.ndimage import label
 import nibabel as nib
 import cv2
 import os
-
 from skimage import color
-from skimage import io
-import matplotlib.pyplot as plt
-import skimage
 
 #########
 # Utils #
@@ -58,7 +54,14 @@ def _calculate_depth_projection(data_3d, component_3d=None, axis=0):
         for i in range(grayscale_depth_projection.shape[0]):
             for j in range(grayscale_depth_projection.shape[1]):
                 if grayscale_depth_projection[i, j] > 0:
-                    components_depth_projection[i, j] = component_3d[i, j, depth_projection[i, j]]
+                    if axis == 0:
+                        components_depth_projection[i, j] = component_3d[depth_projection[i, j], i, j]
+                    elif axis == 1:
+                        components_depth_projection[i, j] = component_3d[i, depth_projection[i, j], j]
+                    elif axis == 2:
+                        components_depth_projection[i, j] = component_3d[i, j, depth_projection[i, j]]
+                    else:
+                        raise ValueError("Invalid axis")
 
         return grayscale_depth_projection, components_depth_projection
 
@@ -427,18 +430,12 @@ def create_dataset_original_images():
             right_image1 = image_outlier_removal(right_image1, right_image2)
 
             # Repair the components according to preds
-            front_components = color.label2rgb(label=np.where(front_image1 > 0, front_components, 0))
-            back_components = color.label2rgb(label=np.where(back_image1 > 0, back_components, 0))
-            top_components = color.label2rgb(label=np.where(top_image1 > 0, top_components, 0))
-            bottom_components = color.label2rgb(label=np.where(bottom_image1 > 0, bottom_components, 0))
-            left_components = color.label2rgb(label=np.where(left_image1 > 0, left_components, 0))
-            right_components = color.label2rgb(label=np.where(right_image1 > 0, right_components, 0))
-
-            # from skimage import io
-            # import matplotlib.pyplot as plt
-            # io.imshow(color.label2rgb(front_image1))
-            # plt.show()
-
+            front_components = color.label2rgb(label=np.where(front_image1 > 0, front_components, 0)) * 255
+            back_components = color.label2rgb(label=np.where(back_image1 > 0, back_components, 0)) * 255
+            top_components = color.label2rgb(label=np.where(top_image1 > 0, top_components, 0)) * 255
+            bottom_components = color.label2rgb(label=np.where(bottom_image1 > 0, bottom_components, 0)) * 255
+            left_components = color.label2rgb(label=np.where(left_image1 > 0, left_components, 0)) * 255
+            right_components = color.label2rgb(label=np.where(right_image1 > 0, right_components, 0)) * 255
 
             # Repair the labels
             front_image2 = image_missing_connected_components_removal(front_image1, front_image2)
@@ -487,25 +484,12 @@ def create_dataset_original_images():
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_right.png", right_image2)
 
                 # Folder3 - components
-                io.imshow(front_components)
-                plt.savefig(f"{org_folder3}/{output_idx}_{mini_box_id_str}_front_components.png")
-                io.imshow(back_components)
-                plt.savefig(f"{org_folder3}/{output_idx}_{mini_box_id_str}_back_components.png")
-                io.imshow(top_components)
-                plt.savefig(f"{org_folder3}/{output_idx}_{mini_box_id_str}_top_components.png")
-                io.imshow(bottom_components)
-                plt.savefig(f"{org_folder3}/{output_idx}_{mini_box_id_str}_bottom_components.png")
-                io.imshow(left_components)
-                plt.savefig(f"{org_folder3}/{output_idx}_{mini_box_id_str}_left_components.png")
-                io.imshow(right_components)
-                plt.savefig(f"{org_folder3}/{output_idx}_{mini_box_id_str}_right_components.png")
-
-                # cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_front_components.png", front_components)
-                # cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_back_components.png", back_components)
-                # cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_top_components.png", top_components)
-                # cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_bottom_components.png", bottom_components)
-                # cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_left_components.png", left_components)
-                # cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_right_components.png", right_components)
+                cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_front_components.png", front_components)
+                cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_back_components.png", back_components)
+                cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_top_components.png", top_components)
+                cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_bottom_components.png", bottom_components)
+                cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_left_components.png", left_components)
+                cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_right_components.png", right_components)
 
                 # convert_numpy_to_nii_gz(mini_cube1, save_name="1", save=True)
                 # convert_numpy_to_nii_gz(mini_cube2, save_name="2", save=True)
