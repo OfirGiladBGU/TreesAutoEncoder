@@ -36,19 +36,33 @@ def connected_components_3d(data_3d):
     return labeled_array, num_features
 
 
-def _calculate_depth_projection(data_3d, axis):
+def _calculate_depth_projection(data_3d, component_3d=None, axis=0):
     depth_projection = np.argmax(data_3d, axis=axis)
     max_projection = np.max(data_3d, axis=axis)
     axis_size = data_3d.shape[axis]
 
-    return np.where(max_projection > 0,
-                    (255 * (1 - (depth_projection / axis_size))).astype(int),
-                    0)
+    grayscale_depth_projection = np.where(
+        max_projection > 0,
+        (255 * (1 - (depth_projection / axis_size))).astype(int),
+        0
+    )
+
+    if component_3d is None:
+        return grayscale_depth_projection
+    else:
+        components_depth_projection = np.zeros_like(grayscale_depth_projection)
+        for i in range(grayscale_depth_projection.shape[0]):
+            for j in range(grayscale_depth_projection.shape[1]):
+                if grayscale_depth_projection[i, j] > 0:
+                    components_depth_projection[i, j] = component_3d[i, j, depth_projection[i, j]]
+
+        return grayscale_depth_projection, components_depth_projection
 
     # return (255 * (1 - (depth_projection / axis_size))).astype(int)
 
 
 def project_3d_to_2d(data_3d,
+                     component_3d=None,
                      front=False,
                      back=False,
                      top=False,
@@ -62,6 +76,14 @@ def project_3d_to_2d(data_3d,
     rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(1, 2))
     rotated_data_3d = np.flip(rotated_data_3d, axis=1)
 
+    if component_3d is not None:
+        rotated_component_3d = component_3d
+        rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(0, 2))
+        rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(1, 2))
+        rotated_component_3d = np.flip(rotated_component_3d, axis=1)
+    else:
+        rotated_component_3d = None
+
     # Front projection (XY plane)
     if front:
         flipped_data_3d = rotated_data_3d
@@ -70,7 +92,16 @@ def project_3d_to_2d(data_3d,
         # projections["front_image"] = np.max(data_3d, axis=2)
 
         # Option 2
-        projections["front_image"] = _calculate_depth_projection(flipped_data_3d, axis=2)
+        if rotated_component_3d is None:
+            projections["front_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=2)
+        else:
+            flipped_component_3d = rotated_component_3d
+
+            projections["front_image"], projections["front_components"] = _calculate_depth_projection(
+                data_3d=flipped_data_3d,
+                component_3d=flipped_component_3d,
+                axis=2
+            )
 
     # Back projection (XY plane)
     if back:
@@ -81,7 +112,17 @@ def project_3d_to_2d(data_3d,
         # projections["back_image"] = np.max(flipped_data_3d, axis=2)
 
         # Option 2
-        projections["back_image"] = _calculate_depth_projection(flipped_data_3d, axis=2)
+        if rotated_component_3d is None:
+            projections["back_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=2)
+        else:
+            flipped_component_3d = rotated_component_3d
+            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(1, 2))
+
+            projections["back_image"], projections["back_components"] = _calculate_depth_projection(
+                data_3d=flipped_data_3d,
+                component_3d=flipped_component_3d,
+                axis=2
+            )
 
     # Top projection (XZ plane)
     if top:
@@ -92,7 +133,17 @@ def project_3d_to_2d(data_3d,
         # projections["top_image"] = np.max(data_3d, axis=1)
 
         # Option 2
-        projections["top_image"] = _calculate_depth_projection(flipped_data_3d, axis=0)
+        if rotated_component_3d is None:
+            projections["top_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=0)
+        else:
+            flipped_component_3d = rotated_component_3d
+            flipped_component_3d = np.rot90(flipped_component_3d, k=1, axes=(1, 2))
+
+            projections["top_image"], projections["top_components"] = _calculate_depth_projection(
+                data_3d=flipped_data_3d,
+                component_3d=flipped_component_3d,
+                axis=0
+            )
 
     # Bottom projection (XZ plane)
     if bottom:
@@ -104,7 +155,18 @@ def project_3d_to_2d(data_3d,
         # projections["bottom_image"] = np.max(flipped_data_3d, axis=1)
 
         # Option 2
-        projections["bottom_image"] = _calculate_depth_projection(flipped_data_3d, axis=0)
+        if rotated_component_3d is None:
+            projections["bottom_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=0)
+        else:
+            flipped_component_3d = rotated_component_3d
+            flipped_component_3d = np.rot90(flipped_component_3d, k=1, axes=(1, 2))
+            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(0, 1))
+
+            projections["bottom_image"], projections["bottom_components"] = _calculate_depth_projection(
+                data_3d=flipped_data_3d,
+                component_3d=flipped_component_3d,
+                axis=0
+            )
 
     # Right projection (YZ plane)
     if right:
@@ -115,7 +177,17 @@ def project_3d_to_2d(data_3d,
         # projections["right_image"] = np.max(flipped_data_3d, axis=0)
 
         # Option 2
-        projections["right_image"] = _calculate_depth_projection(flipped_data_3d, axis=1)
+        if rotated_component_3d is None:
+            projections["right_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=1)
+        else:
+            flipped_component_3d = rotated_component_3d
+            flipped_component_3d = np.flip(flipped_component_3d, axis=1)
+
+            projections["right_image"], projections["right_components"] = _calculate_depth_projection(
+                data_3d=flipped_data_3d,
+                component_3d=flipped_component_3d,
+                axis=1
+            )
 
     # Left projection (YZ plane)
     if left:
@@ -127,7 +199,18 @@ def project_3d_to_2d(data_3d,
         # projections["left_image"] = np.max(data_3d, axis=0)
 
         # Option 2
-        projections["left_image"] = _calculate_depth_projection(flipped_data_3d, axis=1)
+        if rotated_component_3d is None:
+            projections["left_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=1)
+        else:
+            flipped_component_3d = rotated_component_3d
+            flipped_component_3d = np.flip(flipped_component_3d, axis=1)
+            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(1, 2))
+
+            projections["left_image"], projections["left_components"] = _calculate_depth_projection(
+                data_3d=flipped_data_3d,
+                component_3d=flipped_component_3d,
+                axis=1
+            )
 
     return projections
 
@@ -212,7 +295,7 @@ def create_dataset_depth_2d_projections():
         data_filepath = os.path.join(folder_path, data_filepath)
         ct_numpy = convert_nii_to_numpy(data_file=data_filepath)
 
-        projection = project_3d_to_2d(ct_numpy,
+        projection = project_3d_to_2d(data_3d=ct_numpy,
                                       front=True, back=True, top=True, bottom=True, left=True, right=True)
         front_image = projection["front_image"]
         back_image = projection["back_image"]
@@ -234,17 +317,18 @@ def create_dataset_depth_2d_projections():
 ####################
 def create_dataset_original_images():
     folder_path1 = "../parse2022/preds"
-    org_folder1 = "./parse_preds_mini_cropped_v4"
+    org_folder1 = "./parse_preds_mini_cropped_v5"
 
     folder_path2 = "../parse2022/labels"
-    org_folder2 = "./parse_labels_mini_cropped_v4"
+    org_folder2 = "./parse_labels_mini_cropped_v5"
 
     folder_path3 = "../parse2022/preds_components"
+    org_folder3 = "./parse_preds_components_mini_cropped_v5"
 
     size = (32, 32, 32)
     step = 16
-    white_points_upper_threshold = size[0] * size[0] * 0.8
-    white_points_lower_threshold = size[0] * size[0] * 0.1
+    # white_points_upper_threshold = size[0] * size[0] * 0.8
+    # white_points_lower_threshold = size[0] * size[0] * 0.1
 
     os.makedirs(org_folder1, exist_ok=True)
     os.makedirs(org_folder2, exist_ok=True)
@@ -276,9 +360,9 @@ def create_dataset_original_images():
         cropped_data_3d_1[cropped_data_3d_1 > 0] = 255
         cropped_data_3d_2[cropped_data_3d_2 > 0] = 255
 
-        mini_cubes1 = crop_mini_cubes(cropped_data_3d_1, size=size, step=step)
-        mini_cubes2 = crop_mini_cubes(cropped_data_3d_2, size=size, step=step)
-        mini_cubes3 = crop_mini_cubes(cropped_data_3d_3, size=size, step=step)
+        mini_cubes1 = crop_mini_cubes(cropped_data_3d=cropped_data_3d_1, size=size, step=step)
+        mini_cubes2 = crop_mini_cubes(cropped_data_3d=cropped_data_3d_2, size=size, step=step)
+        mini_cubes3 = crop_mini_cubes(cropped_data_3d=cropped_data_3d_3, size=size, step=step)
 
         print(
             f"File: {output_idx}\n"
@@ -300,7 +384,8 @@ def create_dataset_original_images():
             if components_3d_count < 2:
                 continue
 
-            projections1 = project_3d_to_2d(data_3d=mini_cube1,
+            # Project 3D to 2D (Preds)
+            projections1 = project_3d_to_2d(data_3d=mini_cube1, component_3d=mini_cube3,
                                             front=True, back=True, top=True, bottom=True, left=True, right=True)
             front_image1 = projections1["front_image"]
             back_image1 = projections1["back_image"]
@@ -309,6 +394,14 @@ def create_dataset_original_images():
             left_image1 = projections1["left_image"]
             right_image1 = projections1["right_image"]
 
+            front_components = projections1["front_components"]
+            back_components = projections1["back_components"]
+            top_components = projections1["top_components"]
+            bottom_components = projections1["bottom_components"]
+            left_components = projections1["left_components"]
+            right_components = projections1["right_components"]
+
+            # Project 3D to 2D (Labels)
             projections2 = project_3d_to_2d(data_3d=mini_cube2,
                                             front=True, back=True, top=True, bottom=True, left=True, right=True)
             front_image2 = projections2["front_image"]
@@ -326,6 +419,14 @@ def create_dataset_original_images():
             left_image1 = image_outlier_removal(left_image1, left_image2)
             right_image1 = image_outlier_removal(right_image1, right_image2)
 
+            # Repair the components according to preds
+            front_components = np.where(front_image1 > 0, front_components, 0)
+            back_components = np.where(back_image1 > 0, back_components, 0)
+            top_components = np.where(top_image1 > 0, top_components, 0)
+            bottom_components = np.where(bottom_image1 > 0, bottom_components, 0)
+            left_components = np.where(left_image1 > 0, left_components, 0)
+            right_components = np.where(right_image1 > 0, right_components, 0)
+
             # Repair the labels
             front_image2 = image_missing_connected_components_removal(front_image1, front_image2)
             back_image2 = image_missing_connected_components_removal(back_image1, back_image2)
@@ -334,45 +435,54 @@ def create_dataset_original_images():
             left_image2 = image_missing_connected_components_removal(left_image1, left_image2)
             right_image2 = image_missing_connected_components_removal(right_image1, right_image2)
 
-            condition1 = (
-                white_points_upper_threshold > np.count_nonzero(front_image1) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(back_image1) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(top_image1) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(bottom_image1) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(left_image1) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(right_image1) > white_points_lower_threshold
-            )
-            condition2 = (
-                white_points_upper_threshold > np.count_nonzero(front_image2) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(back_image2) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(top_image2) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(bottom_image2) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(left_image2) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(right_image2) > white_points_lower_threshold
-            )
+            # condition1 = (
+            #     white_points_upper_threshold > np.count_nonzero(front_image1) > white_points_lower_threshold and
+            #     white_points_upper_threshold > np.count_nonzero(back_image1) > white_points_lower_threshold and
+            #     white_points_upper_threshold > np.count_nonzero(top_image1) > white_points_lower_threshold and
+            #     white_points_upper_threshold > np.count_nonzero(bottom_image1) > white_points_lower_threshold and
+            #     white_points_upper_threshold > np.count_nonzero(left_image1) > white_points_lower_threshold and
+            #     white_points_upper_threshold > np.count_nonzero(right_image1) > white_points_lower_threshold
+            # )
+            # condition2 = (
+            #     white_points_upper_threshold > np.count_nonzero(front_image2) > white_points_lower_threshold and
+            #     white_points_upper_threshold > np.count_nonzero(back_image2) > white_points_lower_threshold and
+            #     white_points_upper_threshold > np.count_nonzero(top_image2) > white_points_lower_threshold and
+            #     white_points_upper_threshold > np.count_nonzero(bottom_image2) > white_points_lower_threshold and
+            #     white_points_upper_threshold > np.count_nonzero(left_image2) > white_points_lower_threshold and
+            #     white_points_upper_threshold > np.count_nonzero(right_image2) > white_points_lower_threshold
+            # )
 
             # if mini_box_id==3253 or condition1 and condition2:
 
-            if condition1 and condition2:
-                mini_box_id_str = str(mini_box_id).zfill(total_cubes_digits_count)
-                # Folder1 - preds
-                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_front.png", front_image1)
-                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_back.png", back_image1)
-                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_top.png", top_image1)
-                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_bottom.png", bottom_image1)
-                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_left.png", left_image1)
-                cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_right.png", right_image1)
+            # if condition1 and condition2:
+            mini_box_id_str = str(mini_box_id).zfill(total_cubes_digits_count)
 
-                # Folder2 - labels
-                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_front.png", front_image2)
-                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_back.png", back_image2)
-                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_top.png", top_image2)
-                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_bottom.png", bottom_image2)
-                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_left.png", left_image2)
-                cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_right.png", right_image2)
+            # Folder1 - preds
+            cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_front.png", front_image1)
+            cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_back.png", back_image1)
+            cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_top.png", top_image1)
+            cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_bottom.png", bottom_image1)
+            cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_left.png", left_image1)
+            cv2.imwrite(f"{org_folder1}/{output_idx}_{mini_box_id_str}_right.png", right_image1)
 
-                # convert_numpy_to_nii_gz(mini_cube1, save_name="1", save=True)
-                # convert_numpy_to_nii_gz(mini_cube2, save_name="2", save=True)
+            # Folder2 - labels
+            cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_front.png", front_image2)
+            cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_back.png", back_image2)
+            cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_top.png", top_image2)
+            cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_bottom.png", bottom_image2)
+            cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_left.png", left_image2)
+            cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_right.png", right_image2)
+
+            # Folder3 - components
+            cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_front_components.png", front_components)
+            cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_back_components.png", back_components)
+            cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_top_components.png", top_components)
+            cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_bottom_components.png", bottom_components)
+            cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_left_components.png", left_components)
+            cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_right_components.png", right_components)
+
+            # convert_numpy_to_nii_gz(mini_cube1, save_name="1", save=True)
+            # convert_numpy_to_nii_gz(mini_cube2, save_name="2", save=True)
 
         if batch_idx == 10:
             break
