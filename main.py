@@ -124,7 +124,7 @@ if __name__ == "__main__":
                         help='Where to store images')
     parser.add_argument('--dataset', type=str, default='MNIST', metavar='N',
                         help='Which dataset to use')
-    parser.add_argument('--weights-filepath', type=str, default='Network.pth', metavar='N',
+    parser.add_argument('--weights-filepath', type=str, default='./weights/Network.pth', metavar='N',
                         help='Which dataset to use')
 
     args = parser.parse_args()
