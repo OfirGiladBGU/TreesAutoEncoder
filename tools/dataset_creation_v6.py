@@ -325,9 +325,11 @@ def create_dataset_depth_2d_projections():
 def create_dataset_original_images():
     folder_path1 = "../parse2022/preds"
     org_folder1 = "./parse_preds_mini_cropped_v5"
+    org_3d_folder1 = "./parse_preds_mini_cropped_3d_v5"
 
     folder_path2 = "../parse2022/labels"
     org_folder2 = "./parse_labels_mini_cropped_v5"
+    org_3d_folder2 = "./parse_labels_mini_cropped_3d_v5"
 
     folder_path3 = "../parse2022/preds_components"
     org_folder3 = "./parse_preds_components_mini_cropped_v5"
@@ -340,6 +342,9 @@ def create_dataset_original_images():
     os.makedirs(org_folder1, exist_ok=True)
     os.makedirs(org_folder2, exist_ok=True)
     os.makedirs(org_folder3, exist_ok=True)
+
+    os.makedirs(org_3d_folder1, exist_ok=True)
+    os.makedirs(org_3d_folder2, exist_ok=True)
 
     data_filepaths1 = sorted(os.listdir(folder_path1))
     data_filepaths2 = sorted(os.listdir(folder_path2))
@@ -490,6 +495,12 @@ def create_dataset_original_images():
                 cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_bottom_components.png", bottom_components)
                 cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_left_components.png", left_components)
                 cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_right_components.png", right_components)
+
+                # 3D Folders
+                save_name = f"{org_3d_folder1}/{output_idx}_{mini_box_id_str}"
+                convert_numpy_to_nii_gz(numpy_array=mini_cube1, save_name=save_name, save=True)
+                save_name = f"{org_3d_folder2}/{output_idx}_{mini_box_id_str}"
+                convert_numpy_to_nii_gz(numpy_array=mini_cube2, save_name=save_name, save=True)
 
                 # convert_numpy_to_nii_gz(mini_cube1, save_name="1", save=True)
                 # convert_numpy_to_nii_gz(mini_cube2, save_name="2", save=True)

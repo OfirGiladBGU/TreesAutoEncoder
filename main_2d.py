@@ -7,7 +7,7 @@ from models.ae_v2_model import Network
 # from models.vgg_demo_model import Network
 # from models.gap_cnn import Network
 
-from train import Trainer
+from train_2d import Trainer
 import matplotlib.pyplot as plt
 import numpy as np
 
