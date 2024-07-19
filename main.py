@@ -28,68 +28,69 @@ def predict_model(model):
     trainer = Trainer(args=args, model=model)
 
     with torch.no_grad():
-        # Get the images from the test loader
-        batch_num = 2
-        data = iter(trainer.test_loader)
-        for i in range(batch_num):
-            input_images, target_images = next(data)
-        input_images = input_images.to(trainer.device)
-        if args.dataset != 'TreesV1':
-            target_images = input_images.clone().detach()
-        target_images = target_images.to(trainer.device)
+        for b in range(4):
+            # Get the images from the test loader
+            batch_num = b + 1
+            data = iter(trainer.test_loader)
+            for i in range(batch_num):
+                input_images, target_images = next(data)
+            input_images = input_images.to(trainer.device)
+            if args.dataset != 'TreesV1':
+                target_images = input_images.clone().detach()
+            target_images = target_images.to(trainer.device)
 
-        # TODO: Threshold
-        # trainer.apply_threshold(input_images, 0.5)
-        # trainer.apply_threshold(target_images, 0.5)
+            # TODO: Threshold
+            # trainer.apply_threshold(input_images, 0.5)
+            # trainer.apply_threshold(target_images, 0.5)
 
-        # Fix for Trees dataset - Fixed problem
-        # if input_images.dtype != torch.float32:
-        #     input_images = input_images.float()
-        # if target_images.dtype != torch.float32:
-        #     target_images = target_images.float()
+            # Fix for Trees dataset - Fixed problem
+            # if input_images.dtype != torch.float32:
+            #     input_images = input_images.float()
+            # if target_images.dtype != torch.float32:
+            #     target_images = target_images.float()
 
-        # Create holes in the input images
-        if args.dataset != 'TreesV1' and args.dataset != 'CIFAR10':
-            trainer.create_holes(input_images)
+            # Create holes in the input images
+            if args.dataset != 'TreesV1' and args.dataset != 'CIFAR10':
+                trainer.create_holes(input_images)
 
-        model.eval()
-        output_images = model(input_images)
+            model.eval()
+            output_images = model(input_images)
 
-        # TODO: Threshold
-        # trainer.apply_threshold(output_images, 0.5)
+            # TODO: Threshold
+            # trainer.apply_threshold(output_images, 0.5)
 
-        # Detach the images from the cuda and move them to CPU
-        if trainer.args.cuda:
-            input_images = input_images.cpu().detach()
-            target_images = target_images.cpu().detach()
-            output_images = output_images.cpu().detach()
+            # Detach the images from the cuda and move them to CPU
+            if trainer.args.cuda:
+                input_images = input_images.cpu().detach()
+                target_images = target_images.cpu().detach()
+                output_images = output_images.cpu().detach()
 
-        # Create a grid of images
-        columns = 3
-        rows = 25
-        fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
-        ax = []
-        for i in range(rows):
-            # Input
-            ax.append(fig.add_subplot(rows, columns, i * 3 + 1))
-            npimg = input_images[i].numpy()
-            plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+            # Create a grid of images
+            columns = 3
+            rows = 25
+            fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
+            ax = []
+            for i in range(rows):
+                # Input
+                ax.append(fig.add_subplot(rows, columns, i * 3 + 1))
+                npimg = input_images[i].numpy()
+                plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
 
-            # Target
-            ax.append(fig.add_subplot(rows, columns, i * 3 + 2))
-            npimg = target_images[i].numpy()
-            plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+                # Target
+                ax.append(fig.add_subplot(rows, columns, i * 3 + 2))
+                npimg = target_images[i].numpy()
+                plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
 
-            # Output
-            ax.append(fig.add_subplot(rows, columns, i * 3 + 3))
-            npimg = output_images[i].numpy()
-            plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+                # Output
+                ax.append(fig.add_subplot(rows, columns, i * 3 + 3))
+                npimg = output_images[i].numpy()
+                plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
 
-        ax[0].set_title("Input:")
-        ax[1].set_title("Target:")
-        ax[2].set_title("Output:")
-        fig.tight_layout()
-        plt.savefig(os.path.join(args.results_path, f'output_{args.dataset}_{model.model_name}.png'))
+            ax[0].set_title("Input:")
+            ax[1].set_title("Target:")
+            ax[2].set_title("Output:")
+            fig.tight_layout()
+            plt.savefig(os.path.join(args.results_path, f'output_{args.dataset}_{model.model_name}_{b + 1}.png'))
 
 
 def main():
