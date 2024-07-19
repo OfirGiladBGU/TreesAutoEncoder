@@ -225,14 +225,16 @@ class TreesCustomDataset3DV1(torch.utils.data.Dataset):
         else:
             raise ValueError("Invalid number of data paths")
 
+        batch = torch.stack(batch)
         return batch, target
 
 
 class TreesCustomDataloader3D:
-    def __init__(self, data_paths, args, transform=None):
+    def __init__(self, data_paths, args, transform2d=None, transform3d=None):
         self.data_paths = data_paths
         self.args = args
-        self.transform = transform
+        self.transform2d = transform2d
+        self.transform3d = transform3d
         self._init_dataloader()
 
     def _init_dataloader(self):
@@ -244,7 +246,7 @@ class TreesCustomDataloader3D:
             val_dataloader: Val loader with 0.1 of the data.
         """
 
-        tree_dataset = TreesCustomDataset3DV1(self.data_paths, self.transform)
+        tree_dataset = TreesCustomDataset3DV1(self.data_paths, self.transform2d, self.transform3d)
         dataset_size = len(tree_dataset)
         train_size = int(dataset_size * 0.9)
         val_size = dataset_size - train_size
