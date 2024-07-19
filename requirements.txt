@@ -10,3 +10,4 @@ pip install torchmetrics
 pip install torcheval
 pip install scikit-image
 pip imstall open3d
+pip install trimesh
