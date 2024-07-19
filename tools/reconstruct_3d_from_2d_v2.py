@@ -77,11 +77,14 @@ def reconstruct_3d_from_2d(format_of_2d_images):
     convert_numpy_to_nii_gz(final_data_3d, save_name=save_name, save=True)
     return final_data_3d
 
-###########
 
-import numpy as np
+############################
+# Repair 3D reconstruction #
+############################
 import open3d as o3d
 from skimage import measure
+import trimesh
+
 
 def extract_surface_from_voxel_grid(voxel_grid):
     voxel_size = voxel_grid.shape[0]
@@ -96,9 +99,28 @@ def extract_surface_from_voxel_grid(voxel_grid):
 
     return mesh
 
+
 def smooth_mesh(mesh, num_iterations=10):
     mesh_smooth = mesh.filter_smooth_laplacian(number_of_iterations=num_iterations)
     return mesh_smooth
+
+
+def convert_mesh_to_trimesh(mesh):
+    vertices = np.asarray(mesh.vertices)
+    faces = np.asarray(mesh.triangles)
+    return trimesh.Trimesh(vertices=vertices, faces=faces)
+
+
+def mesh_to_voxel_grid(mesh, voxel_size):
+    trimesh_mesh = convert_mesh_to_trimesh(mesh)
+
+    # Use trimesh's voxelize function
+    voxel_grid = trimesh.voxel.creation.voxelize(trimesh_mesh, voxel_size)
+
+    # Convert voxel grid to a numpy array
+    voxel_matrix = voxel_grid.matrix.astype(bool)
+
+    return voxel_matrix
 
 
 def refine_construction(voxel_grid: np.ndarray):
@@ -114,11 +136,13 @@ def refine_construction(voxel_grid: np.ndarray):
     # Visualize the refined mesh
     # o3d.visualization.draw_geometries([mesh_smooth])
 
-    # TODO: Convert the mesh back to voxel grid
-    voxel_size = 1.0 / voxel_grid.shape[0]
+    # Method is too slow
     resolution = voxel_grid.shape[0]
-    # voxel_grid_refined = mesh_to_voxel_grid(mesh_smooth, voxel_size, resolution)
-    # convert_numpy_to_nii_gz(voxel_grid_refined, save_name="Test", save=True)
+    voxel_size = 1.0 / resolution
+    voxel_grid_refined = mesh_to_voxel_grid(mesh_smooth, voxel_size)
+    voxel_grid_refined = voxel_grid_refined.astype(np.uint8)
+    convert_numpy_to_nii_gz(voxel_grid_refined, save_name="Test", save=True)
+
 
 def main():
     format_of_2d_images = r".\parse_labels_mini_cropped_v5\PA000005_vessel_02584_<VIEW>.png"
