@@ -150,7 +150,7 @@ def unfilled_holes_loss(out, target, original):
     out_missing_holes = target_filled_holes - out
     out_missing_holes[out_missing_holes < 0] = 0
 
-    diff = torch.sum(out_missing_holes)
+    diff = torch.sum(out_missing_holes) # / out.size(0)
     return diff
 
 
@@ -161,11 +161,11 @@ def weighted_pixels_diff_loss(out, original, target):
     # Make sure to keep the non-zero pixels stay with the same color
     misclassified_pixels = output_diff.clone()
     misclassified_pixels = torch.where(target != 0, misclassified_pixels, torch.tensor(0.0))
-    misclassified_pixels_error = torch.sum(torch.abs(misclassified_pixels))
+    misclassified_pixels_error = torch.sum(torch.abs(misclassified_pixels)) # / out.size(0)
 
     # Make sure to prevent black pixels to change to gray/white
     new_pixels_error = output_diff.clone()
     new_pixels_error = torch.where(target == 0, new_pixels_error, torch.tensor(0.0))
-    new_pixels_error = torch.sum(torch.abs(new_pixels_error))
+    new_pixels_error = torch.sum(torch.abs(new_pixels_error)) # / out.size(0)
 
     return 0.8 * misclassified_pixels_error + 0.2 * new_pixels_error
