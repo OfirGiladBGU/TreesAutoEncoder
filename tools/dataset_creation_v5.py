@@ -304,13 +304,13 @@ def create_dataset_original_images():
             left_image1 = image_outlier_removal(left_image1, left_image2)
             right_image1 = image_outlier_removal(right_image1, right_image2)
 
-            # Repair the labels
-            front_image2 = image_missing_connected_components_removal(front_image1, front_image2)
-            back_image2 = image_missing_connected_components_removal(back_image1, back_image2)
-            top_image2 = image_missing_connected_components_removal(top_image1, top_image2)
-            bottom_image2 = image_missing_connected_components_removal(bottom_image1, bottom_image2)
-            left_image2 = image_missing_connected_components_removal(left_image1, left_image2)
-            right_image2 = image_missing_connected_components_removal(right_image1, right_image2)
+            # Repair the labels - TODO: Check how to do smartly
+            # front_image2 = image_missing_connected_components_removal(front_image1, front_image2)
+            # back_image2 = image_missing_connected_components_removal(back_image1, back_image2)
+            # top_image2 = image_missing_connected_components_removal(top_image1, top_image2)
+            # bottom_image2 = image_missing_connected_components_removal(bottom_image1, bottom_image2)
+            # left_image2 = image_missing_connected_components_removal(left_image1, left_image2)
+            # right_image2 = image_missing_connected_components_removal(right_image1, right_image2)
 
             condition1 = (
                 white_points_upper_threshold > np.count_nonzero(front_image1) > white_points_lower_threshold and
