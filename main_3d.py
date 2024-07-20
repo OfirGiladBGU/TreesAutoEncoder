@@ -114,13 +114,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args.dataset = 'Trees3DV1'
 
-    args.epochs = 10
+    args.epochs = 1
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")
     torch.manual_seed(args.seed)
 
     if args.dataset == 'Trees3DV1':
-        args.input_size = (6, 1, 1, 32, 32)
+        args.input_size = (6, 1, 32, 32)
 
     main()

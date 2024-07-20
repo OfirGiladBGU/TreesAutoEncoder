@@ -1,4 +1,4 @@
-# import numpy as np
+import numpy as np
 import torch
 import cv2
 import os
@@ -203,6 +203,8 @@ class TreesCustomDataset3DV1(torch.utils.data.Dataset):
 
             if self.transform2d is not None:
                 image_numpy1 = self.transform2d(image_numpy1)
+            else:
+                image_numpy1 = torch.Tensor(image_numpy1)
 
             batch.append(image_numpy1)
 
@@ -215,9 +217,12 @@ class TreesCustomDataset3DV1(torch.utils.data.Dataset):
             data_file2 = os.path.join(self.data_paths[1], self.data_files2[idx])
             ct_img = nib.load(data_file2)
             image_numpy2 = ct_img.get_fdata()
+            image_numpy2 = image_numpy2.astype(np.uint8)
 
             if self.transform3d is not None:
                 image_numpy2 = self.transform3d(image_numpy2)
+            else:
+                image_numpy2 = torch.Tensor(image_numpy2)
 
             target = image_numpy2
 
@@ -226,6 +231,7 @@ class TreesCustomDataset3DV1(torch.utils.data.Dataset):
             raise ValueError("Invalid number of data paths")
 
         batch = torch.stack(batch)
+        target = torch.stack([target])
         return batch, target
 
 

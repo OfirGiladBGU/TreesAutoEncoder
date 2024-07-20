@@ -169,3 +169,40 @@ def weighted_pixels_diff_loss(out, original, target):
     new_pixels_error = torch.sum(torch.abs(new_pixels_error)) # / out.size(0)
 
     return 0.8 * misclassified_pixels_error + 0.2 * new_pixels_error
+
+
+# Dice Loss and BCE Dice Loss
+class DiceLoss(nn.Module):
+    def __init__(self):
+        super(DiceLoss, self).__init__()
+
+    def forward(self, inputs, targets, smooth=1):
+        inputs = inputs.view(-1)
+        targets = targets.view(-1)
+        intersection = (inputs * targets).sum()
+        dice = (2. * intersection + smooth) / (inputs.sum() + targets.sum() + smooth)
+        return 1 - dice
+
+
+class BCEDiceLoss(nn.Module):
+    def __init__(self, weight_bce=0.5, weight_dice=0.5):
+        super(BCEDiceLoss, self).__init__()
+        self.bce = nn.BCELoss()
+        self.dice = DiceLoss()
+        self.weight_bce = weight_bce
+        self.weight_dice = weight_dice
+
+    def forward(self, inputs, targets):
+        bce_loss = self.bce(inputs[0], targets[0])
+        dice_loss = self.dice(inputs, targets)
+        return self.weight_bce * bce_loss + self.weight_dice * dice_loss
+
+
+def dice_loss(out, target):
+    loss_fn = DiceLoss()
+    return loss_fn(out, target)
+
+
+def bce_dice_loss(out, target):
+    loss_fn = BCEDiceLoss()
+    return loss_fn(out, target)

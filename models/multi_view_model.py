@@ -42,31 +42,37 @@ class Decoder(nn.Module):
 
 
 class MultiView3DReconstruction(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args=None):
         super(MultiView3DReconstruction, self).__init__()
 
         self.model_name = 'multi_view_3d_reconstruction'
-        self.input_size = args.input_size
+        if args is not None:
+            self.input_size = args.input_size
 
         self.encoders = nn.ModuleList([Encoder() for _ in range(6)])
         self.fc = nn.Linear(64 * 32 * 32 * 6, 64 * 4 * 4 * 4)
         self.decoder = Decoder()
 
     def forward(self, views):
-        encoded_views = [encoder(view)[-1] for encoder, view in zip(self.encoders, views)]
-        encoded_views = torch.cat(encoded_views, dim=1)
-        encoded_views = encoded_views.view(encoded_views.size(0), -1)
+        # views shape: (batch_size, 6, 1, 32, 32)
+        batch_size = views.size(0)
+        encoded_views = []
+        for i in range(6):
+            view = views[:, i, :, :, :]  # Extract the i-th view from each batch
+            encoded_view = self.encoders[i](view)[-1]  # Only use the last feature map
+            encoded_views.append(encoded_view)
+
+        encoded_views = torch.cat(encoded_views, dim=1)  # Concatenate along the channel dimension
+        encoded_views = encoded_views.view(batch_size, -1)
         x = self.fc(encoded_views)
-        x = x.view(x.size(0), 64, 4, 4, 4)
+        x = x.view(batch_size, 64, 4, 4, 4)
         x = self.decoder(x)
         return x
 
 
 # Example usage
 if __name__ == '__main__':
-    model = MultiView3DReconstruction()
-    views = [torch.randn(1, 1, 32, 32) for _ in range(6)]  # Dummy input for 6 views
-    views = [v.cuda() for v in views]  # Move to GPU if available
-    model.cuda()  # Move model to GPU if available
+    model = MultiView3DReconstruction().cuda()
+    views = torch.randn(2, 6, 1, 32, 32).cuda()  # Dummy input for batch_size=2 and 6 views per sample
     output = model(views)
-    print(output.shape)  # Should be [1, 1, 32, 32, 32]
+    print(output.shape)  # Should be [2, 1, 32, 32, 32]

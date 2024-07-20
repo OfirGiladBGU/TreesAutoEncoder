@@ -1,4 +1,3 @@
-import random
 import torch
 import torch.utils.data
 from torch import optim
@@ -40,7 +39,9 @@ class Trainer(object):
         :param original: the original input data for the model
         :return:
         """
-        LOSS = F.mse_loss(out, target, reduction='sum')
+
+        # LOSS = F.mse_loss(out, target, reduction='sum')
+        LOSS = loss_functions.bce_dice_loss(out, target)
 
         return LOSS
 
