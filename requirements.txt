@@ -9,5 +9,5 @@ pip install git+https://github.com/Po-Hsun-Su/pytorch-ssim.git
 pip install torchmetrics
 pip install torcheval
 pip install scikit-image
-pip imstall open3d
+pip install open3d
 pip install trimesh
