@@ -41,8 +41,8 @@ class Trainer(object):
         """
 
         # LOSS = F.mse_loss(out, target, reduction='sum')
-        LOSS = loss_functions.bce_dice_loss(out, target)
-
+        # LOSS = loss_functions.bce_dice_loss(out, target)
+        LOSS = loss_functions.weighted_bce_dice_loss(out, target)
         return LOSS
 
     @staticmethod

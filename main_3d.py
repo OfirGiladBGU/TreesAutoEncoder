@@ -94,7 +94,7 @@ def main():
 
     # model.load_state_dict(torch.load(args.weights_filepath))
 
-    # train_model(model=model)
+    train_model(model=model)
     predict_model(model=model)
 
 
@@ -122,6 +122,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args.dataset = 'Trees3DV1'
 
+    # args.batch_size = 1
     args.epochs = 1
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()

@@ -184,6 +184,20 @@ class DiceLoss(nn.Module):
         return 1 - dice
 
 
+# Weighted BCE Loss
+class WeightedBCELoss(nn.Module):
+    def __init__(self, pos_weight=1.0):
+        super(WeightedBCELoss, self).__init__()
+        self.pos_weight = pos_weight
+
+    def forward(self, inputs, targets):
+        # Calculate the weights: higher for positive (1) and lower for negative (0)
+        weights = torch.where(targets == 1, self.pos_weight, 1.0)
+        # Apply BCE with weights
+        loss = nn.functional.binary_cross_entropy(inputs, targets, weight=weights)
+        return loss
+
+
 class BCEDiceLoss(nn.Module):
     def __init__(self, weight_bce=0.5, weight_dice=0.5):
         super(BCEDiceLoss, self).__init__()
@@ -198,6 +212,25 @@ class BCEDiceLoss(nn.Module):
         return self.weight_bce * bce_loss + self.weight_dice * dice_loss
 
 
+# BCE + Dice Loss with weighted BCE
+class WeightedBCEDiceLoss(nn.Module):
+    def __init__(self, weight_bce=0.5, weight_dice=0.5, pos_weight=2.0):
+        super(WeightedBCEDiceLoss, self).__init__()
+        self.bce = WeightedBCELoss(pos_weight=pos_weight)
+        self.dice = DiceLoss()
+        self.weight_bce = weight_bce
+        self.weight_dice = weight_dice
+
+    def forward(self, inputs, targets):
+        bce_loss_res = self.bce(inputs, targets)
+        dice_loss_res = self.dice(inputs, targets)
+        return self.weight_bce * bce_loss_res + self.weight_dice * dice_loss_res
+
+
+def bce_loss(out, target):
+    loss_fn = nn.BCELoss()
+    return loss_fn(out, target)
+
 def dice_loss(out, target):
     loss_fn = DiceLoss()
     return loss_fn(out, target)
@@ -205,4 +238,9 @@ def dice_loss(out, target):
 
 def bce_dice_loss(out, target):
     loss_fn = BCEDiceLoss()
+    return loss_fn(out, target)
+
+
+def weighted_bce_dice_loss(out, target):
+    loss_fn = WeightedBCEDiceLoss()
     return loss_fn(out, target)
