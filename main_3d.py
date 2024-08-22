@@ -71,8 +71,8 @@ def predict_model(model):
                 ax = []
 
                 for j in range(columns):
-                    ax.append(fig.add_subplot(rows, columns, i * 3 + (j + 1)))
-                    npimg = input_images[i][j].numpy()
+                    ax.append(fig.add_subplot(rows, columns, j + 1))
+                    npimg = input_images[idx][j].numpy()
                     plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
 
                     ax[j].set_title(f"View {j}:")
@@ -81,7 +81,7 @@ def predict_model(model):
                 plt.savefig(os.path.join("3d_results", f"images_{b}_{idx}.png"))
 
                 # only the first
-                exit()
+                # exit()
 
 
 def main():
@@ -122,8 +122,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args.dataset = 'Trees3DV1'
 
-    # args.batch_size = 1
-    args.epochs = 1
+    # args.batch_size = 3
+    args.epochs = 3
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")
