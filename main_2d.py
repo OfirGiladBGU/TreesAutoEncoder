@@ -99,6 +99,7 @@ def main():
     # Update save path
     filepath, ext = os.path.splitext(args.weights_filepath)
     args.weights_filepath = f"{filepath}_{model.model_name}{ext}"
+    os.makedirs(name=os.path.dirname(args.weights_filepath), exist_ok=True)
 
     # model.load_state_dict(torch.load(args.weights_filepath))
 
