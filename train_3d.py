@@ -45,6 +45,11 @@ class Trainer(object):
 
         return LOSS
 
+    @staticmethod
+    def apply_threshold(tensor, threshold):
+        tensor[tensor >= threshold] = 1.0
+        tensor[tensor < threshold] = 0.0
+
     def _train(self, epoch):
         self.model.train()
         train_loss = 0

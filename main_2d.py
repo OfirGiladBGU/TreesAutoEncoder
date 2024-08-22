@@ -1,6 +1,8 @@
 import argparse
 import os
 import torch
+import matplotlib.pyplot as plt
+import numpy as np
 
 # from models.ae_model import Network
 from models.ae_v2_model import Network
@@ -8,8 +10,6 @@ from models.ae_v2_model import Network
 # from models.gap_cnn import Network
 
 from train_2d import Trainer
-import matplotlib.pyplot as plt
-import numpy as np
 
 
 def train_model(model):

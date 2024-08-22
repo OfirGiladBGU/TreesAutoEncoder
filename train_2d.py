@@ -131,7 +131,8 @@ class Trainer(object):
                 # plt.imshow(target_data[idx].permute(1, 2, 0))
                 # save_image(target_data[idx], 'img1.png')
 
-    def apply_threshold(self, tensor, threshold):
+    @staticmethod
+    def apply_threshold(tensor, threshold):
         tensor[tensor >= threshold] = 1.0
         tensor[tensor < threshold] = 0.0
 

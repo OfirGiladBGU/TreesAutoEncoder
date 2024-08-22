@@ -1,13 +1,13 @@
 import argparse
 import os
 import torch
+import matplotlib.pyplot as plt
+import numpy as np
+import nibabel as nib
 
 from models.multi_view_model import MultiView3DReconstruction
 
-
 from train_3d import Trainer
-import matplotlib.pyplot as plt
-import numpy as np
 
 
 def train_model(model):
@@ -15,66 +15,73 @@ def train_model(model):
     trainer.train()
 
 
-# def predict_model(model):
-#     try:
-#         os.stat(args.results_path)
-#     except:
-#         os.mkdir(args.results_path)
-#
-#     if os.path.exists(args.weights_filepath):
-#         model.load_state_dict(torch.load(args.weights_filepath))
-#     trainer = Trainer(args=args, model=model)
-#
-#     with torch.no_grad():
-#         for b in range(4):
-#             # Get the images from the test loader
-#             batch_num = b + 1
-#             data = iter(trainer.test_loader)
-#             for i in range(batch_num):
-#                 input_images, target_images = next(data)
-#             input_images = input_images.to(trainer.device)
-#             if args.dataset != 'TreesV1':
-#                 target_images = input_images.clone().detach()
-#             target_images = target_images.to(trainer.device)
-#
-#             model.eval()
-#             output_images = model(input_images)
-#
-#             # TODO: Threshold
-#             # trainer.apply_threshold(output_images, 0.5)
-#
-#             # Detach the images from the cuda and move them to CPU
-#             if trainer.args.cuda:
-#                 input_images = input_images.cpu().detach()
-#                 target_images = target_images.cpu().detach()
-#                 output_images = output_images.cpu().detach()
-#
-#             # Create a grid of images
-#             columns = 3
-#             rows = 25
-#             fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
-#             ax = []
-#             for i in range(rows):
-#                 # Input
-#                 ax.append(fig.add_subplot(rows, columns, i * 3 + 1))
-#                 npimg = input_images[i].numpy()
-#                 plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
-#
-#                 # Target
-#                 ax.append(fig.add_subplot(rows, columns, i * 3 + 2))
-#                 npimg = target_images[i].numpy()
-#                 plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
-#
-#                 # Output
-#                 ax.append(fig.add_subplot(rows, columns, i * 3 + 3))
-#                 npimg = output_images[i].numpy()
-#                 plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
-#
-#             ax[0].set_title("Input:")
-#             ax[1].set_title("Target:")
-#             ax[2].set_title("Output:")
-#             fig.tight_layout()
-#             plt.savefig(os.path.join(args.results_path, f'output_{args.dataset}_{model.model_name}_{b + 1}.png'))
+
+def convert_numpy_to_nii_gz(numpy_array, save_name="", save=False):
+    ct_nii_gz = nib.Nifti1Image(numpy_array, affine=np.eye(4))
+    if save and save_name != "":
+        nib.save(ct_nii_gz, f"{save_name}.nii.gz")
+    return ct_nii_gz
+
+def predict_model(model):
+    try:
+        os.stat(args.results_path)
+    except:
+        os.mkdir(args.results_path)
+
+    if os.path.exists(args.weights_filepath):
+        model.load_state_dict(torch.load(args.weights_filepath))
+    trainer = Trainer(args=args, model=model)
+
+    with torch.no_grad():
+        for b in range(4):
+            # Get the images from the test loader
+            batch_num = b + 1
+            data = iter(trainer.test_loader)
+            for i in range(batch_num):
+                input_images, target_3d_object = next(data)
+            input_images = input_images.to(trainer.device)
+
+            target_3d_object = target_3d_object.to(trainer.device)
+
+            model.eval()
+            output_3d_object = model(input_images)
+
+            # TODO: Threshold
+            trainer.apply_threshold(output_3d_object, 0.1)
+
+            # Detach the images from the cuda and move them to CPU
+            if trainer.args.cuda:
+                input_images = input_images.cpu().detach()
+                target_3d_object = target_3d_object.cpu().detach()
+                output_3d_object = output_3d_object.cpu().detach()
+
+            for idx in range(input_images.size(0)):
+                target_3d_object_idx = target_3d_object[idx].squeeze().numpy()
+                output_3d_object_idx = output_3d_object[idx].squeeze().numpy()
+
+                convert_numpy_to_nii_gz(numpy_array=target_3d_object_idx,
+                                        save_name=f"3d_results/target_{b}_{idx}", save=True)
+                convert_numpy_to_nii_gz(numpy_array=output_3d_object_idx,
+                                        save_name=f"3d_results/output_{b}_{idx}", save=True)
+
+                # Create a grid of images
+                columns = 6
+                rows = 1
+                fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
+                ax = []
+
+                for j in range(columns):
+                    ax.append(fig.add_subplot(rows, columns, i * 3 + (j + 1)))
+                    npimg = input_images[i][j].numpy()
+                    plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+
+                    ax[j].set_title(f"View {j}:")
+
+                fig.tight_layout()
+                plt.savefig(os.path.join("3d_results", f"images_{b}_{idx}.png"))
+
+                # only the first
+                exit()
 
 
 def main():
@@ -87,8 +94,8 @@ def main():
 
     # model.load_state_dict(torch.load(args.weights_filepath))
 
-    train_model(model=model)
-    # predict_model(model=model)
+    # train_model(model=model)
+    predict_model(model=model)
 
 
 if __name__ == "__main__":
