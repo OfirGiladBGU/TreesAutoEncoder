@@ -497,6 +497,9 @@ def create_dataset_original_images():
                 cv2.imwrite(f"{org_folder3}/{output_idx}_{mini_box_id_str}_right_components.png", right_components)
 
                 # 3D Folders
+                mini_cube1[mini_cube1 > 0] = 1.0
+                mini_cube2[mini_cube2 > 0] = 1.0
+
                 save_name = f"{org_3d_folder1}/{output_idx}_{mini_box_id_str}"
                 convert_numpy_to_nii_gz(numpy_array=mini_cube1, save_name=save_name)
                 save_name = f"{org_3d_folder2}/{output_idx}_{mini_box_id_str}"
