@@ -15,7 +15,6 @@ def train_model(model):
     trainer.train()
 
 
-
 def convert_numpy_to_nii_gz(numpy_array, save_name=None):
     ct_nii_gz = nib.Nifti1Image(numpy_array, affine=np.eye(4))
     if save_name is not None:
