@@ -73,7 +73,7 @@ class TreesDatasetV1(object):
         dst_path = os.path.join(str(os.path.dirname(__file__)), "tools", "parse_labels_mini_cropped_v5")
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader(data_paths=data_paths, args=args, transform=transforms.ToTensor())
+        trees_dataloader = TreesCustomDataloader(data_paths=data_paths, args=args)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
@@ -82,7 +82,7 @@ class TreesDatasetV2(object):
         src_path = os.path.join(str(os.path.dirname(__file__)), "tools", "mini_cropped_images")
         data_paths = [src_path]
 
-        trees_dataloader = TreesCustomDataloader(data_paths=data_paths, args=args, transform=transforms.ToTensor())
+        trees_dataloader = TreesCustomDataloader(data_paths=data_paths, args=args)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
@@ -92,8 +92,7 @@ class TreesDataset3DV1(object):
         dst_path = os.path.join(str(os.path.dirname(__file__)), "tools", "parse_labels_mini_cropped_3d_v5")
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args,
-                                                   transform2d=transforms.ToTensor(), transform3d=transforms.ToTensor())
+        trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 class TreesDataset3DV2(object):
@@ -102,6 +101,5 @@ class TreesDataset3DV2(object):
         dst_path = os.path.join(str(os.path.dirname(__file__)), "tools", "parse_labels_mini_cropped_3d_v5")
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args,
-                                                   transform2d=transforms.ToTensor(), transform3d=transforms.ToTensor())
+        trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
