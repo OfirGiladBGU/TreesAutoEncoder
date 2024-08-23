@@ -21,6 +21,13 @@ https://github.com/crowsonkb/vgg_loss/tree/master
 
 ---
 
+# Data info:
+
+1. parse2022 `labels`, `preds` -> Values: binary (0, 255), Dim: (..., ..., ...)
+2. parse2022 `preds_compnents` -> Values: grayscale (0-255), Dim: (..., ..., ...)
+3. mini_cropped `labels`, `preds` -> Values: binary (0, 1), Dim: (..., ..., ...)
+
+
 # The available approaches:
 
 Given the `3d ground truth` and the `3d predicted labels`:
