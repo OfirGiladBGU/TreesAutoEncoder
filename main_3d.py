@@ -6,7 +6,7 @@ import numpy as np
 import nibabel as nib
 
 from models.multi_view_model import MultiView3DReconstruction
-# from models.ae_3d_v2_model import Network3D
+from models.ae_3d_v2_model import Network3D
 
 from train_3d import Trainer
 
@@ -39,53 +39,60 @@ def predict_model(model):
             batch_num = b + 1
             data = iter(trainer.test_loader)
             for i in range(batch_num):
-                input_images, target_3d_object = next(data)
-            input_images = input_images.to(trainer.device)
+                input_data, target_data = next(data)
+            input_data = input_data.to(trainer.device)
 
-            target_3d_object = target_3d_object.to(trainer.device)
+            target_data = target_data.to(trainer.device)
 
             model.eval()
-            output_3d_object = model(input_images)
+            output_data = model(input_data)
 
             # TODO: Threshold
-            trainer.apply_threshold(output_3d_object, 0.1)
+            trainer.apply_threshold(output_data, 0.1)
 
             # Detach the images from the cuda and move them to CPU
             if trainer.args.cuda:
-                input_images = input_images.cpu().detach()
-                target_3d_object = target_3d_object.cpu().detach()
-                output_3d_object = output_3d_object.cpu().detach()
+                input_data = input_data.cpu()
+                target_data = target_data.cpu()
+                output_data = output_data.cpu()
 
-            for idx in range(input_images.size(0)):
-                target_3d_object_idx = target_3d_object[idx].squeeze().numpy()
-                output_3d_object_idx = output_3d_object[idx].squeeze().numpy()
+            for idx in range(input_data.size(0)):
+                target_data_idx = target_data[idx].squeeze().numpy()
+                output_data_idx = output_data[idx].squeeze().numpy()
 
-                convert_numpy_to_nii_gz(numpy_array=target_3d_object_idx, save_name=f"3d_results/target_{b}_{idx}")
-                convert_numpy_to_nii_gz(numpy_array=output_3d_object_idx, save_name=f"3d_results/output_{b}_{idx}")
+                convert_numpy_to_nii_gz(numpy_array=target_data_idx, save_name=f"3d_results/target_{b}_{idx}")
+                convert_numpy_to_nii_gz(numpy_array=output_data_idx, save_name=f"3d_results/output_{b}_{idx}")
 
-                # Create a grid of images
-                columns = 6
-                rows = 1
-                fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
-                ax = []
+                if args.dataset == 'Trees3DV1':
+                    # Create a grid of images
+                    columns = 6
+                    rows = 1
+                    fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
+                    ax = []
 
-                for j in range(columns):
-                    ax.append(fig.add_subplot(rows, columns, j + 1))
-                    npimg = input_images[idx][j].numpy()
-                    plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+                    for j in range(columns):
+                        ax.append(fig.add_subplot(rows, columns, j + 1))
+                        npimg = input_data[idx][j].numpy()
+                        plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
 
-                    ax[j].set_title(f"View {j}:")
+                        ax[j].set_title(f"View {j}:")
 
-                fig.tight_layout()
-                plt.savefig(os.path.join("3d_results", f"images_{b}_{idx}.png"))
+                    fig.tight_layout()
+                    plt.savefig(os.path.join("3d_results", f"images_{b}_{idx}.png"))
 
-                # only the first
-                # exit()
+                    # only the first
+                    # exit()
 
+                elif args.dataset == 'Trees3DV2':
+                    input_data_idx = input_data[idx].squeeze().numpy()
+                    convert_numpy_to_nii_gz(numpy_array=input_data_idx, save_name=f"3d_results/input_{b}_{idx}")
+
+                else:
+                    raise ValueError("Invalid dataset")
 
 def main():
-    model = MultiView3DReconstruction(args)
-    # model = Network3D(args)
+    # model = MultiView3DReconstruction(args)
+    model = Network3D(args)
 
     # Update save path
     filepath, ext = os.path.splitext(args.weights_filepath)
@@ -120,10 +127,11 @@ if __name__ == "__main__":
                         help='Which dataset to use')
 
     args = parser.parse_args()
-    args.dataset = 'Trees3DV1'
+    # args.dataset = 'Trees3DV1'
+    args.dataset = 'Trees3DV2'
 
     # args.batch_size = 3
-    args.epochs = 3
+    args.epochs = 1
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")
