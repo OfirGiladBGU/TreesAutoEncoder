@@ -101,7 +101,7 @@ def main():
 
     # model.load_state_dict(torch.load(args.weights_filepath))
 
-    # train_model(model=model)
+    train_model(model=model)
     predict_model(model=model)
 
 
