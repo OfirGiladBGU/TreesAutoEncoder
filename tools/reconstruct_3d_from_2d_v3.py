@@ -4,9 +4,9 @@ import cv2
 import os
 
 
-def convert_numpy_to_nii_gz(numpy_array, save_name="", save=False):
+def convert_numpy_to_nii_gz(numpy_array, save_name=None):
     ct_nii_gz = nib.Nifti1Image(numpy_array, affine=np.eye(4))
-    if save and save_name != "":
+    if save_name is not None:
         nib.save(ct_nii_gz, f"{save_name}.nii.gz")
     return ct_nii_gz
 
@@ -74,7 +74,7 @@ def reconstruct_3d_from_2d(format_of_2d_images):
 
     final_data_3d = final_data_3d.astype(np.uint8) * 255
     save_name = format_of_2d_images.replace("<VIEW>", "result")
-    convert_numpy_to_nii_gz(final_data_3d, save_name=save_name, save=True)
+    convert_numpy_to_nii_gz(final_data_3d, save_name=save_name)
     return final_data_3d
 
 
@@ -101,7 +101,7 @@ def refine_construction(voxel_grid: np.ndarray):
     # Extract surface mesh using Marching Cubes
     voxel_grid_refined = refine_voxel_grid(voxel_grid)
 
-    convert_numpy_to_nii_gz(voxel_grid_refined, save_name="Test", save=True)
+    convert_numpy_to_nii_gz(voxel_grid_refined, save_name="Test")
 
 
 def main():

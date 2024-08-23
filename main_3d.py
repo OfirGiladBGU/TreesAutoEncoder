@@ -16,11 +16,12 @@ def train_model(model):
 
 
 
-def convert_numpy_to_nii_gz(numpy_array, save_name="", save=False):
+def convert_numpy_to_nii_gz(numpy_array, save_name=None):
     ct_nii_gz = nib.Nifti1Image(numpy_array, affine=np.eye(4))
-    if save and save_name != "":
+    if save_name is not None:
         nib.save(ct_nii_gz, f"{save_name}.nii.gz")
     return ct_nii_gz
+
 
 def predict_model(model):
     try:
@@ -59,10 +60,8 @@ def predict_model(model):
                 target_3d_object_idx = target_3d_object[idx].squeeze().numpy()
                 output_3d_object_idx = output_3d_object[idx].squeeze().numpy()
 
-                convert_numpy_to_nii_gz(numpy_array=target_3d_object_idx,
-                                        save_name=f"3d_results/target_{b}_{idx}", save=True)
-                convert_numpy_to_nii_gz(numpy_array=output_3d_object_idx,
-                                        save_name=f"3d_results/output_{b}_{idx}", save=True)
+                convert_numpy_to_nii_gz(numpy_array=target_3d_object_idx, save_name=f"3d_results/target_{b}_{idx}")
+                convert_numpy_to_nii_gz(numpy_array=output_3d_object_idx, save_name=f"3d_results/output_{b}_{idx}")
 
                 # Create a grid of images
                 columns = 6

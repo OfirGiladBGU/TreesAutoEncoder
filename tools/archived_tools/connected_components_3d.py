@@ -12,9 +12,9 @@ def convert_nii_to_numpy(data_file):
     return ct_numpy
 
 
-def convert_numpy_to_nii_gz(numpy_array, save_name="", save=False):
+def convert_numpy_to_nii_gz(numpy_array, save_name=None):
     ct_nii_gz = nib.Nifti1Image(numpy_array, affine=np.eye(4))
-    if save and save_name != "":
+    if save_name is not None:
         nib.save(ct_nii_gz, f"{save_name}.nii.gz")
     return ct_nii_gz
 
@@ -31,7 +31,7 @@ def connected_components_3d(data_3d):
     print(labeled_array)
     print("Number of features:", num_features)
 
-    convert_numpy_to_nii_gz(labeled_array, "PA000005_components", save=True)
+    convert_numpy_to_nii_gz(numpy_array=labeled_array, save_name="PA000005_components")
 
 
 def main():

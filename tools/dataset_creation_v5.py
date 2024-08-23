@@ -14,9 +14,9 @@ def convert_nii_to_numpy(data_file):
     return ct_numpy
 
 
-def convert_numpy_to_nii_gz(numpy_array, save_name="", save=False):
+def convert_numpy_to_nii_gz(numpy_array, save_name=None):
     ct_nii_gz = nib.Nifti1Image(numpy_array, affine=np.eye(4))
-    if save and save_name != "":
+    if save_name is not None:
         nib.save(ct_nii_gz, f"{save_name}.nii.gz")
     return ct_nii_gz
 
@@ -192,7 +192,7 @@ def convert_to_3d_components():
         # Save results
         new_filepath = data_filepath.replace('preds', 'preds_components')
         output_save_name = os.path.splitext(os.path.splitext(new_filepath)[0])[0]  # To remove '.nii.gz'
-        convert_numpy_to_nii_gz(numpy_array=data_3d_components, save_name=output_save_name, save=True)
+        convert_numpy_to_nii_gz(numpy_array=data_3d_components, save_name=output_save_name)
 
 
 ##################
@@ -349,8 +349,8 @@ def create_dataset_original_images():
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_left.png", left_image2)
                 cv2.imwrite(f"{org_folder2}/{output_idx}_{mini_box_id_str}_right.png", right_image2)
 
-                # convert_numpy_to_nii_gz(mini_cube1, save_name="1", save=True)
-                # convert_numpy_to_nii_gz(mini_cube2, save_name="2", save=True)
+                # convert_numpy_to_nii_gz(mini_cube1, save_name="1")
+                # convert_numpy_to_nii_gz(mini_cube2, save_name="2")
 
         if batch_idx == 10:
             break
