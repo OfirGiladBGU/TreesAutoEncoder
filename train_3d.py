@@ -4,10 +4,8 @@ from torch import optim
 from torch.nn import functional as F
 import copy
 
-from datasets import TreesDataset3DV1
+from datasets import TreesDataset3DV1, TreesDataset3DV2
 import loss_functions
-
-from torchvision.utils import save_image
 
 
 class Trainer(object):
@@ -29,6 +27,8 @@ class Trainer(object):
     def _init_dataset(self):
         if self.args.dataset == 'Trees3DV1':
             self.data = TreesDataset3DV1(self.args)
+        elif self.args.dataset == 'Trees3DV2':
+            self.data = TreesDataset3DV2(self.args)
         else:
             raise Exception("Dataset not supported")
 

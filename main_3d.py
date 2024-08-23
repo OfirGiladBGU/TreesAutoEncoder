@@ -6,6 +6,7 @@ import numpy as np
 import nibabel as nib
 
 from models.multi_view_model import MultiView3DReconstruction
+# from models.ae_3d_v2_model import Network3D
 
 from train_3d import Trainer
 
@@ -84,6 +85,7 @@ def predict_model(model):
 
 def main():
     model = MultiView3DReconstruction(args)
+    # model = Network3D(args)
 
     # Update save path
     filepath, ext = os.path.splitext(args.weights_filepath)
@@ -129,5 +131,7 @@ if __name__ == "__main__":
 
     if args.dataset == 'Trees3DV1':
         args.input_size = (6, 1, 32, 32)
+    if args.dataset == 'Trees3DV2':
+        args.input_size = (1, 32, 32, 32)
 
     main()

@@ -131,8 +131,13 @@ class TreesCustomDataloader:
             train_dataloader: Train loader with 0.9 of the data.
             val_dataloader: Val loader with 0.1 of the data.
         """
+        if self.args.dataset == 'TreesV1':
+            tree_dataset = TreesCustomDatasetV1(self.data_paths, self.transform)
+        elif self.args.dataset == 'TreesV2':
+            tree_dataset = TreesCustomDatasetV2(self.data_paths, self.transform)
+        else:
+            raise Exception("Dataset not supported")
 
-        tree_dataset = TreesCustomDatasetV1(self.data_paths, self.transform)
         dataset_size = len(tree_dataset)
         train_size = int(dataset_size * 0.9)
         val_size = dataset_size - train_size
@@ -235,6 +240,58 @@ class TreesCustomDataset3DV1(torch.utils.data.Dataset):
         return batch, target
 
 
+class TreesCustomDataset3DV2(torch.utils.data.Dataset):
+    def __init__(self, data_paths: list, transform3d=None):
+        self.data_paths = data_paths
+        self.transform3d = transform3d
+
+        self.paths_count = len(data_paths)
+        if self.paths_count == 1:
+            self.data_files1 = os.listdir(data_paths[0])
+            self.data_files1.sort()
+        elif self.paths_count == 2:
+            self.data_files1 = os.listdir(data_paths[0])
+            self.data_files1.sort()
+            self.data_files2 = os.listdir(data_paths[1])
+            self.data_files2.sort()
+        else:
+            raise ValueError("Invalid number of data paths")
+
+        self.scans_count = len(self.data_files2)
+
+    def __len__(self):
+        return self.scans_count
+
+    def __getitem__(self, idx):
+        data_file1 = os.path.join(self.data_paths[0], self.data_files1[idx])
+        ct_img1 = nib.load(data_file1)
+        image_3d_numpy1 = ct_img1.get_fdata()
+        image_3d_numpy1 = image_3d_numpy1.astype(np.uint8)
+
+        if self.transform3d is not None:
+            image_3d_numpy1 = self.transform3d(image_3d_numpy1)
+        else:
+            image_3d_numpy1 = torch.Tensor(image_3d_numpy1)
+
+        # Only 1 3D data
+        if self.paths_count == 1:
+            return image_3d_numpy1, -1
+
+        # 1 3D input + 1 3D target
+        elif self.paths_count == 2:
+            data_file2 = os.path.join(self.data_paths[1], self.data_files2[idx])
+            ct_img2 = nib.load(data_file2)
+            image_3d_numpy2 = ct_img2.get_fdata()
+            image_3d_numpy2 = image_3d_numpy2.astype(np.uint8)
+
+            if self.transform3d is not None:
+                image_3d_numpy2 = self.transform3d(image_3d_numpy2)
+            else:
+                image_3d_numpy2 = torch.Tensor(image_3d_numpy2)
+
+            return image_3d_numpy1, image_3d_numpy2
+
+
 class TreesCustomDataloader3D:
     def __init__(self, data_paths, args, transform2d=None, transform3d=None):
         self.data_paths = data_paths
@@ -252,7 +309,13 @@ class TreesCustomDataloader3D:
             val_dataloader: Val loader with 0.1 of the data.
         """
 
-        tree_dataset = TreesCustomDataset3DV1(self.data_paths, self.transform2d, self.transform3d)
+        if self.args.dataset == 'Trees3DV1':
+            tree_dataset = TreesCustomDataset3DV1(self.data_paths, self.transform2d, self.transform3d)
+        elif self.args.dataset == 'Trees3DV2':
+            tree_dataset = TreesCustomDataset3DV2(self.data_paths, self.transform3d)
+        else:
+            raise Exception("Dataset not supported")
+
         dataset_size = len(tree_dataset)
         train_size = int(dataset_size * 0.9)
         val_size = dataset_size - train_size
