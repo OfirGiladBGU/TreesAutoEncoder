@@ -60,8 +60,8 @@ def predict_model(model):
                 target_data_idx = target_data[idx].squeeze().numpy()
                 output_data_idx = output_data[idx].squeeze().numpy()
 
-                convert_numpy_to_nii_gz(numpy_array=target_data_idx, save_name=f"3d_results/target_{b}_{idx}")
-                convert_numpy_to_nii_gz(numpy_array=output_data_idx, save_name=f"3d_results/output_{b}_{idx}")
+                convert_numpy_to_nii_gz(numpy_array=target_data_idx, save_name=f"3d_results/{b}_{idx}_target")
+                convert_numpy_to_nii_gz(numpy_array=output_data_idx, save_name=f"3d_results/{b}_{idx}_output")
 
                 if args.dataset == 'Trees3DV1':
                     # Create a grid of images
@@ -78,14 +78,14 @@ def predict_model(model):
                         ax[j].set_title(f"View {j}:")
 
                     fig.tight_layout()
-                    plt.savefig(os.path.join("3d_results", f"images_{b}_{idx}.png"))
+                    plt.savefig(os.path.join("3d_results", f"{b}_{idx}_images.png"))
 
                     # only the first
                     # exit()
 
                 elif args.dataset == 'Trees3DV2':
                     input_data_idx = input_data[idx].squeeze().numpy()
-                    convert_numpy_to_nii_gz(numpy_array=input_data_idx, save_name=f"3d_results/input_{b}_{idx}")
+                    convert_numpy_to_nii_gz(numpy_array=input_data_idx, save_name=f"3d_results/{b}_{idx}_input")
 
                 else:
                     raise ValueError("Invalid dataset")
@@ -101,7 +101,7 @@ def main():
 
     # model.load_state_dict(torch.load(args.weights_filepath))
 
-    train_model(model=model)
+    # train_model(model=model)
     predict_model(model=model)
 
 
@@ -131,7 +131,7 @@ if __name__ == "__main__":
     args.dataset = 'Trees3DV2'
 
     # args.batch_size = 3
-    args.epochs = 1
+    args.epochs = 5
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")
