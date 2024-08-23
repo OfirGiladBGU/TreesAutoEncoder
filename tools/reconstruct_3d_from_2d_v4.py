@@ -107,6 +107,10 @@ def reconstruct_3d_from_2d(format_of_2d_images):
 def main():
     src_folder = r".\parse_labels_mini_cropped_v5"
     tgt_folder = r".\parse_labels_mini_cropped_3d_reconstruct_v5"
+
+    # src_folder = r".\parse_preds_mini_cropped_v5"
+    # tgt_folder = r".\parse_preds_mini_cropped_3d_reconstruct_v5"
+
     os.makedirs(tgt_folder, exist_ok=True)
 
     all_images = os.listdir(src_folder)
