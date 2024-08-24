@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 import nibabel as nib
 from torchvision import transforms
+import matplotlib.pyplot as plt
 
 from models.ae_v2_model import Network
 from models.ae_3d_v2_model import Network3D
@@ -102,6 +103,24 @@ def single_predict(format_of_2d_images, output_path):
             numpy_image = data_2d_predicts[idx].squeeze() * 255
             data_3d = reverse_rotations(numpy_image, image_view)
             data_3d_list.append(data_3d)
+
+        # TODO: DEBUG
+        # columns = 6
+        # rows = 1
+        # fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
+        # ax = []
+        #
+        # for j in range(columns):
+        #     ax.append(fig.add_subplot(rows, columns, j + 1))
+        #     npimg = data_2d_predicts[idx]
+        #     npimg = npimg * 255
+        #     npimg = npimg.astype(np.uint8)
+        #     plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+        #
+        #     ax[j].set_title(f"View {j}:")
+        #
+        # fig.tight_layout()
+        # plt.savefig(os.path.join("results", f"{idx}_images.png"))
 
         final_data_3d = data_3d_list[0]
         for i in range(1, len(data_3d_list)):

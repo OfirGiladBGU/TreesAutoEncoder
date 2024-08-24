@@ -45,6 +45,9 @@ def predict_model(model):
             target_data = target_data.to(trainer.device)
 
             model.eval()
+
+            # TODO: temp fix
+            input_data = input_data.to(torch.float32)
             output_data = model(input_data)
 
             # TODO: Threshold
@@ -101,7 +104,7 @@ def main():
 
     # model.load_state_dict(torch.load(args.weights_filepath))
 
-    train_model(model=model)
+    # train_model(model=model)
     predict_model(model=model)
 
 
@@ -131,7 +134,7 @@ if __name__ == "__main__":
     args.dataset = 'Trees3DV2'
 
     # args.batch_size = 3
-    args.epochs = 5
+    args.epochs = 2
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")

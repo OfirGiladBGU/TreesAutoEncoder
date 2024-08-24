@@ -13,6 +13,7 @@ class TreesCustomDatasetV1(torch.utils.data.Dataset):
     def __init__(self, data_paths: list, transform=None):
         self.data_paths = data_paths
         self.transform = transform
+        self.to_tensor = transforms.ToTensor()
 
         self.paths_count = len(data_paths)
         if self.paths_count == 1:
@@ -41,7 +42,7 @@ class TreesCustomDatasetV1(torch.utils.data.Dataset):
         # if image_numpy1.max() > 0:
         #     image_numpy1 = image_numpy1 / image_numpy1.max()
 
-        image_numpy1 = transforms.ToTensor()(image_numpy1)
+        image_numpy1 = self.to_tensor(image_numpy1)
         if self.transform is not None:
             image_numpy1 = self.transform(image_numpy1)
 
@@ -58,7 +59,7 @@ class TreesCustomDatasetV1(torch.utils.data.Dataset):
             # if image_numpy2.max() > 0:
             #     image_numpy2 = image_numpy2 / image_numpy2.max()
 
-            image_numpy2 = transforms.ToTensor()(image_numpy2)
+            image_numpy2 = self.to_tensor(image_numpy2)
             if self.transform is not None:
                 image_numpy2 = self.transform(image_numpy2)
 
@@ -70,6 +71,7 @@ class TreesCustomDatasetV2(torch.utils.data.Dataset):
     def __init__(self, data_paths: list, transform=None):
         self.data_paths = data_paths
         self.transform = transform
+        self.to_tensor = transforms.ToTensor()
 
         self.paths_count = len(data_paths)
         if self.paths_count == 1:
@@ -98,7 +100,7 @@ class TreesCustomDatasetV2(torch.utils.data.Dataset):
             image_numpy1 = cv2.imread(data_file1)
             image_numpy1 = cv2.cvtColor(image_numpy1, cv2.COLOR_BGR2GRAY)
 
-            image_numpy1 = transforms.ToTensor()(image_numpy1)
+            image_numpy1 = self.to_tensor(image_numpy1)
             if self.transform is not None:
                 image_numpy1 = self.transform(image_numpy1)
 
@@ -111,7 +113,7 @@ class TreesCustomDatasetV2(torch.utils.data.Dataset):
                 image_numpy2 = cv2.imread(data_file2)
                 image_numpy2 = cv2.cvtColor(image_numpy2, cv2.COLOR_BGR2GRAY)
 
-                image_numpy2 = transforms.ToTensor()(image_numpy2)
+                image_numpy2 = self.to_tensor(image_numpy2)
                 if self.transform is not None:
                     image_numpy2 = self.transform(image_numpy2)
 
@@ -184,6 +186,7 @@ class TreesCustomDataset3DV1(torch.utils.data.Dataset):
         self.data_paths = data_paths
         self.transform2d = transform2d
         self.transform3d = transform3d
+        self.to_tensor = transforms.ToTensor()
 
         self.paths_count = len(data_paths)
         if self.paths_count == 1:
@@ -211,7 +214,7 @@ class TreesCustomDataset3DV1(torch.utils.data.Dataset):
             image_numpy1 = cv2.imread(data_file1)
             image_numpy1 = cv2.cvtColor(image_numpy1, cv2.COLOR_BGR2GRAY)
 
-            image_numpy1 = transforms.ToTensor()(image_numpy1)
+            image_numpy1 = self.to_tensor(image_numpy1)
             if self.transform2d is not None:
                 image_numpy1 = self.transform2d(image_numpy1)
 
@@ -228,7 +231,7 @@ class TreesCustomDataset3DV1(torch.utils.data.Dataset):
             image_numpy2 = ct_img.get_fdata()
             image_numpy2 = image_numpy2.astype(np.uint8)
 
-            image_numpy2 = transforms.ToTensor()(image_numpy2)
+            image_numpy2 = self.to_tensor(image_numpy2)
             if self.transform3d is not None:
                 image_numpy2 = self.transform3d(image_numpy2)
 
@@ -247,6 +250,7 @@ class TreesCustomDataset3DV2(torch.utils.data.Dataset):
     def __init__(self, data_paths: list, transform3d=None):
         self.data_paths = data_paths
         self.transform3d = transform3d
+        self.to_tensor = transforms.ToTensor()
 
         self.paths_count = len(data_paths)
         if self.paths_count == 1:
@@ -271,7 +275,7 @@ class TreesCustomDataset3DV2(torch.utils.data.Dataset):
         image_3d_numpy1 = ct_img1.get_fdata()
         # image_3d_numpy1 = image_3d_numpy1.astype(np.uint8)
 
-        image_3d_numpy1 = transforms.ToTensor()(image_3d_numpy1)
+        image_3d_numpy1 = self.to_tensor(image_3d_numpy1)
         if self.transform3d is not None:
             image_3d_numpy1 = self.transform3d(image_3d_numpy1)
 
@@ -286,7 +290,7 @@ class TreesCustomDataset3DV2(torch.utils.data.Dataset):
             image_3d_numpy2 = ct_img2.get_fdata()
             # image_3d_numpy2 = image_3d_numpy2.astype(np.uint8)
 
-            image_3d_numpy2 = transforms.ToTensor()(image_3d_numpy2)
+            image_3d_numpy2 = self.to_tensor(image_3d_numpy2)
             if self.transform3d is not None:
                 image_3d_numpy2 = self.transform3d(image_3d_numpy2)
 
