@@ -1,26 +1,125 @@
 import argparse
+import os
+import torch
+import cv2
+import numpy as np
+import nibabel as nib
+from torchvision import transforms
 
 from models.ae_v2_model import Network
 from models.ae_3d_v2_model import Network3D
 
 
-def single_predict(image_path, model_path, model_type):
-    model_2d = Network()
-    model_3d = Network3D()
+def convert_numpy_to_nii_gz(numpy_array, save_name=None):
+    ct_nii_gz = nib.Nifti1Image(numpy_array, affine=np.eye(4))
+    if save_name is not None:
+        nib.save(ct_nii_gz, f"{save_name}.nii.gz")
+    return ct_nii_gz
 
-    # model.load_state_dict(torch.load(model_path))
-    # model.eval()
-    #
-    # # Load the image
-    # image = nib.load(image_path)
-    # image_data = image.get_fdata()
-    #
-    # # Predict
-    # with torch.no_grad():
-    #     input_data = torch.tensor(image_data).unsqueeze(0).unsqueeze(0).float()
-    #     output_data = model(input_data)
-    #
-    # return output_data
+
+def reverse_rotations(numpy_image, view_type):
+    # Convert to 3D
+    data_3d = np.zeros((numpy_image.shape[0], numpy_image.shape[0], numpy_image.shape[0]), dtype=np.uint8)
+    for i in range(numpy_image.shape[0]):
+        for j in range(numpy_image.shape[1]):
+            gray_value = int(numpy_image[i, j])
+            if gray_value > 0:
+                rescale_gray_value = int(numpy_image.shape[0] * (1 - (gray_value / 255)))
+
+                if view_type in ["front", "back"]:
+                    data_3d[i, j, rescale_gray_value] = 255
+                elif view_type in ["top", "bottom"]:
+                    data_3d[rescale_gray_value, i, j] = 255
+                elif view_type in ["right", "left"]:
+                    data_3d[i, rescale_gray_value, j] = 255
+                else:
+                    raise ValueError("Invalid view type")
+
+    # Reverse the rotations
+    if view_type == "front":
+        pass
+
+    if view_type == "back":
+        data_3d = np.rot90(data_3d, k=2, axes=(2, 1))
+
+    if view_type == "top":
+        data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
+
+    if view_type == "bottom":
+        data_3d = np.rot90(data_3d, k=2, axes=(1, 0))
+        data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
+
+    if view_type == "right":
+        data_3d = np.flip(data_3d, axis=1)
+
+    if view_type == "left":
+        data_3d = np.rot90(data_3d, k=2, axes=(2, 1))
+        data_3d = np.flip(data_3d, axis=1)
+
+    # Reverse the initial rotations
+    data_3d = np.flip(data_3d, axis=1)
+    data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
+    data_3d = np.rot90(data_3d, k=1, axes=(2, 0))
+
+    return data_3d
+
+def single_predict(format_of_2d_images, output_path):
+    os.makedirs(output_path, exist_ok=True)
+
+    # Load models
+    filepath, ext = os.path.splitext(args.weights_filepath)
+
+    args.input_size = (1, 32, 32)
+    model_2d = Network(args=args)
+    model_2d_weights_filepath = f"{filepath}_{model_2d.model_name}{ext}"
+    model_2d.load_state_dict(torch.load(model_2d_weights_filepath))
+    model_2d.eval()
+
+    args.input_size = (1, 32, 32, 32)
+    model_3d = Network3D(args=args)
+    model_3d_weights_filepath = f"{filepath}_{model_3d.model_name}{ext}"
+    model_3d.load_state_dict(torch.load(model_3d_weights_filepath))
+    model_3d.eval()
+
+    with torch.no_grad():
+        # Prepare 2D data
+        images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
+        data_2d_list = list()
+        for image_view in images_6_views:
+            image_path = format_of_2d_images.replace("<VIEW>", image_view)
+            image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+            torch_image = transforms.ToTensor()(image)
+            data_2d_list.append(torch_image)
+        data_2d = torch.stack(data_2d_list)
+
+        # Predict 2D
+        data_2d_predicts = model_2d(data_2d)
+
+        # Prepare 3D data
+        data_2d_predicts = data_2d_predicts.numpy()
+        data_3d_list = list()
+        for idx, image_view in enumerate(images_6_views):
+            numpy_image = data_2d_predicts[idx].squeeze()
+            data_3d = reverse_rotations(numpy_image, image_view)
+            data_3d_list.append(data_3d)
+
+        final_data_3d = data_3d_list[0]
+        for i in range(1, len(data_3d_list)):
+            final_data_3d = np.logical_or(final_data_3d, data_3d_list[i])
+        final_data_3d = final_data_3d.astype(np.float64)
+
+        # Convert to batch
+        final_data_3d = transforms.ToTensor()(final_data_3d).unsqueeze(0)
+        final_data_3d_batch = final_data_3d.unsqueeze(0)
+
+        # Predict 3D
+        data_3d_predicts = model_3d(final_data_3d_batch)
+
+        # Save the results
+        data_3d_output = data_3d_predicts[0].squeeze().numpy()
+        save_name = os.path.join(output_path, os.path.basename(format_of_2d_images).replace("<VIEW>.png", ""))
+        convert_numpy_to_nii_gz(numpy_array=data_3d_output, save_name=save_name)
+
 
 def main():
     # 1. Use model 1 on the `parse_preds_mini_cropped_v5`
@@ -29,7 +128,10 @@ def main():
     # 4. Use model 2 on the `parse_prefixed_mini_cropped_3d_v5`
     # 5. Save the results in `parse_fixed_mini_cropped_3d_v5`
     # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
-    pass
+
+    format_of_2d_images = r"./tools/parse_labels_mini_cropped_v5/PA000005_vessel_02584_<VIEW>.png"
+    output_path = r"./predict_results"
+    single_predict(format_of_2d_images=format_of_2d_images, output_path=output_path)
 
 
 if __name__ == "__main__":
@@ -44,5 +146,7 @@ if __name__ == "__main__":
                         help='Which dataset to use')
     parser.add_argument('--weights-filepath', type=str, default='./weights/Network.pth', metavar='N',
                         help='Which dataset to use')
+
+    args = parser.parse_args()
 
     main()
