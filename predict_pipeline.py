@@ -117,6 +117,10 @@ def single_predict(format_of_2d_images, output_path):
 
         # Save the results
         data_3d_output = data_3d_predicts[0].squeeze().numpy()
+
+        # TODO: Threshold
+        data_3d_output[data_3d_output >= 0.1] = 1.0
+        data_3d_output[data_3d_output < 0.1] = 0.0
         save_name = os.path.join(output_path, os.path.basename(format_of_2d_images).replace("<VIEW>.png", ""))
         convert_numpy_to_nii_gz(numpy_array=data_3d_output, save_name=save_name)
 
