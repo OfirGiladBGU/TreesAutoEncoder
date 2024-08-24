@@ -58,7 +58,8 @@ class Trainer(object):
             target_data = target_data.to(self.device)
 
             # TODO: temp fix
-            target_data = torch.tensor(target_data, dtype=torch.float32)
+            input_data = input_data.to(torch.float32)
+            target_data = target_data.to(torch.float32)
 
             self.optimizer.zero_grad()
             recon_batch = self.model(input_data)
@@ -83,6 +84,10 @@ class Trainer(object):
             for i, (input_data, target_data) in enumerate(self.test_loader):
                 input_data = input_data.to(self.device)
                 target_data = target_data.to(self.device)
+
+                # TODO: temp fix
+                input_data = input_data.to(torch.float32)
+                target_data = target_data.to(torch.float32)
 
                 recon_batch = self.model(input_data)
                 test_loss += self.loss_function(out=recon_batch, target=target_data, original=input_data).item()

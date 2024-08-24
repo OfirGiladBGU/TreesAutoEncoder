@@ -48,6 +48,8 @@ def predict_model(model):
 
             # TODO: temp fix
             input_data = input_data.to(torch.float32)
+            target_data = target_data.to(torch.float32)
+
             output_data = model(input_data)
 
             # TODO: Threshold
@@ -104,7 +106,7 @@ def main():
 
     # model.load_state_dict(torch.load(args.weights_filepath))
 
-    # train_model(model=model)
+    train_model(model=model)
     predict_model(model=model)
 
 
