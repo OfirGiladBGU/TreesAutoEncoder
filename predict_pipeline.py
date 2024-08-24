@@ -99,7 +99,7 @@ def single_predict(format_of_2d_images, output_path):
         data_2d_predicts = data_2d_predicts.numpy()
         data_3d_list = list()
         for idx, image_view in enumerate(images_6_views):
-            numpy_image = data_2d_predicts[idx].squeeze()
+            numpy_image = data_2d_predicts[idx].squeeze() * 255
             data_3d = reverse_rotations(numpy_image, image_view)
             data_3d_list.append(data_3d)
 

@@ -57,6 +57,9 @@ class Trainer(object):
             input_data = input_data.to(self.device)
             target_data = target_data.to(self.device)
 
+            # TODO: temp fix
+            target_data = torch.tensor(target_data, dtype=torch.float32)
+
             self.optimizer.zero_grad()
             recon_batch = self.model(input_data)
             loss = self.loss_function(out=recon_batch, target=target_data, original=input_data)

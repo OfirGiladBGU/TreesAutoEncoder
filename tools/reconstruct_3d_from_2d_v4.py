@@ -72,7 +72,7 @@ def reconstruct_3d_from_2d(format_of_2d_images):
     for i in range(1, len(data_3d_list)):
         final_data_3d = np.logical_or(final_data_3d, data_3d_list[i])
 
-    final_data_3d = final_data_3d.astype(np.float64)
+    final_data_3d = final_data_3d.astype(np.float32)
     # save_name = format_of_2d_images.replace("<VIEW>", "result")
     # convert_numpy_to_nii_gz(final_data_3d, save_name=save_name)
     return final_data_3d
