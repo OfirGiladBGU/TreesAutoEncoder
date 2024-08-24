@@ -106,7 +106,7 @@ def single_predict(format_of_2d_images, output_path):
         final_data_3d = data_3d_list[0]
         for i in range(1, len(data_3d_list)):
             final_data_3d = np.logical_or(final_data_3d, data_3d_list[i])
-        final_data_3d = final_data_3d.astype(np.float64)
+        final_data_3d = final_data_3d.astype(np.float32)
 
         # Convert to batch
         final_data_3d = transforms.ToTensor()(final_data_3d).unsqueeze(0)
