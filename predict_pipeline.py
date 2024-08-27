@@ -158,6 +158,12 @@ def main():
 
 
 if __name__ == "__main__":
+    # TODO: run test of different inputs (100 examples)
+    # TODO: show best 10, worst 10, median 10
+
+    # TODO: another note for next stage:
+    # 1. Add label on number of connected components inside a 3D volume
+    # 2. Use the label to add a task for the model to predict the number of connected components
     parser = argparse.ArgumentParser(description='Main function to call training for different AutoEncoders')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='enables CUDA training')
