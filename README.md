@@ -40,12 +40,9 @@ Given the `3d ground truth` and the `3d predicted labels`:
       1. Train with the 6 `2d predicted labels` to **repair** and get 6 `2d ground truth`
       2. Predict with the 6 `2d predicted labels` to get the 6 `2d fixed labels`
    3. Use `model2` as follows (6-2D to 3D):
-      1. (Seems better) Option 1:
-         1. Train with the 6 `2d ground truth` to **reconstruct** and get the `3d ground truth`
-         2. Predict with the 6 `2d fixed labels` to get the `3d fixed labels`
-      2. (Might be problematic) Option 2:
-         1. Train with the 6 `2d predicted labels`/`2d fixed labels`  to **reconstruct** and get the `3d ground truth`
-         2. Predict with the 6 `2d fixed labels` to get the `3d fixed labels`
+      1. Train with the 6 `2d ground truth` to **reconstruct** and get the `3d ground truth`
+      2. Predict with the 6 `2d fixed labels` to get the `3d fixed labels`
+      
    4. Use all the `3d fixed label` to fix the `3d predicted labels`
 
 2. (Secondary Core Flow) Option 2 Flows: 
@@ -60,12 +57,8 @@ Given the `3d ground truth` and the `3d predicted labels`:
       2. From `2d predicted labels` to get the `pre-3d predicted labels`
       3. From `2d fixed labels` to get the `pre-3d fixed labels`
    4. Use `model2` as follows (3D to 3D):
-      1. (Seems better) Option 1:
-         1. Train with the `pre-3d ground truth` to **reconstruct** and get the `3d ground truth`
-         2. Predict with the `pre-3d fixed labels` to get the `3d fixed labels`
-      2. (Might be problematic) Option 2:
-         1. Train with the `pre-3d predicted labels`/`pre-3d fixed labels` to **reconstruct** and get the `3d ground truth`
-         2. Predict with the `pre-3d fixed labels` to get the `3d fixed labels`
+      1. Train with the `pre-3d ground truth` to **reconstruct** and get the `3d ground truth`
+      2. Predict with the `pre-3d fixed labels` to get the `3d fixed labels`
    5. Use all the `3d fixed label` to fix the `3d predicted labels`
 
 3. (Direct Repair Flow) Option 3 Flows:

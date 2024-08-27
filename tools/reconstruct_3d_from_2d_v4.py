@@ -103,14 +103,7 @@ def reconstruct_3d_from_2d(format_of_2d_images):
 #
 #     convert_numpy_to_nii_gz(voxel_grid_refined, save_name="Test")
 
-
-def main():
-    src_folder = r".\parse_labels_mini_cropped_v5"
-    tgt_folder = r".\parse_labels_mini_cropped_3d_reconstruct_v5"
-
-    # src_folder = r".\parse_preds_mini_cropped_v5"
-    # tgt_folder = r".\parse_preds_mini_cropped_3d_reconstruct_v5"
-
+def full_3d_reconstruction(src_folder, tgt_folder):
     os.makedirs(tgt_folder, exist_ok=True)
 
     all_images = os.listdir(src_folder)
@@ -131,12 +124,22 @@ def main():
         save_name = os.path.join(tgt_folder, save_name)
         convert_numpy_to_nii_gz(final_data_3d, save_name=save_name)
 
-
     # format_of_2d_images = r".\parse_labels_mini_cropped_v5\PA000005_vessel_02584_<VIEW>.png"
     # final_data_3d = reconstruct_3d_from_2d(format_of_2d_images)
     #
     # voxel_grid = final_data_3d.astype(np.uint8)
     # refine_construction(voxel_grid)
+
+
+def main():
+    src_folder1 = r".\parse_labels_mini_cropped_v5"
+    tgt_folder1 = r".\parse_labels_mini_cropped_3d_reconstruct_v5"
+
+    # src_folder2 = r".\parse_preds_mini_cropped_v5"
+    # tgt_folder2 = r".\parse_preds_mini_cropped_3d_reconstruct_v5"
+
+    full_3d_reconstruction(src_folder1, tgt_folder1)
+    # full_3d_reconstruction(src_folder2, tgt_folder2)
 
 
 if __name__ == "__main__":

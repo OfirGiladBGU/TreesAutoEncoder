@@ -18,6 +18,8 @@ def train_model(model):
 
 
 def predict_model(model):
+    print("Predicting")
+
     try:
         os.stat(args.results_path)
     except:

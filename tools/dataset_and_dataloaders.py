@@ -228,8 +228,7 @@ class TreesCustomDataset3DV1(torch.utils.data.Dataset):
         elif self.paths_count == 2:
             data_file2 = os.path.join(self.data_paths[1], self.data_files2[idx])
             ct_img = nib.load(data_file2)
-            image_numpy2 = ct_img.get_fdata()
-            image_numpy2 = image_numpy2.astype(np.uint8)
+            image_numpy2 = ct_img.get_fdata().astype(np.uint8)
 
             image_numpy2 = self.to_tensor(image_numpy2)
             if self.transform3d is not None:
@@ -272,8 +271,7 @@ class TreesCustomDataset3DV2(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         data_file1 = os.path.join(self.data_paths[0], self.data_files1[idx])
         ct_img1 = nib.load(data_file1)
-        image_3d_numpy1 = ct_img1.get_fdata()
-        # image_3d_numpy1 = image_3d_numpy1.astype(np.uint8)
+        image_3d_numpy1 = ct_img1.get_fdata().astype(np.uint8)
 
         image_3d_numpy1 = self.to_tensor(image_3d_numpy1)
         if self.transform3d is not None:
@@ -287,8 +285,7 @@ class TreesCustomDataset3DV2(torch.utils.data.Dataset):
         elif self.paths_count == 2:
             data_file2 = os.path.join(self.data_paths[1], self.data_files2[idx])
             ct_img2 = nib.load(data_file2)
-            image_3d_numpy2 = ct_img2.get_fdata()
-            # image_3d_numpy2 = image_3d_numpy2.astype(np.uint8)
+            image_3d_numpy2 = ct_img2.get_fdata().astype(np.uint8)
 
             image_3d_numpy2 = self.to_tensor(image_3d_numpy2)
             if self.transform3d is not None:

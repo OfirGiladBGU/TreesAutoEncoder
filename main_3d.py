@@ -24,6 +24,8 @@ def convert_numpy_to_nii_gz(numpy_array, save_name=None):
 
 
 def predict_model(model):
+    print("Predicting")
+
     try:
         os.stat(args.results_path)
     except:
