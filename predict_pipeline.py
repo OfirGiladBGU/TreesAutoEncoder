@@ -64,6 +64,10 @@ def reverse_rotations(numpy_image, view_type):
 
     return data_3d
 
+def apply_threshold(tensor, threshold):
+    tensor[tensor >= threshold] = 1.0
+    tensor[tensor < threshold] = 0.0
+
 def single_predict(format_of_2d_images, output_path):
     os.makedirs(output_path, exist_ok=True)
 
@@ -110,17 +114,19 @@ def single_predict(format_of_2d_images, output_path):
         # fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
         # ax = []
         #
+        # data_2d = data_2d.numpy()
         # for j in range(columns):
         #     ax.append(fig.add_subplot(rows, columns, j + 1))
-        #     npimg = data_2d_predicts[idx]
+        #     npimg = data_2d_predicts[j]
+        #     # npimg = data_2d[j]
         #     npimg = npimg * 255
         #     npimg = npimg.astype(np.uint8)
         #     plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
         #
-        #     ax[j].set_title(f"View {j}:")
+        #     ax[j].set_title(f"View {images_6_views[j]}:")
         #
         # fig.tight_layout()
-        # plt.savefig(os.path.join("results", f"{idx}_images.png"))
+        # plt.savefig(os.path.join("results", f"debug_images.png"))
 
         final_data_3d = data_3d_list[0]
         for i in range(1, len(data_3d_list)):
@@ -129,7 +135,7 @@ def single_predict(format_of_2d_images, output_path):
 
         # Convert to batch
         final_data_3d = transforms.ToTensor()(final_data_3d).unsqueeze(0)
-        final_data_3d_batch = final_data_3d.unsqueeze(0)
+        final_data_3d_batch = torch.stack([final_data_3d])
 
         # Predict 3D
         data_3d_predicts = model_3d(final_data_3d_batch)
@@ -138,8 +144,7 @@ def single_predict(format_of_2d_images, output_path):
         data_3d_output = data_3d_predicts[0].squeeze().numpy()
 
         # TODO: Threshold
-        data_3d_output[data_3d_output >= 0.5] = 1.0
-        data_3d_output[data_3d_output < 0.5] = 0.0
+        apply_threshold(data_3d_output, 0.1)
         save_name = os.path.join(output_path, os.path.basename(format_of_2d_images).replace("_<VIEW>.png", ""))
         convert_numpy_to_nii_gz(numpy_array=data_3d_output, save_name=save_name)
 
