@@ -147,14 +147,13 @@ def single_predict(format_of_2d_images, output_path):
         convert_numpy_to_nii_gz(numpy_array=final_data_3d, save_name=save_name)
 
         # Convert to batch
-        final_data_3d = transforms.ToTensor()(final_data_3d).unsqueeze(0)
-        final_data_3d_batch = torch.stack([final_data_3d])
+        final_data_3d_batch = torch.Tensor(final_data_3d).unsqueeze(0).unsqueeze(0)
 
         # Predict 3D
         data_3d_predicts = model_3d(final_data_3d_batch)
 
         # Save the results
-        data_3d_output = data_3d_predicts[0].squeeze().numpy()
+        data_3d_output = data_3d_predicts.squeeze().squeeze().numpy()
 
         # TODO: Threshold
         apply_threshold(data_3d_output, 0.1)
