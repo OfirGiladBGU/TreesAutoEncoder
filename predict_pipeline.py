@@ -109,37 +109,42 @@ def single_predict(format_of_2d_images, output_path):
             data_3d_list.append(data_3d)
 
         # TODO: DEBUG
-        # columns = 6
-        # rows = 2
-        # fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
-        # ax = []
-        #
-        # for j in range(columns):
-        #     ax.append(fig.add_subplot(rows, columns, 0 * columns + j + 1))
-        #     npimg = data_2d_predicts[j]
-        #     npimg = npimg * 255
-        #     npimg = npimg.astype(np.uint8)
-        #     plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
-        #
-        #     ax[j].set_title(f"View {images_6_views[j]}:")
-        #
-        # data_2d = data_2d.numpy()
-        # for j in range(columns):
-        #     ax.append(fig.add_subplot(rows, columns, 1 * columns + j + 1))
-        #     npimg = data_2d[j]
-        #     npimg = npimg * 255
-        #     npimg = npimg.astype(np.uint8)
-        #     plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
-        #
-        #     ax[j].set_title(f"View {images_6_views[j]}:")
-        #
-        # fig.tight_layout()
-        # plt.savefig(os.path.join("results", f"debug_images.png"))
+        data_2d = data_2d.numpy()
+
+        columns = 6
+        rows = 2
+        fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
+        ax = []
+        for j in range(columns):
+            ax.append(fig.add_subplot(rows, columns, 0 * columns + j + 1))
+            npimg = data_2d[j]
+            npimg = npimg * 255
+            npimg = npimg.astype(np.uint8)
+            plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+
+            ax[j].set_title(f"View {images_6_views[j]}:")
+
+
+        for j in range(columns):
+            ax.append(fig.add_subplot(rows, columns, 1 * columns + j + 1))
+            npimg = data_2d_predicts[j]
+            npimg = npimg * 255
+            npimg = npimg.astype(np.uint8)
+            plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+
+            ax[j].set_title(f"View {images_6_views[j]}:")
+
+        fig.tight_layout()
+        plt.savefig(os.path.join("predict_results", f"input_output_images.png"))
 
         final_data_3d = data_3d_list[0]
         for i in range(1, len(data_3d_list)):
             final_data_3d = np.logical_or(final_data_3d, data_3d_list[i])
         final_data_3d = final_data_3d.astype(np.float32)
+
+        # TODO: DEBUG
+        save_name = os.path.join(output_path, os.path.basename(format_of_2d_images).replace("_<VIEW>.png", "_input"))
+        convert_numpy_to_nii_gz(numpy_array=final_data_3d, save_name=save_name)
 
         # Convert to batch
         final_data_3d = transforms.ToTensor()(final_data_3d).unsqueeze(0)
@@ -153,7 +158,7 @@ def single_predict(format_of_2d_images, output_path):
 
         # TODO: Threshold
         apply_threshold(data_3d_output, 0.1)
-        save_name = os.path.join(output_path, os.path.basename(format_of_2d_images).replace("_<VIEW>.png", ""))
+        save_name = os.path.join(output_path, os.path.basename(format_of_2d_images).replace("_<VIEW>.png", "_output"))
         convert_numpy_to_nii_gz(numpy_array=data_3d_output, save_name=save_name)
 
 
@@ -165,7 +170,7 @@ def main():
     # 5. Save the results in `parse_fixed_mini_cropped_3d_v5`
     # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
 
-    format_of_2d_images = r"./tools/parse_labels_mini_cropped_v5/PA000005_vessel_02584_<VIEW>.png"
+    format_of_2d_images = r"./tools/parse_preds_mini_cropped_v5/PA000005_vessel_02584_<VIEW>.png"
     output_path = r"./predict_results"
     single_predict(format_of_2d_images=format_of_2d_images, output_path=output_path)
 
