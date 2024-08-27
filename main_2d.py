@@ -74,17 +74,17 @@ def predict_model(model):
             ax = []
             for i in range(rows):
                 # Input
-                ax.append(fig.add_subplot(rows, columns, i * 3 + 1))
+                ax.append(fig.add_subplot(rows, columns, i * columns + 1))
                 npimg = input_images[i].numpy()
                 plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
 
                 # Target
-                ax.append(fig.add_subplot(rows, columns, i * 3 + 2))
+                ax.append(fig.add_subplot(rows, columns, i * columns + 2))
                 npimg = target_images[i].numpy()
                 plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
 
                 # Output
-                ax.append(fig.add_subplot(rows, columns, i * 3 + 3))
+                ax.append(fig.add_subplot(rows, columns, i * columns + 3))
                 npimg = output_images[i].numpy()
                 plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
 

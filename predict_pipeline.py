@@ -110,15 +110,23 @@ def single_predict(format_of_2d_images, output_path):
 
         # TODO: DEBUG
         # columns = 6
-        # rows = 1
+        # rows = 2
         # fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
         # ax = []
         #
+        # for j in range(columns):
+        #     ax.append(fig.add_subplot(rows, columns, 0 * columns + j + 1))
+        #     npimg = data_2d_predicts[j]
+        #     npimg = npimg * 255
+        #     npimg = npimg.astype(np.uint8)
+        #     plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+        #
+        #     ax[j].set_title(f"View {images_6_views[j]}:")
+        #
         # data_2d = data_2d.numpy()
         # for j in range(columns):
-        #     ax.append(fig.add_subplot(rows, columns, j + 1))
-        #     npimg = data_2d_predicts[j]
-        #     # npimg = data_2d[j]
+        #     ax.append(fig.add_subplot(rows, columns, 1 * columns + j + 1))
+        #     npimg = data_2d[j]
         #     npimg = npimg * 255
         #     npimg = npimg.astype(np.uint8)
         #     plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
