@@ -47,11 +47,6 @@ def predict_model(model):
             target_data = target_data.to(trainer.device)
 
             model.eval()
-
-            # TODO: temp fix
-            input_data = input_data.to(torch.float32)
-            target_data = target_data.to(torch.float32)
-
             output_data = model(input_data)
 
             # TODO: Threshold
