@@ -127,6 +127,7 @@ def main():
         final_data_3d = reconstruct_3d_from_2d(format_of_2d_images=image_format_src_filepath)
 
         save_name = image_format.replace("<VIEW>.png", "result")
+        print(f"Saving: {save_name}.nii.gz")
         save_name = os.path.join(tgt_folder, save_name)
         convert_numpy_to_nii_gz(final_data_3d, save_name=save_name)
 
