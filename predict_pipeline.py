@@ -7,6 +7,7 @@ import nibabel as nib
 from torchvision import transforms
 import matplotlib.pyplot as plt
 import pathlib
+from tqdm import tqdm
 
 from models.ae_v2_model import Network
 from models.ae_3d_v2_model import Network3D
@@ -111,7 +112,7 @@ def single_predict(format_of_2d_images, output_path):
             data_3d = reverse_rotations(numpy_image=numpy_image, view_type=image_view)
             data_3d_list.append(data_3d)
 
-        # TODO: DEBUG
+        # TODO: DEBUG - START
         data_2d = data_2d.numpy()
 
         columns = 6
@@ -139,15 +140,18 @@ def single_predict(format_of_2d_images, output_path):
 
         fig.tight_layout()
         plt.savefig(os.path.join("predict_results", f"input_output_images.png"))
+        plt.close(fig)
+        # TODO: DEBUG - END
 
         final_data_3d = data_3d_list[0]
         for i in range(1, len(data_3d_list)):
             final_data_3d = np.logical_or(final_data_3d, data_3d_list[i])
         final_data_3d = final_data_3d.astype(np.float32)
 
-        # TODO: DEBUG
+        # TODO: DEBUG - START
         save_name = os.path.join(output_path, os.path.basename(format_of_2d_images).replace("_<VIEW>.png", "_input"))
         convert_numpy_to_nii_gz(numpy_array=final_data_3d, save_name=save_name)
+        # TODO: DEBUG - END
 
         # Convert to batch
         final_data_3d_batch = torch.Tensor(final_data_3d).unsqueeze(0).unsqueeze(0)
@@ -181,7 +185,7 @@ def full_predict():
 
     format_of_2d_images_set = sorted(list(format_of_2d_images_set))
     output_path = r"./predict_results"
-    for format_of_2d_images in format_of_2d_images_set:
+    for format_of_2d_images in tqdm(format_of_2d_images_set):
         single_predict(format_of_2d_images=format_of_2d_images, output_path=output_path)
 
 
