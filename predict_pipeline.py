@@ -6,6 +6,7 @@ import numpy as np
 import nibabel as nib
 from torchvision import transforms
 import matplotlib.pyplot as plt
+import pathlib
 
 from models.ae_v2_model import Network
 from models.ae_3d_v2_model import Network3D
@@ -18,7 +19,7 @@ def convert_numpy_to_nii_gz(numpy_array, save_name=None):
     return ct_nii_gz
 
 
-def reverse_rotations(numpy_image, view_type):
+def reverse_rotations(numpy_image, view_type: str):
     # Convert to 3D
     data_3d = np.zeros((numpy_image.shape[0], numpy_image.shape[0], numpy_image.shape[0]), dtype=np.uint8)
     for i in range(numpy_image.shape[0]):
@@ -64,9 +65,11 @@ def reverse_rotations(numpy_image, view_type):
 
     return data_3d
 
+
 def apply_threshold(tensor, threshold):
     tensor[tensor >= threshold] = 1.0
     tensor[tensor < threshold] = 0.0
+
 
 def single_predict(format_of_2d_images, output_path):
     os.makedirs(output_path, exist_ok=True)
@@ -105,7 +108,7 @@ def single_predict(format_of_2d_images, output_path):
         data_3d_list = list()
         for idx, image_view in enumerate(images_6_views):
             numpy_image = data_2d_predicts[idx].squeeze() * 255
-            data_3d = reverse_rotations(numpy_image, image_view)
+            data_3d = reverse_rotations(numpy_image=numpy_image, view_type=image_view)
             data_3d_list.append(data_3d)
 
         # TODO: DEBUG
@@ -156,9 +159,30 @@ def single_predict(format_of_2d_images, output_path):
         data_3d_output = data_3d_predicts.squeeze().squeeze().numpy()
 
         # TODO: Threshold
-        apply_threshold(data_3d_output, 0.1)
+        apply_threshold(tensor=data_3d_output, threshold=0.5)
         save_name = os.path.join(output_path, os.path.basename(format_of_2d_images).replace("_<VIEW>.png", "_output"))
         convert_numpy_to_nii_gz(numpy_array=data_3d_output, save_name=save_name)
+
+
+def test_single_predict():
+    format_of_2d_images = r"./tools/data/parse_preds_mini_cropped_v5/PA000005_vessel_02584_<VIEW>.png"
+    output_path = r"./predict_results"
+    single_predict(format_of_2d_images=format_of_2d_images, output_path=output_path)
+
+
+def full_predict():
+    input_folder = r"./tools/data/parse_preds_mini_cropped_v5"
+    input_format = r"PA000005_vessel"
+    format_paths = pathlib.Path(input_folder).rglob(f"{input_format}_*.png")
+    format_of_2d_images_set = set()
+    for format_path in format_paths:
+        extract_format = str(format_path).rsplit("_", maxsplit=1)[0]
+        format_of_2d_images_set.add(f"{extract_format}_<VIEW>.png")
+
+    format_of_2d_images_set = sorted(list(format_of_2d_images_set))
+    output_path = r"./predict_results"
+    for format_of_2d_images in format_of_2d_images_set:
+        single_predict(format_of_2d_images=format_of_2d_images, output_path=output_path)
 
 
 def main():
@@ -169,9 +193,7 @@ def main():
     # 5. Save the results in `parse_fixed_mini_cropped_3d_v5`
     # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
 
-    format_of_2d_images = r"./tools/data/parse_preds_mini_cropped_v5/PA000005_vessel_02584_<VIEW>.png"
-    output_path = r"./predict_results"
-    single_predict(format_of_2d_images=format_of_2d_images, output_path=output_path)
+    full_predict()
 
 
 if __name__ == "__main__":
