@@ -8,6 +8,7 @@ from torchvision import transforms
 import matplotlib.pyplot as plt
 import pathlib
 from tqdm import tqdm
+import pandas as pd
 
 from models.ae_v2_model import Network
 from models.ae_3d_v2_model import Network3D
@@ -189,6 +190,31 @@ def full_predict():
         single_predict(format_of_2d_images=format_of_2d_images, output_path=output_path)
 
 
+def calculate_dice_scores():
+    input_folder = r"./predict_results"
+    input_format = r"PA000005_vessel"
+
+    format_paths = pathlib.Path(input_folder).rglob(f"{input_format}_*.nii.gz")
+    input_output_paths = sorted(list(format_paths))
+    scores_dict = dict()
+    for idx in range(0, len(input_output_paths), 2):
+        input_path = input_output_paths[idx]
+        output_path = input_output_paths[idx + 1]
+
+        input_nii = nib.load(input_path)
+        output_nii = nib.load(output_path)
+
+        input_data = input_nii.get_fdata()
+        output_data = output_nii.get_fdata()
+
+        dice_score = 2 * np.sum(input_data * output_data) / (np.sum(input_data) + np.sum(output_data))
+
+        idx_format = str(input_path).rsplit("_", maxsplit=2)[1]
+        scores_dict[f"PA000005_vessel_{idx_format}"] = dice_score
+
+    pd.DataFrame(scores_dict.items()).to_csv('out.csv')
+
+
 def main():
     # 1. Use model 1 on the `parse_preds_mini_cropped_v5`
     # 2. Save the results in `parse_fixed_mini_cropped_v5`
@@ -197,7 +223,8 @@ def main():
     # 5. Save the results in `parse_fixed_mini_cropped_3d_v5`
     # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
 
-    full_predict()
+    # full_predict()
+    calculate_dice_scores()
 
 
 if __name__ == "__main__":
