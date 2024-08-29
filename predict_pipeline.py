@@ -169,7 +169,7 @@ def main():
     # 5. Save the results in `parse_fixed_mini_cropped_3d_v5`
     # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
 
-    format_of_2d_images = r"./tools/parse_preds_mini_cropped_v5/PA000005_vessel_02584_<VIEW>.png"
+    format_of_2d_images = r"./tools/data/parse_preds_mini_cropped_v5/PA000005_vessel_02584_<VIEW>.png"
     output_path = r"./predict_results"
     single_predict(format_of_2d_images=format_of_2d_images, output_path=output_path)
 

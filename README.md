@@ -1,34 +1,35 @@
-# Source of AE
-
-https://github.com/dariocazzani/pytorch-AE
-
-# Graph Generators
-
-https://github.com/networkx/grave
-
-https://github.com/deyuan/random-graph-generator
-
-https://github.com/mlimbuu/random-graph-generator
-
-https://github.com/mlimbuu/TCGRE-graph-generator
-
-https://github.com/connectedcompany/alph
+# Trees Auto Encoder
 
 
-# VGG loss
+## How to create the datasets:
 
-https://github.com/crowsonkb/vgg_loss/tree/master
+1. Put the `parse2022` dataset with the `labels` and `preds` data on the path: `/parse2022`
+   1. `labels` - The ground truth
+   2. `preds` - The predicted labels by a model
+2. Run the 2d dataset creator: [dataset_creation_v6.py](tools/dataset_creation_v6.py) 
+3. Run the 3d dataset creator: [reconstruct_3d_from_2d_v4.py](tools/reconstruct_3d_from_2d_v4.py)
+
+
+## How To train the models:
+
+1. To train the `model_2d` run `main_2d` script: [main_2d.py](main_2d.py)
+2. To train the `model_3d` run `main_3d` script: [main_3d.py](main_3d.py)
+
+
+## How to test the full pipeline:
+
+1. Run the `predict_pipeline` script: [predict_pipeline.py](predict_pipeline.py)
 
 ---
 
 # Data info:
 
-1. parse2022 `labels`, `preds` -> Values: binary (0, 255), Dim: (..., ..., ...)
-2. parse2022 `preds_compnents` -> Values: grayscale (0-255), Dim: (..., ..., ...)
-3. mini_cropped `labels`, `preds` -> Values: binary (0, 1), Dim: (..., ..., ...)
+1. parse2022 `labels`, `preds` -> Values: binary (0, 255), Dim: 3
+2. parse2022 `preds_compnents` -> Values: grayscale (0-255), Dim: 3
+3. mini_cropped `labels`, `preds` -> Values: binary (0, 1), Dim: 3
 
 
-# The available approaches:
+# The Available Approaches:
 
 Given the `3d ground truth` and the `3d predicted labels`:
 
@@ -69,3 +70,30 @@ Given the `3d ground truth` and the `3d predicted labels`:
       1. Train with the `cropped 3d predicted labels` to the `cropped 3d predicted labels` to **reconstruct** and get the `cropped 3d ground truth`
       2. Predict with the `cropped 3d predicted labels` to get the `cropped 3d fixed labels`
    3. Use all the `cropped 3d fixed label` to fix the `3d predicted labels`
+
+---
+
+# Sources:
+
+
+## Source of AE
+
+https://github.com/dariocazzani/pytorch-AE
+
+
+## Graph Generators
+
+https://github.com/networkx/grave
+
+https://github.com/deyuan/random-graph-generator
+
+https://github.com/mlimbuu/random-graph-generator
+
+https://github.com/mlimbuu/TCGRE-graph-generator
+
+https://github.com/connectedcompany/alph
+
+
+## VGG loss:
+
+https://github.com/crowsonkb/vgg_loss/tree/master
