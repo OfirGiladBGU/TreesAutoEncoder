@@ -269,8 +269,8 @@ def image_missing_connected_components_removal(pred, label):
 # 3D Components #
 #################
 def convert_to_3d_components():
-    folder_path = "../parse2022/preds"
-    org_folder = "../parse2022/preds_components"
+    folder_path = r"../parse2022/preds"
+    org_folder = r"../parse2022/preds_components"
 
     os.makedirs(org_folder, exist_ok=True)
     data_filepaths = os.listdir(folder_path)
@@ -289,11 +289,11 @@ def convert_to_3d_components():
 # 2D Projections #
 ##################
 def create_dataset_depth_2d_projections():
-    folder_path = "../parse2022/labels"
-    org_folder = "./parse_labels_2d"
+    folder_path = r"../parse2022/labels"
+    org_folder = r"./data/parse_labels_2d"
 
-    # folder_path = "../parse2022/preds"
-    # org_folder = "./parse_preds_2d"
+    # folder_path = r"../parse2022/preds"
+    # org_folder = r"./data/parse_preds_2d"
 
     os.makedirs(org_folder, exist_ok=True)
     data_filepaths = os.listdir(folder_path)
@@ -323,16 +323,16 @@ def create_dataset_depth_2d_projections():
 # Original Dataset #
 ####################
 def create_dataset_original_images():
-    folder_path1 = "../parse2022/preds"
-    org_folder1 = "./parse_preds_mini_cropped_v5"
-    org_3d_folder1 = "./parse_preds_mini_cropped_3d_v5"
+    folder_path1 = r"../parse2022/preds"
+    org_folder1 = r"./data/parse_preds_mini_cropped_v5"
+    org_3d_folder1 = r"./data/parse_preds_mini_cropped_3d_v5"
 
-    folder_path2 = "../parse2022/labels"
-    org_folder2 = "./parse_labels_mini_cropped_v5"
-    org_3d_folder2 = "./parse_labels_mini_cropped_3d_v5"
+    folder_path2 = r"../parse2022/labels"
+    org_folder2 = r"./data/parse_labels_mini_cropped_v5"
+    org_3d_folder2 = r"./data/parse_labels_mini_cropped_3d_v5"
 
-    folder_path3 = "../parse2022/preds_components"
-    org_folder3 = "./parse_preds_components_mini_cropped_v5"
+    folder_path3 = r"../parse2022/preds_components"
+    org_folder3 = r"./data/parse_preds_components_mini_cropped_v5"
 
     size = (32, 32, 32)
     step = 16

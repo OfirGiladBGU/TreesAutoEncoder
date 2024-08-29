@@ -132,7 +132,7 @@ def full_3d_reconstruction(src_folder, tgt_folder):
 
 
 def main():
-    src_folder1 = r".\parse_labels_mini_cropped_v5"
+    src_folder1 = r".\data\parse_labels_mini_cropped_v5"
     tgt_folder1 = r".\parse_labels_mini_cropped_3d_reconstruct_v5"
 
     # src_folder2 = r".\parse_preds_mini_cropped_v5"
