@@ -5,7 +5,7 @@ from torch import optim
 from torch.nn import functional as F
 import copy
 
-from datasets import MNIST, EMNIST, FashionMNIST, CIFAR10, TreesDatasetV1, TreesDatasetV2
+from datasets.dataset_list import MNIST, EMNIST, FashionMNIST, CIFAR10, TreesDatasetV1, TreesDatasetV2
 import loss_functions
 
 from torchvision.utils import save_image

@@ -10,62 +10,9 @@ import pathlib
 from tqdm import tqdm
 import pandas as pd
 
+from datasets.dataset_utils import convert_numpy_to_nii_gz, reverse_rotations
 from models.ae_v2_model import Network
 from models.ae_3d_v2_model import Network3D
-
-
-def convert_numpy_to_nii_gz(numpy_array, save_name=None):
-    ct_nii_gz = nib.Nifti1Image(numpy_array, affine=np.eye(4))
-    if save_name is not None:
-        nib.save(ct_nii_gz, f"{save_name}.nii.gz")
-    return ct_nii_gz
-
-
-def reverse_rotations(numpy_image, view_type: str):
-    # Convert to 3D
-    data_3d = np.zeros((numpy_image.shape[0], numpy_image.shape[0], numpy_image.shape[0]), dtype=np.uint8)
-    for i in range(numpy_image.shape[0]):
-        for j in range(numpy_image.shape[1]):
-            gray_value = int(numpy_image[i, j])
-            if gray_value > 0:
-                rescale_gray_value = int(numpy_image.shape[0] * (1 - (gray_value / 255)))
-
-                if view_type in ["front", "back"]:
-                    data_3d[i, j, rescale_gray_value] = 255
-                elif view_type in ["top", "bottom"]:
-                    data_3d[rescale_gray_value, i, j] = 255
-                elif view_type in ["right", "left"]:
-                    data_3d[i, rescale_gray_value, j] = 255
-                else:
-                    raise ValueError("Invalid view type")
-
-    # Reverse the rotations
-    if view_type == "front":
-        pass
-
-    if view_type == "back":
-        data_3d = np.rot90(data_3d, k=2, axes=(2, 1))
-
-    if view_type == "top":
-        data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
-
-    if view_type == "bottom":
-        data_3d = np.rot90(data_3d, k=2, axes=(1, 0))
-        data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
-
-    if view_type == "right":
-        data_3d = np.flip(data_3d, axis=1)
-
-    if view_type == "left":
-        data_3d = np.rot90(data_3d, k=2, axes=(2, 1))
-        data_3d = np.flip(data_3d, axis=1)
-
-    # Reverse the initial rotations
-    data_3d = np.flip(data_3d, axis=1)
-    data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
-    data_3d = np.rot90(data_3d, k=1, axes=(2, 0))
-
-    return data_3d
 
 
 def apply_threshold(tensor, threshold):
@@ -151,7 +98,7 @@ def single_predict(format_of_2d_images, output_path):
 
         # TODO: DEBUG - START
         save_name = os.path.join(output_path, os.path.basename(format_of_2d_images).replace("_<VIEW>.png", "_input"))
-        convert_numpy_to_nii_gz(numpy_array=final_data_3d, save_name=save_name)
+        convert_numpy_to_nii_gz(numpy_data=final_data_3d, save_name=save_name)
         # TODO: DEBUG - END
 
         # Convert to batch
@@ -166,7 +113,7 @@ def single_predict(format_of_2d_images, output_path):
         # TODO: Threshold
         apply_threshold(tensor=data_3d_output, threshold=0.5)
         save_name = os.path.join(output_path, os.path.basename(format_of_2d_images).replace("_<VIEW>.png", "_output"))
-        convert_numpy_to_nii_gz(numpy_array=data_3d_output, save_name=save_name)
+        convert_numpy_to_nii_gz(numpy_data=data_3d_output, save_name=save_name)
 
 
 def test_single_predict():

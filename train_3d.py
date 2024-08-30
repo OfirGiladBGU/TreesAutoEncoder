@@ -4,7 +4,7 @@ from torch import optim
 from torch.nn import functional as F
 import copy
 
-from datasets import TreesDataset3DV1, TreesDataset3DV2
+from datasets.dataset_list import TreesDataset3DV1, TreesDataset3DV2
 import loss_functions
 
 
