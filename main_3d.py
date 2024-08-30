@@ -25,12 +25,9 @@ def convert_numpy_to_nii_gz(numpy_array, save_name=None):
 
 def predict_model(model):
     print("Predicting")
+    os.makedirs(name=args.results_path, exist_ok=True)
 
-    try:
-        os.stat(args.results_path)
-    except:
-        os.mkdir(args.results_path)
-
+    # Load model weights
     if os.path.exists(args.weights_filepath):
         model.load_state_dict(torch.load(args.weights_filepath))
     trainer = Trainer(args=args, model=model)
@@ -62,8 +59,8 @@ def predict_model(model):
                 target_data_idx = target_data[idx].squeeze().numpy()
                 output_data_idx = output_data[idx].squeeze().numpy()
 
-                convert_numpy_to_nii_gz(numpy_array=target_data_idx, save_name=f"3d_results/{b}_{idx}_target")
-                convert_numpy_to_nii_gz(numpy_array=output_data_idx, save_name=f"3d_results/{b}_{idx}_output")
+                convert_numpy_to_nii_gz(numpy_array=target_data_idx, save_name=f"{args.results_path}/{b}_{idx}_target")
+                convert_numpy_to_nii_gz(numpy_array=output_data_idx, save_name=f"{args.results_path}/{b}_{idx}_output")
 
                 if args.dataset == 'Trees3DV1':
                     # Create a grid of images
@@ -80,15 +77,14 @@ def predict_model(model):
                         ax[j].set_title(f"View {j}:")
 
                     fig.tight_layout()
-                    plt.savefig(os.path.join("3d_results", f"{b}_{idx}_images.png"))
+                    plt.savefig(os.path.join(args.results_path, f"{b}_{idx}_images.png"))
 
                     # only the first
                     # exit()
 
                 elif args.dataset == 'Trees3DV2':
                     input_data_idx = input_data[idx].squeeze().numpy()
-                    convert_numpy_to_nii_gz(numpy_array=input_data_idx, save_name=f"3d_results/{b}_{idx}_input")
-
+                    convert_numpy_to_nii_gz(numpy_array=input_data_idx, save_name=f"{args.results_path}/{b}_{idx}_input")
                 else:
                     raise ValueError("Invalid dataset")
 
@@ -121,23 +117,24 @@ if __name__ == "__main__":
                         help='how many batches to wait before logging training status')
     parser.add_argument('--embedding-size', type=int, default=32, metavar='N',
                         help='how many batches to wait before logging training status')
-    parser.add_argument('--results-path', type=str, default='results/', metavar='N',
+    parser.add_argument('--results-path', type=str, default='./results/model_3d', metavar='N',
                         help='Where to store images')
-    parser.add_argument('--dataset', type=str, default='MNIST', metavar='N',
+    parser.add_argument('--dataset', type=str, default='Trees3DV2', metavar='N',
                         help='Which dataset to use')
     parser.add_argument('--weights-filepath', type=str, default='./weights/Network.pth', metavar='N',
                         help='Which dataset to use')
 
     args = parser.parse_args()
-    # args.dataset = 'Trees3DV1'
-    args.dataset = 'Trees3DV2'
-
-    # args.batch_size = 3
-    args.epochs = 2
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")
     torch.manual_seed(args.seed)
+
+    # args.dataset = 'Trees3DV1'
+    args.dataset = 'Trees3DV2'
+
+    # args.batch_size = 3
+    args.epochs = 10
 
     if args.dataset == 'Trees3DV1':
         args.input_size = (6, 1, 32, 32)

@@ -19,12 +19,9 @@ def train_model(model):
 
 def predict_model(model):
     print("Predicting")
+    os.makedirs(name=args.results_path, exist_ok=True)
 
-    try:
-        os.stat(args.results_path)
-    except:
-        os.mkdir(args.results_path)
-
+    # Load model weights
     if os.path.exists(args.weights_filepath):
         model.load_state_dict(torch.load(args.weights_filepath))
     trainer = Trainer(args=args, model=model)
@@ -123,7 +120,7 @@ if __name__ == "__main__":
                         help='how many batches to wait before logging training status')
     parser.add_argument('--embedding-size', type=int, default=32, metavar='N',
                         help='how many batches to wait before logging training status')
-    parser.add_argument('--results-path', type=str, default='results/', metavar='N',
+    parser.add_argument('--results-path', type=str, default='./results/model_2d', metavar='N',
                         help='Where to store images')
     parser.add_argument('--dataset', type=str, default='MNIST', metavar='N',
                         help='Which dataset to use')
@@ -131,16 +128,17 @@ if __name__ == "__main__":
                         help='Which dataset to use')
 
     args = parser.parse_args()
+
+    args.cuda = not args.no_cuda and torch.cuda.is_available()
+    args.device = torch.device("cuda" if args.cuda else "cpu")
+    torch.manual_seed(args.seed)
+
     # args.dataset = 'MNIST'
     # args.dataset = 'CIFAR10'
     args.dataset = 'TreesV1'
     # args.dataset = 'TreesV2'
 
-    args.epochs = 10
-
-    args.cuda = not args.no_cuda and torch.cuda.is_available()
-    args.device = torch.device("cuda" if args.cuda else "cpu")
-    torch.manual_seed(args.seed)
+    args.epochs = 20
 
     if args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
         args.input_size = (1, 28, 28)
