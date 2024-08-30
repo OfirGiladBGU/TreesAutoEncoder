@@ -191,25 +191,32 @@ def full_predict():
 
 
 def calculate_dice_scores():
-    input_folder = r"./predict_results"
-    input_format = r"PA000005_vessel"
+    output_folder = r"./predict_results"
+    target_folder = r"./tools/data/parse_labels_mini_cropped_3d_v5"
 
-    format_paths = pathlib.Path(input_folder).rglob(f"{input_format}_*.nii.gz")
-    input_output_paths = sorted(list(format_paths))
+    output_format = r"PA000005_vessel_*_output"
+    target_format = r"PA000005_vessel_*"
+
+    output_format_paths = pathlib.Path(output_folder).rglob(f"{output_format}.nii.gz")
+    target_format_paths = pathlib.Path(target_folder).rglob(f"{target_format}.nii.gz")
+    output_paths = sorted(list(output_format_paths))
+    target_paths = sorted(list(target_format_paths))
+
+    files_count = len(output_paths)
     scores_dict = dict()
-    for idx in range(0, len(input_output_paths), 2):
-        input_path = input_output_paths[idx]
-        output_path = input_output_paths[idx + 1]
+    for idx in range(files_count):
+        output_path = output_paths[idx]
+        target_path = target_paths[idx]
 
-        input_nii = nib.load(input_path)
         output_nii = nib.load(output_path)
+        target_nii = nib.load(target_path)
 
-        input_data = input_nii.get_fdata()
         output_data = output_nii.get_fdata()
+        target_data = target_nii.get_fdata()
 
-        dice_score = 2 * np.sum(input_data * output_data) / (np.sum(input_data) + np.sum(output_data))
+        dice_score = 2 * np.sum(output_data * target_data) / (np.sum(output_data) + np.sum(target_data))
 
-        idx_format = str(input_path).rsplit("_", maxsplit=2)[1]
+        idx_format = str(output_path).rsplit("_", maxsplit=2)[1]
         scores_dict[f"PA000005_vessel_{idx_format}"] = dice_score
 
     pd.DataFrame(scores_dict.items()).to_csv('out.csv')
