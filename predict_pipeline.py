@@ -222,6 +222,7 @@ def main():
     # 4. Use model 2 on the `parse_prefixed_mini_cropped_3d_v5`
     # 5. Save the results in `parse_fixed_mini_cropped_3d_v5`
     # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
+    # 7. Perform cleanup on the final result (delete small connected components)
 
     # full_predict()
     calculate_dice_scores()
