@@ -1,7 +1,7 @@
 import numpy as np
-from scipy.ndimage import label
 import cv2
 import os
+from scipy.ndimage import label
 from skimage import color
 
 

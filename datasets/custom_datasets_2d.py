@@ -1,11 +1,12 @@
 import numpy as np
 import torch
+from torch.utils.data import Dataset, DataLoader, Subset
+from torchvision import transforms
 import cv2
 import os
-from torchvision import transforms
 
 
-class TreesCustomDatasetV1(torch.utils.data.Dataset):
+class TreesCustomDatasetV1(Dataset):
     def __init__(self, data_paths: list, transform=None):
         self.data_paths = data_paths
         self.transform = transform
@@ -63,7 +64,7 @@ class TreesCustomDatasetV1(torch.utils.data.Dataset):
 
 
 # TODO: Check if will be useful
-class TreesCustomDatasetV2(torch.utils.data.Dataset):
+class TreesCustomDatasetV2(Dataset):
     def __init__(self, data_paths: list, transform=None):
         self.data_paths = data_paths
         self.transform = transform
@@ -148,31 +149,31 @@ class TreesCustomDataloader:
         # train_data, test_data = torch.utils.data.random_split(tree_dataset, [train_size, val_size])
 
         # Non random split
-        train_data = torch.utils.data.Subset(tree_dataset, indices=range(0, train_size))
-        test_data = torch.utils.data.Subset(tree_dataset, indices=range(train_size, train_size + val_size))
+        train_data = Subset(tree_dataset, indices=range(0, train_size))
+        test_data = Subset(tree_dataset, indices=range(train_size, train_size + val_size))
 
         # Create dataloaders
         if self.args is not None:
             kwargs = {'num_workers': 1, 'pin_memory': True} if self.args.cuda else {}
-            self.train_dataloader = torch.utils.data.DataLoader(
+            self.train_dataloader = DataLoader(
                 dataset=train_data,
                 batch_size=self.args.batch_size,
                 shuffle=True,
                 **kwargs
             )
-            self.test_dataloader = torch.utils.data.DataLoader(
+            self.test_dataloader = DataLoader(
                 dataset=test_data,
                 batch_size=self.args.batch_size,
                 shuffle=False,
                 **kwargs
             )
         else:
-            self.train_dataloader = torch.utils.data.DataLoader(
+            self.train_dataloader = DataLoader(
                 dataset=train_data,
                 batch_size=1,
                 shuffle=True,
             )
-            self.test_dataloader = torch.utils.data.DataLoader(
+            self.test_dataloader = DataLoader(
                 dataset=test_data,
                 batch_size=1,
                 shuffle=False
