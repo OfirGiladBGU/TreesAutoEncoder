@@ -6,8 +6,8 @@
 1. Put the `parse2022` dataset with the `labels` and `preds` data on the path: `/parse2022`
    1. `labels` - The ground truth
    2. `preds` - The predicted labels by a model
-2. Run the 2d dataset creator: [dataset_creation_v6.py](tools/dataset_creation_v6.py) 
-3. Run the 3d dataset creator: [reconstruct_3d_from_2d_v4.py](tools/reconstruct_3d_from_2d_v4.py)
+2. To build the `dataset_2d` run `dataset_2d_creator` script: [dataset_2d_creator.py](datasets/dataset_2d_creator.py)
+3. To build the `dataset_3d` run  `dataset_3d_creator` script: [dataset_3d_creator.py](datasets/Fdataset_3d_creator.py)
 
 
 ## How To train the models:
