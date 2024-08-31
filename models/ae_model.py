@@ -1,3 +1,4 @@
+import argparse
 import torch
 import torch.utils.data
 from torch import nn
@@ -128,8 +129,9 @@ class CNN_Decoder(nn.Module):
 
 # Model
 class Network(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args: argparse.Namespace):
         super(Network, self).__init__()
+
         self.model_name = 'ae'
         self.input_size = args.input_size
         self.output_size = args.embedding_size

@@ -1,8 +1,9 @@
+import argparse
 import torch.nn as nn
 
 
 class Network3D(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args: argparse.Namespace):
         super(Network3D, self).__init__()
 
         self.model_name = 'ae_3d_v2'

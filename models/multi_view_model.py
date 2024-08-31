@@ -1,3 +1,4 @@
+import argparse
 import torch
 import torch.nn as nn
 from torch.cuda.amp import GradScaler, autocast
@@ -43,11 +44,11 @@ class Decoder(nn.Module):
 
 
 class MultiView3DReconstruction(nn.Module):
-    def __init__(self, args=None):
+    def __init__(self, args: argparse.Namespace):
         super(MultiView3DReconstruction, self).__init__()
+
         self.model_name = 'multi_view_3d_reconstruction'
-        if args is not None:
-            self.input_size = args.input_size
+        self.input_size = args.input_size
 
         self.encoders = nn.ModuleList([Encoder() for _ in range(6)])
         self.fc = nn.Linear(32 * 32 * 32 * 6, 32 * 4 * 4 * 4)  # Adjusted dimensions

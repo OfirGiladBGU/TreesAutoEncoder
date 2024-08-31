@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 import pytorch_ssim
-import vgg_loss
+from trainer import vgg_loss
 from torchmetrics.segmentation import MeanIoU
 from torcheval.metrics.functional import multiclass_f1_score
 

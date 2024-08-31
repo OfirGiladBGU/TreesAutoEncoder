@@ -1,3 +1,4 @@
+import argparse
 import torch
 import torch.utils.data
 from torch import optim
@@ -5,11 +6,11 @@ from torch.nn import functional as F
 import copy
 
 from datasets.dataset_list import TreesDataset3DV1, TreesDataset3DV2
-import loss_functions
+from trainer import loss_functions
 
 
 class Trainer(object):
-    def __init__(self, args, model):
+    def __init__(self, args: argparse.Namespace, model):
         self.args = args
         self.device = args.device
         self._init_dataset()

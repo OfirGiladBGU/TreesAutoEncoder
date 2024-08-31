@@ -1,10 +1,12 @@
+import argparse
 from torch import nn
 
 
 # Model
 class Network(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args: argparse.Namespace):
         super(Network, self).__init__()
+
         self.model_name = 'gap_cnn'
         self.input_size = args.input_size
         self.c = self.input_size[0]

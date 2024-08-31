@@ -8,11 +8,11 @@ import nibabel as nib
 from models.multi_view_model import MultiView3DReconstruction
 from models.ae_3d_v2_model import Network3D
 
-from train_3d import Trainer
+from trainer.train_3d import Trainer
 
 
 def train_model(model):
-    trainer = Trainer(args, model)
+    trainer = Trainer(args=args, model=model)
     trainer.train()
 
 

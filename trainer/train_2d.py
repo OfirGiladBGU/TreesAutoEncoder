@@ -1,3 +1,4 @@
+import argparse
 import random
 import torch
 import torch.utils.data
@@ -6,13 +7,13 @@ from torch.nn import functional as F
 import copy
 
 from datasets.dataset_list import MNIST, EMNIST, FashionMNIST, CIFAR10, TreesDatasetV1, TreesDatasetV2
-import loss_functions
+from trainer import loss_functions
 
 from torchvision.utils import save_image
 
 
 class Trainer(object):
-    def __init__(self, args, model):
+    def __init__(self, args: argparse.Namespace, model):
         self.args = args
         self.device = args.device
         self._init_dataset()

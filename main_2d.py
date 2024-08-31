@@ -9,11 +9,11 @@ from models.ae_v2_model import Network
 # from models.vgg_demo_model import Network
 # from models.gap_cnn import Network
 
-from train_2d import Trainer
+from trainer.train_2d import Trainer
 
 
 def train_model(model):
-    trainer = Trainer(args, model)
+    trainer = Trainer(args=args, model=model)
     trainer.train()
 
 

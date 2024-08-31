@@ -1,10 +1,12 @@
+import argparse
 from torch import nn
 
 
 # Model
 class Network(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args: argparse.Namespace):
         super(Network, self).__init__()
+
         self.model_name = 'vgg_ae_demo'
         self.input_size = args.input_size
 
