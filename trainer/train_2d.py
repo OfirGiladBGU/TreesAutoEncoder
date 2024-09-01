@@ -5,11 +5,14 @@ import torch.utils.data
 from torch import optim
 from torch.nn import functional as F
 import copy
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+from torchvision.utils import save_image
 
+from datasets.dataset_utils import apply_threshold
 from datasets.dataset_list import MNIST, EMNIST, FashionMNIST, CIFAR10, TreesDatasetV1, TreesDatasetV2
 from trainer import loss_functions
-
-from torchvision.utils import save_image
 
 
 class Trainer(object):
@@ -132,11 +135,6 @@ class Trainer(object):
                 # plt.imshow(target_data[idx].permute(1, 2, 0))
                 # save_image(target_data[idx], 'img1.png')
 
-    @staticmethod
-    def apply_threshold(tensor, threshold):
-        tensor[tensor >= threshold] = 1.0
-        tensor[tensor < threshold] = 0.0
-
     def _train(self, epoch):
         self.model.train()
         train_loss = 0
@@ -218,7 +216,7 @@ class Trainer(object):
     def train(self):
         try:
             for epoch in range(1, self.args.epochs + 1):
-                self._train(epoch)
+                self._train(epoch=epoch)
                 self._test()
         except (KeyboardInterrupt, SystemExit):
             print("Manual Interruption")
@@ -226,3 +224,79 @@ class Trainer(object):
         print("Saving Model Weights")
         model_parameters = copy.deepcopy(self.model.state_dict())
         torch.save(model_parameters, self.args.weights_filepath)
+
+    def predict(self):
+        print("Predicting")
+        os.makedirs(name=self.args.results_path, exist_ok=True)
+
+        # Load model weights
+        if os.path.exists(self.args.weights_filepath):
+            self.model.load_state_dict(torch.load(self.args.weights_filepath))
+
+        with torch.no_grad():
+            for b in range(4):
+                # Get the images from the test loader
+                batch_num = b + 1
+                data = iter(self.test_loader)
+                for i in range(batch_num):
+                    input_images, target_images = next(data)
+                input_images = input_images.to(self.device)
+                if self.args.dataset != 'TreesV1':
+                    target_images = input_images.clone().detach()
+                target_images = target_images.to(self.device)
+
+                # TODO: Threshold
+                # trainer.apply_threshold(input_images, 0.5)
+                # trainer.apply_threshold(target_images, 0.5)
+
+                # Fix for Trees dataset - Fixed problem
+                # if input_images.dtype != torch.float32:
+                #     input_images = input_images.float()
+                # if target_images.dtype != torch.float32:
+                #     target_images = target_images.float()
+
+                # Create holes in the input images
+                if self.args.dataset != 'TreesV1' and self.args.dataset != 'CIFAR10':
+                    self.create_holes(input_images)
+
+                self.model.eval()
+                output_images = self.model(input_images)
+
+                # TODO: Threshold
+                # trainer.apply_threshold(output_images, 0.5)
+
+                # Detach the images from the cuda and move them to CPU
+                if self.args.cuda:
+                    input_images = input_images.cpu().detach()
+                    target_images = target_images.cpu().detach()
+                    output_images = output_images.cpu().detach()
+
+                # Create a grid of images
+                columns = 3
+                rows = 25
+                fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
+                ax = []
+                for i in range(rows):
+                    # Input
+                    ax.append(fig.add_subplot(rows, columns, i * columns + 1))
+                    npimg = input_images[i].numpy()
+                    plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+
+                    # Target
+                    ax.append(fig.add_subplot(rows, columns, i * columns + 2))
+                    npimg = target_images[i].numpy()
+                    plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+
+                    # Output
+                    ax.append(fig.add_subplot(rows, columns, i * columns + 3))
+                    npimg = output_images[i].numpy()
+                    plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+
+                ax[0].set_title("Input:")
+                ax[1].set_title("Target:")
+                ax[2].set_title("Output:")
+                fig.tight_layout()
+                plt.savefig(os.path.join(
+                    self.args.results_path,
+                    f'output_{self.args.dataset}_{self.model.model_name}_{b + 1}.png')
+                )

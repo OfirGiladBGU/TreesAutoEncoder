@@ -1,8 +1,9 @@
 import numpy as np
 import nibabel as nib
+import torch
 
 
-def convert_nii_to_numpy(data_filepath):
+def convert_nii_gz_to_numpy(data_filepath):
     nib_data = nib.load(data_filepath)
     numpy_data = nib_data.get_fdata()
     return numpy_data
@@ -60,3 +61,8 @@ def reverse_rotations(numpy_image, view_type: str):
     data_3d = np.rot90(data_3d, k=1, axes=(2, 0))
 
     return data_3d
+
+
+def apply_threshold(tensor: torch.Tensor, threshold: float):
+    tensor[tensor >= threshold] = 1.0
+    tensor[tensor < threshold] = 0.0

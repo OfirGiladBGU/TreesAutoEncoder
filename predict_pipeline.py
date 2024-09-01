@@ -10,14 +10,9 @@ import pathlib
 from tqdm import tqdm
 import pandas as pd
 
-from datasets.dataset_utils import convert_numpy_to_nii_gz, reverse_rotations
+from datasets.dataset_utils import convert_numpy_to_nii_gz, reverse_rotations, apply_threshold
 from models.ae_v2_model import Network
 from models.ae_3d_v2_model import Network3D
-
-
-def apply_threshold(tensor, threshold):
-    tensor[tensor >= threshold] = 1.0
-    tensor[tensor < threshold] = 0.0
 
 
 def single_predict(format_of_2d_images, output_path):

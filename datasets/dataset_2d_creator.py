@@ -6,7 +6,7 @@ from skimage import color
 
 
 from dataset_list import DATA_PATH
-from dataset_utils import convert_nii_to_numpy, convert_numpy_to_nii_gz
+from dataset_utils import convert_nii_gz_to_numpy, convert_numpy_to_nii_gz
 
 
 #########
@@ -267,8 +267,8 @@ def convert_to_3d_components():
     data_filepaths = os.listdir(folder_path)
     for data_filepath in data_filepaths:
         data_filepath = os.path.join(folder_path, data_filepath)
-        ct_numpy = convert_nii_to_numpy(data_filepath=data_filepath)
-        data_3d_components, _ = connected_components_3d(data_3d=ct_numpy)
+        numpy_data = convert_nii_gz_to_numpy(data_filepath=data_filepath)
+        data_3d_components, _ = connected_components_3d(data_3d=numpy_data)
 
         # Save results
         new_filepath = data_filepath.replace('preds', 'preds_components')
@@ -291,9 +291,9 @@ def create_dataset_depth_2d_projections():
     for data_filepath in data_filepaths:
         output_idx = data_filepath.split(".")[0]
         data_filepath = os.path.join(folder_path, data_filepath)
-        ct_numpy = convert_nii_to_numpy(data_filepath=data_filepath)
+        numpy_data = convert_nii_gz_to_numpy(data_filepath=data_filepath)
 
-        projection = project_3d_to_2d(data_3d=ct_numpy,
+        projection = project_3d_to_2d(data_3d=numpy_data,
                                       front=True, back=True, top=True, bottom=True, left=True, right=True)
         front_image = projection["front_image"]
         back_image = projection["back_image"]
@@ -353,13 +353,13 @@ def create_dataset_original_images():
         data_filepath2 = os.path.join(folder_path2, data_filepath2)
         data_filepath3 = os.path.join(folder_path3, data_filepath3)
 
-        ct_numpy1 = convert_nii_to_numpy(data_filepath=data_filepath1)
-        ct_numpy2 = convert_nii_to_numpy(data_filepath=data_filepath2)
-        ct_numpy3 = convert_nii_to_numpy(data_filepath=data_filepath3)
+        numpy_data1 = convert_nii_gz_to_numpy(data_filepath=data_filepath1)
+        numpy_data2 = convert_nii_gz_to_numpy(data_filepath=data_filepath2)
+        numpy_data3 = convert_nii_gz_to_numpy(data_filepath=data_filepath3)
 
-        cropped_data_3d_1 = ct_numpy1
-        cropped_data_3d_2 = ct_numpy2
-        cropped_data_3d_3 = ct_numpy3
+        cropped_data_3d_1 = numpy_data1
+        cropped_data_3d_2 = numpy_data2
+        cropped_data_3d_3 = numpy_data3
 
         cropped_data_3d_1[cropped_data_3d_1 > 0] = 255
         cropped_data_3d_2[cropped_data_3d_2 > 0] = 255
