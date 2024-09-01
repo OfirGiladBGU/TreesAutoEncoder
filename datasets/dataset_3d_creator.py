@@ -2,7 +2,8 @@ import numpy as np
 import cv2
 import os
 
-from dataset_list import DATA_PATH
+
+from dataset_list import CROPPED_PATH
 from dataset_utils import convert_numpy_to_nii_gz, reverse_rotations
 
 
@@ -68,7 +69,7 @@ def full_3d_reconstruction(src_folder, tgt_folder):
         final_data_3d = reconstruct_3d_from_2d(format_of_2d_images=image_format_src_filepath)
 
         save_name = image_format.replace("<VIEW>.png", "result")
-        print(f"Saving: {save_name}.nii.gz")
+        # print(f"Saving: {save_name}.nii.gz")
         save_name = os.path.join(tgt_folder, save_name)
         convert_numpy_to_nii_gz(final_data_3d, save_name=save_name)
 
@@ -80,14 +81,14 @@ def full_3d_reconstruction(src_folder, tgt_folder):
 
 
 def main():
-    src_folder1 = os.path.join(DATA_PATH, "parse_labels_mini_cropped_v5")
-    tgt_folder1 = os.path.join(DATA_PATH, "parse_labels_mini_cropped_3d_reconstruct_v5")
+    src_folder1 = os.path.join(CROPPED_PATH, "labels_2d_v6")
+    tgt_folder1 = os.path.join(CROPPED_PATH, "labels_3d_reconstruct_v6")
 
-    # src_folder2 = os.path.join(DATA_PATH, "parse_preds_mini_cropped_v5")
-    # tgt_folder2 = os.path.join(DATA_PATH, "parse_preds_mini_cropped_3d_reconstruct_v5")
+    src_folder2 = os.path.join(CROPPED_PATH, "preds_2d_v6")
+    tgt_folder2 = os.path.join(CROPPED_PATH, "preds_3d_reconstruct_v6")
 
     full_3d_reconstruction(src_folder1, tgt_folder1)
-    # full_3d_reconstruction(src_folder2, tgt_folder2)
+    full_3d_reconstruction(src_folder2, tgt_folder2)
 
 
 if __name__ == "__main__":

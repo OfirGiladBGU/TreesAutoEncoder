@@ -257,26 +257,6 @@ def image_outlier_removal(pred, label):
 #     return repaired_label
 
 
-#################
-# 3D Components #
-#################
-def build_preds_components():
-    folder_path = os.path.join(DATA_PATH, "parse2022", "preds")
-    org_folder = os.path.join(DATA_PATH, "parse2022", "preds_components")
-
-    os.makedirs(org_folder, exist_ok=True)
-    data_filepaths = os.listdir(folder_path)
-    for data_filepath in data_filepaths:
-        data_filepath = os.path.join(folder_path, data_filepath)
-        numpy_data = convert_nii_gz_to_numpy(data_filepath=data_filepath)
-        data_3d_components, _ = connected_components_3d(data_3d=numpy_data)
-
-        # Save results
-        new_filepath = data_filepath.replace('preds', 'preds_components')
-        output_save_name = os.path.splitext(os.path.splitext(new_filepath)[0])[0]  # To remove '.nii.gz'
-        convert_numpy_to_nii_gz(numpy_data=data_3d_components, save_name=output_save_name)
-
-
 ##################
 # 2D Projections #
 ##################
@@ -309,6 +289,26 @@ def create_dataset_depth_2d_projections():
         cv2.imwrite(os.path.join(org_folder, f"{output_idx}_bottom.png"), bottom_image)
         cv2.imwrite(os.path.join(org_folder, f"{output_idx}_left.png"), left_image)
         cv2.imwrite(os.path.join(org_folder, f"{output_idx}_right.png"), right_image)
+
+
+#################
+# 3D Components #
+#################
+def build_preds_components():
+    folder_path = os.path.join(DATA_PATH, "parse2022", "preds")
+    org_folder = os.path.join(DATA_PATH, "parse2022", "preds_components")
+
+    os.makedirs(org_folder, exist_ok=True)
+    data_filepaths = os.listdir(folder_path)
+    for data_filepath in data_filepaths:
+        data_filepath = os.path.join(folder_path, data_filepath)
+        numpy_data = convert_nii_gz_to_numpy(data_filepath=data_filepath)
+        data_3d_components, _ = connected_components_3d(data_3d=numpy_data)
+
+        # Save results
+        new_filepath = data_filepath.replace('preds', 'preds_components')
+        output_save_name = os.path.splitext(os.path.splitext(new_filepath)[0])[0]  # To remove '.nii.gz'
+        convert_numpy_to_nii_gz(numpy_data=data_3d_components, save_name=output_save_name)
 
 
 ####################
@@ -487,8 +487,10 @@ def create_dataset_original_images():
 
 
 def main():
-    # build_preds_components()
+    # TODO: DEBUG
     # create_dataset_depth_2d_projections()
+
+    build_preds_components()
     create_dataset_original_images()
 
 
