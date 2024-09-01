@@ -362,9 +362,6 @@ def create_dataset_original_images():
         pred_numpy_data = convert_nii_gz_to_numpy(data_filepath=pred_filepath)
         pred_component_numpy_data = convert_nii_gz_to_numpy(data_filepath=pred_component_filepath)
 
-        # label_numpy_data[label_numpy_data > 0] = 255
-        # pred_numpy_data[pred_numpy_data > 0] = 255
-
         label_cubes = crop_mini_cubes(data_3d=label_numpy_data, size=size, step=step)
         pred_cubes = crop_mini_cubes(data_3d=pred_numpy_data, size=size, step=step)
         pred_components_cubes = crop_mini_cubes(data_3d=pred_component_numpy_data, size=size, step=step)
@@ -418,6 +415,11 @@ def create_dataset_original_images():
                     label=np.where(repaired_pred_image > 0, pred_components, 0)
                 ) * 255
                 repaired_components = pred_projections[f"{image_view}_repaired_components"]
+
+                # TODO: Temp fix
+                pred_projections[f"{image_view}_components"] = color.label2rgb(
+                    label=np.where(pred_image > 0, pred_components, 0)
+                ) * 255
 
                 # Repair the labels - TODO: Check how to do smartly
                 # label_projections[f"{image_6_view}_repaired_image"] = image_missing_connected_components_removal(
