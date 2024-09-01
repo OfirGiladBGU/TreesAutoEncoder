@@ -1,11 +1,12 @@
 import numpy as np
 import cv2
 import os
+import pathlib
 from scipy.ndimage import label
 from skimage import color
 
 
-from dataset_list import DATA_PATH
+from dataset_list import DATA_PATH, DATASET_PATH, CROPPED_PATH
 from dataset_utils import convert_nii_gz_to_numpy, convert_numpy_to_nii_gz
 
 
@@ -213,19 +214,19 @@ def project_3d_to_2d(data_3d,
     return projections
 
 
-def crop_mini_cubes(cropped_data_3d, size=(28, 28, 28), step=14):
+def crop_mini_cubes(data_3d, size=(28, 28, 28), step=14):
     mini_cubes = []
-    for i in range(0, cropped_data_3d.shape[0], step):
-        for j in range(0, cropped_data_3d.shape[1], step):
-            for k in range(0, cropped_data_3d.shape[2], step):
+    for i in range(0, data_3d.shape[0], step):
+        for j in range(0, data_3d.shape[1], step):
+            for k in range(0, data_3d.shape[2], step):
                 # print(i, j, k)
                 if (
-                    i + size[0] > cropped_data_3d.shape[0] or
-                    j + size[1] > cropped_data_3d.shape[1] or
-                    k + size[2] > cropped_data_3d.shape[2]
+                    i + size[0] > data_3d.shape[0] or
+                    j + size[1] > data_3d.shape[1] or
+                    k + size[2] > data_3d.shape[2]
                 ):
                     continue
-                mini_cube = cropped_data_3d[i:i+size[0], j:j+size[1], k:k+size[2]]
+                mini_cube = data_3d[i:i+size[0], j:j+size[1], k:k+size[2]]
                 mini_cubes.append(mini_cube)
 
     return mini_cubes
@@ -259,7 +260,7 @@ def image_outlier_removal(pred, label):
 #################
 # 3D Components #
 #################
-def convert_to_3d_components():
+def build_preds_components():
     folder_path = os.path.join(DATA_PATH, "parse2022", "preds")
     org_folder = os.path.join(DATA_PATH, "parse2022", "preds_components")
 
@@ -314,76 +315,72 @@ def create_dataset_depth_2d_projections():
 # Original Dataset #
 ####################
 def create_dataset_original_images():
-    folder_path1 = os.path.join(DATA_PATH, "parse2022", "preds")
-    org_folder1 = os.path.join(DATA_PATH, "parse_preds_mini_cropped_v5")
-    org_3d_folder1 = os.path.join(DATA_PATH, "parse_preds_mini_cropped_3d_v5")
+    # Inputs
+    input_folders = {
+        "labels": os.path.join(DATASET_PATH, "labels"),
+        "preds": os.path.join(DATASET_PATH, "preds"),
+        "preds_components": os.path.join(DATASET_PATH, "preds_components")
+    }
 
-    folder_path2 = os.path.join(DATA_PATH, "parse2022", "labels")
-    org_folder2 = os.path.join(DATA_PATH, "parse_labels_mini_cropped_v5")
-    org_3d_folder2 = os.path.join(DATA_PATH, "parse_labels_mini_cropped_3d_v5")
-
-    folder_path3 = os.path.join(DATA_PATH, "parse2022", "preds_components")
-    org_folder3 = os.path.join(DATA_PATH, "parse_preds_components_mini_cropped_v5")
+    # Outputs
+    output_folders = {
+        # Labels
+        "labels_2d": os.path.join(CROPPED_PATH, "labels_2d_v6"),
+        "labels_3d": os.path.join(CROPPED_PATH, "labels_3d_v6"),
+        # Preds
+        "preds_2d": os.path.join(CROPPED_PATH, "preds_2d_v6"),
+        "preds_2d_fixed": os.path.join(CROPPED_PATH, "preds_2d_fixed_v6"),
+        "preds_3d": os.path.join(CROPPED_PATH, "preds_3d_v6"),
+        # "preds_3d_fixed": os.path.join(CROPPED_PATH, "preds_3d_fixed_v6"),
+        # Preds Components
+        "preds_components_2d": os.path.join(CROPPED_PATH, "preds_components_2d_v6"),
+        "preds_components_2d_fixed": os.path.join(CROPPED_PATH, "preds_components_2d_fixed_v6"),
+        "preds_components_3d": os.path.join(CROPPED_PATH, "preds_components_3d_v6"),
+        # "preds_components_3d_fixed": os.path.join(CROPPED_PATH, "preds_components_3d_fixed")
+    }
 
     size = (32, 32, 32)
     step = 16
     white_points_upper_threshold = size[0] * size[0] * 0.9
     white_points_lower_threshold = size[0] * size[0] * 0.1
 
-    os.makedirs(org_folder1, exist_ok=True)
-    os.makedirs(org_folder2, exist_ok=True)
-    os.makedirs(org_folder3, exist_ok=True)
+    for output_folder in output_folders.values():
+        os.makedirs(output_folder, exist_ok=True)
 
-    os.makedirs(org_3d_folder1, exist_ok=True)
-    os.makedirs(org_3d_folder2, exist_ok=True)
+    input_filepaths = dict()
+    for key, value in input_folders.items():
+        input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.nii.gz"))
 
-    data_filepaths1 = sorted(os.listdir(folder_path1))
-    data_filepaths2 = sorted(os.listdir(folder_path2))
-    data_filepaths3 = sorted(os.listdir(folder_path3))
-
-    for batch_idx in range(len(data_filepaths1)):
-        data_filepath1 = data_filepaths1[batch_idx]
-        data_filepath2 = data_filepaths2[batch_idx]
-        data_filepath3 = data_filepaths3[batch_idx]
-
+    zipped_filepaths = zip(input_filepaths["labels"], input_filepaths["preds"], input_filepaths["preds_components"])
+    for batch_idx, (label_filepath, pred_filepath, pred_component_filepath) in enumerate(zipped_filepaths):
+        # DEBUG
         batch_idx += 1
-        output_idx = data_filepath1.split(".")[0]
 
-        data_filepath1 = os.path.join(folder_path1, data_filepath1)
-        data_filepath2 = os.path.join(folder_path2, data_filepath2)
-        data_filepath3 = os.path.join(folder_path3, data_filepath3)
+        output_idx = label_filepath.name.split(".nii.gz")[0]
 
-        numpy_data1 = convert_nii_gz_to_numpy(data_filepath=data_filepath1)
-        numpy_data2 = convert_nii_gz_to_numpy(data_filepath=data_filepath2)
-        numpy_data3 = convert_nii_gz_to_numpy(data_filepath=data_filepath3)
+        label_numpy_data = convert_nii_gz_to_numpy(data_filepath=label_filepath)
+        pred_numpy_data = convert_nii_gz_to_numpy(data_filepath=pred_filepath)
+        pred_component_numpy_data = convert_nii_gz_to_numpy(data_filepath=pred_component_filepath)
 
-        cropped_data_3d_1 = numpy_data1
-        cropped_data_3d_2 = numpy_data2
-        cropped_data_3d_3 = numpy_data3
+        label_numpy_data[label_numpy_data > 0] = 255
+        pred_numpy_data[pred_numpy_data > 0] = 255
 
-        cropped_data_3d_1[cropped_data_3d_1 > 0] = 255
-        cropped_data_3d_2[cropped_data_3d_2 > 0] = 255
-
-        mini_cubes1 = crop_mini_cubes(cropped_data_3d=cropped_data_3d_1, size=size, step=step)
-        mini_cubes2 = crop_mini_cubes(cropped_data_3d=cropped_data_3d_2, size=size, step=step)
-        mini_cubes3 = crop_mini_cubes(cropped_data_3d=cropped_data_3d_3, size=size, step=step)
+        label_cubes = crop_mini_cubes(data_3d=label_numpy_data, size=size, step=step)
+        pred_cubes = crop_mini_cubes(data_3d=pred_numpy_data, size=size, step=step)
+        pred_components_cubes = crop_mini_cubes(data_3d=pred_component_numpy_data, size=size, step=step)
 
         print(
             f"File: {output_idx}\n"
-            f"Total Mini Cubes 1: {len(mini_cubes1)}\n"
-            f"Total Mini Cubes 2: {len(mini_cubes2)}\n"
-            f"Total Mini Cubes 3: {len(mini_cubes3)}"
+            f"Total Mini Cubes 'Label': {len(label_cubes)}\n"
+            f"Total Mini Cubes 'Pred': {len(pred_cubes)}\n"
+            f"Total Mini Cubes 'Pred Components: {len(pred_components_cubes)}"
         )
 
-        total_cubes_digits_count = len(str(len(mini_cubes1)))
-
-        for mini_box_id in range(len(mini_cubes1)):
-            mini_cube1 = mini_cubes1[mini_box_id]
-            mini_cube2 = mini_cubes2[mini_box_id]
-            mini_cube3 = mini_cubes3[mini_box_id]
-
+        total_cubes_digits_count = len(str(len(label_cubes)))
+        zipped_cubes = zip(label_cubes, pred_cubes, pred_components_cubes)
+        for mini_box_id, (label_cube, pred_cube, pred_components_cube) in enumerate(zipped_cubes):
             # check that there are 2 or more components to connect
-            components_3d_indices = np.unique(mini_cube3)
+            components_3d_indices = np.unique(pred_components_cube)
             components_3d_indices = list(components_3d_indices)
             components_3d_indices.remove(0)
             components_3d_count = len(components_3d_indices)
@@ -391,120 +388,100 @@ def create_dataset_original_images():
                 continue
 
             # Project 3D to 2D (Preds)
-            projections1 = project_3d_to_2d(data_3d=mini_cube1, component_3d=mini_cube3,
-                                            front=True, back=True, top=True, bottom=True, left=True, right=True)
-            front_image1 = projections1["front_image"]
-            back_image1 = projections1["back_image"]
-            top_image1 = projections1["top_image"]
-            bottom_image1 = projections1["bottom_image"]
-            left_image1 = projections1["left_image"]
-            right_image1 = projections1["right_image"]
-
-            front_components = projections1["front_components"]
-            back_components = projections1["back_components"]
-            top_components = projections1["top_components"]
-            bottom_components = projections1["bottom_components"]
-            left_components = projections1["left_components"]
-            right_components = projections1["right_components"]
+            pred_projections = project_3d_to_2d(
+                data_3d=pred_cube,
+                component_3d=pred_components_cube,
+                front=True, back=True, top=True, bottom=True, left=True, right=True
+            )
 
             # Project 3D to 2D (Labels)
-            projections2 = project_3d_to_2d(data_3d=mini_cube2,
-                                            front=True, back=True, top=True, bottom=True, left=True, right=True)
-            front_image2 = projections2["front_image"]
-            back_image2 = projections2["back_image"]
-            top_image2 = projections2["top_image"]
-            bottom_image2 = projections2["bottom_image"]
-            left_image2 = projections2["left_image"]
-            right_image2 = projections2["right_image"]
-
-            # Repair the preds
-            front_image1 = image_outlier_removal(front_image1, front_image2)
-            back_image1 = image_outlier_removal(back_image1, back_image2)
-            top_image1 = image_outlier_removal(top_image1, top_image2)
-            bottom_image1 = image_outlier_removal(bottom_image1, bottom_image2)
-            left_image1 = image_outlier_removal(left_image1, left_image2)
-            right_image1 = image_outlier_removal(right_image1, right_image2)
-
-            # Repair the components according to preds
-            front_components = color.label2rgb(label=np.where(front_image1 > 0, front_components, 0)) * 255
-            back_components = color.label2rgb(label=np.where(back_image1 > 0, back_components, 0)) * 255
-            top_components = color.label2rgb(label=np.where(top_image1 > 0, top_components, 0)) * 255
-            bottom_components = color.label2rgb(label=np.where(bottom_image1 > 0, bottom_components, 0)) * 255
-            left_components = color.label2rgb(label=np.where(left_image1 > 0, left_components, 0)) * 255
-            right_components = color.label2rgb(label=np.where(right_image1 > 0, right_components, 0)) * 255
-
-            # Repair the labels - TODO: Check how to do smartly
-            # front_image2 = image_missing_connected_components_removal(front_image1, front_image2)
-            # back_image2 = image_missing_connected_components_removal(back_image1, back_image2)
-            # top_image2 = image_missing_connected_components_removal(top_image1, top_image2)
-            # bottom_image2 = image_missing_connected_components_removal(bottom_image1, bottom_image2)
-            # left_image2 = image_missing_connected_components_removal(left_image1, left_image2)
-            # right_image2 = image_missing_connected_components_removal(right_image1, right_image2)
-
-            condition1 = (
-                white_points_upper_threshold > np.count_nonzero(front_image1) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(back_image1) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(top_image1) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(bottom_image1) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(left_image1) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(right_image1) > white_points_lower_threshold
-            )
-            condition2 = (
-                white_points_upper_threshold > np.count_nonzero(front_image2) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(back_image2) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(top_image2) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(bottom_image2) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(left_image2) > white_points_lower_threshold and
-                white_points_upper_threshold > np.count_nonzero(right_image2) > white_points_lower_threshold
+            label_projections = project_3d_to_2d(
+                data_3d=label_cube,
+                front=True, back=True, top=True, bottom=True, left=True, right=True
             )
 
-            # if mini_box_id==3253 or condition1 and condition2:
+            images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
+            for image_6_view in images_6_views:
+                pred_image = pred_projections[f"{image_6_view}_image"]
+                label_image = label_projections[f"{image_6_view}_image"]
 
-            if condition1 and condition2:
-                mini_box_id_str = str(mini_box_id).zfill(total_cubes_digits_count)
+                pred_projections[f"{image_6_view}_repaired_image"] = image_outlier_removal(
+                    pred=pred_image,
+                    label=label_image
+                )
+                repaired_pred_image = pred_projections[f"{image_6_view}_repaired_image"]
 
-                # Folder1 - preds
-                cv2.imwrite(os.path.join(org_folder1, f"{output_idx}_{mini_box_id_str}_front.png"), front_image1)
-                cv2.imwrite(os.path.join(org_folder1, f"{output_idx}_{mini_box_id_str}_back.png"), back_image1)
-                cv2.imwrite(os.path.join(org_folder1, f"{output_idx}_{mini_box_id_str}_top.png"), top_image1)
-                cv2.imwrite(os.path.join(org_folder1, f"{output_idx}_{mini_box_id_str}_bottom.png"), bottom_image1)
-                cv2.imwrite(os.path.join(org_folder1, f"{output_idx}_{mini_box_id_str}_left.png"), left_image1)
-                cv2.imwrite(os.path.join(org_folder1, f"{output_idx}_{mini_box_id_str}_right.png"), right_image1)
+                pred_projections[f"{image_6_view}_repaired_components"] = color.label2rgb(
+                    label=np.where(
+                        pred_projections[f"{image_6_view}_repaired_image"] > 0,
+                        pred_projections[f"{image_6_view}_repaired_components"],
+                        0
+                    )
+                ) * 255
+                repaired_components = pred_projections[f"{image_6_view}_repaired_components"]
 
-                # Folder2 - labels
-                cv2.imwrite(os.path.join(org_folder2, f"{output_idx}_{mini_box_id_str}_front.png"), front_image2)
-                cv2.imwrite(os.path.join(org_folder2, f"{output_idx}_{mini_box_id_str}_back.png"), back_image2)
-                cv2.imwrite(os.path.join(org_folder2, f"{output_idx}_{mini_box_id_str}_top.png"), top_image2)
-                cv2.imwrite(os.path.join(org_folder2, f"{output_idx}_{mini_box_id_str}_bottom.png"), bottom_image2)
-                cv2.imwrite(os.path.join(org_folder2, f"{output_idx}_{mini_box_id_str}_left.png"), left_image2)
-                cv2.imwrite(os.path.join(org_folder2, f"{output_idx}_{mini_box_id_str}_right.png"), right_image2)
+                # Repair the labels - TODO: Check how to do smartly
+                # label_projections[f"{image_6_view}_repaired_image"] = image_missing_connected_components_removal(
+                #     pred=pred_image,
+                #     label=label_image
+                # )
+                # repaired_label_image = label_projections[f"{image_6_view}_repaired_image"]
+
+                # Check Condition 1 (If condition fails, skip the current mini cube):
+                if not (white_points_upper_threshold > np.count_nonzero(repaired_pred_image) > white_points_lower_threshold):
+                    break
+
+                # Check Condition 2 (If condition fails, skip the current mini cube):
+                if not (white_points_upper_threshold > np.count_nonzero(label_image) > white_points_lower_threshold):
+                    break
+
+            # if mini_box_id==3253:
+
+            mini_box_id_str = str(mini_box_id).zfill(total_cubes_digits_count)
+
+            for image_view in images_6_views:
+                label_image = label_projections[f"{image_view}_image"]
+
+                pred_image = pred_projections[f"{image_view}_image"]
+                repaired_pred_image = pred_projections[f"{image_view}_repaired_image"]
+
+                pred_components = pred_projections[f"{image_view}_components"]
+                repaired_pred_components = pred_projections[f"{image_view}_repaired_components"]
+
+                # Folder1 - labels
+                cv2.imwrite(os.path.join(output_folders["labels_2d"], f"{output_idx}_{mini_box_id_str}_{image_view}.png"), label_image)
+
+                # Folder2 - preds
+                cv2.imwrite(os.path.join(output_folders["preds_2d"], f"{output_idx}_{mini_box_id_str}_{image_view}.png"), pred_image)
+                cv2.imwrite(os.path.join(output_folders["preds_2d_fixed"], f"{output_idx}_{mini_box_id_str}_{image_view}.png"), repaired_pred_image)
 
                 # Folder3 - components
-                cv2.imwrite(os.path.join(org_folder3, f"{output_idx}_{mini_box_id_str}_front_components.png"), front_components)
-                cv2.imwrite(os.path.join(org_folder3, f"{output_idx}_{mini_box_id_str}_back_components.png"), back_components)
-                cv2.imwrite(os.path.join(org_folder3, f"{output_idx}_{mini_box_id_str}_top_components.png"), top_components)
-                cv2.imwrite(os.path.join(org_folder3, f"{output_idx}_{mini_box_id_str}_bottom_components.png"), bottom_components)
-                cv2.imwrite(os.path.join(org_folder3, f"{output_idx}_{mini_box_id_str}_left_components.png"), left_components)
-                cv2.imwrite(os.path.join(org_folder3, f"{output_idx}_{mini_box_id_str}_right_components.png"), right_components)
+                cv2.imwrite(os.path.join(output_folders["preds_components_2d"], f"{output_idx}_{mini_box_id_str}_{image_view}_components.png"), pred_components)
+                cv2.imwrite(os.path.join(output_folders["preds_components_2d_fixed"], f"{output_idx}_{mini_box_id_str}_{image_view}_components.png"), repaired_pred_components)
 
-                # 3D Folders
-                mini_cube1[mini_cube1 > 0] = 1.0
-                mini_cube2[mini_cube2 > 0] = 1.0
+            # 3D Folders
+            label_cube[label_cube > 0] = 1.0
+            pred_cube[pred_cube > 0] = 1.0
 
-                save_name = os.path.join(org_3d_folder1, f"{output_idx}_{mini_box_id_str}")
-                convert_numpy_to_nii_gz(numpy_data=mini_cube1, save_name=save_name)
-                save_name = os.path.join(org_3d_folder2, f"{output_idx}_{mini_box_id_str}")
-                convert_numpy_to_nii_gz(numpy_data=mini_cube2, save_name=save_name)
+            save_name = os.path.join(output_folders["labels_3d"], f"{output_idx}_{mini_box_id_str}")
+            convert_numpy_to_nii_gz(numpy_data=label_cube, save_name=save_name)
 
-                # convert_numpy_to_nii_gz(mini_cube1, save_name="1")
-                # convert_numpy_to_nii_gz(mini_cube2, save_name="2")
+            save_name = os.path.join(output_folders["preds_3d"], f"{output_idx}_{mini_box_id_str}")
+            convert_numpy_to_nii_gz(numpy_data=pred_cube, save_name=save_name)
+
+            save_name = os.path.join(output_folders["preds_components_3d"], f"{output_idx}_{mini_box_id_str}")
+            convert_numpy_to_nii_gz(numpy_data=pred_components_cube, save_name=save_name)
+
+            # DEBUG
+            # convert_numpy_to_nii_gz(label_cube, save_name="1")
+            # convert_numpy_to_nii_gz(pred_cube, save_name="2")
 
         if batch_idx == 10:
             break
 
 
 def main():
-    # convert_to_3d_components()
+    build_preds_components()
     # create_dataset_depth_2d_projections()
     create_dataset_original_images()
 

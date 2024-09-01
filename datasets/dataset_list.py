@@ -7,9 +7,10 @@ import pathlib
 from datasets.custom_datasets_2d import TreesCustomDataloader
 from datasets.custom_datasets_3d import TreesCustomDataloader3D
 
-
 ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
 DATA_PATH = os.path.join(ROOT_PATH, "data")
+DATASET_PATH = os.path.join(DATA_PATH, "parse2022")  # TODO: Read from config file
+CROPPED_PATH = os.path.join(DATA_PATH, "cropped_data")
 
 
 class MNIST(object):
@@ -87,25 +88,8 @@ class CIFAR10(object):
 # Custom Dataset
 class TreesDatasetV1(object):
     def __init__(self, args):
-        # Option 1
-        # src_path = os.path.join(DATA_PATH, "cropped_src_images")
-        # dst_path = os.path.join(DATA_PATH, "cropped_dst_images")
-
-        # Option 2
-        # src_path = os.path.join(DATA_PATH, "parse_preds_mini_cropped")
-        # dst_path = os.path.join(DATA_PATH, "parse_labels_mini_cropped")
-
-        # Option 3
-        # src_path = os.path.join(DATA_PATH, "parse_preds_mini_cropped_v2")
-        # dst_path = os.path.join(DATA_PATH, "parse_labels_mini_cropped_v2")
-
-        # Option 4
-        # src_path = os.path.join(str(os.path.dirname(__file__)), "tools", "data", "parse_preds_mini_cropped_v4")
-        # dst_path = os.path.join(str(os.path.dirname(__file__)), "tools", "data", "parse_labels_mini_cropped_v4")
-
-        # Option 5
-        src_path = os.path.join(DATA_PATH, "parse_preds_mini_cropped_v5")
-        dst_path = os.path.join(DATA_PATH, "parse_labels_mini_cropped_v5")
+        src_path = os.path.join(CROPPED_PATH, "parse_preds_mini_cropped_v5")
+        dst_path = os.path.join(CROPPED_PATH, "parse_labels_mini_cropped_v5")
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader(data_paths=data_paths, args=args)
@@ -114,7 +98,7 @@ class TreesDatasetV1(object):
 
 class TreesDatasetV2(object):
     def __init__(self, args):
-        src_path = os.path.join(DATA_PATH, "mini_cropped_images")
+        src_path = os.path.join(CROPPED_PATH, "mini_cropped_images")
 
         data_paths = [src_path]
         trees_dataloader = TreesCustomDataloader(data_paths=data_paths, args=args)
@@ -123,8 +107,8 @@ class TreesDatasetV2(object):
 
 class TreesDataset3DV1(object):
     def __init__(self, args):
-        src_path = os.path.join(DATA_PATH, "parse_labels_mini_cropped_v5")
-        dst_path = os.path.join(DATA_PATH, "parse_labels_mini_cropped_3d_v5")
+        src_path = os.path.join(CROPPED_PATH, "parse_labels_mini_cropped_v5")
+        dst_path = os.path.join(CROPPED_PATH, "parse_labels_mini_cropped_3d_v5")
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
@@ -133,8 +117,8 @@ class TreesDataset3DV1(object):
 
 class TreesDataset3DV2(object):
     def __init__(self, args):
-        src_path = os.path.join(DATA_PATH, "parse_labels_mini_cropped_3d_reconstruct_v5")
-        dst_path = os.path.join(DATA_PATH, "parse_labels_mini_cropped_3d_v5")
+        src_path = os.path.join(CROPPED_PATH, "parse_labels_mini_cropped_3d_reconstruct_v5")
+        dst_path = os.path.join(CROPPED_PATH, "parse_labels_mini_cropped_3d_v5")
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
