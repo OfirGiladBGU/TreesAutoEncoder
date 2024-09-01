@@ -4,9 +4,9 @@ import torch
 
 from trainer.train_2d import Trainer
 
-# from models.ae_model import Network
-from models.ae_v2_model import Network
-# from models.vgg_demo_model import Network
+# from models.ae import Network
+from models.ae_2d_to_2d import Network
+# from models.vgg_ae_demo import Network
 # from models.gap_cnn import Network
 
 
@@ -63,6 +63,7 @@ if __name__ == "__main__":
 
     # args.dataset = 'MNIST'
     # args.dataset = 'CIFAR10'
+    # args.dataset = 'TreesV0'
     args.dataset = 'TreesV1'
     # args.dataset = 'TreesV2'
 
@@ -71,11 +72,13 @@ if __name__ == "__main__":
     if args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
         args.input_size = (1, 28, 28)
     if args.dataset == 'CIFAR10':
-        args.input_size = (3, 32, 32)
+        args.input_size = (1, 32, 32)
+    if args.dataset == 'TreesV0':
+        args.input_size = (1, 28, 28)
+        # args.input_size = (1, 64, 64)
     if args.dataset == 'TreesV1':
         args.input_size = (1, 32, 32)
-        # args.input_size = (1, 64, 64)
     if args.dataset == 'TreesV2':
-        args.input_size = (1, 28, 28)
+        args.input_size = (6, 32, 32)
 
     main()

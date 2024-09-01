@@ -47,7 +47,7 @@ class MultiView3DReconstruction(nn.Module):
     def __init__(self, args: argparse.Namespace):
         super(MultiView3DReconstruction, self).__init__()
 
-        self.model_name = 'multi_view_3d_reconstruction'
+        self.model_name = 'ae_6_2d_to_3d'
         self.input_size = args.input_size
 
         self.encoders = nn.ModuleList([Encoder() for _ in range(6)])

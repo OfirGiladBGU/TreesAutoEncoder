@@ -11,8 +11,8 @@ from tqdm import tqdm
 import pandas as pd
 
 from datasets.dataset_utils import convert_numpy_to_nii_gz, reverse_rotations, apply_threshold
-from models.ae_v2_model import Network
-from models.ae_3d_v2_model import Network3D
+from models.ae_2d_to_2d import Network
+from models.ae_3d_to_3d import Network3D
 
 
 def single_predict(format_of_2d_images, output_path):

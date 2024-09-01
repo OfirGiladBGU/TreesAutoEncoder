@@ -11,7 +11,7 @@ import numpy as np
 from torchvision.utils import save_image
 
 from datasets.dataset_utils import apply_threshold
-from datasets.dataset_list import MNIST, EMNIST, FashionMNIST, CIFAR10, TreesDatasetV1, TreesDatasetV2
+from datasets.dataset_list import MNIST, EMNIST, FashionMNIST, CIFAR10, TreesDatasetV0, TreesDatasetV1, TreesDatasetV2
 from trainer import loss_functions
 
 
@@ -49,6 +49,8 @@ class Trainer(object):
         elif self.args.dataset == 'CIFAR10':
             self.data = CIFAR10(self.args)
         # Custom Dataset
+        elif self.args.dataset == 'TreesV0':
+            self.data = TreesDatasetV0(self.args)
         elif self.args.dataset == 'TreesV1':
             self.data = TreesDatasetV1(self.args)
         elif self.args.dataset == 'TreesV2':
@@ -71,7 +73,7 @@ class Trainer(object):
         elif self.args.dataset == 'CIFAR10':
             LOSS = loss_functions.perceptual_loss(out, target, channels=3, device=self.args.device)
 
-        elif self.args.dataset == 'TreesV2':
+        elif self.args.dataset == 'TreesV0':
             out, target = loss_functions.reshape_inputs(out, target, input_size=(28 * 28, ))
             LOSS = (
                 0.5 * F.binary_cross_entropy(out, target, reduction='sum') +
@@ -93,7 +95,7 @@ class Trainer(object):
                 10 * loss_functions.weighted_pixels_diff_loss(out, target, original)
             )
 
-            # gap_cnn / ae_v2
+            # gap_cnn / ae_2d_to_2d
             # LOSS = F.mse_loss(out, target)
             # LOSS = F.mse_loss(out, target, reduction='sum')
 
@@ -115,7 +117,8 @@ class Trainer(object):
 
         return LOSS
 
-    def zero_out_radius(self, tensor, point, radius):
+    @staticmethod
+    def zero_out_radius(tensor, point, radius):
         x, y = point[1], point[2]  # Get the coordinates
         for i in range(max(0, x - radius), min(tensor.size(1), x + radius + 1)):
             for j in range(max(0, y - radius), min(tensor.size(2), y + radius + 1)):
@@ -139,12 +142,12 @@ class Trainer(object):
         self.model.train()
         train_loss = 0
         for batch_idx, (input_data, target_data) in enumerate(self.train_loader):
-            if self.args.dataset != 'TreesV1':
+            if self.args.dataset not in ['TreesV1', 'TreesV2']:
                 target_data = input_data.clone()
 
             # TODO: Threshold
-            # self.apply_threshold(input_data, 0.5)
-            # self.apply_threshold(target_data, 0.5)
+            # apply_threshold(input_data, 0.5)
+            # apply_threshold(target_data, 0.5)
 
             # Fix for Trees dataset - Fixed problem
             # if input_data.dtype != torch.float32:
@@ -158,7 +161,7 @@ class Trainer(object):
             # print(res.min())
 
             # Notice: Faster on CPU
-            if self.args.dataset != 'TreesV1' and self.args.dataset != 'CIFAR10':
+            if self.args.dataset not in ['TreesV1', 'TreesV2', 'CIFAR10']:
                 self.create_holes(input_data)
 
             input_data = input_data.to(self.device)
@@ -196,15 +199,15 @@ class Trainer(object):
                 target_data = target_data.to(self.device)
 
                 # TODO: Threshold
-                # self.apply_threshold(input_data, 0.5)
-                # self.apply_threshold(target_data, 0.5)
+                # apply_threshold(input_data, 0.5)
+                # apply_threshold(target_data, 0.5)
 
                 # if input_data.dtype != torch.float32:
                 #     input_data = input_data.float()
                 # if target_data.dtype != torch.float32:
                 #     target_data = target_data.float()
 
-                if self.args.dataset != 'TreesV1' and self.args.dataset != 'CIFAR10':
+                if self.args.dataset not in ['TreesV1', 'TreesV2', 'CIFAR10']:
                     self.create_holes(input_data)
 
                 recon_batch = self.model(input_data)
@@ -246,8 +249,8 @@ class Trainer(object):
                 target_images = target_images.to(self.device)
 
                 # TODO: Threshold
-                # trainer.apply_threshold(input_images, 0.5)
-                # trainer.apply_threshold(target_images, 0.5)
+                # apply_threshold(input_images, 0.5)
+                # apply_threshold(target_images, 0.5)
 
                 # Fix for Trees dataset - Fixed problem
                 # if input_images.dtype != torch.float32:
@@ -256,14 +259,14 @@ class Trainer(object):
                 #     target_images = target_images.float()
 
                 # Create holes in the input images
-                if self.args.dataset != 'TreesV1' and self.args.dataset != 'CIFAR10':
+                if self.args.dataset not in ['TreesV1', 'TreesV2', 'CIFAR10']:
                     self.create_holes(input_images)
 
                 self.model.eval()
                 output_images = self.model(input_images)
 
                 # TODO: Threshold
-                # trainer.apply_threshold(output_images, 0.5)
+                # apply_threshold(output_images, 0.5)
 
                 # Detach the images from the cuda and move them to CPU
                 if self.args.cuda:

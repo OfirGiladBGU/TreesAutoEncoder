@@ -6,7 +6,7 @@ class Network3D(nn.Module):
     def __init__(self, args: argparse.Namespace):
         super(Network3D, self).__init__()
 
-        self.model_name = 'ae_3d_v2'
+        self.model_name = 'ae_3d_to_3d'
         self.input_size = args.input_size
 
         # Encoder
