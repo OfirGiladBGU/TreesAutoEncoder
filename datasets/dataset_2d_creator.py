@@ -281,10 +281,10 @@ def build_preds_components():
 # 2D Projections #
 ##################
 def create_dataset_depth_2d_projections():
-    folder_path = os.path.join(DATA_PATH, "parse2022", "labels")
+    folder_path = os.path.join(DATASET_PATH, "labels")
     org_folder = os.path.join(DATA_PATH, "parse_labels_2d")
 
-    # folder_path = os.path.join(DATA_PATH, "parse2022", "preds")
+    # folder_path = os.path.join(DATASET_PATH, "preds")
     # org_folder = os.path.join(DATA_PATH, "parse_preds_2d")
 
     os.makedirs(org_folder, exist_ok=True)
@@ -362,8 +362,8 @@ def create_dataset_original_images():
         pred_numpy_data = convert_nii_gz_to_numpy(data_filepath=pred_filepath)
         pred_component_numpy_data = convert_nii_gz_to_numpy(data_filepath=pred_component_filepath)
 
-        label_numpy_data[label_numpy_data > 0] = 255
-        pred_numpy_data[pred_numpy_data > 0] = 255
+        # label_numpy_data[label_numpy_data > 0] = 255
+        # pred_numpy_data[pred_numpy_data > 0] = 255
 
         label_cubes = crop_mini_cubes(data_3d=label_numpy_data, size=size, step=step)
         pred_cubes = crop_mini_cubes(data_3d=pred_numpy_data, size=size, step=step)
@@ -373,7 +373,7 @@ def create_dataset_original_images():
             f"File: {output_idx}\n"
             f"Total Mini Cubes 'Label': {len(label_cubes)}\n"
             f"Total Mini Cubes 'Pred': {len(pred_cubes)}\n"
-            f"Total Mini Cubes 'Pred Components: {len(pred_components_cubes)}"
+            f"Total Mini Cubes 'Pred Components': {len(pred_components_cubes)}"
         )
 
         total_cubes_digits_count = len(str(len(label_cubes)))
@@ -401,24 +401,23 @@ def create_dataset_original_images():
             )
 
             images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
-            for image_6_view in images_6_views:
-                pred_image = pred_projections[f"{image_6_view}_image"]
-                label_image = label_projections[f"{image_6_view}_image"]
+            condition1 = True
+            condition2 = True
+            for image_view in images_6_views:
+                pred_image = pred_projections[f"{image_view}_image"]
+                label_image = label_projections[f"{image_view}_image"]
 
-                pred_projections[f"{image_6_view}_repaired_image"] = image_outlier_removal(
+                pred_projections[f"{image_view}_repaired_image"] = image_outlier_removal(
                     pred=pred_image,
                     label=label_image
                 )
-                repaired_pred_image = pred_projections[f"{image_6_view}_repaired_image"]
 
-                pred_projections[f"{image_6_view}_repaired_components"] = color.label2rgb(
-                    label=np.where(
-                        pred_projections[f"{image_6_view}_repaired_image"] > 0,
-                        pred_projections[f"{image_6_view}_repaired_components"],
-                        0
-                    )
+                repaired_pred_image = pred_projections[f"{image_view}_repaired_image"]
+                pred_components = pred_projections[f"{image_view}_components"]
+                pred_projections[f"{image_view}_repaired_components"] = color.label2rgb(
+                    label=np.where(repaired_pred_image > 0, pred_components, 0)
                 ) * 255
-                repaired_components = pred_projections[f"{image_6_view}_repaired_components"]
+                repaired_components = pred_projections[f"{image_view}_repaired_components"]
 
                 # Repair the labels - TODO: Check how to do smartly
                 # label_projections[f"{image_6_view}_repaired_image"] = image_missing_connected_components_removal(
@@ -429,13 +428,21 @@ def create_dataset_original_images():
 
                 # Check Condition 1 (If condition fails, skip the current mini cube):
                 if not (white_points_upper_threshold > np.count_nonzero(repaired_pred_image) > white_points_lower_threshold):
+                    condition1 = False
                     break
 
                 # Check Condition 2 (If condition fails, skip the current mini cube):
                 if not (white_points_upper_threshold > np.count_nonzero(label_image) > white_points_lower_threshold):
+                    condition2 = False
                     break
 
+            # DEBUG
             # if mini_box_id==3253:
+            #     print("Debug")
+
+            # Validate the conditions
+            if not (condition1 and condition2):
+                continue
 
             mini_box_id_str = str(mini_box_id).zfill(total_cubes_digits_count)
 
@@ -460,9 +467,6 @@ def create_dataset_original_images():
                 cv2.imwrite(os.path.join(output_folders["preds_components_2d_fixed"], f"{output_idx}_{mini_box_id_str}_{image_view}_components.png"), repaired_pred_components)
 
             # 3D Folders
-            label_cube[label_cube > 0] = 1.0
-            pred_cube[pred_cube > 0] = 1.0
-
             save_name = os.path.join(output_folders["labels_3d"], f"{output_idx}_{mini_box_id_str}")
             convert_numpy_to_nii_gz(numpy_data=label_cube, save_name=save_name)
 
@@ -481,7 +485,7 @@ def create_dataset_original_images():
 
 
 def main():
-    build_preds_components()
+    # build_preds_components()
     # create_dataset_depth_2d_projections()
     create_dataset_original_images()
 
