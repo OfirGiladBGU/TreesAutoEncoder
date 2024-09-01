@@ -24,9 +24,12 @@
 
 # Data info:
 
-1. parse2022 `labels`, `preds` -> Values: binary (0, 255), Dim: 3
+1. parse2022 `labels`, `preds` -> Values: binary {0, 1}, Dim: 3
 2. parse2022 `preds_compnents` -> Values: grayscale (0-255), Dim: 3
-3. mini_cropped `labels`, `preds` -> Values: binary (0, 1), Dim: 3
+3. cropped 2d `labels`, `preds` -> Values: grayscale (0-255), Dim: 2
+4. cropped 2d `components` -> Values: RGB (0-255, 0-255, 0-255), Dim: 2
+5. cropped 3d `labels`, `preds` -> Values: binary {0, 1}, Dim: 3
+6. cropped 3d `components` -> Values: grayscale (0-255), Dim: 3
 
 
 # The Available Approaches:
