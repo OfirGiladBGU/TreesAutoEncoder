@@ -2,6 +2,8 @@ import numpy as np
 import cv2
 import os
 import pathlib
+
+import pandas as pd
 from scipy.ndimage import label
 from skimage import color
 from tqdm import tqdm
@@ -21,8 +23,8 @@ def connected_components_3d(data_3d: np.ndarray):
     # Label connected components
     labeled_array, num_features = label(data_3d, structure=structure)
 
-    print("Labeled Array:", labeled_array)
-    print("Number of Features:", num_features)
+    # print("Labeled Array:", labeled_array)
+    # print("Number of Features:", num_features)
 
     return labeled_array, num_features
 
@@ -234,14 +236,14 @@ def crop_mini_cubes(data_3d: np.ndarray, size: tuple = (28, 28, 28), step: int =
                 mini_cubes.append(mini_cube)
 
                 if cubes_data is True:
-                    mini_cubes_data.append([{
+                    mini_cubes_data.append({
                         "start_i": start_i,
                         "start_j": start_j,
                         "start_k": start_k,
                         "end_i": end_i,
                         "end_j": end_j,
                         "end_k": end_k
-                    }])
+                    })
 
     if cubes_data is False:
         return mini_cubes
@@ -528,7 +530,7 @@ def create_dataset_original_images():
             local_components_3d_count = len(local_components_3d_indices)
 
             cube_data.update({
-                "name": output_3d_format,
+                # "name": output_3d_format,
                 "pred_global_components": global_components_3d_count,
                 "label_local_components": local_components_3d_count
             })
@@ -541,13 +543,15 @@ def create_dataset_original_images():
         if batch_idx == 10:
             break
 
+    pd.DataFrame(log_data).T.to_csv(log_filepath)
+
 
 def main():
     # TODO: DEBUG
-    create_dataset_depth_2d_projections()
+    # create_dataset_depth_2d_projections()
 
-    # build_preds_components()
-    # create_dataset_original_images()
+    build_preds_components()
+    create_dataset_original_images()
 
 
 if __name__ == "__main__":
