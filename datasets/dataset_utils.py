@@ -3,20 +3,20 @@ import nibabel as nib
 import torch
 
 
-def convert_nii_gz_to_numpy(data_filepath):
+def convert_nii_gz_to_numpy(data_filepath) -> np.ndarray:
     nib_data = nib.load(data_filepath)
     numpy_data = nib_data.get_fdata()
     return numpy_data
 
 
-def convert_numpy_to_nii_gz(numpy_data, save_name=None):
+def convert_numpy_to_nii_gz(numpy_data: np.ndarray, save_name=None) -> nib.Nifti1Image:
     nib_data = nib.Nifti1Image(numpy_data, affine=np.eye(4))
     if save_name is not None:
         nib.save(img=nib_data, filename=f"{save_name}.nii.gz")
     return nib_data
 
 
-def reverse_rotations(numpy_image, view_type: str):
+def reverse_rotations(numpy_image: np.ndarray, view_type: str) -> np.ndarray:
     # Convert to 3D
     data_3d = np.zeros(shape=(numpy_image.shape[0], numpy_image.shape[0], numpy_image.shape[0]), dtype=np.uint8)
     for i in range(numpy_image.shape[0]):
