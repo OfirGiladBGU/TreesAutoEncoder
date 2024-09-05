@@ -292,9 +292,11 @@ def create_dataset_depth_2d_projections():
         "preds_2d": os.path.join(DATASET_PATH, "preds_2d")
     }
 
+    # Create Output Folders
     for output_folder in output_folders.values():
         os.makedirs(output_folder, exist_ok=True)
 
+    # Get the filepaths
     input_filepaths = dict()
     for key, value in input_folders.items():
         input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.nii.gz"))
@@ -385,16 +387,25 @@ def create_dataset_original_images():
     white_points_upper_threshold = size[0] * size[0] * 0.9
     white_points_lower_threshold = size[0] * size[0] * 0.1
 
+    # Create Output Folders
     for output_folder in output_folders.values():
         os.makedirs(output_folder, exist_ok=True)
     os.makedirs(LOGS_PATH, exist_ok=True)
 
+    # Get the filepaths
     input_filepaths = dict()
+    filepaths_found = list()
     for key, value in input_folders.items():
         input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.nii.gz"))
+        filepaths_found.append(len(input_filepaths[key]))
 
+    # Validation
+    if len(set(filepaths_found)) != 1:
+        raise ValueError("Different number of files found in the Input folders")
+
+    batch_idx = 0
     zipped_filepaths = zip(input_filepaths["labels"], input_filepaths["preds"], input_filepaths["preds_components"])
-    for batch_idx, (label_filepath, pred_filepath, pred_component_filepath) in enumerate(zipped_filepaths):
+    for label_filepath, pred_filepath, pred_component_filepath in zipped_filepaths:
         # DEBUG
         batch_idx += 1
 

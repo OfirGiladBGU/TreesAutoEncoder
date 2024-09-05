@@ -1,12 +1,14 @@
 import numpy as np
 import cv2
 import os
+import pathlib
+from tqdm import tqdm
 
 from dataset_list import CROPPED_PATH
 from dataset_utils import convert_numpy_to_nii_gz, reverse_rotations
 
 
-def reconstruct_3d_from_2d(format_of_2d_images):
+def reconstruct_3d_from_2d(format_of_2d_images) -> np.ndarray:
     images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
     data_3d_list = list()
     for image_view in images_6_views:
@@ -21,8 +23,10 @@ def reconstruct_3d_from_2d(format_of_2d_images):
         final_data_3d = np.logical_or(final_data_3d, data_3d_list[i])
 
     final_data_3d = final_data_3d.astype(np.float32)
+
     # save_name = format_of_2d_images.replace("<VIEW>", "result")
     # convert_numpy_to_nii_gz(final_data_3d, save_name=save_name)
+
     return final_data_3d
 
 
@@ -51,26 +55,68 @@ def reconstruct_3d_from_2d(format_of_2d_images):
 #
 #     convert_numpy_to_nii_gz(voxel_grid_refined, save_name="Test")
 
-def full_3d_reconstruction(src_folder, tgt_folder):
-    os.makedirs(tgt_folder, exist_ok=True)
 
-    all_images = os.listdir(src_folder)
-    image_format_set = set()
-    for image in all_images:
-        image_split = image.rsplit("_", 1)
-        image_split[1] = "<VIEW>.png"
-        image_format = "_".join(image_split)
-        image_format_set.add(image_format)
+def full_3d_reconstruction():
+    # Inputs
+    input_folders = {
+        "labels_2d": os.path.join(CROPPED_PATH, "labels_2d_v6"),
+        "preds_2d": os.path.join(CROPPED_PATH, "preds_2d_v6")
+    }
 
-    image_format_set = list(image_format_set)
-    for image_format in image_format_set:
-        image_format_src_filepath = os.path.join(src_folder, image_format)
-        final_data_3d = reconstruct_3d_from_2d(format_of_2d_images=image_format_src_filepath)
+    # Outputs
+    output_folders = {
+        "labels_3d_reconstruct": os.path.join(CROPPED_PATH, "labels_3d_reconstruct_v6"),
+        "preds_3d_reconstruct": os.path.join(CROPPED_PATH, "preds_3d_reconstruct_v6")
+    }
 
-        save_name = image_format.replace("<VIEW>.png", "result")
-        # print(f"Saving: {save_name}.nii.gz")
-        save_name = os.path.join(tgt_folder, save_name)
-        convert_numpy_to_nii_gz(final_data_3d, save_name=save_name)
+    # Create Output Folders
+    for output_folder in output_folders.values():
+        os.makedirs(output_folder, exist_ok=True)
+
+    # Get the filepaths
+    input_filepaths = dict()
+    for key, value in input_folders.items():
+        input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.png"))
+
+    labels_image_format_set = set()
+    preds_image_format_set = set()
+    zipped_filepaths = zip(input_filepaths["labels_2d"], input_filepaths["preds_2d"])
+    for label_2d_filepath, pred_2d_filepath in zipped_filepaths:
+        # Label
+        label_image_split = str(label_2d_filepath).rsplit("_", 1)
+        label_image_split[1] = "<VIEW>.png"
+        label_image_format = "_".join(label_image_split)
+        labels_image_format_set.add(label_image_format)
+
+        # Pred
+        pred_image_split = str(pred_2d_filepath).rsplit("_", 1)
+        pred_image_split[1] = "<VIEW>.png"
+        pred_image_format = "_".join(pred_image_split)
+        preds_image_format_set.add(pred_image_format)
+
+    labels_image_format_set = list(labels_image_format_set)
+    preds_image_format_set = list(preds_image_format_set)
+
+    zipped_filepaths = zip(labels_image_format_set, preds_image_format_set)
+    for label_image_format, pred_image_format in tqdm(zipped_filepaths):
+        label_numpy_data = reconstruct_3d_from_2d(format_of_2d_images=label_image_format)
+        pred_numpy_data = reconstruct_3d_from_2d(format_of_2d_images=pred_image_format)
+
+        # Label
+        label_image_relative = pathlib.Path(label_image_format).relative_to(input_folders["labels_2d"])
+        label_image_output_filepath = os.path.join(output_folders["labels_3d_reconstruct"], label_image_relative)
+
+        # Pred
+        pred_image_relative = pathlib.Path(pred_image_format).relative_to(input_folders["preds_2d"])
+        pred_image_output_filepath = os.path.join(output_folders["preds_3d_reconstruct"], pred_image_relative)
+
+        # 3D Folders - labels
+        save_name = label_image_output_filepath.replace("<VIEW>.png", "")
+        convert_numpy_to_nii_gz(numpy_data=label_numpy_data, save_name=save_name)
+
+        # 3D Folders - preds
+        save_name = pred_image_output_filepath.replace("<VIEW>.png", "")
+        convert_numpy_to_nii_gz(numpy_data=pred_numpy_data, save_name=save_name)
 
     # format_of_2d_images = r".\parse_labels_mini_cropped_v5\PA000005_vessel_02584_<VIEW>.png"
     # final_data_3d = reconstruct_3d_from_2d(format_of_2d_images)
@@ -80,14 +126,7 @@ def full_3d_reconstruction(src_folder, tgt_folder):
 
 
 def main():
-    src_folder1 = os.path.join(CROPPED_PATH, "labels_2d_v6")
-    tgt_folder1 = os.path.join(CROPPED_PATH, "labels_3d_reconstruct_v6")
-
-    src_folder2 = os.path.join(CROPPED_PATH, "preds_2d_v6")
-    tgt_folder2 = os.path.join(CROPPED_PATH, "preds_3d_reconstruct_v6")
-
-    full_3d_reconstruction(src_folder1, tgt_folder1)
-    full_3d_reconstruction(src_folder2, tgt_folder2)
+    full_3d_reconstruction()
 
 
 if __name__ == "__main__":
