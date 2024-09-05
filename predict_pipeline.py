@@ -15,6 +15,8 @@ from models.ae_2d_to_2d import Network
 from models.ae_3d_to_3d import Network3D
 
 
+# TODO: split 2d and 3d pre pre processes to different function
+
 def single_predict(format_of_2d_images, output_path):
     os.makedirs(output_path, exist_ok=True)
 

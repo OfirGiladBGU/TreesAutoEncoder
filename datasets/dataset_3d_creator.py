@@ -2,7 +2,6 @@ import numpy as np
 import cv2
 import os
 
-
 from dataset_list import CROPPED_PATH
 from dataset_utils import convert_numpy_to_nii_gz, reverse_rotations
 

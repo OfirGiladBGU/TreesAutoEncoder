@@ -4,6 +4,7 @@ import torch
 
 from trainer.train_2d import Trainer
 
+# TODO: Rename each model name to be more descriptive
 # from models.ae import Network
 from models.ae_2d_to_2d import Network
 # from models.vgg_ae_demo import Network

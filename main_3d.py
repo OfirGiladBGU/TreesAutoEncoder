@@ -4,6 +4,7 @@ import torch
 
 from trainer.train_3d import Trainer
 
+# TODO: Rename each model name to be more descriptive
 from models.ae_6_2d_to_3d import MultiView3DReconstruction
 from models.ae_3d_to_3d import Network3D
 
