@@ -298,8 +298,9 @@ def create_dataset_depth_2d_projections():
         input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.nii.gz"))
 
     zipped_filepaths = zip(input_filepaths["labels"], input_filepaths["preds"])
-    for label_filepath, pred_filepath in zipped_filepaths:
+    for label_filepath, pred_filepath in tqdm(zipped_filepaths):
         output_idx = label_filepath.name.split(".nii.gz")[0]
+        print(f"File: {output_idx}")
 
         label_numpy_data = convert_nii_gz_to_numpy(data_filepath=label_filepath)
         pred_numpy_data = convert_nii_gz_to_numpy(data_filepath=pred_filepath)
@@ -520,7 +521,7 @@ def create_dataset_original_images():
             convert_numpy_to_nii_gz(numpy_data=pred_components_cube, save_name=save_name)
 
             # Log 3D info
-            label_components_cube = connected_components_3d(data_3d=label_cube)[1]
+            label_components_cube = connected_components_3d(data_3d=label_cube)[0]
 
             local_components_3d_indices = list(np.unique(label_components_cube))
             local_components_3d_indices.remove(0)
@@ -543,10 +544,10 @@ def create_dataset_original_images():
 
 def main():
     # TODO: DEBUG
-    # create_dataset_depth_2d_projections()
+    create_dataset_depth_2d_projections()
 
-    build_preds_components()
-    create_dataset_original_images()
+    # build_preds_components()
+    # create_dataset_original_images()
 
 
 if __name__ == "__main__":
