@@ -11,7 +11,6 @@ ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
 DATA_PATH = os.path.join(ROOT_PATH, "data")
 DATASET_PATH = os.path.join(DATA_PATH, "parse2022")  # TODO: Read from config file
 CROPPED_PATH = os.path.join(DATA_PATH, "cropped_data")
-LOGS_PATH = os.path.join(CROPPED_PATH, "logs")
 
 
 class MNIST(object):

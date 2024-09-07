@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision import transforms
 import cv2
-import os
+import pathlib
 
 
 class TreesCustomDatasetV1(Dataset):
@@ -14,53 +14,46 @@ class TreesCustomDatasetV1(Dataset):
 
         self.paths_count = len(data_paths)
         if self.paths_count == 1:
-            self.data_files1 = os.listdir(data_paths[0])
-            self.data_files1.sort()
+            self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.png")
+            self.data_files1 = sorted(self.data_files1)
+
         elif self.paths_count == 2:
-            self.data_files1 = os.listdir(data_paths[0])
-            self.data_files1.sort()
-            self.data_files2 = os.listdir(data_paths[1])
-            self.data_files2.sort()
+            self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.png")
+            self.data_files1 = sorted(self.data_files1)
+
+            self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.png")
+            self.data_files2 = sorted(self.data_files2)
+
         else:
             raise ValueError("Invalid number of data paths")
 
-        self.scans_count = len(self.data_files1)
+        self.dataset_count = len(self.data_files1)
 
     def __len__(self):
-        return self.scans_count
+        return self.dataset_count
 
     def __getitem__(self, idx):
-        data_file1 = os.path.join(self.data_paths[0], self.data_files1[idx])
-        image_numpy1 = cv2.imread(data_file1)
-        image_numpy1 = cv2.cvtColor(image_numpy1, cv2.COLOR_BGR2GRAY)
-        # image_numpy1 = np.expand_dims(image_numpy1, axis=0)
-        # image_numpy1.astype(dtype=np.float32)
+        data_file1 = str(self.data_files1[idx])
+        numpy_2d_data1 = cv2.imread(data_file1)
+        numpy_2d_data1 = cv2.cvtColor(numpy_2d_data1, cv2.COLOR_BGR2GRAY)
 
-        # if image_numpy1.max() > 0:
-        #     image_numpy1 = image_numpy1 / image_numpy1.max()
-
-        image_numpy1 = self.to_tensor(image_numpy1)
+        numpy_2d_data1 = self.to_tensor(numpy_2d_data1)
         if self.transform is not None:
-            image_numpy1 = self.transform(image_numpy1)
+            numpy_2d_data1 = self.transform(numpy_2d_data1)
 
         if self.paths_count == 1:
-            return image_numpy1, -1
+            return numpy_2d_data1, -1
 
         elif self.paths_count == 2:
-            data_file2 = os.path.join(self.data_paths[1], self.data_files2[idx])
-            image_numpy2 = cv2.imread(data_file2)
-            image_numpy2 = cv2.cvtColor(image_numpy2, cv2.COLOR_BGR2GRAY)
-            # image_numpy2 = np.expand_dims(image_numpy2, axis=0)
-            # image_numpy2.astype(dtype=np.float32)
+            data_file2 = str(self.data_files2[idx])
+            numpy_2d_data2 = cv2.imread(data_file2)
+            numpy_2d_data2 = cv2.cvtColor(numpy_2d_data2, cv2.COLOR_BGR2GRAY)
 
-            # if image_numpy2.max() > 0:
-            #     image_numpy2 = image_numpy2 / image_numpy2.max()
-
-            image_numpy2 = self.to_tensor(image_numpy2)
+            numpy_2d_data2 = self.to_tensor(numpy_2d_data2)
             if self.transform is not None:
-                image_numpy2 = self.transform(image_numpy2)
+                numpy_2d_data2 = self.transform(numpy_2d_data2)
 
-            return image_numpy1, image_numpy2
+            return numpy_2d_data1, numpy_2d_data2
 
 
 # TODO: Check if will be useful
@@ -72,20 +65,23 @@ class TreesCustomDatasetV2(Dataset):
 
         self.paths_count = len(data_paths)
         if self.paths_count == 1:
-            self.data_files1 = os.listdir(data_paths[0])
-            self.data_files1.sort()
+            self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.png")
+            self.data_files1 = sorted(self.data_files1)
+
         elif self.paths_count == 2:
-            self.data_files1 = os.listdir(data_paths[0])
-            self.data_files1.sort()
-            self.data_files2 = os.listdir(data_paths[1])
-            self.data_files2.sort()
+            self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.png")
+            self.data_files1 = sorted(self.data_files1)
+
+            self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.png")
+            self.data_files2 = sorted(self.data_files2)
+
         else:
             raise ValueError("Invalid number of data paths")
 
-        self.scans_count = int(len(self.data_files1) / 6)
+        self.dataset_count = int(len(self.data_files1) / 6)
 
     def __len__(self):
-        return self.scans_count
+        return self.dataset_count
 
     def __getitem__(self, idx):
         data_idx = idx * 6
@@ -93,29 +89,29 @@ class TreesCustomDatasetV2(Dataset):
         batch1 = list()
         batch2 = list()
         for i in range(6):
-            data_file1 = os.path.join(self.data_paths[0], self.data_files1[data_idx + i])
-            image_numpy1 = cv2.imread(data_file1)
-            image_numpy1 = cv2.cvtColor(image_numpy1, cv2.COLOR_BGR2GRAY)
+            data_file1 = str(self.data_files1[data_idx + i])
+            numpy_2d_data1 = cv2.imread(data_file1)
+            numpy_2d_data1 = cv2.cvtColor(numpy_2d_data1, cv2.COLOR_BGR2GRAY)
 
-            image_numpy1 = self.to_tensor(image_numpy1)
+            numpy_2d_data1 = self.to_tensor(numpy_2d_data1)
             if self.transform is not None:
-                image_numpy1 = self.transform(image_numpy1)
+                numpy_2d_data1 = self.transform(numpy_2d_data1)
 
             if self.paths_count == 1:
-                batch1.append(image_numpy1)
+                batch1.append(numpy_2d_data1)
                 batch2.append(-1)
 
             elif self.paths_count == 2:
-                data_file2 = os.path.join(self.data_paths[1], self.data_files2[data_idx + i])
-                image_numpy2 = cv2.imread(data_file2)
-                image_numpy2 = cv2.cvtColor(image_numpy2, cv2.COLOR_BGR2GRAY)
+                data_file2 = str(self.data_files2[data_idx + i])
+                numpy_2d_data2 = cv2.imread(data_file2)
+                numpy_2d_data2 = cv2.cvtColor(numpy_2d_data2, cv2.COLOR_BGR2GRAY)
 
-                image_numpy2 = self.to_tensor(image_numpy2)
+                numpy_2d_data2 = self.to_tensor(numpy_2d_data2)
                 if self.transform is not None:
-                    image_numpy2 = self.transform(image_numpy2)
+                    numpy_2d_data2 = self.transform(numpy_2d_data2)
 
-                batch1.append(image_numpy1)
-                batch2.append(image_numpy2)
+                batch1.append(numpy_2d_data1)
+                batch2.append(numpy_2d_data2)
 
         return batch1, batch2
 

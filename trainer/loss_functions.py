@@ -11,18 +11,34 @@ from torcheval.metrics.functional import multiclass_f1_score
 #####################
 # Utility functions #
 #####################
-def reshape_inputs(input_images, target_images, input_size):
-    input_images = input_images.view(-1, *input_size)
-    target_images = target_images.view(-1, *input_size)
-    return input_images, target_images
+def reshape_inputs(input_data, input_size):
+    input_data = input_data.view(-1, *input_size)
+    return input_data
+
+
+#########################
+# Common Loss functions #
+#########################
+def bce_loss(out, target, reduction='sum'):
+    loss_fn = nn.BCELoss(reduction=reduction)
+    return loss_fn(out, target)
+
+
+def mse_loss(out, target, reduction='sum'):
+    loss_fn = nn.MSELoss(reduction=reduction)
+    return loss_fn(out, target)
+
+
+def l1_loss(out, target, reduction='sum'):
+    loss_fn = nn.L1Loss(reduction=reduction)
+    return loss_fn(out, target)
 
 
 ###################
 # GPT Suggestions #
 ###################
-def reconstruction_loss(out, target):
-    mse_loss = torch.nn.MSELoss(reduction='sum')
-    return mse_loss(out, target) / (out.size(0) * out.size(1))
+def reconstruction_loss(out, target, reduction='sum'):
+    return mse_loss(out, target, reduction=reduction) / (out.size(0) * out.size(1))
 
 
 # From VGG Loss
@@ -130,7 +146,8 @@ def f1_loss(out, target):
 
 
 def earth_mover_distance(out, target, input_size=(1, 64, 64)):
-    reshaped_out, reshaped_target = reshape_inputs(out, target, input_size=(input_size[1] * input_size[2]))
+    reshaped_out = reshape_inputs(input_data=out, input_size=(input_size[1] * input_size[2]))
+    reshaped_target = reshape_inputs(input_data=target, input_size=(input_size[1] * input_size[2]))
 
     scaled_out = reshaped_out * 255
     scaled_out = scaled_out.int()
@@ -155,7 +172,7 @@ def unfilled_holes_loss(out, target, original):
 
 
 # TODO: fix
-def weighted_pixels_diff_loss(out, original, target):
+def weighted_pixels_diff_loss(out, target, original):
     output_diff = out - original
 
     # Make sure to keep the non-zero pixels stay with the same color
@@ -226,10 +243,6 @@ class WeightedBCEDiceLoss(nn.Module):
         dice_loss_res = self.dice(inputs, targets)
         return self.weight_bce * bce_loss_res + self.weight_dice * dice_loss_res
 
-
-def bce_loss(out, target):
-    loss_fn = nn.BCELoss()
-    return loss_fn(out, target)
 
 def dice_loss(out, target):
     loss_fn = DiceLoss()

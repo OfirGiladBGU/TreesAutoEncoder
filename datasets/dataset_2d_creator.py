@@ -2,13 +2,12 @@ import numpy as np
 import cv2
 import os
 import pathlib
-
+from tqdm import tqdm
 import pandas as pd
 from scipy.ndimage import label
 from skimage import color
-from tqdm import tqdm
 
-from dataset_list import DATASET_PATH, CROPPED_PATH, LOGS_PATH
+from dataset_list import DATASET_PATH, CROPPED_PATH
 from dataset_utils import convert_nii_gz_to_numpy, convert_numpy_to_nii_gz
 
 
@@ -378,7 +377,7 @@ def create_dataset_original_images():
     }
 
     # Log
-    log_filepath = os.path.join(LOGS_PATH, "dataset_2d.csv")
+    log_filepath = os.path.join(CROPPED_PATH, "log.csv")
     log_data = dict()
 
     # Config
@@ -390,7 +389,6 @@ def create_dataset_original_images():
     # Create Output Folders
     for output_folder in output_folders.values():
         os.makedirs(output_folder, exist_ok=True)
-    os.makedirs(LOGS_PATH, exist_ok=True)
 
     # Get the filepaths
     input_filepaths = dict()

@@ -3,7 +3,6 @@ import random
 import torch
 import torch.utils.data
 from torch import optim
-from torch.nn import functional as F
 import copy
 import os
 import matplotlib.pyplot as plt
@@ -67,17 +66,19 @@ class Trainer(object):
         """
 
         if self.args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
-            out, target = loss_functions.reshape_inputs(out, target, input_size=(28 * 28, ))
-            LOSS = F.binary_cross_entropy(out, target, reduction='sum')
+            out = loss_functions.reshape_inputs(input_data=out, input_size=(28 * 28, ))
+            target = loss_functions.reshape_inputs(input_data=target, input_size=(28 * 28,))
+            LOSS = loss_functions.bce_loss(out=out, target=target, reduction='sum')
 
         elif self.args.dataset == 'CIFAR10':
-            LOSS = loss_functions.perceptual_loss(out, target, channels=3, device=self.args.device)
+            LOSS = loss_functions.perceptual_loss(out=out, target=target, channels=1, device=self.args.device)
 
         elif self.args.dataset == 'TreesV0':
-            out, target = loss_functions.reshape_inputs(out, target, input_size=(28 * 28, ))
+            out = loss_functions.reshape_inputs(input_data=out, input_size=(28 * 28, ))
+            target = loss_functions.reshape_inputs(input_data=target, input_size=(28 * 28,))
             LOSS = (
-                0.5 * F.binary_cross_entropy(out, target, reduction='sum') +
-                0.5 * F.l1_loss(out, target, reduction='sum')
+                0.5 * loss_functions.bce_loss(out=out, target=target, reduction='sum') +
+                0.5 * loss_functions.l1_loss(out=out, target=target, reduction='sum')
             )
 
         elif self.args.dataset == 'TreesV1':
@@ -91,13 +92,13 @@ class Trainer(object):
             # )
 
             LOSS = (
-                20 * loss_functions.unfilled_holes_loss(out, target, original) +
-                10 * loss_functions.weighted_pixels_diff_loss(out, target, original)
+                20 * loss_functions.unfilled_holes_loss(out=out, target=target, original=original) +
+                10 * loss_functions.weighted_pixels_diff_loss(out=out, target=target, original=original)
             )
 
             # gap_cnn / ae_2d_to_2d
-            # LOSS = F.mse_loss(out, target)
-            # LOSS = F.mse_loss(out, target, reduction='sum')
+            # LOSS = loss_functions.mse_loss(out, target)
+            # LOSS = loss_functions.mse_loss(out, target, reduction='sum')
 
             # LOSS = loss_functions.fill_holes_loss(out, target, original)
 
@@ -109,8 +110,8 @@ class Trainer(object):
             # )
 
             # LOSS = (
-            #     0.5 *  loss_functions.reconstruction_loss(out, target) +
-            #     0.5 * F.l1_loss(out, target, reduction='sum')
+            #     0.5 * loss_functions.reconstruction_loss(out, target) +
+            #     0.5 * loss_functions.l1_loss(out, target, reduction='sum')
             # )
         else:
             raise NotImplementedError
@@ -173,8 +174,8 @@ class Trainer(object):
             # print(res.min())
 
             self.optimizer.zero_grad()
-            recon_batch = self.model(input_data)
-            loss = self.loss_function(out=recon_batch, target=target_data, original=input_data)
+            out_data = self.model(input_data)
+            loss = self.loss_function(out=out_data, target=target_data, original=input_data)
             loss.backward()
 
             train_loss += loss.item()
@@ -210,8 +211,8 @@ class Trainer(object):
                 if self.args.dataset not in ['TreesV1', 'TreesV2', 'CIFAR10']:
                     self.create_holes(input_data)
 
-                recon_batch = self.model(input_data)
-                test_loss += self.loss_function(out=recon_batch, target=target_data, original=input_data).item()
+                out_data = self.model(input_data)
+                test_loss += self.loss_function(out=out_data, target=target_data, original=input_data).item()
 
         test_loss /= len(self.test_loader.dataset)
         print('====> Test set loss: {:.4f}'.format(test_loss))

@@ -2,7 +2,6 @@ import argparse
 import torch
 import torch.utils.data
 from torch import optim
-from torch.nn import functional as F
 import copy
 import os
 import matplotlib.pyplot as plt
@@ -58,8 +57,8 @@ class Trainer(object):
             target_data = target_data.to(self.device)
 
             self.optimizer.zero_grad()
-            recon_batch = self.model(input_data)
-            loss = self.loss_function(out=recon_batch, target=target_data, original=input_data)
+            out_data = self.model(input_data)
+            loss = self.loss_function(out=out_data, target=target_data, original=input_data)
             loss.backward()
 
             train_loss += loss.item()
@@ -81,8 +80,8 @@ class Trainer(object):
                 input_data = input_data.to(self.device)
                 target_data = target_data.to(self.device)
 
-                recon_batch = self.model(input_data)
-                test_loss += self.loss_function(out=recon_batch, target=target_data, original=input_data).item()
+                out_data = self.model(input_data)
+                test_loss += self.loss_function(out=out_data, target=target_data, original=input_data).item()
 
         test_loss /= len(self.test_loader.dataset)
         print('====> Test set loss: {:.4f}'.format(test_loss))

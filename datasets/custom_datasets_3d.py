@@ -3,8 +3,9 @@ import torch
 from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision import transforms
 import cv2
-import os
-import nibabel as nib
+import pathlib
+
+from datasets.dataset_utils import convert_nii_gz_to_numpy
 
 
 class TreesCustomDataset3DV1(Dataset):
@@ -16,13 +17,14 @@ class TreesCustomDataset3DV1(Dataset):
 
         self.paths_count = len(data_paths)
         if self.paths_count == 1:
-            self.data_files1 = os.listdir(data_paths[0])
-            self.data_files1.sort()
+            self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.png")
+            self.data_files1 = sorted(self.data_files1)
         elif self.paths_count == 2:
-            self.data_files1 = os.listdir(data_paths[0])
-            self.data_files1.sort()
-            self.data_files2 = os.listdir(data_paths[1])
-            self.data_files2.sort()
+            self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.png")
+            self.data_files1 = sorted(self.data_files1)
+
+            self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.nii.gz")
+            self.data_files2 = sorted(self.data_files2)
         else:
             raise ValueError("Invalid number of data paths")
 
@@ -36,15 +38,15 @@ class TreesCustomDataset3DV1(Dataset):
 
         batch = list()
         for i in range(6):
-            data_file1 = os.path.join(self.data_paths[0], self.data_files1[data_idx + i])
-            image_numpy1 = cv2.imread(data_file1)
-            image_numpy1 = cv2.cvtColor(image_numpy1, cv2.COLOR_BGR2GRAY)
+            data_file1 = str(self.data_files1[data_idx + i])
+            numpy_2d_data1 = cv2.imread(data_file1)
+            numpy_2d_data1 = cv2.cvtColor(numpy_2d_data1, cv2.COLOR_BGR2GRAY)
 
-            image_numpy1 = self.to_tensor(image_numpy1)
+            numpy_2d_data1 = self.to_tensor(numpy_2d_data1)
             if self.transform2d is not None:
-                image_numpy1 = self.transform2d(image_numpy1)
+                numpy_2d_data1 = self.transform2d(numpy_2d_data1)
 
-            batch.append(image_numpy1)
+            batch.append(numpy_2d_data1)
 
         # Only 6 images
         if self.paths_count == 1:
@@ -52,15 +54,15 @@ class TreesCustomDataset3DV1(Dataset):
 
         # 6 images + 1 3D data
         elif self.paths_count == 2:
-            data_file2 = os.path.join(self.data_paths[1], self.data_files2[idx])
-            ct_img = nib.load(data_file2)
-            image_numpy2 = ct_img.get_fdata().astype(np.float32)
+            data_file2 =  str(self.data_files2[idx])
+            numpy_3d_data2 = convert_nii_gz_to_numpy(data_filepath=data_file2)
+            numpy_3d_data2 = numpy_3d_data2.astype(np.float32)
 
-            image_numpy2 = torch.Tensor(image_numpy2)
+            numpy_3d_data2 = torch.Tensor(numpy_3d_data2)
             if self.transform3d is not None:
-                image_numpy2 = self.transform3d(image_numpy2)
+                numpy_3d_data2 = self.transform3d(numpy_3d_data2)
 
-            target = image_numpy2
+            target = numpy_3d_data2
 
         # Invalid number of data paths
         else:
@@ -75,17 +77,19 @@ class TreesCustomDataset3DV2(Dataset):
     def __init__(self, data_paths: list, transform3d=None):
         self.data_paths = data_paths
         self.transform3d = transform3d
-        # self.to_tensor = transforms.ToTensor()
 
         self.paths_count = len(data_paths)
         if self.paths_count == 1:
-            self.data_files1 = os.listdir(data_paths[0])
-            self.data_files1.sort()
+            self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.nii.gz")
+            self.data_files1 = sorted(self.data_files1)
+
         elif self.paths_count == 2:
-            self.data_files1 = os.listdir(data_paths[0])
-            self.data_files1.sort()
-            self.data_files2 = os.listdir(data_paths[1])
-            self.data_files2.sort()
+            self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.nii.gz")
+            self.data_files1 = sorted(self.data_files1)
+
+            self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.nii.gz")
+            self.data_files2 = sorted(self.data_files2)
+
         else:
             raise ValueError("Invalid number of data paths")
 
@@ -95,31 +99,31 @@ class TreesCustomDataset3DV2(Dataset):
         return self.scans_count
 
     def __getitem__(self, idx):
-        data_file1 = os.path.join(self.data_paths[0], self.data_files1[idx])
-        ct_img1 = nib.load(data_file1)
-        image_3d_numpy1 = ct_img1.get_fdata().astype(np.float32)
+        data_file1 = str(self.data_files1[idx])
+        numpy_3d_data1 = convert_nii_gz_to_numpy(data_filepath=data_file1)
+        numpy_3d_data1 = numpy_3d_data1.astype(np.float32)
 
-        image_3d_numpy1 = torch.Tensor(image_3d_numpy1)
+        numpy_3d_data1 = torch.Tensor(numpy_3d_data1)
         if self.transform3d is not None:
-            image_3d_numpy1 = self.transform3d(image_3d_numpy1)
+            numpy_3d_data1 = self.transform3d(numpy_3d_data1)
 
         # Only 1 3D data
         if self.paths_count == 1:
-            return image_3d_numpy1, -1
+            return numpy_3d_data1, -1
 
         # 1 3D input + 1 3D target
         elif self.paths_count == 2:
-            data_file2 = os.path.join(self.data_paths[1], self.data_files2[idx])
-            ct_img2 = nib.load(data_file2)
-            image_3d_numpy2 = ct_img2.get_fdata().astype(np.float32)
+            data_file2 = str(self.data_files2[idx])
+            numpy_3d_data2 = convert_nii_gz_to_numpy(data_filepath=data_file2)
+            numpy_3d_data2 = numpy_3d_data2.astype(np.float32)
 
-            image_3d_numpy2 = torch.Tensor(image_3d_numpy2)
+            numpy_3d_data2 = torch.Tensor(numpy_3d_data2)
             if self.transform3d is not None:
-                image_3d_numpy2 = self.transform3d(image_3d_numpy2)
+                numpy_3d_data2 = self.transform3d(numpy_3d_data2)
 
-            image_3d_numpy1 = image_3d_numpy1.unsqueeze(0)
-            image_3d_numpy2 = image_3d_numpy2.unsqueeze(0)
-            return image_3d_numpy1, image_3d_numpy2
+            numpy_3d_data1 = numpy_3d_data1.unsqueeze(0)
+            numpy_3d_data2 = numpy_3d_data2.unsqueeze(0)
+            return numpy_3d_data1, numpy_3d_data2
 
 
 class TreesCustomDataloader3D:
