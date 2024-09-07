@@ -68,9 +68,9 @@ if __name__ == "__main__":
 
     # args.dataset = 'MNIST'
     # args.dataset = 'CIFAR10'
-    # args.dataset = 'TreesV0'
-    args.dataset = 'TreesV1'
-    # args.dataset = 'TreesV2'
+    # args.dataset = 'Trees2DV1S'
+    args.dataset = 'Trees2DV1'
+    # args.dataset = 'Trees2DV2'
 
     args.epochs = 20
 

@@ -9,11 +9,12 @@ class Network(nn.Module):
 
         self.model_name = 'vgg_ae_demo'
         self.input_size = args.input_size
+        self.c = self.input_size[0]
 
         # Original
-        if self.input_size == (3, 32, 32):
+        if self.input_size == (self.c, 32, 32):
             self.encoder = nn.Sequential(
-                nn.Conv2d(3, 16, 3, padding=1), nn.ReLU(),
+                nn.Conv2d(self.c, 16, 3, padding=1), nn.ReLU(),
                 nn.Conv2d(16, 16, 3, padding=1), nn.ReLU(),
                 nn.AvgPool2d(2, ceil_mode=True),
                 nn.Conv2d(16, 32, 3, padding=1), nn.ReLU(),
@@ -36,12 +37,12 @@ class Network(nn.Module):
                 nn.Conv2d(32, 16, 3, padding=1), nn.ReLU(),
                 nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
                 nn.Conv2d(16, 16, 3, padding=1), nn.ReLU(),
-                nn.Conv2d(16, 3, 3, padding=1), nn.Sigmoid(),
+                nn.Conv2d(16, self.c, 3, padding=1), nn.Sigmoid(),
             )
         # Modified
-        elif self.input_size == (1, 64, 64):
+        elif self.input_size == (self.c, 64, 64):
             self.encoder = nn.Sequential(
-                nn.Conv2d(1, 16, 3, padding=1), nn.ReLU(),
+                nn.Conv2d(self.c, 16, 3, padding=1), nn.ReLU(),
                 nn.Conv2d(16, 16, 3, padding=1), nn.ReLU(),
                 nn.AvgPool2d(2, ceil_mode=True),  # 1x64x64 -> 16x32x32
                 nn.Conv2d(16, 32, 3, padding=1), nn.ReLU(),
@@ -70,7 +71,7 @@ class Network(nn.Module):
                 nn.Conv2d(32, 16, 3, padding=1), nn.ReLU(),
                 nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),  # 16x32x32 -> 16x64x64
                 nn.Conv2d(16, 16, 3, padding=1), nn.ReLU(),
-                nn.Conv2d(16, 1, 3, padding=1), nn.Sigmoid(),  # 16x64x64 -> 1x64x64
+                nn.Conv2d(16, self.c, 3, padding=1), nn.Sigmoid(),  # 16x64x64 -> 1x64x64
             )
         else:
             raise ValueError(f'Invalid input size: {self.input_size}')

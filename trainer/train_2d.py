@@ -26,10 +26,10 @@ class Trainer(object):
         self.train_loader = self.data.train_loader
         self.test_loader = self.data.test_loader
 
-        if self.args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
+        self.datasets_for_holes = ['MNIST', 'EMNIST', 'FashionMNIST', 'CIFAR10', 'TreesV1S']
+
+        if self.args.dataset in self.datasets_for_holes:
             self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
-        elif self.args.dataset == 'CIFAR10':
-            self.optimizer = optim.Adam(self.model.parameters())
         else:
             # For ae / gap_cnn
             # self.optimizer = optim.Adadelta(self.model.parameters())
@@ -45,22 +45,22 @@ class Trainer(object):
         """
 
         if self.args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
-            out = loss_functions.reshape_inputs(input_data=out, input_size=(28 * 28, ))
+            out = loss_functions.reshape_inputs(input_data=out, input_size=(28 * 28,))
             target = loss_functions.reshape_inputs(input_data=target, input_size=(28 * 28,))
             LOSS = loss_functions.bce_loss(out=out, target=target, reduction='sum')
 
         elif self.args.dataset == 'CIFAR10':
             LOSS = loss_functions.perceptual_loss(out=out, target=target, channels=1, device=self.args.device)
 
-        elif self.args.dataset == 'TreesV0':
-            out = loss_functions.reshape_inputs(input_data=out, input_size=(28 * 28, ))
+        elif self.args.dataset == 'Trees2DV1S':
+            out = loss_functions.reshape_inputs(input_data=out, input_size=(28 * 28,))
             target = loss_functions.reshape_inputs(input_data=target, input_size=(28 * 28,))
             LOSS = (
                 0.5 * loss_functions.bce_loss(out=out, target=target, reduction='sum') +
                 0.5 * loss_functions.l1_loss(out=out, target=target, reduction='sum')
             )
 
-        elif self.args.dataset == 'TreesV1':
+        elif self.args.dataset == 'Trees2DV1':
             # TODO: MIOU, Total Variation, SSIM, F1, EMD
 
             # ae
@@ -105,44 +105,45 @@ class Trainer(object):
                 if (i - x) ** 2 + (j - y) ** 2 <= radius ** 2:
                     tensor[0, i, j] = 0
 
-    def create_holes(self, target_data):
-        for idx in range(len(target_data)):
-            white_points = torch.nonzero(target_data[idx] > 0.6)
+    def create_holes(self, input_data):
+        for idx in range(len(input_data)):
+            white_points = torch.nonzero(input_data[idx] > 0.6)
 
             if white_points.size(0) > 0:
                 # Randomly select one of the non-zero points
                 random_point = random.choice(white_points)
                 radius = random.randint(3, 5)
-                self.zero_out_radius(target_data[idx], random_point, radius)
+                self.zero_out_radius(input_data[idx], random_point, radius)
 
-                # plt.imshow(target_data[idx].permute(1, 2, 0))
-                # save_image(target_data[idx], 'img1.png')
+                # plt.imshow(input_data[idx].permute(1, 2, 0))
+                # save_image(input_data[idx], 'img1.png')
 
     def _train(self, epoch):
         self.model.train()
         train_loss = 0
-        for batch_idx, (input_data, target_data) in enumerate(self.train_loader):
-            if self.args.dataset not in ['TreesV1', 'TreesV2']:
-                target_data = input_data.clone()
-
-            # TODO: Threshold
-            # apply_threshold(input_data, 0.5)
-            # apply_threshold(target_data, 0.5)
-
-            # Fix for Trees dataset - Fixed problem
-            # if input_data.dtype != torch.float32:
-            #     input_data = input_data.float()
-            # if target_data.dtype != torch.float32:
-            #     target_data = target_data.float()
-
-            # # For Equality Check
-            # res = torch.eq(input_data, target_data)
-            # print(res.max())
-            # print(res.min())
+        for batch_idx, batch_data in enumerate(self.train_loader):
+            (input_data, target_data) = batch_data
 
             # Notice: Faster on CPU
-            if self.args.dataset not in ['TreesV1', 'TreesV2', 'CIFAR10']:
-                self.create_holes(input_data)
+            if self.args.dataset in self.datasets_for_holes:
+                target_data = input_data.clone()
+
+                # TODO: Threshold
+                # apply_threshold(input_data, 0.5)
+                # apply_threshold(target_data, 0.5)
+
+                # Fix for Trees dataset - Fixed problem
+                # if input_data.dtype != torch.float32:
+                #     input_data = input_data.float()
+                # if target_data.dtype != torch.float32:
+                #     target_data = target_data.float()
+
+                # # For Equality Check
+                # res = torch.eq(input_data, target_data)
+                # print(res.max())
+                # print(res.min())
+
+                self.create_holes(input_data=input_data)
 
             input_data = input_data.to(self.device)
             target_data = target_data.to(self.device)
@@ -160,41 +161,48 @@ class Trainer(object):
             train_loss += loss.item()
             self.optimizer.step()
             if batch_idx % self.args.log_interval == 0:
-                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                    epoch, batch_idx * len(input_data), len(self.train_loader.dataset),
+                print('[Train] Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                    epoch,
+                    batch_idx * len(input_data),
+                    len(self.train_loader.dataset),
                     100. * batch_idx / len(self.train_loader),
-                    loss.item() / len(input_data)))
+                    loss.item() / len(input_data)
+                ))
 
-        print('====> Epoch: {} Average loss: {:.4f}'.format(
-              epoch, train_loss / len(self.train_loader.dataset)))
+        print('> [Train] Epoch: {} Average loss: {:.4f}'.format(
+            epoch,
+            train_loss / len(self.train_loader.dataset)
+        ))
 
     def _test(self):
         self.model.eval()
         test_loss = 0
         with torch.no_grad():
-            for i, (input_data, target_data) in enumerate(self.test_loader):
-                input_data = input_data.to(self.device)
-                if self.args.dataset != 'TreesV1':
+            for batch_idx, batch_data in enumerate(self.test_loader):
+                (input_data, target_data) = batch_data
+
+                if self.args.dataset in self.datasets_for_holes:
                     target_data = input_data.clone()
+
+                    # TODO: Threshold
+                    # apply_threshold(input_data, 0.5)
+                    # apply_threshold(target_data, 0.5)
+
+                    # if input_data.dtype != torch.float32:
+                    #     input_data = input_data.float()
+                    # if target_data.dtype != torch.float32:
+                    #     target_data = target_data.float()
+
+                    self.create_holes(input_data=input_data)
+
+                input_data = input_data.to(self.device)
                 target_data = target_data.to(self.device)
-
-                # TODO: Threshold
-                # apply_threshold(input_data, 0.5)
-                # apply_threshold(target_data, 0.5)
-
-                # if input_data.dtype != torch.float32:
-                #     input_data = input_data.float()
-                # if target_data.dtype != torch.float32:
-                #     target_data = target_data.float()
-
-                if self.args.dataset not in ['TreesV1', 'TreesV2', 'CIFAR10']:
-                    self.create_holes(input_data)
 
                 out_data = self.model(input_data)
                 test_loss += self.loss_function(out=out_data, target=target_data, original=input_data).item()
 
         test_loss /= len(self.test_loader.dataset)
-        print('====> Test set loss: {:.4f}'.format(test_loss))
+        print('> [Test] Average Loss: {:.4f}'.format(test_loss))
 
     def train(self):
         try:
@@ -223,24 +231,25 @@ class Trainer(object):
                 data = iter(self.test_loader)
                 for i in range(batch_num):
                     input_images, target_images = next(data)
+
+
+                if self.args.dataset in self.datasets_for_holes:
+                    target_images = input_images.clone()
+
+                    # TODO: Threshold
+                    # apply_threshold(input_images, 0.5)
+                    # apply_threshold(target_images, 0.5)
+
+                    # Fix for Trees dataset - Fixed problem
+                    # if input_images.dtype != torch.float32:
+                    #     input_images = input_images.float()
+                    # if target_images.dtype != torch.float32:
+                    #     target_images = target_images.float()
+
+                    self.create_holes(input_data=input_images)
+
                 input_images = input_images.to(self.device)
-                if self.args.dataset != 'TreesV1':
-                    target_images = input_images.clone().detach()
                 target_images = target_images.to(self.device)
-
-                # TODO: Threshold
-                # apply_threshold(input_images, 0.5)
-                # apply_threshold(target_images, 0.5)
-
-                # Fix for Trees dataset - Fixed problem
-                # if input_images.dtype != torch.float32:
-                #     input_images = input_images.float()
-                # if target_images.dtype != torch.float32:
-                #     target_images = target_images.float()
-
-                # Create holes in the input images
-                if self.args.dataset not in ['TreesV1', 'TreesV2', 'CIFAR10']:
-                    self.create_holes(input_images)
 
                 self.model.eval()
                 output_images = self.model(input_images)
@@ -249,10 +258,10 @@ class Trainer(object):
                 # apply_threshold(output_images, 0.5)
 
                 # Detach the images from the cuda and move them to CPU
-                if self.args.cuda:
-                    input_images = input_images.cpu().detach()
-                    target_images = target_images.cpu().detach()
-                    output_images = output_images.cpu().detach()
+                if self.args.cuda is True:
+                    input_images = input_images.cpu()
+                    target_images = target_images.cpu()
+                    output_images = output_images.cpu()
 
                 # Create a grid of images
                 columns = 3

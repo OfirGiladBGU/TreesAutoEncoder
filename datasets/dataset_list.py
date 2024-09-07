@@ -5,7 +5,7 @@ from torchvision import datasets, transforms
 import os
 import pathlib
 
-from datasets.custom_datasets_2d import TreesCustomDataloader
+from datasets.custom_datasets_2d import TreesCustomDataloader2D
 from datasets.custom_datasets_3d import TreesCustomDataloader3D
 
 ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
@@ -99,19 +99,19 @@ class CIFAR10(object):
 
 
 # Train with 2D labels (with random holes) to predict 2D labels
-class TreesDatasetV0(object):
+class TreesDataset2DV1S(object):
     def __init__(self, args):
         self.input_size = (1, 32, 32)
 
         src_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
 
         data_paths = [src_path]
-        trees_dataloader = TreesCustomDataloader(data_paths=data_paths, args=args)
+        trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
 # Train with 2D preds to predict 2D labels
-class TreesDatasetV1(object):
+class TreesDataset2DV1(object):
     def __init__(self, args):
         self.input_size = (1, 32, 32)
 
@@ -119,12 +119,12 @@ class TreesDatasetV1(object):
         dst_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader(data_paths=data_paths, args=args)
+        trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
 # Train with 6 2D preds to predict 6 2D labels
-class TreesDatasetV2(object):
+class TreesDataset2DV2(object):
     def __init__(self, args):
         self.input_size = (6, 1, 32, 32)
 
@@ -132,7 +132,21 @@ class TreesDatasetV2(object):
         dst_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader(data_paths=data_paths, args=args)
+        trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args)
+        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+
+
+# Train with 3D reconstructed labels to predict 3D labels (with regression)
+class TreesDataset2DV2M(object):
+    def __init__(self, args):
+        self.input_size = (1, 32, 32, 32)
+
+        src_path = os.path.join(CROPPED_PATH, "preds_2d_v6")
+        dst_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
+        log_path = os.path.join(CROPPED_PATH, "log.csv")
+
+        data_paths = [src_path, dst_path, log_path]
+        trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
@@ -162,6 +176,20 @@ class TreesDataset3DV2(object):
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
+# Train with 3D reconstructed labels to predict 3D labels (with regression)
+class TreesDataset3DV2M(object):
+    def __init__(self, args):
+        self.input_size = (1, 32, 32, 32)
+
+        src_path = os.path.join(CROPPED_PATH, "labels_3d_reconstruct_v6")
+        dst_path = os.path.join(CROPPED_PATH, "labels_3d_v6")
+        log_path = os.path.join(CROPPED_PATH, "log.csv")
+
+        data_paths = [src_path, dst_path, log_path]
+        trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
+        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+
+
 # Init Method
 def init_dataset(args: argparse.Namespace):
     dataset_map = dict(
@@ -170,9 +198,9 @@ def init_dataset(args: argparse.Namespace):
         FashionMNIST=FashionMNIST,
         CIFAR10=CIFAR10,
         # 2D Datasets
-        TreesV0=TreesDatasetV0,
-        TreesV1=TreesDatasetV1,
-        TreesV2=TreesDatasetV2,
+        Trees2DV1S=TreesDataset2DV1S,
+        Trees2DV1=TreesDataset2DV1,
+        Trees2DV2=TreesDataset2DV2,
         # 3D Datasets
         Trees3DV1=TreesDataset3DV1,
         Trees3DV2=TreesDataset3DV2

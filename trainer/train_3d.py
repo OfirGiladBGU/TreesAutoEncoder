@@ -43,7 +43,8 @@ class Trainer(object):
     def _train(self, epoch):
         self.model.train()
         train_loss = 0
-        for batch_idx, (input_data, target_data) in enumerate(self.train_loader):
+        for batch_idx, batch_data in enumerate(self.train_loader):
+            (input_data, target_data) = batch_data
             input_data = input_data.to(self.device)
             target_data = target_data.to(self.device)
 
@@ -55,19 +56,25 @@ class Trainer(object):
             train_loss += loss.item()
             self.optimizer.step()
             if batch_idx % self.args.log_interval == 0:
-                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                    epoch, batch_idx * len(input_data), len(self.train_loader.dataset),
+                print('[Train] Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                    epoch,
+                    batch_idx * len(input_data),
+                    len(self.train_loader.dataset),
                     100. * batch_idx / len(self.train_loader),
-                    loss.item() / len(input_data)))
+                    loss.item() / len(input_data)
+                ))
 
-        print('====> Epoch: {} Average loss: {:.4f}'.format(
-              epoch, train_loss / len(self.train_loader.dataset)))
+        print('> [Train] Epoch: {}, Average Loss: {:.4f}'.format(
+            epoch,
+            train_loss / len(self.train_loader.dataset)
+        ))
 
     def _test(self):
         self.model.eval()
         test_loss = 0
         with torch.no_grad():
-            for i, (input_data, target_data) in enumerate(self.test_loader):
+            for batch_idx, batch_data in enumerate(self.test_loader):
+                (input_data, target_data) = batch_data
                 input_data = input_data.to(self.device)
                 target_data = target_data.to(self.device)
 
@@ -75,7 +82,7 @@ class Trainer(object):
                 test_loss += self.loss_function(out=out_data, target=target_data, original=input_data).item()
 
         test_loss /= len(self.test_loader.dataset)
-        print('====> Test set loss: {:.4f}'.format(test_loss))
+        print('> [Test] Average Loss: {:.4f}'.format(test_loss))
 
     def train(self):
         try:
