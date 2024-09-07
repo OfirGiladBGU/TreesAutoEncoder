@@ -2,6 +2,7 @@ import argparse
 import os
 import torch
 
+from datasets.dataset_list import init_dataset
 from trainer.train_3d import Trainer
 
 # TODO: Rename each model name to be more descriptive
@@ -9,17 +10,20 @@ from models.ae_6_2d_to_3d import MultiView3DReconstruction
 from models.ae_3d_to_3d import Network3D
 
 
-def train_model(model):
-    trainer = Trainer(args=args, model=model)
+def train_model(data, model):
+    trainer = Trainer(args=args, data=data, model=model)
     trainer.train()
 
 
-def predict_model(model):
-    trainer = Trainer(args=args, model=model)
+def predict_model(data, model):
+    trainer = Trainer(args=args, data=data, model=model)
     trainer.predict()
 
 
 def main():
+    data = init_dataset(args=args)
+    args.input_size = data.input_size
+
     # model = MultiView3DReconstruction(args)
     model = Network3D(args)
 
@@ -30,8 +34,8 @@ def main():
 
     # model.load_state_dict(torch.load(args.weights_filepath))
 
-    train_model(model=model)
-    predict_model(model=model)
+    train_model(data=data, model=model)
+    predict_model(data=data, model=model)
 
 
 if __name__ == "__main__":
@@ -64,12 +68,6 @@ if __name__ == "__main__":
     # args.dataset = 'Trees3DV1'
     args.dataset = 'Trees3DV2'
 
-    # args.batch_size = 3
     args.epochs = 10
-
-    if args.dataset == 'Trees3DV1':
-        args.input_size = (6, 1, 32, 32)
-    if args.dataset == 'Trees3DV2':
-        args.input_size = (1, 32, 32, 32)
 
     main()

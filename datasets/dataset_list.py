@@ -1,3 +1,4 @@
+import argparse
 import torch
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
@@ -15,6 +16,8 @@ CROPPED_PATH = os.path.join(DATA_PATH, "cropped_data")
 
 class MNIST(object):
     def __init__(self, args):
+        self.input_size = (1, 28, 28)
+
         kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
         root = os.path.join(DATA_PATH, "mnist")
         self.train_loader = DataLoader(
@@ -33,6 +36,8 @@ class MNIST(object):
 
 class EMNIST(object):
     def __init__(self, args):
+        self.input_size = (1, 28, 28)
+
         kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
         root = os.path.join(DATA_PATH, "emnist")
         self.train_loader = DataLoader(
@@ -51,6 +56,8 @@ class EMNIST(object):
 
 class FashionMNIST(object):
     def __init__(self, args):
+        self.input_size = (1, 28, 28)
+
         kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
         root = os.path.join(DATA_PATH, "fmnist")
         self.train_loader = DataLoader(
@@ -69,6 +76,8 @@ class FashionMNIST(object):
 
 class CIFAR10(object):
     def __init__(self, args):
+        self.input_size = (1, 32, 32)
+
         transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Grayscale(num_output_channels=1)
@@ -92,6 +101,8 @@ class CIFAR10(object):
 # Train with 2D labels (with random holes) to predict 2D labels
 class TreesDatasetV0(object):
     def __init__(self, args):
+        self.input_size = (1, 32, 32)
+
         src_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
 
         data_paths = [src_path]
@@ -102,6 +113,8 @@ class TreesDatasetV0(object):
 # Train with 2D preds to predict 2D labels
 class TreesDatasetV1(object):
     def __init__(self, args):
+        self.input_size = (1, 32, 32)
+
         src_path = os.path.join(CROPPED_PATH, "preds_2d_v6")
         dst_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
 
@@ -113,6 +126,8 @@ class TreesDatasetV1(object):
 # Train with 6 2D preds to predict 6 2D labels
 class TreesDatasetV2(object):
     def __init__(self, args):
+        self.input_size = (6, 1, 32, 32)
+
         src_path = os.path.join(CROPPED_PATH, "preds_2d_v6")
         dst_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
 
@@ -124,6 +139,8 @@ class TreesDatasetV2(object):
 # Train with 6 2D labels to predict 3D labels
 class TreesDataset3DV1(object):
     def __init__(self, args):
+        self.input_size = (6, 1, 32, 32)
+
         src_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
         dst_path = os.path.join(CROPPED_PATH, "labels_3d_v6")
 
@@ -135,9 +152,32 @@ class TreesDataset3DV1(object):
 # Train with 3D reconstructed labels to predict 3D labels
 class TreesDataset3DV2(object):
     def __init__(self, args):
+        self.input_size = (1, 32, 32, 32)
+
         src_path = os.path.join(CROPPED_PATH, "labels_3d_reconstruct_v6")
         dst_path = os.path.join(CROPPED_PATH, "labels_3d_v6")
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+
+
+# Init Method
+def init_dataset(args: argparse.Namespace):
+    dataset_map = dict(
+        MNIST=MNIST,
+        EMNIST=EMNIST,
+        FashionMNIST=FashionMNIST,
+        CIFAR10=CIFAR10,
+        # 2D Datasets
+        TreesV0=TreesDatasetV0,
+        TreesV1=TreesDatasetV1,
+        TreesV2=TreesDatasetV2,
+        # 3D Datasets
+        Trees3DV1=TreesDataset3DV1,
+        Trees3DV2=TreesDataset3DV2
+    )
+    if args.dataset in list(dataset_map.keys()):
+        return dataset_map[args.dataset](args=args)
+    else:
+        raise Exception("Dataset not supported")

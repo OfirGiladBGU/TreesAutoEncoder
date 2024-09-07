@@ -13,28 +13,19 @@ from trainer import loss_functions
 
 
 class Trainer(object):
-    def __init__(self, args: argparse.Namespace, model):
+    def __init__(self, args: argparse.Namespace, data, model):
         self.args = args
-        self.device = args.device
-        self._init_dataset()
+
+        self.device = self.args.device
+        self.data = data
+        self.model = model
+        self.model.to(self.device)
 
         # Get loaders
         self.train_loader = self.data.train_loader
         self.test_loader = self.data.test_loader
 
-        self.model = model
-        self.model.to(self.device)
-        self.input_size = model.input_size
-
         self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
-
-    def _init_dataset(self):
-        if self.args.dataset == 'Trees3DV1':
-            self.data = TreesDataset3DV1(self.args)
-        elif self.args.dataset == 'Trees3DV2':
-            self.data = TreesDataset3DV2(self.args)
-        else:
-            raise Exception("Dataset not supported")
 
     def loss_function(self, out, target, original=None):
         """

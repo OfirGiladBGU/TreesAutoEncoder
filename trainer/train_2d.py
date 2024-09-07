@@ -10,52 +10,31 @@ import numpy as np
 from torchvision.utils import save_image
 
 from datasets.dataset_utils import apply_threshold
-from datasets.dataset_list import MNIST, EMNIST, FashionMNIST, CIFAR10, TreesDatasetV0, TreesDatasetV1, TreesDatasetV2
 from trainer import loss_functions
 
 
 class Trainer(object):
-    def __init__(self, args: argparse.Namespace, model):
+    def __init__(self, args: argparse.Namespace, data, model):
         self.args = args
-        self.device = args.device
-        self._init_dataset()
+
+        self.device = self.args.device
+        self.data = data
+        self.model = model
+        self.model.to(self.device)
 
         # Get loaders
         self.train_loader = self.data.train_loader
         self.test_loader = self.data.test_loader
 
-        self.model = model
-        self.model.to(self.device)
-        self.input_size = model.input_size
-
-        if args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
+        if self.args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
             self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
-        elif args.dataset == 'CIFAR10':
+        elif self.args.dataset == 'CIFAR10':
             self.optimizer = optim.Adam(self.model.parameters())
         else:
             # For ae / gap_cnn
             # self.optimizer = optim.Adadelta(self.model.parameters())
             # For vgg_ae_demo / ae_v2
             self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
-
-    def _init_dataset(self):
-        if self.args.dataset == 'MNIST':
-            self.data = MNIST(self.args)
-        elif self.args.dataset == 'EMNIST':
-            self.data = EMNIST(self.args)
-        elif self.args.dataset == 'FashionMNIST':
-            self.data = FashionMNIST(self.args)
-        elif self.args.dataset == 'CIFAR10':
-            self.data = CIFAR10(self.args)
-        # Custom Dataset
-        elif self.args.dataset == 'TreesV0':
-            self.data = TreesDatasetV0(self.args)
-        elif self.args.dataset == 'TreesV1':
-            self.data = TreesDatasetV1(self.args)
-        elif self.args.dataset == 'TreesV2':
-            self.data = TreesDatasetV2(self.args)
-        else:
-            raise Exception("Dataset not supported")
 
     def loss_function(self, out, target, original=None):
         """

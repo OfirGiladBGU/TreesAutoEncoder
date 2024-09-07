@@ -2,6 +2,7 @@ import argparse
 import os
 import torch
 
+from datasets.dataset_list import init_dataset
 from trainer.train_2d import Trainer
 
 # TODO: Rename each model name to be more descriptive
@@ -11,17 +12,20 @@ from models.ae_2d_to_2d import Network
 # from models.gap_cnn import Network
 
 
-def train_model(model):
-    trainer = Trainer(args=args, model=model)
+def train_model(data, model):
+    trainer = Trainer(args=args, data=data, model=model)
     trainer.train()
 
 
-def predict_model(model):
-    trainer = Trainer(args=args, model=model)
+def predict_model(data, model):
+    trainer = Trainer(args=args, data=data, model=model)
     trainer.predict()
 
 
 def main():
+    data = init_dataset(args)
+    args.input_size = data.input_size
+
     model = Network(args)
 
     # Update save path
@@ -31,8 +35,8 @@ def main():
 
     # model.load_state_dict(torch.load(args.weights_filepath))
 
-    train_model(model=model)
-    predict_model(model=model)
+    train_model(data=data, model=model)
+    predict_model(data=data, model=model)
 
 
 if __name__ == "__main__":
@@ -69,17 +73,5 @@ if __name__ == "__main__":
     # args.dataset = 'TreesV2'
 
     args.epochs = 20
-
-    if args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
-        args.input_size = (1, 28, 28)
-    if args.dataset == 'CIFAR10':
-        args.input_size = (1, 32, 32)
-    if args.dataset == 'TreesV0':
-        args.input_size = (1, 28, 28)
-        # args.input_size = (1, 64, 64)
-    if args.dataset == 'TreesV1':
-        args.input_size = (1, 32, 32)
-    if args.dataset == 'TreesV2':
-        args.input_size = (6, 32, 32)
 
     main()
