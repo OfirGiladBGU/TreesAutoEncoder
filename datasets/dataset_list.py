@@ -201,9 +201,11 @@ def init_dataset(args: argparse.Namespace):
         Trees2DV1S=TreesDataset2DV1S,
         Trees2DV1=TreesDataset2DV1,
         Trees2DV2=TreesDataset2DV2,
+        Trees2DV2M=TreesDataset2DV2M,
         # 3D Datasets
         Trees3DV1=TreesDataset3DV1,
-        Trees3DV2=TreesDataset3DV2
+        Trees3DV2=TreesDataset3DV2,
+        Trees3DV2M=TreesDataset3DV2M,
     )
     if args.dataset in list(dataset_map.keys()):
         return dataset_map[args.dataset](args=args)
