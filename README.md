@@ -56,13 +56,27 @@ Given the `3d ground truth` and the `3d predicted labels`:
    2. Use `model1` as follows (2D to 2D):
       1. Train with the 6 `2d predicted labels` to **repair** and get 6 `2d ground truth`
       2. Predict with the 6 `2d predicted labels` to get the 6 `2d fixed labels`
+      * **2 approaches available with the same data:**
+         1. Option 1: work with batches of 1 view (size: (b, 1, w, h))
+         2. Option 2: work with batches of 6 views (size: (b, 6, 1, w, h))
    3. Perform direct projection (using `logical or`) for all the data:
-      1. From `2d ground truth` to get the `pre-3d ground truth`
-      2. From `2d predicted labels` to get the `pre-3d predicted labels`
-      3. From `2d fixed labels` to get the `pre-3d fixed labels`
+      1. Option 1:
+         1. From `2d ground truth` to get the `pre-3d ground truth`
+         2. From `2d predicted labels` to get the `pre-3d predicted labels`
+         3. From `2d fixed labels` to get the `pre-3d fixed labels`
+      2. Option 2:
+         1. From `2d ground truth` to get the `pre-3d ground truth`
+         2. From `2d predicted labels` to get the `pre-3d predicted labels`
+         3. From `2d fixed labels` to get the `pre-3d fixed labels`
+         4. Merge `3d predicted labels` and `pre-3d ground truth` to get the `fused pre-3d ground truth`
+         5. Merge `3d predicted labels` and `pre-3d fixed labels` to get the `fused pre-3d fixed labels`
    4. Use `model2` as follows (3D to 3D):
-      1. Train with the `pre-3d ground truth` to **reconstruct** and get the `3d ground truth`
-      2. Predict with the `pre-3d fixed labels` to get the `3d fixed labels`
+      1. Option 1 (Fill the whole internal space):
+         1. Train with the `pre-3d ground truth` to **reconstruct** and get the `3d ground truth`
+         2. Predict with the `pre-3d fixed labels` to get the `3d fixed labels`
+      2. Option 2 (Fill only the predicted labels):
+         1. Train with the `fused pre-3d ground truth` to **reconstruct** and get the `3d ground truth`
+         2. Predict with the `fused pre-3d fixed labels` to get the `3d fixed labels`
    5. Use all the `3d fixed label` to fix the `3d predicted labels`
 
 3. (Direct Repair Flow) Option 3 Flows:
