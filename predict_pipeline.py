@@ -180,6 +180,22 @@ def main():
 
 
 if __name__ == "__main__":
+    # 1
+    # TODO: validate that after the 2d projection reconstruct, applying again 2d projection give the same results (artificial tests)
+    # TODO: add plots of 3d data in matplotlib
+    # TODO: creation of the 3d data of fixed 3d pred
+
+
+    # 2
+    # TODO: add 45 degrees projections
+    # TODO: use the ground truth to create create a holes
+
+
+    # 3
+    # TODO: create the classification models
+
+
+    # completed
     # TODO: run test of different inputs (100 examples)
     # TODO: show best 10, worst 10, median 10
 
