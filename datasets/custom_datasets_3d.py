@@ -186,7 +186,13 @@ class TreesCustomDataloader3D:
                 log_path=self.log_path,
                 transform3d=self.transform3d
             )
-        elif self.args.dataset == 'Trees3DV3M':
+        elif self.args.dataset == 'Trees3DV2M':
+            tree_dataset = TreesCustomDataset3DV2(
+                data_paths=self.data_paths,
+                log_path=self.log_path,
+                transform3d=self.transform3d
+            )
+        elif self.args.dataset == 'Trees3DV3':
             tree_dataset = TreesCustomDataset3DV2(
                 data_paths=self.data_paths,
                 log_path=self.log_path,

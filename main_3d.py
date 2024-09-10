@@ -66,7 +66,8 @@ if __name__ == "__main__":
     torch.manual_seed(args.seed)
 
     # args.dataset = 'Trees3DV1'
-    args.dataset = 'Trees3DV2'
+    # args.dataset = 'Trees3DV2'
+    args.dataset = 'Trees3DV3'
 
     args.epochs = 10
 
