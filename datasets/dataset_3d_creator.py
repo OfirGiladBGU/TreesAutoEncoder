@@ -167,7 +167,7 @@ def create_3d_fusions():
 
     # Outputs
     output_folders = {
-        "preds_3d_fusion": os.path.join(CROPPED_PATH, "preds_fixed_3d_fusion_v6"),
+        "preds_3d_fusion": os.path.join(CROPPED_PATH, "preds_3d_fusion_v6"),
         "preds_fixed_3d_fusion": os.path.join(CROPPED_PATH, "preds_fixed_3d_fusion_v6")
     }
 
