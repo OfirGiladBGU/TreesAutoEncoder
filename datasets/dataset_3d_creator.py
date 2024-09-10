@@ -156,8 +156,23 @@ def full_3d_reconstruction():
     # refine_construction(voxel_grid)
 
 
+# TODO: implement
+def fusion_3d_reconstruction():
+    # Inputs
+    input_folders = {
+        "preds_fixed_3d": os.path.join(CROPPED_PATH, "preds_fixed_3d_v6"),
+        "labels_3d_reconstruct": os.path.join(CROPPED_PATH, "labels_3d_reconstruct_v6")
+    }
+
+    # Outputs
+    output_folders = {
+        "preds_fixed_3d_fusion": os.path.join(CROPPED_PATH, "preds_fixed_3d_fusion_v6")
+    }
+
+
 def main():
     full_3d_reconstruction()
+    fusion_3d_reconstruction()
 
 
 if __name__ == "__main__":
