@@ -61,13 +61,15 @@ def full_3d_reconstruction():
     # Inputs
     input_folders = {
         "labels_2d": os.path.join(CROPPED_PATH, "labels_2d_v6"),
-        "preds_2d": os.path.join(CROPPED_PATH, "preds_2d_v6")
+        "preds_2d": os.path.join(CROPPED_PATH, "preds_2d_v6"),
+        "preds_fixed_2d": os.path.join(CROPPED_PATH, "preds_fixed_2d_v6")
     }
 
     # Outputs
     output_folders = {
         "labels_3d_reconstruct": os.path.join(CROPPED_PATH, "labels_3d_reconstruct_v6"),
-        "preds_3d_reconstruct": os.path.join(CROPPED_PATH, "preds_3d_reconstruct_v6")
+        "preds_3d_reconstruct": os.path.join(CROPPED_PATH, "preds_3d_reconstruct_v6"),
+        "preds_fixed_3d_reconstruct": os.path.join(CROPPED_PATH, "preds_fixed_3d_reconstruct_v6")
     }
 
     # Create Output Folders
