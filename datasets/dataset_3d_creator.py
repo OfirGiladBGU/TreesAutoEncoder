@@ -111,11 +111,11 @@ def full_3d_reconstruction():
         pred_image_output_filepath = os.path.join(output_folders["preds_3d_reconstruct"], pred_image_relative)
 
         # 3D Folders - labels
-        save_name = label_image_output_filepath.replace("<VIEW>.png", "")
+        save_name = label_image_output_filepath.replace("_<VIEW>.png", "")
         convert_numpy_to_nii_gz(numpy_data=label_numpy_data, save_name=save_name)
 
         # 3D Folders - preds
-        save_name = pred_image_output_filepath.replace("<VIEW>.png", "")
+        save_name = pred_image_output_filepath.replace("_<VIEW>.png", "")
         convert_numpy_to_nii_gz(numpy_data=pred_numpy_data, save_name=save_name)
 
     # format_of_2d_images = r".\parse_labels_mini_cropped_v5\PA000005_vessel_02584_<VIEW>.png"
