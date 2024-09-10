@@ -8,6 +8,7 @@ from dataset_list import CROPPED_PATH
 from dataset_utils import convert_numpy_to_nii_gz, reverse_rotations
 
 
+# TODO: Use Pred for Fusion
 def reconstruct_3d_from_2d(format_of_2d_images) -> np.ndarray:
     images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
     data_3d_list = list()
@@ -80,8 +81,13 @@ def full_3d_reconstruction():
 
     labels_image_format_set = set()
     preds_image_format_set = set()
-    zipped_filepaths = zip(input_filepaths["labels_2d"], input_filepaths["preds_2d"])
-    for label_2d_filepath, pred_2d_filepath in zipped_filepaths:
+
+    filepaths_count = len(input_filepaths["labels_2d"])
+    for filepath_idx in tqdm(range(filepaths_count)):
+        # Get index data:
+        label_2d_filepath = input_filepaths["labels_2d"][filepath_idx]
+        pred_2d_filepath = input_filepaths["preds_2d"][filepath_idx]
+
         # Label
         label_image_split = str(label_2d_filepath).rsplit("_", 1)
         label_image_split[1] = "<VIEW>.png"
@@ -97,8 +103,12 @@ def full_3d_reconstruction():
     labels_image_format_set = list(labels_image_format_set)
     preds_image_format_set = list(preds_image_format_set)
 
-    zipped_filepaths = zip(labels_image_format_set, preds_image_format_set)
-    for label_image_format, pred_image_format in tqdm(zipped_filepaths):
+    filepaths_count = len(labels_image_format_set)
+    for filepath_idx in tqdm(range(filepaths_count)):
+        # Get index data:
+        label_image_format = labels_image_format_set[filepath_idx]
+        pred_image_format = preds_image_format_set[filepath_idx]
+
         label_numpy_data = reconstruct_3d_from_2d(format_of_2d_images=label_image_format)
         pred_numpy_data = reconstruct_3d_from_2d(format_of_2d_images=pred_image_format)
 
