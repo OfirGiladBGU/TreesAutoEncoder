@@ -83,12 +83,14 @@ def full_3d_reconstruction():
 
     labels_image_format_set = set()
     preds_image_format_set = set()
+    preds_fixed_image_format_set = set()
 
     filepaths_count = len(input_filepaths["labels_2d"])
     for filepath_idx in tqdm(range(filepaths_count)):
         # Get index data:
         label_2d_filepath = input_filepaths["labels_2d"][filepath_idx]
         pred_2d_filepath = input_filepaths["preds_2d"][filepath_idx]
+        pred_fixed_2d_filepath = input_filepaths["preds_fixed_2d"][filepath_idx]
 
         # Label
         label_image_split = str(label_2d_filepath).rsplit("_", 1)
@@ -102,17 +104,26 @@ def full_3d_reconstruction():
         pred_image_format = "_".join(pred_image_split)
         preds_image_format_set.add(pred_image_format)
 
+        # Pred Fixed
+        pred_fixed_image_split = str(pred_fixed_2d_filepath).rsplit("_", 1)
+        pred_fixed_image_split[1] = "<VIEW>.png"
+        pred_fixed_image_format = "_".join(pred_fixed_image_split)
+        preds_fixed_image_format_set.add(pred_fixed_image_format)
+
     labels_image_format_set = list(labels_image_format_set)
     preds_image_format_set = list(preds_image_format_set)
+    preds_fixed_image_format_set = list(preds_fixed_image_format_set)
 
     filepaths_count = len(labels_image_format_set)
     for filepath_idx in tqdm(range(filepaths_count)):
         # Get index data:
         label_image_format = labels_image_format_set[filepath_idx]
         pred_image_format = preds_image_format_set[filepath_idx]
+        pred_fixed_image_format = preds_fixed_image_format_set[filepath_idx]
 
         label_numpy_data = reconstruct_3d_from_2d(format_of_2d_images=label_image_format)
         pred_numpy_data = reconstruct_3d_from_2d(format_of_2d_images=pred_image_format)
+        pred_fixed_numpy_data = reconstruct_3d_from_2d(format_of_2d_images=pred_fixed_image_format)
 
         # Label
         label_image_relative = pathlib.Path(label_image_format).relative_to(input_folders["labels_2d"])
@@ -122,6 +133,10 @@ def full_3d_reconstruction():
         pred_image_relative = pathlib.Path(pred_image_format).relative_to(input_folders["preds_2d"])
         pred_image_output_filepath = os.path.join(output_folders["preds_3d_reconstruct"], pred_image_relative)
 
+        # Pred Fixed
+        pred_fixed_image_relative = pathlib.Path(pred_fixed_image_format).relative_to(input_folders["preds_fixed_2d"])
+        pred_fixed_image_output_filepath = os.path.join(output_folders["preds_fixed_3d_reconstruct"], pred_fixed_image_relative)
+
         # 3D Folders - labels
         save_name = label_image_output_filepath.replace("_<VIEW>.png", "")
         convert_numpy_to_nii_gz(numpy_data=label_numpy_data, save_name=save_name)
@@ -129,6 +144,10 @@ def full_3d_reconstruction():
         # 3D Folders - preds
         save_name = pred_image_output_filepath.replace("_<VIEW>.png", "")
         convert_numpy_to_nii_gz(numpy_data=pred_numpy_data, save_name=save_name)
+
+        # 3D Folders - preds fixed
+        save_name = pred_fixed_image_output_filepath.replace("_<VIEW>.png", "")
+        convert_numpy_to_nii_gz(numpy_data=pred_fixed_numpy_data, save_name=save_name)
 
     # format_of_2d_images = r".\parse_labels_mini_cropped_v5\PA000005_vessel_02584_<VIEW>.png"
     # final_data_3d = reconstruct_3d_from_2d(format_of_2d_images)

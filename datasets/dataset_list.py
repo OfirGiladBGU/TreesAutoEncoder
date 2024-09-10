@@ -115,7 +115,7 @@ class TreesDataset2DV1(object):
     def __init__(self, args):
         self.input_size = (1, 32, 32)
 
-        src_path = os.path.join(CROPPED_PATH, "preds_2d_v6")
+        src_path = os.path.join(CROPPED_PATH, "preds_fixed_2d_v6")
         dst_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
 
         data_paths = [src_path, dst_path]
@@ -128,7 +128,7 @@ class TreesDataset2DV2(object):
     def __init__(self, args):
         self.input_size = (6, 1, 32, 32)
 
-        src_path = os.path.join(CROPPED_PATH, "preds_2d_v6")
+        src_path = os.path.join(CROPPED_PATH, "preds_fixed_2d_v6")
         dst_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
 
         data_paths = [src_path, dst_path]
@@ -141,7 +141,7 @@ class TreesDataset2DV2M(object):
     def __init__(self, args):
         self.input_size = (1, 32, 32, 32)
 
-        src_path = os.path.join(CROPPED_PATH, "preds_2d_v6")
+        src_path = os.path.join(CROPPED_PATH, "preds_fixed_2d_v6")
         dst_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
         log_path = os.path.join(CROPPED_PATH, "log.csv")
 
