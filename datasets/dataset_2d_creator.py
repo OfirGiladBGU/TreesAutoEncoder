@@ -335,7 +335,7 @@ def create_dataset_depth_2d_projections():
 #################
 # 3D Components #
 #################
-def build_preds_components():
+def create_preds_components():
     input_folder = os.path.join(DATASET_PATH, "preds")
     output_folder = os.path.join(DATASET_PATH, "preds_components")
 
@@ -357,10 +357,10 @@ def build_preds_components():
         convert_numpy_to_nii_gz(numpy_data=data_3d_components, save_name=save_name)
 
 
-####################
-# Original Dataset #
-####################
-def create_dataset_original_images():
+###############################
+# 2D Projections and 3D Cubes #
+###############################
+def create_2d_projections_and_3d_cubes():
     # Inputs
     input_folders = {
         "labels": os.path.join(DATASET_PATH, "labels"),
@@ -604,8 +604,8 @@ def main():
     # TODO: DEBUG
     # create_dataset_depth_2d_projections()
 
-    build_preds_components()
-    create_dataset_original_images()
+    create_preds_components()
+    create_2d_projections_and_3d_cubes()
 
 
 if __name__ == "__main__":

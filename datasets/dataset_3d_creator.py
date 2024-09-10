@@ -5,7 +5,7 @@ import pathlib
 from tqdm import tqdm
 
 from dataset_list import CROPPED_PATH
-from dataset_utils import convert_numpy_to_nii_gz, reverse_rotations
+from dataset_utils import convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, reverse_rotations
 
 
 # TODO: Use Pred for Fusion
@@ -57,7 +57,7 @@ def reconstruct_3d_from_2d(format_of_2d_images) -> np.ndarray:
 #     convert_numpy_to_nii_gz(voxel_grid_refined, save_name="Test")
 
 
-def full_3d_reconstruction():
+def create_3d_reconstructions():
     # Inputs
     input_folders = {
         "labels_2d": os.path.join(CROPPED_PATH, "labels_2d_v6"),
@@ -157,22 +157,67 @@ def full_3d_reconstruction():
 
 
 # TODO: implement
-def fusion_3d_reconstruction():
+def create_3d_fusions():
     # Inputs
     input_folders = {
-        "preds_fixed_3d": os.path.join(CROPPED_PATH, "preds_fixed_3d_v6"),
-        "labels_3d_reconstruct": os.path.join(CROPPED_PATH, "labels_3d_reconstruct_v6")
+        "labels_3d_reconstruct": os.path.join(CROPPED_PATH, "labels_3d_reconstruct_v6"),
+        "preds_3d": os.path.join(CROPPED_PATH, "preds_3d_v6"),
+        "preds_fixed_3d": os.path.join(CROPPED_PATH, "preds_fixed_3d_v6")
     }
 
     # Outputs
     output_folders = {
+        "preds_3d_fusion": os.path.join(CROPPED_PATH, "preds_fixed_3d_fusion_v6"),
         "preds_fixed_3d_fusion": os.path.join(CROPPED_PATH, "preds_fixed_3d_fusion_v6")
     }
 
+    # Create Output Folders
+    for output_folder in output_folders.values():
+        os.makedirs(output_folder, exist_ok=True)
+
+    # Get the filepaths
+    input_filepaths = dict()
+    for key, value in input_folders.items():
+        input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.nii.gz"))
+
+    filepaths_count = len(input_filepaths["labels_3d_reconstruct"])
+    for filepath_idx in tqdm(range(filepaths_count)):
+        # Get index data:
+        label_3d_reconstruct_filepath = input_filepaths["labels_3d_reconstruct"][filepath_idx]
+        pred_3d_filepath = input_filepaths["preds_3d"][filepath_idx]
+        pred_fixed_3d_filepath = input_filepaths["preds_fixed_3d"][filepath_idx]
+
+        # Original data
+        label_3d_reconstruct_numpy_data = convert_nii_gz_to_numpy(data_filepath=label_3d_reconstruct_filepath)
+        pred_3d_numpy_data = convert_nii_gz_to_numpy(data_filepath=pred_3d_filepath)
+        pred_fixed_3d_numpy_data = convert_nii_gz_to_numpy(data_filepath=pred_fixed_3d_filepath)
+
+        # Fusions
+        pred_3d_fusion = np.logical_or(pred_3d_numpy_data, label_3d_reconstruct_numpy_data)
+        pred_3d_fusion = pred_3d_fusion.astype(np.float32)
+        pred_fixed_3d_fusion = np.logical_or(pred_fixed_3d_numpy_data, label_3d_reconstruct_numpy_data)
+        pred_fixed_3d_fusion = pred_fixed_3d_fusion.astype(np.float32)
+
+        # Pred
+        pred_3d_relative = pathlib.Path(pred_3d_filepath).relative_to(input_folders["preds_3d"])
+        pred_3d_output_filepath = os.path.join(output_folders["preds_3d_fusion"], pred_3d_relative)
+
+        # Pred Fixed
+        pred_fixed_3d_relative = pathlib.Path(pred_fixed_3d_filepath).relative_to(input_folders["preds_fixed_3d"])
+        pred_fixed_3d_output_filepath = os.path.join(output_folders["preds_fixed_3d_fusion"], pred_fixed_3d_relative)
+
+        # 3D Folders - preds fusion
+        save_name = pred_3d_output_filepath
+        convert_numpy_to_nii_gz(numpy_data=pred_3d_fusion, save_name=save_name)
+
+        # 3D Folders - preds fixed
+        save_name = pred_fixed_3d_output_filepath
+        convert_numpy_to_nii_gz(numpy_data=pred_fixed_3d_fusion, save_name=save_name)
+
 
 def main():
-    full_3d_reconstruction()
-    fusion_3d_reconstruction()
+    # create_3d_reconstructions()
+    create_3d_fusions()
 
 
 if __name__ == "__main__":
