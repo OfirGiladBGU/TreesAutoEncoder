@@ -10,7 +10,8 @@ import pathlib
 from tqdm import tqdm
 import pandas as pd
 
-from datasets.dataset_utils import convert_numpy_to_nii_gz, reverse_rotations, apply_threshold
+from datasets.dataset_utils import convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, reverse_rotations, apply_threshold
+from datasets.dataset_list import CROPPED_PATH
 from models.ae_2d_to_2d import Network
 from models.ae_3d_to_3d import Network3D
 
@@ -36,7 +37,11 @@ def single_predict(format_of_2d_images, output_path):
     model_3d.eval()
 
     with torch.no_grad():
-        # Prepare 2D data
+        ###################
+        # Prepare 2D data #
+        ###################
+
+        # Projections 2D
         images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
         data_2d_list = list()
         for image_view in images_6_views:
@@ -49,17 +54,15 @@ def single_predict(format_of_2d_images, output_path):
         # Predict 2D
         data_2d_predicts = model_2d(data_2d)
 
-        # Prepare 3D data
-        data_2d_predicts = data_2d_predicts.numpy()
-        data_3d_list = list()
-        for idx, image_view in enumerate(images_6_views):
-            numpy_image = data_2d_predicts[idx].squeeze() * 255
-            data_3d = reverse_rotations(numpy_image=numpy_image, view_type=image_view)
-            data_3d_list.append(data_3d)
+        ###################
+        # Prepare 3D data #
+        ###################
 
-        # TODO: DEBUG - START
+        # Reconstruct 3D
+        data_2d_predicts = data_2d_predicts.numpy()
         data_2d = data_2d.numpy()
 
+        # TODO: DEBUG - START
         columns = 6
         rows = 2
         fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
@@ -88,18 +91,30 @@ def single_predict(format_of_2d_images, output_path):
         plt.close(fig)
         # TODO: DEBUG - END
 
-        final_data_3d = data_3d_list[0]
+        # Reconstruct 3D
+        data_3d_list = list()
+        for idx, image_view in enumerate(images_6_views):
+            numpy_image = data_2d_predicts[idx].squeeze() * 255
+            data_3d = reverse_rotations(numpy_image=numpy_image, view_type=image_view)
+            data_3d_list.append(data_3d)
+
+        data_3d_reconstruct = data_3d_list[0]
         for i in range(1, len(data_3d_list)):
-            final_data_3d = np.logical_or(final_data_3d, data_3d_list[i])
-        final_data_3d = final_data_3d.astype(np.float32)
+            data_3d_reconstruct = np.logical_or(data_3d_reconstruct, data_3d_list[i])
+        data_3d_reconstruct = data_3d_reconstruct.astype(np.float32)
+
+        # Fusion 3D
+        pred_3d_filepath = os.path.join(CROPPED_PATH, "preds_3d_v6", os.path.basename(format_of_2d_images).replace("_<VIEW>.png", ".nii.gz"))
+        pred_3d = convert_nii_gz_to_numpy(data_filepath=pred_3d_filepath)
+        data_3d_fusion = np.logical_or(data_3d_reconstruct, pred_3d)
 
         # TODO: DEBUG - START
         save_name = os.path.join(output_path, os.path.basename(format_of_2d_images).replace("_<VIEW>.png", "_input"))
-        convert_numpy_to_nii_gz(numpy_data=final_data_3d, save_name=save_name)
+        convert_numpy_to_nii_gz(numpy_data=data_3d_fusion, save_name=save_name)
         # TODO: DEBUG - END
 
         # Convert to batch
-        final_data_3d_batch = torch.Tensor(final_data_3d).unsqueeze(0).unsqueeze(0)
+        final_data_3d_batch = torch.Tensor(data_3d_fusion).unsqueeze(0).unsqueeze(0)
 
         # Predict 3D
         data_3d_predicts = model_3d(final_data_3d_batch)
@@ -114,13 +129,13 @@ def single_predict(format_of_2d_images, output_path):
 
 
 def test_single_predict():
-    format_of_2d_images = r"./tools/data/parse_preds_mini_cropped_v5/PA000005_vessel_02584_<VIEW>.png"
+    format_of_2d_images = os.path.join(CROPPED_PATH, "preds_fixed_2d_v6", "PA000005_vessel_02584_<VIEW>.png")
     output_path = r"./predict_results"
     single_predict(format_of_2d_images=format_of_2d_images, output_path=output_path)
 
 
 def full_predict():
-    input_folder = r"./tools/data/parse_preds_mini_cropped_v5"
+    input_folder = os.path.join(CROPPED_PATH, "preds_2d_v6")
     input_format = r"PA000005_vessel"
     format_paths = pathlib.Path(input_folder).rglob(f"{input_format}_*.png")
     format_of_2d_images_set = set()
@@ -136,7 +151,7 @@ def full_predict():
 
 def calculate_dice_scores():
     output_folder = r"./predict_results"
-    target_folder = r"./tools/data/parse_labels_mini_cropped_3d_v5"
+    target_folder = os.path.join(CROPPED_PATH, "labels_3d_v6")
 
     output_format = r"PA000005_vessel_*_output"
     target_format = r"PA000005_vessel_*"
