@@ -110,7 +110,7 @@ class TreesDataset2DV1S(object):
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
-# Train with 2D preds to predict 2D labels
+# Train with 2D preds fixed to predict 2D labels
 class TreesDataset2DV1(object):
     def __init__(self, args):
         self.input_size = (1, 32, 32)
@@ -123,7 +123,7 @@ class TreesDataset2DV1(object):
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
-# Train with 6 2D preds to predict 6 2D labels
+# Train with 6 2D preds fixed to predict 6 2D labels
 class TreesDataset2DV2(object):
     def __init__(self, args):
         self.input_size = (6, 1, 32, 32)
@@ -136,10 +136,10 @@ class TreesDataset2DV2(object):
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
-# Train with 3D reconstructed labels to predict 3D labels (with regression)
+# Train with 6 2D preds fixed to predict 6 2D labels (with regression)
 class TreesDataset2DV2M(object):
     def __init__(self, args):
-        self.input_size = (1, 32, 32, 32)
+        self.input_size = (6, 1, 32, 32)
 
         src_path = os.path.join(CROPPED_PATH, "preds_fixed_2d_v6")
         dst_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
@@ -190,6 +190,18 @@ class TreesDataset3DV2M(object):
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
+# Train with 3D preds fixed fusion to predict 3D labels
+class TreesDataset3DV3(object):
+    def __init__(self, args):
+        self.input_size = (1, 32, 32, 32)
+
+        src_path = os.path.join(CROPPED_PATH, "preds_fixed_3d_fusion_v6")
+        dst_path = os.path.join(CROPPED_PATH, "labels_3d_v6")
+
+        data_paths = [src_path, dst_path]
+        trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
+        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+
 # Init Method
 def init_dataset(args: argparse.Namespace):
     dataset_map = dict(
@@ -206,6 +218,7 @@ def init_dataset(args: argparse.Namespace):
         Trees3DV1=TreesDataset3DV1,
         Trees3DV2=TreesDataset3DV2,
         Trees3DV2M=TreesDataset3DV2M,
+        Trees3DV3=TreesDataset3DV3
     )
     if args.dataset in list(dataset_map.keys()):
         return dataset_map[args.dataset](args=args)
