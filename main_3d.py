@@ -42,7 +42,7 @@ def main():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Main function to call training for different AutoEncoders')
+    parser = argparse.ArgumentParser(description='Main function to run 3D models')
     parser.add_argument('--batch-size', type=int, default=21, metavar='N',
                         help='input batch size for training (default: 21)')
     parser.add_argument('--epochs', type=int, default=10, metavar='N',
