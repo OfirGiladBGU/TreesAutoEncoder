@@ -114,6 +114,7 @@ def single_predict(data_3d_filepath):
         pred_3d_filepath = os.path.join(CROPPED_PATH, "preds_3d_v6", f"{data_3d_basename}.nii.gz")
         pred_3d = convert_nii_gz_to_numpy(data_filepath=pred_3d_filepath)
         data_3d_fusion = np.logical_or(data_3d_reconstruct, pred_3d)
+        data_3d_fusion = data_3d_fusion.astype(np.float32)
 
         # Create output folder
         save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
