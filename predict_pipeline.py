@@ -11,8 +11,7 @@ import pandas as pd
 
 from datasets.dataset_utils import convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, reverse_rotations, apply_threshold
 from datasets.dataset_list import CROPPED_PATH, PREDICT_PIPELINE_RESULTS_PATH
-from models.ae_2d_to_2d import Network
-from models.ae_3d_to_3d import Network3D
+from models.model_list import init_model
 
 
 # TODO: split 2d and 3d pre pre processes to different function
@@ -24,13 +23,15 @@ def single_predict(data_3d_filepath):
     filepath, ext = os.path.splitext(args.weights_filepath)
 
     args.input_size = (1, 32, 32)
-    model_2d = Network(args=args)
+    args.model = "ae_2d_to_2d"
+    model_2d = init_model(args=args)
     model_2d_weights_filepath = f"{filepath}_{model_2d.model_name}{ext}"
     model_2d.load_state_dict(torch.load(model_2d_weights_filepath))
     model_2d.eval()
 
     args.input_size = (1, 32, 32, 32)
-    model_3d = Network3D(args=args)
+    args.model = "ae_3d_to_3d"
+    model_3d = init_model(args=args)
     model_3d_weights_filepath = f"{filepath}_{model_3d.model_name}{ext}"
     model_3d.load_state_dict(torch.load(model_3d_weights_filepath))
     model_3d.eval()
