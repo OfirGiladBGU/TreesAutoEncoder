@@ -4,28 +4,24 @@ import torch
 
 from datasets.dataset_list import init_dataset, MODEL_RESULTS_PATH
 from trainer.train_3d import Trainer
-
-# TODO: Rename each model name to be more descriptive
-from models.ae_6_2d_to_3d import MultiView3DReconstruction
-from models.ae_3d_to_3d import Network3D
+from models.model_list import init_model
 
 
-def train_model(data, model):
-    trainer = Trainer(args=args, data=data, model=model)
+def train_model(dataset, model):
+    trainer = Trainer(args=args, dataset=dataset, model=model)
     trainer.train()
 
 
-def predict_model(data, model):
-    trainer = Trainer(args=args, data=data, model=model)
+def predict_model(dataset, model):
+    trainer = Trainer(args=args, dataset=dataset, model=model)
     trainer.predict()
 
 
 def main():
-    data = init_dataset(args=args)
-    args.input_size = data.input_size
+    dataset = init_dataset(args=args)
+    args.input_size = dataset.input_size
 
-    # model = MultiView3DReconstruction(args)
-    model = Network3D(args)
+    model = init_model(args=args)
 
     # Update save path
     filepath, ext = os.path.splitext(args.weights_filepath)
@@ -37,8 +33,8 @@ def main():
 
     # model.load_state_dict(torch.load(args.weights_filepath))
 
-    train_model(data=data, model=model)
-    predict_model(data=data, model=model)
+    train_model(dataset=dataset, model=model)
+    predict_model(dataset=dataset, model=model)
 
 
 if __name__ == "__main__":
@@ -59,12 +55,18 @@ if __name__ == "__main__":
                         help='Which dataset to use')
     parser.add_argument('--weights-filepath', type=str, default='./weights/Network.pth', metavar='N',
                         help='Which dataset to use')
+    parser.add_argument('--model', type=str, default='ae_3d_to_3d', metavar='N',
+                        help='Which model to use')
 
     args = parser.parse_args()
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")
     torch.manual_seed(args.seed)
+
+    # Custom Edit:
+
+    args.model = 'ae_3d_to_3d'
 
     # args.dataset = 'Trees3DV1'
     # args.dataset = 'Trees3DV2'

@@ -4,29 +4,24 @@ import torch
 
 from datasets.dataset_list import init_dataset, MODEL_RESULTS_PATH
 from trainer.train_2d import Trainer
-
-# TODO: Rename each model name to be more descriptive
-# from models.ae import Network
-from models.ae_2d_to_2d import Network
-# from models.vgg_ae_demo import Network
-# from models.gap_cnn import Network
+from models.model_list import init_model
 
 
-def train_model(data, model):
-    trainer = Trainer(args=args, data=data, model=model)
+def train_model(dataset, model):
+    trainer = Trainer(args=args, dataset=dataset, model=model)
     trainer.train()
 
 
-def predict_model(data, model):
-    trainer = Trainer(args=args, data=data, model=model)
+def predict_model(dataset, model):
+    trainer = Trainer(args=args, dataset=dataset, model=model)
     trainer.predict()
 
 
 def main():
-    data = init_dataset(args)
-    args.input_size = data.input_size
+    dataset = init_dataset(args=args)
+    args.input_size = dataset.input_size
 
-    model = Network(args)
+    model = init_model(args=args)
 
     # Update save path
     filepath, ext = os.path.splitext(args.weights_filepath)
@@ -38,8 +33,8 @@ def main():
 
     # model.load_state_dict(torch.load(args.weights_filepath))
 
-    train_model(data=data, model=model)
-    predict_model(data=data, model=model)
+    train_model(dataset=dataset, model=model)
+    predict_model(dataset=dataset, model=model)
 
 
 if __name__ == "__main__":
@@ -60,12 +55,18 @@ if __name__ == "__main__":
                         help='Which dataset to use')
     parser.add_argument('--weights-filepath', type=str, default='./weights/Network.pth', metavar='N',
                         help='Which dataset to use')
+    parser.add_argument('--model', type=str, default='ae_2d_to_2d', metavar='N',
+                        help='Which model to use')
 
     args = parser.parse_args()
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.cuda else "cpu")
     torch.manual_seed(args.seed)
+
+    # Custom Edit:
+
+    args.model = 'ae_2d_to_2d'
 
     # args.dataset = 'MNIST'
     # args.dataset = 'CIFAR10'

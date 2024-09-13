@@ -2,16 +2,16 @@ import argparse
 import torch.nn as nn
 
 
-class Network(nn.Module):
+class Network2D(nn.Module):
     def __init__(self, args: argparse.Namespace):
-        super(Network, self).__init__()
+        super(Network2D, self).__init__()
 
-        self.model_name = 'ae_2d_to_2d'
+        self.model_name = 'ae_6_2d_to_6_2d'
         self.input_size = args.input_size
 
         # Encoder
         self.encoder1 = nn.Sequential(
-            nn.Conv2d(1, 64, kernel_size=3, stride=2, padding=1),  # (batch_size, 64, H/2, W/2)
+            nn.Conv2d(6, 64, kernel_size=3, stride=2, padding=1),  # (batch_size, 64, H/2, W/2)
             nn.ReLU(True)
         )
         self.encoder2 = nn.Sequential(
@@ -35,19 +35,21 @@ class Network(nn.Module):
             nn.ReLU(True)
         )
         self.decoder3 = nn.Sequential(
-            nn.ConvTranspose2d(64, 1, kernel_size=3, stride=2, padding=1, output_padding=1),  # (batch_size, 1, H, W)
+            nn.ConvTranspose2d(64, 6, kernel_size=3, stride=2, padding=1, output_padding=1),  # (batch_size, 6, H, W)
             nn.Sigmoid()  # To normalize the output to [0, 1]
         )
 
     def forward(self, x):
+        z = x
+
         # Encoding
-        x1 = self.encoder1(x)
-        x2 = self.encoder2(x1)
-        x3 = self.encoder3(x2)
+        z1 = self.encoder1(z)
+        z2 = self.encoder2(z1)
+        z3 = self.encoder3(z2)
 
         # Decoding with skip connections
-        x = self.decoder1(x3)
-        x = self.decoder2(x + x2)  # Skip connection
-        x = self.decoder3(x + x1)  # Skip connection
+        z = self.decoder1(z3)
+        z = self.decoder2(z + z2)  # Skip connection
+        z = self.decoder3(z + z1)  # Skip connection
 
-        return x
+        return z

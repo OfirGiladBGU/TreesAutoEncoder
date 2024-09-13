@@ -14,17 +14,17 @@ from trainer import loss_functions
 
 
 class Trainer(object):
-    def __init__(self, args: argparse.Namespace, data, model):
+    def __init__(self, args: argparse.Namespace, dataset, model):
         self.args = args
 
         self.device = self.args.device
-        self.data = data
+        self.dataset = dataset
         self.model = model
         self.model.to(self.device)
 
         # Get loaders
-        self.train_loader = self.data.train_loader
-        self.test_loader = self.data.test_loader
+        self.train_loader = self.dataset.train_loader
+        self.test_loader = self.dataset.test_loader
 
         self.datasets_for_holes = ['MNIST', 'EMNIST', 'FashionMNIST', 'CIFAR10', 'TreesV1S']
 

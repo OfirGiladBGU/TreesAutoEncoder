@@ -8,22 +8,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from datasets.dataset_utils import convert_numpy_to_nii_gz, apply_threshold
-from datasets.dataset_list import TreesDataset3DV1, TreesDataset3DV2
 from trainer import loss_functions
 
 
 class Trainer(object):
-    def __init__(self, args: argparse.Namespace, data, model):
+    def __init__(self, args: argparse.Namespace, dataset, model):
         self.args = args
 
         self.device = self.args.device
-        self.data = data
+        self.dataset = dataset
         self.model = model
         self.model.to(self.device)
 
         # Get loaders
-        self.train_loader = self.data.train_loader
-        self.test_loader = self.data.test_loader
+        self.train_loader = self.dataset.train_loader
+        self.test_loader = self.dataset.test_loader
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
 

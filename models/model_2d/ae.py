@@ -128,9 +128,9 @@ class CNN_Decoder(nn.Module):
 
 
 # Model
-class Network(nn.Module):
+class Network2D(nn.Module):
     def __init__(self, args: argparse.Namespace):
-        super(Network, self).__init__()
+        super(Network2D, self).__init__()
 
         self.model_name = 'ae'
         self.input_size = args.input_size
