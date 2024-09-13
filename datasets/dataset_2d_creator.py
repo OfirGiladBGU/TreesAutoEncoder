@@ -353,8 +353,8 @@ def create_preds_components():
         data_3d_components = connected_components_3d(data_3d=numpy_data)[0]
 
         # Save results
-        save_name = os.path.join(output_folder, output_idx)
-        convert_numpy_to_nii_gz(numpy_data=data_3d_components, save_name=save_name)
+        save_filename = os.path.join(output_folder, output_idx)
+        convert_numpy_to_nii_gz(numpy_data=data_3d_components, save_filename=save_filename)
 
 
 ###############################
@@ -555,25 +555,25 @@ def create_2d_projections_and_3d_cubes():
             output_3d_format = f"{output_idx}_{cube_idx_str}"
 
             # 3D Folders - labels
-            save_name = os.path.join(output_folders["labels_3d"], output_3d_format)
-            convert_numpy_to_nii_gz(numpy_data=label_cube, save_name=save_name)
+            save_filename = os.path.join(output_folders["labels_3d"], output_3d_format)
+            convert_numpy_to_nii_gz(numpy_data=label_cube, save_filename=save_filename)
 
             # 3D Folders - preds
-            save_name = os.path.join(output_folders["preds_3d"], output_3d_format)
-            convert_numpy_to_nii_gz(numpy_data=pred_cube, save_name=save_name)
+            save_filename = os.path.join(output_folders["preds_3d"], output_3d_format)
+            convert_numpy_to_nii_gz(numpy_data=pred_cube, save_filename=save_filename)
 
             # 3D Folders - preds components
-            save_name = os.path.join(output_folders["preds_components_3d"], output_3d_format)
-            convert_numpy_to_nii_gz(numpy_data=pred_components_cube, save_name=save_name)
+            save_filename = os.path.join(output_folders["preds_components_3d"], output_3d_format)
+            convert_numpy_to_nii_gz(numpy_data=pred_components_cube, save_filename=save_filename)
 
 
             # 3D Folders - preds fixed
-            save_name = os.path.join(output_folders["preds_fixed_3d"], output_3d_format)
-            convert_numpy_to_nii_gz(numpy_data=pred_fixed_cube, save_name=save_name)
+            save_filename = os.path.join(output_folders["preds_fixed_3d"], output_3d_format)
+            convert_numpy_to_nii_gz(numpy_data=pred_fixed_cube, save_filename=save_filename)
 
             # 3D Folders - preds fixed components
-            save_name = os.path.join(output_folders["preds_fixed_components_3d"], output_3d_format)
-            convert_numpy_to_nii_gz(numpy_data=pred_fixed_components_cube, save_name=save_name)
+            save_filename = os.path.join(output_folders["preds_fixed_components_3d"], output_3d_format)
+            convert_numpy_to_nii_gz(numpy_data=pred_fixed_components_cube, save_filename=save_filename)
 
 
             # Log 3D info

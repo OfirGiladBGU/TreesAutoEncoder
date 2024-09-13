@@ -89,9 +89,12 @@ def single_predict(data_3d_filepath):
 
             ax[j].set_title(f"View {images_6_views[j]}:")
 
-        save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d", data_3d_basename)
+        save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d")
+        os.makedirs(save_path, exist_ok=True)
+        save_filepath = os.path.join(save_path, data_3d_basename)
+
         fig.tight_layout()
-        plt.savefig(save_path)
+        plt.savefig(save_filepath)
         plt.close(fig)
         # TODO: DEBUG - END
 
@@ -112,9 +115,13 @@ def single_predict(data_3d_filepath):
         pred_3d = convert_nii_gz_to_numpy(data_filepath=pred_3d_filepath)
         data_3d_fusion = np.logical_or(data_3d_reconstruct, pred_3d)
 
+        # Create output folder
+        save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
+        os.makedirs(save_path, exist_ok=True)
+
         # TODO: DEBUG - START
-        save_name = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d", f"{data_3d_basename}_input")
-        convert_numpy_to_nii_gz(numpy_data=data_3d_fusion, save_name=save_name)
+        save_filepath = os.path.join(save_path, f"{data_3d_basename}_input")
+        convert_numpy_to_nii_gz(numpy_data=data_3d_fusion, save_filename=save_filepath)
         # TODO: DEBUG - END
 
         # Convert to batch
@@ -128,8 +135,8 @@ def single_predict(data_3d_filepath):
 
         # TODO: Threshold
         apply_threshold(tensor=data_3d_output, threshold=0.5)
-        save_name = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d", f"{data_3d_basename}_output")
-        convert_numpy_to_nii_gz(numpy_data=data_3d_output, save_name=save_name)
+        save_filepath = os.path.join(save_path, f"{data_3d_basename}_output")
+        convert_numpy_to_nii_gz(numpy_data=data_3d_output, save_filename=save_filepath)
 
 
 def test_single_predict():

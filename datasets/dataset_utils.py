@@ -9,12 +9,12 @@ def convert_nii_gz_to_numpy(data_filepath) -> np.ndarray:
     return numpy_data
 
 
-def convert_numpy_to_nii_gz(numpy_data: np.ndarray, save_name=None) -> nib.Nifti1Image:
+def convert_numpy_to_nii_gz(numpy_data: np.ndarray, save_filename=None) -> nib.Nifti1Image:
     nib_data = nib.Nifti1Image(numpy_data, affine=np.eye(4))
-    if save_name is not None:
-        if not save_name.endswith(".nii.gz"):
-            save_name = f"{save_name}.nii.gz"
-        nib.save(img=nib_data, filename=save_name)
+    if save_filename is not None:
+        if not save_filename.endswith(".nii.gz"):
+            save_filename = f"{save_filename}.nii.gz"
+        nib.save(img=nib_data, filename=save_filename)
     return nib_data
 
 

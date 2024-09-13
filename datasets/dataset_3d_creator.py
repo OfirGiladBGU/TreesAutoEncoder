@@ -138,16 +138,16 @@ def create_3d_reconstructions():
         pred_fixed_image_output_filepath = os.path.join(output_folders["preds_fixed_3d_reconstruct"], pred_fixed_image_relative)
 
         # 3D Folders - labels
-        save_name = label_image_output_filepath.replace("_<VIEW>.png", "")
-        convert_numpy_to_nii_gz(numpy_data=label_numpy_data, save_name=save_name)
+        save_filename = label_image_output_filepath.replace("_<VIEW>.png", "")
+        convert_numpy_to_nii_gz(numpy_data=label_numpy_data, save_filename=save_filename)
 
         # 3D Folders - preds
-        save_name = pred_image_output_filepath.replace("_<VIEW>.png", "")
-        convert_numpy_to_nii_gz(numpy_data=pred_numpy_data, save_name=save_name)
+        save_filename = pred_image_output_filepath.replace("_<VIEW>.png", "")
+        convert_numpy_to_nii_gz(numpy_data=pred_numpy_data, save_filename=save_filename)
 
         # 3D Folders - preds fixed
-        save_name = pred_fixed_image_output_filepath.replace("_<VIEW>.png", "")
-        convert_numpy_to_nii_gz(numpy_data=pred_fixed_numpy_data, save_name=save_name)
+        save_filename = pred_fixed_image_output_filepath.replace("_<VIEW>.png", "")
+        convert_numpy_to_nii_gz(numpy_data=pred_fixed_numpy_data, save_filename=save_filename)
 
     # format_of_2d_images = r".\parse_labels_mini_cropped_v5\PA000005_vessel_02584_<VIEW>.png"
     # final_data_3d = reconstruct_3d_from_2d(format_of_2d_images)
@@ -207,12 +207,12 @@ def create_3d_fusions():
         pred_fixed_3d_output_filepath = os.path.join(output_folders["preds_fixed_3d_fusion"], pred_fixed_3d_relative)
 
         # 3D Folders - preds fusion
-        save_name = pred_3d_output_filepath
-        convert_numpy_to_nii_gz(numpy_data=pred_3d_fusion, save_name=save_name)
+        save_filename = pred_3d_output_filepath
+        convert_numpy_to_nii_gz(numpy_data=pred_3d_fusion, save_filename=save_filename)
 
         # 3D Folders - preds fixed
-        save_name = pred_fixed_3d_output_filepath
-        convert_numpy_to_nii_gz(numpy_data=pred_fixed_3d_fusion, save_name=save_name)
+        save_filename = pred_fixed_3d_output_filepath
+        convert_numpy_to_nii_gz(numpy_data=pred_fixed_3d_fusion, save_filename=save_filename)
 
 
 def main():

@@ -132,13 +132,15 @@ class Trainer(object):
                     target_data_idx = target_data[idx].squeeze().numpy()
                     output_data_idx = output_data[idx].squeeze().numpy()
 
+                    save_filename = f"{self.args.results_path}/{b}_{idx}_target"
                     convert_numpy_to_nii_gz(
                         numpy_data=target_data_idx,
-                        save_name=f"{self.args.results_path}/{b}_{idx}_target"
+                        save_filename=save_filename
                     )
+                    save_filename = f"{self.args.results_path}/{b}_{idx}_output"
                     convert_numpy_to_nii_gz(
                         numpy_data=output_data_idx,
-                        save_name=f"{self.args.results_path}/{b}_{idx}_output"
+                        save_filename=save_filename
                     )
 
                     if self.args.dataset == 'Trees3DV1':
@@ -163,9 +165,10 @@ class Trainer(object):
 
                     elif self.args.dataset in ['Trees3DV2', 'Trees3DV3']:
                         input_data_idx = input_data[idx].squeeze().numpy()
+                        save_filename = f"{self.args.results_path}/{b}_{idx}_input"
                         convert_numpy_to_nii_gz(
                             numpy_data=input_data_idx,
-                            save_name=f"{self.args.results_path}/{b}_{idx}_input"
+                            save_filename=save_filename
                         )
                     else:
                         raise ValueError("Invalid dataset")
