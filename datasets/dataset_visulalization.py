@@ -4,8 +4,6 @@ import os
 import pathlib
 import itertools
 
-from numpy.random import permutation
-
 from datasets.dataset_utils import convert_nii_gz_to_numpy
 from datasets.dataset_list import CROPPED_PATH, RESULTS_PATH
 
