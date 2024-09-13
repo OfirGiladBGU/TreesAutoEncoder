@@ -3,7 +3,6 @@ import os
 import torch
 import cv2
 import numpy as np
-import nibabel as nib
 from torchvision import transforms
 import matplotlib.pyplot as plt
 import pathlib
