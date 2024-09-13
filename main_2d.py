@@ -46,11 +46,11 @@ if __name__ == "__main__":
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='enables CUDA training')
     parser.add_argument('--seed', type=int, default=42, metavar='S',
-                        help='random seed (default: 1)')
+                        help='random seed (default: 42)')
     parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                         help='how many batches to wait before logging training status')
     parser.add_argument('--embedding-size', type=int, default=32, metavar='N',
-                        help='how many batches to wait before logging training status')
+                        help='embedding size for the model')
     parser.add_argument('--dataset', type=str, default='MNIST', metavar='N',
                         help='Which dataset to use')
     parser.add_argument('--weights-filepath', type=str, default='./weights/Network.pth', metavar='N',

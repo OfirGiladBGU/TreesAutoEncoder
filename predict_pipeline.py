@@ -22,15 +22,17 @@ def single_predict(data_3d_filepath):
     # Load models
     filepath, ext = os.path.splitext(args.weights_filepath)
 
-    args.input_size = (1, 32, 32)
-    args.model = "ae_2d_to_2d"
+    # Load 2D model
+    args.input_size = args.input_size_model_2d
+    args.model = args.model_2d
     model_2d = init_model(args=args)
     model_2d_weights_filepath = f"{filepath}_{model_2d.model_name}{ext}"
     model_2d.load_state_dict(torch.load(model_2d_weights_filepath))
     model_2d.eval()
 
-    args.input_size = (1, 32, 32, 32)
-    args.model = "ae_3d_to_3d"
+    # Load 3D model
+    args.input_size = args.input_size_model_3d
+    args.model = args.model_3d
     model_3d = init_model(args=args)
     model_3d_weights_filepath = f"{filepath}_{model_3d.model_name}{ext}"
     model_3d.load_state_dict(torch.load(model_3d_weights_filepath))
@@ -195,8 +197,8 @@ def main():
     # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
     # 7. Perform cleanup on the final result (delete small connected components)
 
-    # full_predict()
-    calculate_dice_scores()
+    full_predict()
+    # calculate_dice_scores()
 
 
 if __name__ == "__main__":
@@ -229,7 +231,26 @@ if __name__ == "__main__":
                         help='random seed (default: 1)')
     parser.add_argument('--weights-filepath', type=str, default='./weights/Network.pth', metavar='N',
                         help='Which dataset to use')
+    parser.add_argument('--model-2d', type=str, default='ae_2d_to_2d', metavar='N',
+                        help='Which 2D model to use')
+    parser.add_argument('--input-size-model-2d', type=tuple, default=(1, 32, 32), metavar='N',
+                        help='Which input size the 2D model should to use')
+    parser.add_argument('--model-3d', type=str, default='ae_3d_to_3d', metavar='N',
+                        help='Which 3D model to use')
+    parser.add_argument('--input-size-model-3d', type=tuple, default=(1, 32, 32, 32), metavar='N',
+                        help='Which input size the 3D model should to use')
 
     args = parser.parse_args()
+
+    args.cuda = not args.no_cuda and torch.cuda.is_available()
+    args.device = torch.device("cuda" if args.cuda else "cpu")
+    torch.manual_seed(args.seed)
+
+    # Custom Edit:
+
+    args.model_2d = "ae_2d_to_2d"
+    args.input_size_model_2d = (1, 32, 32)
+    args.model_3d = "ae_3d_to_3d"
+    args.input_size_model_3d = (1, 32, 32, 32)
 
     main()
