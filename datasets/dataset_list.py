@@ -208,24 +208,39 @@ class TreesDataset3DV3(object):
         trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
+
+# Train with 3D preds fixed to predict 3D labels (Direct Repair)
+class TreesDataset3DV4(object):
+    def __init__(self, args):
+        self.input_size = (1, 32, 32, 32)
+
+        src_path = os.path.join(CROPPED_PATH, "preds_fixed_3d_v6")
+        dst_path = os.path.join(CROPPED_PATH, "labels_3d_v6")
+
+        data_paths = [src_path, dst_path]
+        trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
+        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+
+
 # Init Method
 def init_dataset(args: argparse.Namespace):
-    dataset_map = dict(
-        MNIST=MNIST,
-        EMNIST=EMNIST,
-        FashionMNIST=FashionMNIST,
-        CIFAR10=CIFAR10,
+    dataset_map = {
+        "MNIST": MNIST,
+        "EMNIST": EMNIST,
+        "FashionMNIST": FashionMNIST,
+        "CIFAR10": CIFAR10,
         # 2D Datasets
-        Trees2DV1S=TreesDataset2DV1S,
-        Trees2DV1=TreesDataset2DV1,
-        Trees2DV2=TreesDataset2DV2,
-        Trees2DV2M=TreesDataset2DV2M,
+        "Trees2DV1S": TreesDataset2DV1S,
+        "Trees2DV1": TreesDataset2DV1,
+        "Trees2DV2": TreesDataset2DV2,
+        "Trees2DV2M": TreesDataset2DV2M,
         # 3D Datasets
-        Trees3DV1=TreesDataset3DV1,
-        Trees3DV2=TreesDataset3DV2,
-        Trees3DV2M=TreesDataset3DV2M,
-        Trees3DV3=TreesDataset3DV3
-    )
+        "Trees3DV1": TreesDataset3DV1,
+        "Trees3DV2": TreesDataset3DV2,
+        "Trees3DV2M": TreesDataset3DV2M,
+        "Trees3DV3": TreesDataset3DV3,
+        "Trees3DV4": TreesDataset3DV4
+    }
     if args.dataset in list(dataset_map.keys()):
         return dataset_map[args.dataset](args=args)
     else:
