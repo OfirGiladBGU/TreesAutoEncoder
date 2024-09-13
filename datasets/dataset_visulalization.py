@@ -4,10 +4,10 @@ import os
 import itertools
 
 from datasets.dataset_utils import convert_nii_gz_to_numpy
-from datasets.dataset_list import CROPPED_PATH, VISUALIZATION_RESULTS_PATH
+from datasets.dataset_list import CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESULTS_PATH
 
 
-def matplotlib_plot_3d(data_3d, save_filename):
+def matplotlib_plot_3d(data_3d: np.ndarray, save_filename):
     print(f"Filename: '{save_filename}'\nData shape: '{data_3d.shape}'\n")
 
     # Downsample the images
@@ -39,7 +39,16 @@ def matplotlib_plot_3d(data_3d, save_filename):
         plt.close('all')
 
 
-def plot_3d_data():
+def single_plot_3d():
+    data_3d_filepath = os.path.join(RESULTS_PATH, "models", "ae_3d_to_3d", "0_0_input.nii.gz")
+    numpy_3d_data = convert_nii_gz_to_numpy(data_filepath=data_3d_filepath)
+    save_name = os.path.join(RESULTS_PATH, "input")
+
+    matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_name)
+
+
+
+def full_plot_3d():
     data_3d_basename = "PA000005_04510"
 
     folder_paths = {
@@ -67,7 +76,8 @@ def plot_3d_data():
 
 
 def main():
-    plot_3d_data()
+    single_plot_3d()
+    # full_plot_3d()
 
 
 if __name__ == "__main__":
