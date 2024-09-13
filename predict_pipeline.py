@@ -11,15 +11,15 @@ from tqdm import tqdm
 import pandas as pd
 
 from datasets.dataset_utils import convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, reverse_rotations, apply_threshold
-from datasets.dataset_list import CROPPED_PATH
+from datasets.dataset_list import CROPPED_PATH, PREDICT_PIPELINE_RESULTS_PATH
 from models.ae_2d_to_2d import Network
 from models.ae_3d_to_3d import Network3D
 
 
 # TODO: split 2d and 3d pre pre processes to different function
 
-def single_predict(format_of_2d_images, output_path):
-    os.makedirs(output_path, exist_ok=True)
+def single_predict(data_3d_filepath):
+    os.makedirs(PREDICT_PIPELINE_RESULTS_PATH, exist_ok=True)
 
     # Load models
     filepath, ext = os.path.splitext(args.weights_filepath)
@@ -40,6 +40,10 @@ def single_predict(format_of_2d_images, output_path):
         ###################
         # Prepare 2D data #
         ###################
+        # Get the 2D data format
+        data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
+        data_2d_basename = f"{data_3d_basename}_<VIEW>"
+        format_of_2d_images = os.path.join(CROPPED_PATH, "preds_2d_v6", f"{data_2d_basename}.png")
 
         # Projections 2D
         images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
@@ -86,8 +90,9 @@ def single_predict(format_of_2d_images, output_path):
 
             ax[j].set_title(f"View {images_6_views[j]}:")
 
+        save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d", data_3d_basename)
         fig.tight_layout()
-        plt.savefig(os.path.join("predict_results", f"input_output_images.png"))
+        plt.savefig(save_path)
         plt.close(fig)
         # TODO: DEBUG - END
 
@@ -104,12 +109,12 @@ def single_predict(format_of_2d_images, output_path):
         data_3d_reconstruct = data_3d_reconstruct.astype(np.float32)
 
         # Fusion 3D
-        pred_3d_filepath = os.path.join(CROPPED_PATH, "preds_3d_v6", os.path.basename(format_of_2d_images).replace("_<VIEW>.png", ".nii.gz"))
+        pred_3d_filepath = os.path.join(CROPPED_PATH, "preds_3d_v6", f"{data_3d_basename}.nii.gz")
         pred_3d = convert_nii_gz_to_numpy(data_filepath=pred_3d_filepath)
         data_3d_fusion = np.logical_or(data_3d_reconstruct, pred_3d)
 
         # TODO: DEBUG - START
-        save_name = os.path.join(output_path, os.path.basename(format_of_2d_images).replace("_<VIEW>.png", "_input"))
+        save_name = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d", f"{data_3d_basename}_input")
         convert_numpy_to_nii_gz(numpy_data=data_3d_fusion, save_name=save_name)
         # TODO: DEBUG - END
 
@@ -124,61 +129,53 @@ def single_predict(format_of_2d_images, output_path):
 
         # TODO: Threshold
         apply_threshold(tensor=data_3d_output, threshold=0.5)
-        save_name = os.path.join(output_path, os.path.basename(format_of_2d_images).replace("_<VIEW>.png", "_output"))
+        save_name = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d", f"{data_3d_basename}_output")
         convert_numpy_to_nii_gz(numpy_data=data_3d_output, save_name=save_name)
 
 
 def test_single_predict():
-    format_of_2d_images = os.path.join(CROPPED_PATH, "preds_fixed_2d_v6", "PA000005_vessel_02584_<VIEW>.png")
-    output_path = r"./predict_results"
-    single_predict(format_of_2d_images=format_of_2d_images, output_path=output_path)
+    data_3d_filepath = os.path.join(CROPPED_PATH, "preds_3d_v6", "PA000005_02584.nii.gz")
+    single_predict(data_3d_filepath=data_3d_filepath)
 
 
 def full_predict():
-    input_folder = os.path.join(CROPPED_PATH, "preds_2d_v6")
-    input_format = r"PA000005_vessel"
-    format_paths = pathlib.Path(input_folder).rglob(f"{input_format}_*.png")
-    format_of_2d_images_set = set()
-    for format_path in format_paths:
-        extract_format = str(format_path).rsplit("_", maxsplit=1)[0]
-        format_of_2d_images_set.add(f"{extract_format}_<VIEW>.png")
+    input_folder = os.path.join(CROPPED_PATH, "preds_3d_v6")
+    input_format = "PA000005"
 
-    format_of_2d_images_set = sorted(list(format_of_2d_images_set))
-    output_path = r"./predict_results"
-    for format_of_2d_images in tqdm(format_of_2d_images_set):
-        single_predict(format_of_2d_images=format_of_2d_images, output_path=output_path)
+    data_3d_filepaths = pathlib.Path(input_folder).rglob(f"{input_format}_*.nii.gz")
+    data_3d_filepaths = sorted(data_3d_filepaths)
+
+    for data_3d_filepath in tqdm(data_3d_filepaths):
+        single_predict(data_3d_filepath=data_3d_filepath)
 
 
 def calculate_dice_scores():
-    output_folder = r"./predict_results"
+    output_folder = PREDICT_PIPELINE_RESULTS_PATH
     target_folder = os.path.join(CROPPED_PATH, "labels_3d_v6")
+    data_3d_basename = "PA000005"
 
-    output_format = r"PA000005_vessel_*_output"
-    target_format = r"PA000005_vessel_*"
+    output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}_*_output.nii.gz")
+    target_filepaths = pathlib.Path(target_folder).rglob(f"{data_3d_basename}_*.nii.gz")
 
-    output_format_paths = pathlib.Path(output_folder).rglob(f"{output_format}.nii.gz")
-    target_format_paths = pathlib.Path(target_folder).rglob(f"{target_format}.nii.gz")
-    output_paths = sorted(list(output_format_paths))
-    target_paths = sorted(list(target_format_paths))
+    output_filepaths = sorted(output_filepaths)
+    target_filepaths = sorted(target_filepaths)
 
-    files_count = len(output_paths)
+    filepaths_count = len(output_filepaths)
     scores_dict = dict()
-    for idx in range(files_count):
-        output_path = output_paths[idx]
-        target_path = target_paths[idx]
+    for idx in range(filepaths_count):
+        output_filepath = output_filepaths[idx]
+        target_filepath = target_filepaths[idx]
 
-        output_nii = nib.load(output_path)
-        target_nii = nib.load(target_path)
+        output_3d_numpy = convert_nii_gz_to_numpy(data_filepath=output_filepath)
+        target_3d_numpy = convert_nii_gz_to_numpy(data_filepath=target_filepath)
 
-        output_data = output_nii.get_fdata()
-        target_data = target_nii.get_fdata()
+        dice_score = 2 * np.sum(output_3d_numpy * target_3d_numpy) / (np.sum(output_3d_numpy) + np.sum(target_3d_numpy))
 
-        dice_score = 2 * np.sum(output_data * target_data) / (np.sum(output_data) + np.sum(target_data))
+        idx_format = os.path.basename(target_filepath).replace(".nii.gz", "")
+        scores_dict[idx_format] = dice_score
 
-        idx_format = str(output_path).rsplit("_", maxsplit=2)[1]
-        scores_dict[f"PA000005_vessel_{idx_format}"] = dice_score
-
-    pd.DataFrame(scores_dict.items()).to_csv('out.csv')
+    save_name = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "dice_scores.csv")
+    pd.DataFrame(scores_dict.items()).to_csv(save_name)
 
 
 def main():
@@ -190,8 +187,8 @@ def main():
     # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
     # 7. Perform cleanup on the final result (delete small connected components)
 
-    # full_predict()
-    calculate_dice_scores()
+    full_predict()
+    # calculate_dice_scores()
 
 
 if __name__ == "__main__":

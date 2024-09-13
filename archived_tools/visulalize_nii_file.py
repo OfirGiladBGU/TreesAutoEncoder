@@ -58,7 +58,15 @@ def project_3d_to_2d(data_3d, apply_cropping=False):
 
 
 def test_plot_3d_data():
-    data_file = "../skel_np/PA000005.nii.gz"
+    data_file = r"C:\Users\ofirg\PycharmProjects\TreesAutoEncoder\data\cropped_data\labels_3d_reconstruct_v6\PA000005_04510.nii.gz"
+    # data_file = r"C:\Users\ofirg\PycharmProjects\TreesAutoEncoder\data\cropped_data\preds_3d_reconstruct_v6\PA000005_04510.nii.gz"
+
+    # data_file = r"C:\Users\ofirg\PycharmProjects\TreesAutoEncoder\data\cropped_data\labels_3d_v6\PA000005_04510.nii.gz"
+    # data_file = r"C:\Users\ofirg\PycharmProjects\TreesAutoEncoder\data\cropped_data\preds_3d_v6\PA000005_04510.nii.gz"
+
+    # data_file = r"C:\Users\ofirg\PycharmProjects\TreesAutoEncoder\data\cropped_data\preds_3d_fusion_v6\PA000005_04510.nii.gz"
+    # data_file = r"C:\Users\ofirg\PycharmProjects\TreesAutoEncoder\data\cropped_data\preds_fixed_3d_fusion_v6\PA000005_04510.nii.gz"
+
     output_idx = 1
     ct_numpy = convert_nii_to_numpy(data_file=data_file)
     plot_3d_data(data_3d=ct_numpy, idx=output_idx)
@@ -78,8 +86,8 @@ def test_project_3d_to_2d():
 
 
 def main():
-    # test_plot_3d_data()
-    test_project_3d_to_2d()
+    test_plot_3d_data()
+    # test_project_3d_to_2d()
 
 
 if __name__ == "__main__":

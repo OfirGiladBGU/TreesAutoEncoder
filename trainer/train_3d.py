@@ -85,6 +85,7 @@ class Trainer(object):
         print('> [Test] Average Loss: {:.4f}'.format(test_loss))
 
     def train(self):
+        print(f"[Model: '{self.model.name}'] Training...")
         try:
             for epoch in range(1, self.args.epochs + 1):
                 self._train(epoch=epoch)
@@ -97,7 +98,7 @@ class Trainer(object):
         torch.save(model_parameters, self.args.weights_filepath)
 
     def predict(self):
-        print("Predicting")
+        print(f"[Model: '{self.model.name}'] Predicting...")
         os.makedirs(name=self.args.results_path, exist_ok=True)
 
         # Load model weights
@@ -160,7 +161,7 @@ class Trainer(object):
                         # only the first
                         # exit()
 
-                    elif self.args.dataset == 'Trees3DV2':
+                    elif self.args.dataset in ['Trees3DV2', 'Trees3DV3']:
                         input_data_idx = input_data[idx].squeeze().numpy()
                         convert_numpy_to_nii_gz(
                             numpy_data=input_data_idx,

@@ -2,7 +2,7 @@ import argparse
 import os
 import torch
 
-from datasets.dataset_list import init_dataset
+from datasets.dataset_list import init_dataset, MODEL_RESULTS_PATH
 from trainer.train_3d import Trainer
 
 # TODO: Rename each model name to be more descriptive
@@ -32,6 +32,9 @@ def main():
     args.weights_filepath = f"{filepath}_{model.model_name}{ext}"
     os.makedirs(name=os.path.dirname(args.weights_filepath), exist_ok=True)
 
+    # Update results path
+    args.results_path = os.path.join(MODEL_RESULTS_PATH, model.model_name)
+
     # model.load_state_dict(torch.load(args.weights_filepath))
 
     train_model(data=data, model=model)
@@ -52,8 +55,6 @@ if __name__ == "__main__":
                         help='how many batches to wait before logging training status')
     parser.add_argument('--embedding-size', type=int, default=32, metavar='N',
                         help='how many batches to wait before logging training status')
-    parser.add_argument('--results-path', type=str, default='./results/model_3d', metavar='N',
-                        help='Where to store images')
     parser.add_argument('--dataset', type=str, default='Trees3DV2', metavar='N',
                         help='Which dataset to use')
     parser.add_argument('--weights-filepath', type=str, default='./weights/Network.pth', metavar='N',

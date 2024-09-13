@@ -1,15 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import pathlib
 import itertools
 
 from datasets.dataset_utils import convert_nii_gz_to_numpy
-from datasets.dataset_list import CROPPED_PATH, RESULTS_PATH
+from datasets.dataset_list import CROPPED_PATH, VISUALIZATION_RESULTS_PATH
 
 
 def matplotlib_plot_3d(data_3d, save_filename):
-    print(f"Filename: {save_filename}, Data shape: {data_3d.shape}")
+    print(f"Filename: '{save_filename}'\nData shape: '{data_3d.shape}'\n")
 
     # Downsample the images
     downsample_factor = 1
@@ -41,7 +40,7 @@ def matplotlib_plot_3d(data_3d, save_filename):
 
 
 def plot_3d_data():
-    data_3d_name = "PA000005_04510"
+    data_3d_basename = "PA000005_04510"
 
     folder_paths = {
         "labels_3d": os.path.join(CROPPED_PATH, "labels_3d_v6"),
@@ -57,11 +56,11 @@ def plot_3d_data():
     }
 
     for key, value in folder_paths.items():
-        save_path = os.path.join(RESULTS_PATH, "visualisations", key)
+        save_path = os.path.join(VISUALIZATION_RESULTS_PATH, key)
         os.makedirs(name=save_path, exist_ok=True)
-        save_filename = os.path.join(str(save_path), f"{data_3d_name}")
+        save_filename = os.path.join(str(save_path), f"{data_3d_basename}")
 
-        data_3d_filepath = list(pathlib.Path(value).rglob(f"{data_3d_name}*.nii.gz"))[0]
+        data_3d_filepath = os.path.join(value, f"{data_3d_basename}.nii.gz")
         numpy_3d_data = convert_nii_gz_to_numpy(data_filepath=data_3d_filepath)
 
         matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_filename)
