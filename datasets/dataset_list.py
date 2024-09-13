@@ -8,6 +8,7 @@ import pathlib
 from datasets.custom_datasets_2d import TreesCustomDataloader2D
 from datasets.custom_datasets_3d import TreesCustomDataloader3D
 
+
 # Define paths
 ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
 DATA_PATH = os.path.join(ROOT_PATH, "data")

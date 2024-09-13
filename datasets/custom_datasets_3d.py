@@ -10,6 +10,10 @@ import pandas as pd
 from datasets.dataset_utils import convert_nii_gz_to_numpy
 
 
+V1_3D_DATASETS = ['Trees3DV1']
+V2_3D_DATASETS = ['Trees3DV2', 'Trees3DV2M', 'Trees3DV3', 'Trees3DV4']
+
+
 # 6 2D inputs + 1 3D target
 class TreesCustomDataset3DV1(Dataset):
     def __init__(self, data_paths: list, log_path=None, transform2d=None, transform3d=None):
@@ -175,17 +179,14 @@ class TreesCustomDataloader3D:
             train_dataloader: Train loader with 0.9 of the data.
             val_dataloader: Val loader with 0.1 of the data.
         """
-        v1_datasets = ['Trees3DV1']
-        v2_datasets = ['Trees3DV2', 'Trees3DV2M', 'Trees3DV3', 'Trees3DV4']
-
-        if self.args.dataset in v1_datasets:
+        if self.args.dataset in V1_3D_DATASETS:
             tree_dataset = TreesCustomDataset3DV1(
                 data_paths=self.data_paths,
                 log_path=self.log_path,
                 transform2d=self.transform2d,
                 transform3d=self.transform3d
             )
-        elif self.args.dataset in v2_datasets:
+        elif self.args.dataset in V2_3D_DATASETS:
             tree_dataset = TreesCustomDataset3DV2(
                 data_paths=self.data_paths,
                 log_path=self.log_path,

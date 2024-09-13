@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from datasets.dataset_utils import convert_numpy_to_nii_gz, apply_threshold
+from datasets.custom_datasets_3d import V1_3D_DATASETS, V2_3D_DATASETS
 from trainer import loss_functions
 
 
@@ -83,7 +84,11 @@ class Trainer(object):
         test_loss /= len(self.test_loader.dataset)
         print('> [Test] Average Loss: {:.4f}'.format(test_loss))
 
-    def train(self):
+    def train(self, use_weights=False):
+        if use_weights is True:
+            print("Loading Model Weights")
+            self.model.load_state_dict(torch.load(self.args.weights_filepath))
+
         print(f"[Model: '{self.model.model_name}'] Training...")
         try:
             for epoch in range(1, self.args.epochs + 1):
@@ -142,7 +147,7 @@ class Trainer(object):
                         save_filename=save_filename
                     )
 
-                    if self.args.dataset == 'Trees3DV1':
+                    if self.args.dataset in V1_3D_DATASETS:
                         # Create a grid of images
                         columns = 6
                         rows = 1
@@ -162,7 +167,7 @@ class Trainer(object):
                         # only the first
                         # exit()
 
-                    elif self.args.dataset in ['Trees3DV2', 'Trees3DV3']:
+                    elif self.args.dataset in V2_3D_DATASETS:
                         input_data_idx = input_data[idx].squeeze().numpy()
                         save_filename = f"{self.args.results_path}/{b}_{idx}_input"
                         convert_numpy_to_nii_gz(

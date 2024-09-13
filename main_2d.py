@@ -7,9 +7,9 @@ from trainer.train_2d import Trainer
 from models.model_list import init_model
 
 
-def train_model(dataset, model):
+def train_model(dataset, model, use_weights: bool):
     trainer = Trainer(args=args, dataset=dataset, model=model)
-    trainer.train()
+    trainer.train(use_weights=use_weights)
 
 
 def predict_model(dataset, model):
@@ -31,9 +31,8 @@ def main():
     # Update results path
     args.results_path = os.path.join(MODEL_RESULTS_PATH, model.model_name)
 
-    # model.load_state_dict(torch.load(args.weights_filepath))
-
-    train_model(dataset=dataset, model=model)
+    use_weights = False
+    train_model(dataset=dataset, model=model, use_weights=use_weights)
     predict_model(dataset=dataset, model=model)
 
 

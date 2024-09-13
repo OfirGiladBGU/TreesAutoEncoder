@@ -10,6 +10,7 @@ import numpy as np
 from torchvision.utils import save_image
 
 from datasets.dataset_utils import apply_threshold
+from datasets.custom_datasets_2d import V1_2D_DATASETS, V2_2D_DATASETS
 from trainer import loss_functions
 
 
@@ -204,7 +205,11 @@ class Trainer(object):
         test_loss /= len(self.test_loader.dataset)
         print('> [Test] Average Loss: {:.4f}'.format(test_loss))
 
-    def train(self):
+    def train(self, use_weights=False):
+        if use_weights is True:
+            print("Loading Model Weights")
+            self.model.load_state_dict(torch.load(self.args.weights_filepath))
+
         print(f"[Model: '{self.model.model_name}'] Training...")
         try:
             for epoch in range(1, self.args.epochs + 1):
@@ -217,6 +222,7 @@ class Trainer(object):
         model_parameters = copy.deepcopy(self.model.state_dict())
         torch.save(model_parameters, self.args.weights_filepath)
 
+    # TODO: Handle V1 and V2 cases
     def predict(self):
         print(f"[Model: '{self.model.model_name}'] Predicting...")
         os.makedirs(name=self.args.results_path, exist_ok=True)

@@ -8,6 +8,10 @@ import pathlib
 import pandas as pd
 
 
+V1_2D_DATASETS = ['Trees2DV1', 'Trees2DV1S']
+V2_2D_DATASETS = ['Trees2DV2', 'Trees2DV2M']
+
+
 # 1 2D input + 1 2D target
 class TreesCustomDatasetV1(Dataset):
     def __init__(self, data_paths: list, log_path=None, transform=None):
@@ -169,16 +173,13 @@ class TreesCustomDataloader2D:
             train_dataloader: Train loader with 0.9 of the data.
             val_dataloader: Val loader with 0.1 of the data.
         """
-        v1_datasets = ['Trees2DV1', 'Trees2DV1S']
-        v2_datasets = ['Trees2DV2']
-
-        if self.args.dataset in v1_datasets:
+        if self.args.dataset in V1_2D_DATASETS:
             tree_dataset = TreesCustomDatasetV1(
                 data_paths=self.data_paths,
                 log_path=self.log_path,
                 transform=self.transform
             )
-        elif self.args.dataset in v2_datasets:
+        elif self.args.dataset in V2_2D_DATASETS:
             tree_dataset = TreesCustomDatasetV2(
                 data_paths=self.data_paths,
                 log_path=self.log_path,
