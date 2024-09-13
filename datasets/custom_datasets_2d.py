@@ -8,6 +8,7 @@ import pathlib
 import pandas as pd
 
 
+# 1 2D input + 1 2D target
 class TreesCustomDatasetV1(Dataset):
     def __init__(self, data_paths: list, log_path=None, transform=None):
         self.data_paths = data_paths
@@ -76,7 +77,7 @@ class TreesCustomDatasetV1(Dataset):
         return item
 
 
-# TODO: Check if will be useful
+# 6 2D inputs + 6 2D targets
 class TreesCustomDatasetV2(Dataset):
     def __init__(self, data_paths: list, log_path=None, transform=None):
         self.data_paths = data_paths
@@ -168,20 +169,23 @@ class TreesCustomDataloader2D:
             train_dataloader: Train loader with 0.9 of the data.
             val_dataloader: Val loader with 0.1 of the data.
         """
-        if self.args.dataset in ['Trees2DV1', 'Trees2DV1S']:
+        v1_datasets = ['Trees2DV1', 'Trees2DV1S']
+        v2_datasets = ['Trees2DV2']
+
+        if self.args.dataset in v1_datasets:
             tree_dataset = TreesCustomDatasetV1(
                 data_paths=self.data_paths,
                 log_path=self.log_path,
                 transform=self.transform
             )
-        elif self.args.dataset == 'Trees2DV2':
+        elif self.args.dataset in v2_datasets:
             tree_dataset = TreesCustomDatasetV2(
                 data_paths=self.data_paths,
                 log_path=self.log_path,
                 transform=self.transform
             )
         else:
-            raise Exception("Dataset not supported")
+            raise Exception("Dataset not available in 'Custom Dataset 2D'")
 
         dataset_size = len(tree_dataset)
         train_size = int(dataset_size * 0.9)

@@ -71,6 +71,7 @@ if __name__ == "__main__":
     # args.dataset = 'Trees3DV1'
     # args.dataset = 'Trees3DV2'
     args.dataset = 'Trees3DV3'
+    # args.dataset = 'Trees3DV4'
 
     args.epochs = 10
 

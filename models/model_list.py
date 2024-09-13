@@ -28,4 +28,4 @@ def init_model(args: argparse.Namespace):
     if args.model in list(model_map.keys()):
         return model_map[args.model](args=args)
     else:
-        raise Exception("Model not supported")
+        raise Exception("Model not available in 'Model List'")

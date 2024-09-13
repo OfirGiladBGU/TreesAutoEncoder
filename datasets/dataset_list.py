@@ -244,4 +244,4 @@ def init_dataset(args: argparse.Namespace):
     if args.dataset in list(dataset_map.keys()):
         return dataset_map[args.dataset](args=args)
     else:
-        raise Exception("Dataset not supported")
+        raise Exception("Dataset not available in 'Dataset List'")

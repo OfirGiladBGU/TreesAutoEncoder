@@ -10,6 +10,7 @@ import pandas as pd
 from datasets.dataset_utils import convert_nii_gz_to_numpy
 
 
+# 6 2D inputs + 1 3D target
 class TreesCustomDataset3DV1(Dataset):
     def __init__(self, data_paths: list, log_path=None, transform2d=None, transform3d=None):
         self.data_paths = data_paths
@@ -86,6 +87,7 @@ class TreesCustomDataset3DV1(Dataset):
         return item
 
 
+# 1 3D input + 1 3D target
 class TreesCustomDataset3DV2(Dataset):
     def __init__(self, data_paths: list, log_path=None, transform3d=None):
         self.data_paths = data_paths
@@ -173,33 +175,24 @@ class TreesCustomDataloader3D:
             train_dataloader: Train loader with 0.9 of the data.
             val_dataloader: Val loader with 0.1 of the data.
         """
-        if self.args.dataset == 'Trees3DV1':
+        v1_datasets = ['Trees3DV1']
+        v2_datasets = ['Trees3DV2', 'Trees3DV2M', 'Trees3DV3', 'Trees3DV4']
+
+        if self.args.dataset in v1_datasets:
             tree_dataset = TreesCustomDataset3DV1(
                 data_paths=self.data_paths,
                 log_path=self.log_path,
                 transform2d=self.transform2d,
                 transform3d=self.transform3d
             )
-        elif self.args.dataset == 'Trees3DV2':
-            tree_dataset = TreesCustomDataset3DV2(
-                data_paths=self.data_paths,
-                log_path=self.log_path,
-                transform3d=self.transform3d
-            )
-        elif self.args.dataset == 'Trees3DV2M':
-            tree_dataset = TreesCustomDataset3DV2(
-                data_paths=self.data_paths,
-                log_path=self.log_path,
-                transform3d=self.transform3d
-            )
-        elif self.args.dataset == 'Trees3DV3':
+        elif self.args.dataset in v2_datasets:
             tree_dataset = TreesCustomDataset3DV2(
                 data_paths=self.data_paths,
                 log_path=self.log_path,
                 transform3d=self.transform3d
             )
         else:
-            raise Exception("Dataset not supported")
+            raise Exception("Dataset not available in 'Custom Dataset 3D'")
 
         dataset_size = len(tree_dataset)
         train_size = int(dataset_size * 0.9)
