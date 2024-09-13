@@ -169,7 +169,7 @@ def calculate_dice_scores():
 
     filepaths_count = len(output_filepaths)
     scores_dict = dict()
-    for idx in range(filepaths_count):
+    for idx in tqdm(range(filepaths_count)):
         output_filepath = output_filepaths[idx]
         target_filepath = target_filepaths[idx]
 
@@ -194,8 +194,8 @@ def main():
     # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
     # 7. Perform cleanup on the final result (delete small connected components)
 
-    full_predict()
-    # calculate_dice_scores()
+    # full_predict()
+    calculate_dice_scores()
 
 
 if __name__ == "__main__":
