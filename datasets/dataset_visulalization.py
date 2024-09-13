@@ -8,7 +8,7 @@ from datasets.dataset_list import CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESU
 
 
 def matplotlib_plot_3d(data_3d: np.ndarray, save_filename):
-    print(f"Filename: '{save_filename}'\nData shape: '{data_3d.shape}'\n")
+    print(f"Save filename: '{save_filename}*'\nData shape: '{data_3d.shape}'\n")
 
     # Downsample the images
     downsample_factor = 1
@@ -40,9 +40,12 @@ def matplotlib_plot_3d(data_3d: np.ndarray, save_filename):
 
 
 def single_plot_3d():
-    data_3d_filepath = os.path.join(RESULTS_PATH, "models", "ae_3d_to_3d", "0_0_input.nii.gz")
+    data_3d_filepath = os.path.join(RESULTS_PATH, "models", "ae_3d_to_3d", "0_0_output.nii.gz")
     numpy_3d_data = convert_nii_gz_to_numpy(data_filepath=data_3d_filepath)
-    save_name = os.path.join(RESULTS_PATH, "input")
+
+    save_path = os.path.join(RESULTS_PATH, "single_predict")
+    os.makedirs(name=save_path, exist_ok=True)
+    save_name = os.path.join(save_path, "output")
 
     matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_name)
 
