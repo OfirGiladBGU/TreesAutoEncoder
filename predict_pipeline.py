@@ -14,6 +14,9 @@ from datasets.dataset_list import CROPPED_PATH, PREDICT_PIPELINE_RESULTS_PATH
 from models.model_list import init_model
 
 
+IMAGES_6_VIEWS = ['top', 'bottom', 'front', 'back', 'left', 'right']
+
+
 #########
 # Utils #
 #########
@@ -23,9 +26,8 @@ def preprocess_2d(data_3d_filepath, apply_batch_merge: bool = False):
     format_of_2d_images = os.path.join(CROPPED_PATH, "preds_2d_v6", f"{data_2d_basename}.png")
 
     # Projections 2D
-    images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
     data_2d_list = list()
-    for image_view in images_6_views:
+    for image_view in IMAGES_6_VIEWS:
         image_path = format_of_2d_images.replace("<VIEW>", image_view)
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
         torch_image = transforms.ToTensor()(image)
@@ -35,29 +37,65 @@ def preprocess_2d(data_3d_filepath, apply_batch_merge: bool = False):
 
     # Shape: (1, 6, w, h)
     if apply_batch_merge is True:
-        data_2d = torch.stack(data_2d_list).unsqueeze(0)
+        data_2d_input = torch.stack(data_2d_list).unsqueeze(0)
     # Shape: (6, 1, w, h)
     else:
-        data_2d = torch.stack(data_2d_list)
-    return data_2d
+        data_2d_input = torch.stack(data_2d_list)
+    return data_2d_input
 
 
-def preprocess_3d(data_3d_filepath, data_2d_predicts, apply_fusion: bool = False):
-    data_2d_predicts = data_2d_predicts.numpy()
+def debug_2d(data_3d_filepath, data_2d_input: torch.Tensor, data_2d_output: torch.Tensor):
+    data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
+
+    data_2d_input = data_2d_input.numpy()
+    data_2d_output = data_2d_output.numpy()
+
+    columns = 6
+    rows = 2
+    fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
+    ax = list()
+
+    # 2D Input
+    for j in range(columns):
+        ax.append(fig.add_subplot(rows, columns, 0 * columns + j + 1))
+        npimg = data_2d_input[j]
+        npimg = npimg * 255
+        npimg = npimg.astype(np.uint8)
+        plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+        ax[j].set_title(f"View {IMAGES_6_VIEWS[j]}:")
+
+    # 2D Output
+    for j in range(columns):
+        ax.append(fig.add_subplot(rows, columns, 1 * columns + j + 1))
+        npimg = data_2d_output[j]
+        npimg = npimg * 255
+        npimg = npimg.astype(np.uint8)
+        plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+        ax[j].set_title(f"View {IMAGES_6_VIEWS[j]}:")
+
+    save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d")
+    os.makedirs(save_path, exist_ok=True)
+    save_filepath = os.path.join(save_path, data_3d_basename)
+    fig.tight_layout()
+    plt.savefig(save_filepath)
+    plt.close(fig)
+
+
+def preprocess_3d(data_3d_filepath, data_2d_output, apply_fusion: bool = False):
+    data_2d_predicts = data_2d_output.numpy()
 
     # Convert (1, 6, w, h) to (6, w, h)
-    if data_2d_predicts.shape[0] == 1 and data_2d_predicts[1] == 6:
+    if data_2d_output.shape[0] == 1 and data_2d_output.shape[1] == 6:
         data_2d_predicts = data_2d_predicts.squeeze(0)
     # Convert (6, 1, w, h) to (6, w, h)
-    elif data_2d_predicts.shape[0] == 6 and data_2d_predicts[1] == 1:
+    elif data_2d_output.shape[0] == 6 and data_2d_output.shape[1] == 1:
         data_2d_predicts = data_2d_predicts.squeeze(1)
     else:
         raise ValueError("Invalid shape")
 
     # Reconstruct 3D
-    images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
     data_3d_list = list()
-    for idx, image_view in enumerate(images_6_views):
+    for idx, image_view in enumerate(IMAGES_6_VIEWS):
         numpy_image = data_2d_predicts[idx] * 255
         data_3d = reverse_rotations(numpy_image=numpy_image, view_type=image_view)
         data_3d_list.append(data_3d)
@@ -72,12 +110,38 @@ def preprocess_3d(data_3d_filepath, data_2d_predicts, apply_fusion: bool = False
         pred_3d = convert_nii_gz_to_numpy(data_filepath=data_3d_filepath)
         data_3d_fusion = np.logical_or(data_3d_reconstruct, pred_3d)
         data_3d_fusion = data_3d_fusion.astype(np.float32)
-        data_3d = data_3d_fusion
+        data_3d_input = data_3d_fusion
     else:
-        data_3d = data_3d_reconstruct
-    return data_3d
+        data_3d_input = data_3d_reconstruct
 
-# TODO: split 2d and 3d pre pre processes to different function
+    data_3d_input = torch.Tensor(data_3d_input).unsqueeze(0).unsqueeze(0)
+    return data_3d_input
+
+
+def debug_3d(data_3d_filepath, data_3d_input: torch.Tensor):
+    data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
+
+    data_3d_input = data_3d_input.numpy().astype(np.float32)
+
+    save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
+    os.makedirs(save_path, exist_ok=True)
+    save_filepath = os.path.join(save_path, f"{data_3d_basename}_input")
+    convert_numpy_to_nii_gz(numpy_data=data_3d_input, save_filename=save_filepath)
+
+
+def postprocess_3d(data_3d_filepath, data_3d_output: torch.Tensor):
+    data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
+
+    data_3d_output = data_3d_output.squeeze().squeeze().numpy()
+
+    save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
+    os.makedirs(save_path, exist_ok=True)
+
+    # TODO: Threshold
+    apply_threshold(tensor=data_3d_output, threshold=0.5)
+    save_filepath = os.path.join(save_path, f"{data_3d_basename}_output")
+    convert_numpy_to_nii_gz(numpy_data=data_3d_output, save_filename=save_filepath)
+
 
 ##################
 # Core Functions #
@@ -105,107 +169,34 @@ def single_predict(data_3d_filepath):
     model_3d.eval()
 
     with torch.no_grad():
-        ###################
-        # Prepare 2D data #
-        ###################
-        # Get the 2D data format
-        data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
-        data_2d_basename = f"{data_3d_basename}_<VIEW>"
-        format_of_2d_images = os.path.join(CROPPED_PATH, "preds_2d_v6", f"{data_2d_basename}.png")
-
-        # Projections 2D
-        images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
-        data_2d_list = list()
-        for image_view in images_6_views:
-            image_path = format_of_2d_images.replace("<VIEW>", image_view)
-            image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-            torch_image = transforms.ToTensor()(image)
-            data_2d_list.append(torch_image)
-        data_2d = torch.stack(data_2d_list)
+        ##############
+        # 2D Section #
+        ##############
+        data_2d_input = preprocess_2d(
+            data_3d_filepath=data_3d_filepath,
+            apply_batch_merge=False
+        )
 
         # Predict 2D
-        data_2d_predicts = model_2d(data_2d)
+        data_2d_output = model_2d(data_2d_input)
 
-        ###################
-        # Prepare 3D data #
-        ###################
+        # DEBUG
+        debug_2d(data_3d_filepath=data_3d_filepath, data_2d_input=data_2d_input, data_2d_output=data_2d_output)
 
-        # Reconstruct 3D
-        data_2d_predicts = data_2d_predicts.numpy()
-        data_2d = data_2d.numpy()
+        ##############
+        # 3D Section #
+        ##############
+        data_3d_input = preprocess_3d(
+            data_3d_filepath=data_3d_filepath,
+            data_2d_output=data_2d_output,
+            apply_fusion=True
+        )
 
-        # TODO: DEBUG - START
-        columns = 6
-        rows = 2
-        fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
-        ax = []
-        for j in range(columns):
-            ax.append(fig.add_subplot(rows, columns, 0 * columns + j + 1))
-            npimg = data_2d[j]
-            npimg = npimg * 255
-            npimg = npimg.astype(np.uint8)
-            plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+        data_3d_output = model_3d(data_3d_input)
 
-            ax[j].set_title(f"View {images_6_views[j]}:")
+        debug_3d(data_3d_filepath=data_3d_filepath, data_3d_input=data_3d_input)
 
-
-        for j in range(columns):
-            ax.append(fig.add_subplot(rows, columns, 1 * columns + j + 1))
-            npimg = data_2d_predicts[j]
-            npimg = npimg * 255
-            npimg = npimg.astype(np.uint8)
-            plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
-
-            ax[j].set_title(f"View {images_6_views[j]}:")
-
-        save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d")
-        os.makedirs(save_path, exist_ok=True)
-        save_filepath = os.path.join(save_path, data_3d_basename)
-
-        fig.tight_layout()
-        plt.savefig(save_filepath)
-        plt.close(fig)
-        # TODO: DEBUG - END
-
-        # Reconstruct 3D
-        data_3d_list = list()
-        for idx, image_view in enumerate(images_6_views):
-            numpy_image = data_2d_predicts[idx].squeeze() * 255
-            data_3d = reverse_rotations(numpy_image=numpy_image, view_type=image_view)
-            data_3d_list.append(data_3d)
-
-        data_3d_reconstruct = data_3d_list[0]
-        for i in range(1, len(data_3d_list)):
-            data_3d_reconstruct = np.logical_or(data_3d_reconstruct, data_3d_list[i])
-        data_3d_reconstruct = data_3d_reconstruct.astype(np.float32)
-
-        # Fusion 3D
-        pred_3d = convert_nii_gz_to_numpy(data_filepath=data_3d_filepath)
-        data_3d_fusion = np.logical_or(data_3d_reconstruct, pred_3d)
-        data_3d_fusion = data_3d_fusion.astype(np.float32)
-
-        # Create output folder
-        save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
-        os.makedirs(save_path, exist_ok=True)
-
-        # TODO: DEBUG - START
-        save_filepath = os.path.join(save_path, f"{data_3d_basename}_input")
-        convert_numpy_to_nii_gz(numpy_data=data_3d_fusion, save_filename=save_filepath)
-        # TODO: DEBUG - END
-
-        # Convert to batch
-        final_data_3d_batch = torch.Tensor(data_3d_fusion).unsqueeze(0).unsqueeze(0)
-
-        # Predict 3D
-        data_3d_predicts = model_3d(final_data_3d_batch)
-
-        # Save the results
-        data_3d_output = data_3d_predicts.squeeze().squeeze().numpy()
-
-        # TODO: Threshold
-        apply_threshold(tensor=data_3d_output, threshold=0.5)
-        save_filepath = os.path.join(save_path, f"{data_3d_basename}_output")
-        convert_numpy_to_nii_gz(numpy_data=data_3d_output, save_filename=save_filepath)
+        postprocess_3d(data_3d_filepath=data_3d_filepath, data_3d_output=data_3d_output)
 
 
 def test_single_predict():
