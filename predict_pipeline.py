@@ -14,8 +14,72 @@ from datasets.dataset_list import CROPPED_PATH, PREDICT_PIPELINE_RESULTS_PATH
 from models.model_list import init_model
 
 
+#########
+# Utils #
+#########
+def preprocess_2d(data_3d_filepath, apply_batch_merge: bool = False):
+    data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
+    data_2d_basename = f"{data_3d_basename}_<VIEW>"
+    format_of_2d_images = os.path.join(CROPPED_PATH, "preds_2d_v6", f"{data_2d_basename}.png")
+
+    # Projections 2D
+    images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
+    data_2d_list = list()
+    for image_view in images_6_views:
+        image_path = format_of_2d_images.replace("<VIEW>", image_view)
+        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        torch_image = transforms.ToTensor()(image)
+        if apply_batch_merge is True:
+            torch_image = torch_image.unsqueeze(0)
+        data_2d_list.append(torch_image)
+
+    # Shape: (1, 6, w, h)
+    if apply_batch_merge is True:
+        data_2d = torch.stack(data_2d_list).unsqueeze(0)
+    # Shape: (6, 1, w, h)
+    else:
+        data_2d = torch.stack(data_2d_list)
+    return data_2d
+
+
+def preprocess_3d(data_3d_filepath, data_2d_predicts, apply_fusion: bool = False):
+    # Convert (1, 6, w, h) to (6, w, h)
+    if data_2d_predicts.shape[0] == 1 and data_2d_predicts[1] == 6:
+        data_2d_predicts = data_2d_predicts.squeeze(0)
+    # Convert (6, 1, w, h) to (6, w, h)
+    elif data_2d_predicts.shape[0] == 6 and data_2d_predicts[1] == 1:
+        data_2d_predicts = data_2d_predicts.squeeze(1)
+    else:
+        raise ValueError("Invalid shape")
+
+    # Reconstruct 3D
+    images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
+    data_3d_list = list()
+    for idx, image_view in enumerate(images_6_views):
+        numpy_image = data_2d_predicts[idx] * 255
+        data_3d = reverse_rotations(numpy_image=numpy_image, view_type=image_view)
+        data_3d_list.append(data_3d)
+
+    data_3d_reconstruct = data_3d_list[0]
+    for i in range(1, len(data_3d_list)):
+        data_3d_reconstruct = np.logical_or(data_3d_reconstruct, data_3d_list[i])
+    data_3d_reconstruct = data_3d_reconstruct.astype(np.float32)
+
+    # Fusion 3D
+    if apply_fusion is True:
+        pred_3d = convert_nii_gz_to_numpy(data_filepath=data_3d_filepath)
+        data_3d_fusion = np.logical_or(data_3d_reconstruct, pred_3d)
+        data_3d_fusion = data_3d_fusion.astype(np.float32)
+        data_3d = data_3d_fusion
+    else:
+        data_3d = data_3d_reconstruct
+    return data_3d
+
 # TODO: split 2d and 3d pre pre processes to different function
 
+##################
+# Core Functions #
+##################
 def single_predict(data_3d_filepath):
     os.makedirs(PREDICT_PIPELINE_RESULTS_PATH, exist_ok=True)
 
@@ -114,8 +178,7 @@ def single_predict(data_3d_filepath):
         data_3d_reconstruct = data_3d_reconstruct.astype(np.float32)
 
         # Fusion 3D
-        pred_3d_filepath = os.path.join(CROPPED_PATH, "preds_3d_v6", f"{data_3d_basename}.nii.gz")
-        pred_3d = convert_nii_gz_to_numpy(data_filepath=pred_3d_filepath)
+        pred_3d = convert_nii_gz_to_numpy(data_filepath=data_3d_filepath)
         data_3d_fusion = np.logical_or(data_3d_reconstruct, pred_3d)
         data_3d_fusion = data_3d_fusion.astype(np.float32)
 

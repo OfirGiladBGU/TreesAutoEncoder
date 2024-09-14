@@ -131,6 +131,7 @@ class TreesCustomDatasetV2(Dataset):
             numpy_2d_data1 = self.to_tensor(numpy_2d_data1)
             if self.transform is not None:
                 numpy_2d_data1 = self.transform(numpy_2d_data1)
+            numpy_2d_data1 = numpy_2d_data1.unsqueeze(0)
             batch1.append(numpy_2d_data1)
             current_count -= 1
 
@@ -142,12 +143,15 @@ class TreesCustomDatasetV2(Dataset):
                 numpy_2d_data2 = self.to_tensor(numpy_2d_data2)
                 if self.transform is not None:
                     numpy_2d_data2 = self.transform(numpy_2d_data2)
+                numpy_2d_data2 = numpy_2d_data2.unsqueeze(0)
                 batch2.append(numpy_2d_data2)
                 current_count -= 1
 
+        batch1 = torch.stack(batch1)
         if self.paths_count == 1:
             item += (batch1, -1)
         elif self.paths_count == 2:
+            batch2 = torch.stack(batch2)
             item += (batch1, batch2)
 
         if self.log_path is not None:
