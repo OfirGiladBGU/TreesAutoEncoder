@@ -215,6 +215,14 @@ def create_3d_fusions():
         convert_numpy_to_nii_gz(numpy_data=pred_fixed_3d_fusion, save_filename=save_filename)
 
 
+def test_2d_to_3d_and_back():
+    # TODO:
+    # Use the 2d projections to create a 3d reconstruction
+    # Use the 3d reconstruction to create a 2d projection
+    # Compare the 2d projection with the original 2d projection
+    pass
+
+
 def main():
     # create_3d_reconstructions()
     create_3d_fusions()
