@@ -43,6 +43,8 @@ def preprocess_2d(data_3d_filepath, apply_batch_merge: bool = False):
 
 
 def preprocess_3d(data_3d_filepath, data_2d_predicts, apply_fusion: bool = False):
+    data_2d_predicts = data_2d_predicts.numpy()
+
     # Convert (1, 6, w, h) to (6, w, h)
     if data_2d_predicts.shape[0] == 1 and data_2d_predicts[1] == 6:
         data_2d_predicts = data_2d_predicts.squeeze(0)
