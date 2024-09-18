@@ -296,6 +296,11 @@ if __name__ == "__main__":
     # TODO: create the classification models
 
 
+    # TODO: try to find new loss functions to the 2D model
+    # TODO: try to check how to cleanup the 2D models results on the 3D fusion
+    # TODO: find a way to organize the plots
+    # TODO: test the full pipeline on the fixed preds
+
     # completed
     # TODO: run test of different inputs (100 examples)
     # TODO: show best 10, worst 10, median 10

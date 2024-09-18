@@ -57,9 +57,7 @@ def single_plot_3d():
 
 
 
-def full_plot_3d(include_pipeline_results=False):
-    data_3d_basename = "PA000005_11899"
-
+def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
     folder_paths = {
         "labels_3d": os.path.join(CROPPED_PATH, "labels_3d_v6"),
         "labels_3d_reconstruct": os.path.join(CROPPED_PATH, "labels_3d_reconstruct_v6"),
@@ -124,9 +122,7 @@ def matplotlib_plot_2d(save_filepath, data_2d_list):
     plt.close(fig)
 
 
-def full_plot_2d():
-    data_3d_basename = "PA000005_11899"
-
+def full_plot_2d(data_3d_basename: str):
     folder_paths = {
         "labels_2d": os.path.join(CROPPED_PATH, "labels_2d_v6"),
         "preds_2d": os.path.join(CROPPED_PATH, "preds_2d_v6"),
@@ -150,9 +146,14 @@ def full_plot_2d():
 
 def main():
     # single_plot_3d()
-    # full_plot_3d()
-    # full_plot_3d(include_pipeline_results=True)
-    full_plot_2d()
+
+    data_3d_basename = "PA000005_11899"
+    # data_3d_basename = "PA000005_09039"
+    # data_3d_basename = "PA000005_10017"
+
+    # full_plot_3d(data_3d_basename=data_3d_basename)
+    full_plot_3d(data_3d_basename=data_3d_basename, include_pipeline_results=True)
+    full_plot_2d(data_3d_basename=data_3d_basename)
 
 
 if __name__ == "__main__":
