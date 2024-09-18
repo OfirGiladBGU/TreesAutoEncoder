@@ -23,7 +23,16 @@ IMAGES_6_VIEWS = ['top', 'bottom', 'front', 'back', 'left', 'right']
 def preprocess_2d(data_3d_filepath, apply_batch_merge: bool = False):
     data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
     data_2d_basename = f"{data_3d_basename}_<VIEW>"
-    format_of_2d_images = os.path.join(CROPPED_PATH, "preds_2d_v6", f"{data_2d_basename}.png")
+
+    # Get relative path parts
+    relative_filepath = data_3d_filepath.relative_to(CROPPED_PATH)
+    relative_filepath_parts = list(relative_filepath.parts)
+
+    # Update relative path parts to the relevant 2D images path
+    relative_filepath_parts[0] = relative_filepath_parts[0].replace("3d", "2d")
+    relative_filepath_parts[-1] = f"{data_2d_basename}.png"
+    format_of_2d_images_relative_filepath = pathlib.Path(*relative_filepath_parts)
+    format_of_2d_images = os.path.join(CROPPED_PATH, format_of_2d_images_relative_filepath)
 
     # Projections 2D
     data_2d_list = list()
