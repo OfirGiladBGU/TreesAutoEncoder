@@ -121,7 +121,7 @@ def preprocess_3d(data_3d_filepath, data_2d_output, apply_fusion: bool = False):
 def debug_3d(data_3d_filepath, data_3d_input: torch.Tensor):
     data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
 
-    data_3d_input = data_3d_input.numpy().astype(np.float32)
+    data_3d_input = data_3d_input.squeeze().squeeze().numpy()
 
     save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
     os.makedirs(save_path, exist_ok=True)
