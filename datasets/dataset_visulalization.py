@@ -4,12 +4,12 @@ import os
 import itertools
 
 from datasets.dataset_utils import convert_nii_gz_to_numpy
-from datasets.dataset_list import CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESULTS_PATH
+from datasets.dataset_list import CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESULTS_PATH, PREDICT_PIPELINE_RESULTS_PATH
 
 
 def matplotlib_plot_3d(data_3d: np.ndarray, save_filename):
     print(f"Save filename: '{save_filename}*'\nData shape: '{data_3d.shape}'\n")
-
+    data_3d = data_3d
     # Downsample the images
     downsample_factor = 1
     data_downsampled = data_3d[::downsample_factor, ::downsample_factor, ::downsample_factor]
@@ -53,8 +53,8 @@ def single_plot_3d():
 
 
 
-def full_plot_3d():
-    data_3d_basename = "PA000005_04510"
+def full_plot_3d(include_pipeline_results=False):
+    data_3d_basename = "PA000005_11899"
 
     folder_paths = {
         "labels_3d": os.path.join(CROPPED_PATH, "labels_3d_v6"),
@@ -79,10 +79,26 @@ def full_plot_3d():
 
         matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_filename)
 
+    if include_pipeline_results is True:
+        folder_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
+
+        result_types = ["input", "output"]
+
+        for result_type in result_types:
+            save_path = os.path.join(VISUALIZATION_RESULTS_PATH, f"pipeline_{result_type}")
+            os.makedirs(name=save_path, exist_ok=True)
+            save_filename = os.path.join(str(save_path), f"{data_3d_basename}")
+
+            data_3d_filepath = os.path.join(folder_path, f"{data_3d_basename}_{result_type}.nii.gz")
+            numpy_3d_data = convert_nii_gz_to_numpy(data_filepath=data_3d_filepath)
+
+            matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_filename)
+
 
 def main():
-    single_plot_3d()
+    # single_plot_3d()
     # full_plot_3d()
+    full_plot_3d(include_pipeline_results=True)
 
 
 if __name__ == "__main__":
