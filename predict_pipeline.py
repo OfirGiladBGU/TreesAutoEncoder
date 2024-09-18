@@ -47,8 +47,19 @@ def preprocess_2d(data_3d_filepath, apply_batch_merge: bool = False):
 def debug_2d(data_3d_filepath, data_2d_input: torch.Tensor, data_2d_output: torch.Tensor):
     data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
 
-    data_2d_input = data_2d_input.numpy()
-    data_2d_output = data_2d_output.numpy()
+    data_2d_input_copy = data_2d_input.clone().numpy()
+    data_2d_output_copy = data_2d_output.clone().numpy()
+
+    # Convert (1, 6, w, h) to (6, w, h)
+    if data_2d_input_copy.shape[0] == 1 and data_2d_input_copy.shape[1] == 6:
+        data_2d_input_copy = data_2d_input_copy.squeeze(0)
+        data_2d_output_copy = data_2d_output_copy.squeeze(0)
+    # Convert (6, 1, w, h) to (6, w, h)
+    elif data_2d_input_copy.shape[0] == 6 and data_2d_input_copy.shape[1] == 1:
+        data_2d_input_copy = data_2d_input_copy.squeeze(1)
+        data_2d_output_copy = data_2d_output_copy.squeeze(1)
+    else:
+        raise ValueError("Invalid shape")
 
     columns = 6
     rows = 2
@@ -58,19 +69,21 @@ def debug_2d(data_3d_filepath, data_2d_input: torch.Tensor, data_2d_output: torc
     # 2D Input
     for j in range(columns):
         ax.append(fig.add_subplot(rows, columns, 0 * columns + j + 1))
-        npimg = data_2d_input[j]
-        npimg = npimg * 255
-        npimg = npimg.astype(np.uint8)
-        plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+        numpy_image = data_2d_input_copy[j]
+        numpy_image = numpy_image * 255
+        numpy_image = numpy_image.astype(np.uint8)
+        numpy_image = np.expand_dims(numpy_image, axis=-1)
+        plt.imshow(numpy_image, cmap='gray')
         ax[j].set_title(f"View {IMAGES_6_VIEWS[j]}:")
 
     # 2D Output
     for j in range(columns):
         ax.append(fig.add_subplot(rows, columns, 1 * columns + j + 1))
-        npimg = data_2d_output[j]
-        npimg = npimg * 255
-        npimg = npimg.astype(np.uint8)
-        plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+        numpy_image = data_2d_output_copy[j]
+        numpy_image = numpy_image * 255
+        numpy_image = numpy_image.astype(np.uint8)
+        numpy_image = np.expand_dims(numpy_image, axis=-1)
+        plt.imshow(numpy_image, cmap='gray')
         ax[j].set_title(f"View {IMAGES_6_VIEWS[j]}:")
 
     save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d")
@@ -81,22 +94,22 @@ def debug_2d(data_3d_filepath, data_2d_input: torch.Tensor, data_2d_output: torc
     plt.close(fig)
 
 
-def preprocess_3d(data_3d_filepath, data_2d_output, apply_fusion: bool = False):
-    data_2d_predicts = data_2d_output.numpy()
+def preprocess_3d(data_3d_filepath, data_2d_output: torch.Tensor, apply_fusion: bool = False):
+    data_2d_output_copy = data_2d_output.clone().numpy()
 
     # Convert (1, 6, w, h) to (6, w, h)
-    if data_2d_output.shape[0] == 1 and data_2d_output.shape[1] == 6:
-        data_2d_predicts = data_2d_predicts.squeeze(0)
+    if data_2d_output_copy.shape[0] == 1 and data_2d_output_copy.shape[1] == 6:
+        data_2d_output_copy = data_2d_output_copy.squeeze(0)
     # Convert (6, 1, w, h) to (6, w, h)
-    elif data_2d_output.shape[0] == 6 and data_2d_output.shape[1] == 1:
-        data_2d_predicts = data_2d_predicts.squeeze(1)
+    elif data_2d_output_copy.shape[0] == 6 and data_2d_output_copy.shape[1] == 1:
+        data_2d_output_copy = data_2d_output_copy.squeeze(1)
     else:
         raise ValueError("Invalid shape")
 
     # Reconstruct 3D
     data_3d_list = list()
     for idx, image_view in enumerate(IMAGES_6_VIEWS):
-        numpy_image = data_2d_predicts[idx] * 255
+        numpy_image = data_2d_output_copy[idx] * 255
         data_3d = reverse_rotations(numpy_image=numpy_image, view_type=image_view)
         data_3d_list.append(data_3d)
 
@@ -206,6 +219,7 @@ def test_single_predict():
 
 def full_predict():
     input_folder = os.path.join(CROPPED_PATH, "preds_3d_v6")
+    # input_folder = os.path.join(CROPPED_PATH, "preds_fixed_3d_v6")
     input_format = "PA000005"
 
     data_3d_filepaths = pathlib.Path(input_folder).rglob(f"{input_format}_*.nii.gz")
