@@ -93,6 +93,11 @@ class Trainer(object):
             #     0.5 * loss_functions.reconstruction_loss(out, target) +
             #     0.5 * loss_functions.l1_loss(out, target, reduction='sum')
             # )
+        elif self.args.dataset == 'Trees2DV2':
+            LOSS = (
+                20 * loss_functions.unfilled_holes_loss(out=out, target=target, original=original) +
+                10 * loss_functions.weighted_pixels_diff_loss(out=out, target=target, original=original)
+            )
         else:
             raise NotImplementedError
 
