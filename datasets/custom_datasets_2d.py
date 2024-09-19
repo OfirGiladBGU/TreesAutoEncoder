@@ -143,7 +143,7 @@ class TreesCustomDatasetV2(Dataset):
                 numpy_2d_data2 = self.to_tensor(numpy_2d_data2)
                 if self.transform is not None:
                     numpy_2d_data2 = self.transform(numpy_2d_data2)
-                numpy_2d_data2 = numpy_2d_data2.queeze(0)
+                numpy_2d_data2 = numpy_2d_data2.squeeze(0)
                 batch2.append(numpy_2d_data2)
                 current_count -= 1
 
