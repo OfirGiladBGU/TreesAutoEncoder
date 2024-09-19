@@ -3,6 +3,8 @@ import nibabel as nib
 import torch
 import cv2
 
+IMAGES_6_VIEWS = ['top', 'bottom', 'front', 'back', 'left', 'right']
+
 
 #######################################
 # nii.gz to numpy and numpy to nii.gz #
@@ -65,8 +67,8 @@ def _calculate_depth_projection(data_3d, component_3d=None, axis=0):
     # return (255 * (1 - (depth_projection / axis_size))).astype(int)
 
 
-def project_3d_to_2d(data_3d,
-                     component_3d=None,
+def project_3d_to_2d(data_3d: np.ndarray,
+                     component_3d: np.ndarray = None,
                      front=False,
                      back=False,
                      top=False,
@@ -269,23 +271,29 @@ def reverse_rotations(numpy_image: np.ndarray, view_type: str) -> np.ndarray:
     return data_3d
 
 
-def reconstruct_3d_from_2d(format_of_2d_images) -> np.ndarray:
-    images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
-    data_3d_list = list()
-    for image_view in images_6_views:
+def get_images_6_views(format_of_2d_images: str, convert_to_3d: bool = False) -> list:
+    data_list = list()
+    for image_view in IMAGES_6_VIEWS:
         image_path = format_of_2d_images.replace("<VIEW>", image_view)
-        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        numpy_image = np.array(image)
-        data_3d = reverse_rotations(numpy_image, image_view)
-        data_3d_list.append(data_3d)
+        numpy_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        if convert_to_3d is True:
+            data_3d = reverse_rotations(numpy_image, image_view)
+            data_list.append(data_3d)
+        else:
+            data_list.append(numpy_image)
 
-    final_data_3d = data_3d_list[0]
-    for i in range(1, len(data_3d_list)):
-        final_data_3d = np.logical_or(final_data_3d, data_3d_list[i])
+    return data_list
 
-    final_data_3d = final_data_3d.astype(np.float32)
+
+def reconstruct_3d_from_2d(format_of_2d_images) -> np.ndarray:
+    data_list = get_images_6_views(format_of_2d_images=format_of_2d_images, convert_to_3d=True)
+
+    merged_data_3d = data_list[0]
+    for i in range(1, len(data_list)):
+        merged_data_3d = np.logical_or(merged_data_3d, data_list[i])
+    merged_data_3d = merged_data_3d.astype(np.float32)
 
     # save_name = format_of_2d_images.replace("<VIEW>", "result")
-    # convert_numpy_to_nii_gz(final_data_3d, save_name=save_name)
+    # convert_numpy_to_nii_gz(merged_data_3d, save_name=save_name)
 
-    return final_data_3d
+    return merged_data_3d

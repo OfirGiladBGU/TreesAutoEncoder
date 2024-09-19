@@ -1,34 +1,11 @@
 import numpy as np
-import cv2
 import os
 import pathlib
 from tqdm import tqdm
 
 from dataset_list import CROPPED_PATH
-from dataset_utils import convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, reverse_rotations
-
-
-# TODO: Use Pred for Fusion
-def reconstruct_3d_from_2d(format_of_2d_images) -> np.ndarray:
-    images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
-    data_3d_list = list()
-    for image_view in images_6_views:
-        image_path = format_of_2d_images.replace("<VIEW>", image_view)
-        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        numpy_image = np.array(image)
-        data_3d = reverse_rotations(numpy_image, image_view)
-        data_3d_list.append(data_3d)
-
-    final_data_3d = data_3d_list[0]
-    for i in range(1, len(data_3d_list)):
-        final_data_3d = np.logical_or(final_data_3d, data_3d_list[i])
-
-    final_data_3d = final_data_3d.astype(np.float32)
-
-    # save_name = format_of_2d_images.replace("<VIEW>", "result")
-    # convert_numpy_to_nii_gz(final_data_3d, save_name=save_name)
-
-    return final_data_3d
+from dataset_utils import (convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, reconstruct_3d_from_2d, project_3d_to_2d,
+                           get_images_6_views, IMAGES_6_VIEWS)
 
 
 ############################
@@ -216,16 +193,42 @@ def create_3d_fusions():
 
 
 def test_2d_to_3d_and_back():
-    # TODO:
     # Use the 2d projections to create a 3d reconstruction
     # Use the 3d reconstruction to create a 2d projection
-    # Compare the 2d projection with the original 2d projection
-    pass
+    # Compare the new 2d projection with the original 2d projection
+
+    data_3d_basename = "PA000005_11899"
+    input_folder = os.path.join(CROPPED_PATH, "labels_2d_v6")
+    format_of_2d_images = os.path.join(input_folder, f"{data_3d_basename}_<VIEW>.png")
+
+    # Get the locally saved 2D images
+    data_list = get_images_6_views(format_of_2d_images=format_of_2d_images, convert_to_3d=False)
+
+    # Reconstruct 3D from 2D and Project 3D to 2D again
+    data_3d = reconstruct_3d_from_2d(format_of_2d_images=format_of_2d_images)
+    projections = project_3d_to_2d(
+        data_3d=data_3d,
+        front=True, back=True, top=True, bottom=True, left=True, right=True
+    )
+
+    # Compare the 2D projections with the original 2D images
+    equal_status = True
+    for image_idx, image_view in tqdm(enumerate(IMAGES_6_VIEWS)):
+        locally_saved_image = data_list[image_idx]
+        projection_image = projections[f"{image_view}_image"]
+        if (locally_saved_image - projection_image).sum() != 0:
+            equal_status = False
+            print(f"Error in '{image_view}' view")
+
+    if equal_status is True:
+        print("All images are equal")
 
 
 def main():
     # create_3d_reconstructions()
-    create_3d_fusions()
+    # create_3d_fusions()
+
+    test_2d_to_3d_and_back()
 
 
 if __name__ == "__main__":

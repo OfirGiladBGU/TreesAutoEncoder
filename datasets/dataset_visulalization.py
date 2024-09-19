@@ -4,7 +4,7 @@ import os
 import itertools
 import cv2
 
-from datasets.dataset_utils import convert_nii_gz_to_numpy
+from datasets.dataset_utils import convert_nii_gz_to_numpy, IMAGES_6_VIEWS
 from datasets.dataset_list import CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESULTS_PATH, PREDICT_PIPELINE_RESULTS_PATH
 
 
@@ -100,9 +100,6 @@ def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
 ####################
 # 2D visualization #
 ####################
-IMAGES_6_VIEWS = ['top', 'bottom', 'front', 'back', 'left', 'right']
-
-
 def matplotlib_plot_2d(save_filepath, data_2d_list):
     columns = 6
     rows = 1

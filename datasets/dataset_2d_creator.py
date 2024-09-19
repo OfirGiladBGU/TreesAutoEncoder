@@ -8,7 +8,7 @@ from scipy.ndimage import label
 from skimage import color
 
 from dataset_list import DATASET_PATH, CROPPED_PATH
-from dataset_utils import convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, project_3d_to_2d
+from dataset_utils import convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, project_3d_to_2d, IMAGES_6_VIEWS
 
 
 #########
@@ -135,8 +135,7 @@ def create_dataset_depth_2d_projections():
             front=True, back=True, top=True, bottom=True, left=True, right=True
         )
 
-        images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
-        for image_view in images_6_views:
+        for image_view in IMAGES_6_VIEWS:
             output_2d_format = f"{output_idx}_{image_view}"
 
             label_image = label_projections[f"{image_view}_image"]
@@ -295,10 +294,9 @@ def create_2d_projections_and_3d_cubes():
                 front=True, back=True, top=True, bottom=True, left=True, right=True
             )
 
-            images_6_views = ['top', 'bottom', 'front', 'back', 'left', 'right']
             condition1 = True
             condition2 = True
-            for image_view in images_6_views:
+            for image_view in IMAGES_6_VIEWS:
                 pred_image = pred_projections[f"{image_view}_image"]
                 label_image = label_projections[f"{image_view}_image"]
 
@@ -342,7 +340,7 @@ def create_2d_projections_and_3d_cubes():
             cube_data = cubes_data[cube_idx]
             cube_idx_str = str(cube_idx).zfill(cubes_count_digits_count)
 
-            for image_view in images_6_views:
+            for image_view in IMAGES_6_VIEWS:
                 output_2d_format = f"{output_idx}_{cube_idx_str}_{image_view}"
 
                 # 2D Folders - labels

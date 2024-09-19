@@ -9,12 +9,10 @@ import pathlib
 from tqdm import tqdm
 import pandas as pd
 
-from datasets.dataset_utils import convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, reverse_rotations, apply_threshold
+from datasets.dataset_utils import (convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, reverse_rotations,
+                                    apply_threshold, IMAGES_6_VIEWS)
 from datasets.dataset_list import CROPPED_PATH, PREDICT_PIPELINE_RESULTS_PATH
 from models.model_list import init_model
-
-
-IMAGES_6_VIEWS = ['top', 'bottom', 'front', 'back', 'left', 'right']
 
 
 #########
