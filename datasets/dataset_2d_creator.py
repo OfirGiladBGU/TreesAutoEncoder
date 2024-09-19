@@ -8,7 +8,7 @@ from scipy.ndimage import label
 from skimage import color
 
 from dataset_list import DATASET_PATH, CROPPED_PATH
-from dataset_utils import convert_nii_gz_to_numpy, convert_numpy_to_nii_gz
+from dataset_utils import convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, project_3d_to_2d
 
 
 #########
@@ -26,192 +26,6 @@ def connected_components_3d(data_3d: np.ndarray):
     # print("Number of Features:", num_features)
 
     return labeled_array, num_features
-
-
-def _calculate_depth_projection(data_3d, component_3d=None, axis=0):
-    depth_projection = np.argmax(data_3d, axis=axis)
-    max_projection = np.max(data_3d, axis=axis)
-    axis_size = data_3d.shape[axis]
-
-    grayscale_depth_projection = np.where(
-        max_projection > 0,
-        (255 * (1 - (depth_projection / axis_size))).astype(int),
-        0
-    )
-
-    if component_3d is None:
-        return grayscale_depth_projection
-    else:
-        components_depth_projection = np.zeros_like(grayscale_depth_projection)
-        for i in range(grayscale_depth_projection.shape[0]):
-            for j in range(grayscale_depth_projection.shape[1]):
-                if grayscale_depth_projection[i, j] > 0:
-                    if axis == 0:
-                        components_depth_projection[i, j] = component_3d[depth_projection[i, j], i, j]
-                    elif axis == 1:
-                        components_depth_projection[i, j] = component_3d[i, depth_projection[i, j], j]
-                    elif axis == 2:
-                        components_depth_projection[i, j] = component_3d[i, j, depth_projection[i, j]]
-                    else:
-                        raise ValueError("Invalid axis")
-
-        return grayscale_depth_projection, components_depth_projection
-
-    # return (255 * (1 - (depth_projection / axis_size))).astype(int)
-
-
-def project_3d_to_2d(data_3d,
-                     component_3d=None,
-                     front=False,
-                     back=False,
-                     top=False,
-                     bottom=False,
-                     left=False,
-                     right=False):
-    projections = dict()
-
-    rotated_data_3d = data_3d
-    rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 2))
-    rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(1, 2))
-    rotated_data_3d = np.flip(rotated_data_3d, axis=1)
-
-    if component_3d is not None:
-        rotated_component_3d = component_3d
-        rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(0, 2))
-        rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(1, 2))
-        rotated_component_3d = np.flip(rotated_component_3d, axis=1)
-    else:
-        rotated_component_3d = None
-
-    # Front projection (XY plane)
-    if front is True:
-        flipped_data_3d = rotated_data_3d
-
-        # Option 1
-        # projections["front_image"] = np.max(data_3d, axis=2)
-
-        # Option 2
-        if rotated_component_3d is None:
-            projections["front_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=2)
-        else:
-            flipped_component_3d = rotated_component_3d
-
-            projections["front_image"], projections["front_components"] = _calculate_depth_projection(
-                data_3d=flipped_data_3d,
-                component_3d=flipped_component_3d,
-                axis=2
-            )
-
-    # Back projection (XY plane)
-    if back is True:
-        flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(1, 2))
-
-        # Option 1
-        # projections["back_image"] = np.max(flipped_data_3d, axis=2)
-
-        # Option 2
-        if rotated_component_3d is None:
-            projections["back_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=2)
-        else:
-            flipped_component_3d = rotated_component_3d
-            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(1, 2))
-
-            projections["back_image"], projections["back_components"] = _calculate_depth_projection(
-                data_3d=flipped_data_3d,
-                component_3d=flipped_component_3d,
-                axis=2
-            )
-
-    # Top projection (XZ plane)
-    if top is True:
-        flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.rot90(flipped_data_3d, k=1, axes=(1, 2))
-
-        # Option 1
-        # projections["top_image"] = np.max(data_3d, axis=1)
-
-        # Option 2
-        if rotated_component_3d is None:
-            projections["top_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=0)
-        else:
-            flipped_component_3d = rotated_component_3d
-            flipped_component_3d = np.rot90(flipped_component_3d, k=1, axes=(1, 2))
-
-            projections["top_image"], projections["top_components"] = _calculate_depth_projection(
-                data_3d=flipped_data_3d,
-                component_3d=flipped_component_3d,
-                axis=0
-            )
-
-    # Bottom projection (XZ plane)
-    if bottom is True:
-        flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.rot90(flipped_data_3d, k=1, axes=(1, 2))
-        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(0, 1))
-
-        # Option 1
-        # projections["bottom_image"] = np.max(flipped_data_3d, axis=1)
-
-        # Option 2
-        if rotated_component_3d is None:
-            projections["bottom_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=0)
-        else:
-            flipped_component_3d = rotated_component_3d
-            flipped_component_3d = np.rot90(flipped_component_3d, k=1, axes=(1, 2))
-            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(0, 1))
-
-            projections["bottom_image"], projections["bottom_components"] = _calculate_depth_projection(
-                data_3d=flipped_data_3d,
-                component_3d=flipped_component_3d,
-                axis=0
-            )
-
-    # Right projection (YZ plane)
-    if right is True:
-        flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.flip(flipped_data_3d, axis=1)
-
-        # Option 1
-        # projections["right_image"] = np.max(flipped_data_3d, axis=0)
-
-        # Option 2
-        if rotated_component_3d is None:
-            projections["right_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=1)
-        else:
-            flipped_component_3d = rotated_component_3d
-            flipped_component_3d = np.flip(flipped_component_3d, axis=1)
-
-            projections["right_image"], projections["right_components"] = _calculate_depth_projection(
-                data_3d=flipped_data_3d,
-                component_3d=flipped_component_3d,
-                axis=1
-            )
-
-    # Left projection (YZ plane)
-    if left is True:
-        flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.flip(flipped_data_3d, axis=1)
-        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(1, 2))
-
-        # Option 1
-        # projections["left_image"] = np.max(data_3d, axis=0)
-
-        # Option 2
-        if rotated_component_3d is None:
-            projections["left_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=1)
-        else:
-            flipped_component_3d = rotated_component_3d
-            flipped_component_3d = np.flip(flipped_component_3d, axis=1)
-            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(1, 2))
-
-            projections["left_image"], projections["left_components"] = _calculate_depth_projection(
-                data_3d=flipped_data_3d,
-                component_3d=flipped_component_3d,
-                axis=1
-            )
-
-    return projections
 
 
 def crop_mini_cubes(data_3d: np.ndarray, size: tuple = (28, 28, 28), step: int = 14, cubes_data: bool = False):
@@ -461,16 +275,16 @@ def create_2d_projections_and_3d_cubes():
             if global_components_3d_count < 2:
                 continue
 
+            # Project 3D to 2D (Labels)
+            label_projections = project_3d_to_2d(
+                data_3d=label_cube,
+                front=True, back=True, top=True, bottom=True, left=True, right=True
+            )
+
             # Project 3D to 2D (Preds)
             pred_projections = project_3d_to_2d(
                 data_3d=pred_cube,
                 component_3d=pred_components_cube,
-                front=True, back=True, top=True, bottom=True, left=True, right=True
-            )
-
-            # Project 3D to 2D (Labels)
-            label_projections = project_3d_to_2d(
-                data_3d=label_cube,
                 front=True, back=True, top=True, bottom=True, left=True, right=True
             )
 
@@ -594,7 +408,7 @@ def create_2d_projections_and_3d_cubes():
             # convert_numpy_to_nii_gz(label_cube, save_name="1")
             # convert_numpy_to_nii_gz(pred_cube, save_name="2")
 
-        if filepath_idx == 9:
+        if filepath_idx == 19:
             break
 
     pd.DataFrame(log_data).T.to_csv(log_filepath)
@@ -604,7 +418,7 @@ def main():
     # TODO: DEBUG
     # create_dataset_depth_2d_projections()
 
-    create_preds_components()
+    # create_preds_components()
     create_2d_projections_and_3d_cubes()
 
 
