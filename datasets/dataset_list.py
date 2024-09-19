@@ -133,7 +133,7 @@ class TreesDataset2DV1(object):
 # Train with 6 2D preds fixed to predict 6 2D labels
 class TreesDataset2DV2(object):
     def __init__(self, args):
-        self.input_size = (6, 1, 32, 32)
+        self.input_size = (6, 32, 32)
 
         src_path = os.path.join(CROPPED_PATH, "preds_fixed_2d_v6")
         dst_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
@@ -146,7 +146,7 @@ class TreesDataset2DV2(object):
 # Train with 6 2D preds fixed to predict 6 2D labels (with regression)
 class TreesDataset2DV2M(object):
     def __init__(self, args):
-        self.input_size = (6, 1, 32, 32)
+        self.input_size = (6, 32, 32)
 
         src_path = os.path.join(CROPPED_PATH, "preds_fixed_2d_v6")
         dst_path = os.path.join(CROPPED_PATH, "labels_2d_v6")

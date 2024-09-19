@@ -275,6 +275,13 @@ class Trainer(object):
                     target_images = target_images.cpu()
                     output_images = output_images.cpu()
 
+                # Convert (b, 6, w, h) to (6*b, 1, w, h) - Trees2DV2
+                if input_images.shape[1] == 6:
+                    x, y = self.args.input_size[1:]
+                    input_images = input_images.view(-1, 1, x, y)
+                    target_images = target_images.view(-1, 1, x, y)
+                    output_images = output_images.view(-1, 1, x, y)
+
                 # Create a grid of images
                 columns = 3
                 rows = 25
