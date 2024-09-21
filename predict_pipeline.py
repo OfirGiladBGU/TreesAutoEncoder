@@ -51,22 +51,33 @@ def preprocess_2d(data_3d_filepath, apply_batch_merge: bool = False):
     return data_2d_input
 
 
+def postprocess_2d(data_2d_input: torch.Tensor, data_2d_output: torch.Tensor, apply_holes_fusion: bool = False):
+    # Convert (1, 6, w, h) to (6, w, h)
+    if data_2d_input.shape[0] == 1 and data_2d_input.shape[1] == 6:
+        data_2d_input = data_2d_input.squeeze(0)
+        data_2d_output = data_2d_output.squeeze(0)
+    # Convert (6, 1, w, h) to (6, w, h)
+    elif data_2d_input.shape[0] == 6 and data_2d_input.shape[1] == 1:
+        data_2d_input = data_2d_input.squeeze(1)
+        data_2d_output = data_2d_output.squeeze(1)
+    # Apply no change to (6, w, h)
+    elif data_2d_input.shape[0] == 6 and len(data_2d_input.shape) == 3:
+        pass
+    else:
+        raise ValueError("Invalid shape")
+
+    if apply_holes_fusion is True:
+        black_mask = (data_2d_input == 0).float()
+        data_2d_output = data_2d_input + (black_mask * data_2d_output)
+
+    return data_2d_input, data_2d_output
+
+
 def debug_2d(data_3d_filepath, data_2d_input: torch.Tensor, data_2d_output: torch.Tensor):
     data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
 
     data_2d_input_copy = data_2d_input.clone().numpy()
     data_2d_output_copy = data_2d_output.clone().numpy()
-
-    # Convert (1, 6, w, h) to (6, w, h)
-    if data_2d_input_copy.shape[0] == 1 and data_2d_input_copy.shape[1] == 6:
-        data_2d_input_copy = data_2d_input_copy.squeeze(0)
-        data_2d_output_copy = data_2d_output_copy.squeeze(0)
-    # Convert (6, 1, w, h) to (6, w, h)
-    elif data_2d_input_copy.shape[0] == 6 and data_2d_input_copy.shape[1] == 1:
-        data_2d_input_copy = data_2d_input_copy.squeeze(1)
-        data_2d_output_copy = data_2d_output_copy.squeeze(1)
-    else:
-        raise ValueError("Invalid shape")
 
     columns = 6
     rows = 2
@@ -102,21 +113,12 @@ def debug_2d(data_3d_filepath, data_2d_input: torch.Tensor, data_2d_output: torc
 
 
 def preprocess_3d(data_3d_filepath, data_2d_output: torch.Tensor, apply_fusion: bool = False):
-    data_2d_output_copy = data_2d_output.clone().numpy()
-
-    # Convert (1, 6, w, h) to (6, w, h)
-    if data_2d_output_copy.shape[0] == 1 and data_2d_output_copy.shape[1] == 6:
-        data_2d_output_copy = data_2d_output_copy.squeeze(0)
-    # Convert (6, 1, w, h) to (6, w, h)
-    elif data_2d_output_copy.shape[0] == 6 and data_2d_output_copy.shape[1] == 1:
-        data_2d_output_copy = data_2d_output_copy.squeeze(1)
-    else:
-        raise ValueError("Invalid shape")
+    data_2d_output = data_2d_output.numpy()
 
     # Reconstruct 3D
     data_3d_list = list()
     for idx, image_view in enumerate(IMAGES_6_VIEWS):
-        numpy_image = data_2d_output_copy[idx] * 255
+        numpy_image = data_2d_output[idx] * 255
         data_3d = reverse_rotations(numpy_image=numpy_image, view_type=image_view)
         data_3d_list.append(data_3d)
 
@@ -138,17 +140,6 @@ def preprocess_3d(data_3d_filepath, data_2d_output: torch.Tensor, apply_fusion: 
     return data_3d_input
 
 
-def debug_3d(data_3d_filepath, data_3d_input: torch.Tensor):
-    data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
-
-    data_3d_input = data_3d_input.squeeze().squeeze().numpy()
-
-    save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
-    os.makedirs(save_path, exist_ok=True)
-    save_filepath = os.path.join(save_path, f"{data_3d_basename}_input")
-    convert_numpy_to_nii_gz(numpy_data=data_3d_input, save_filename=save_filepath)
-
-
 def postprocess_3d(data_3d_filepath, data_3d_output: torch.Tensor):
     data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
 
@@ -161,6 +152,17 @@ def postprocess_3d(data_3d_filepath, data_3d_output: torch.Tensor):
     apply_threshold(tensor=data_3d_output, threshold=0.5)
     save_filepath = os.path.join(save_path, f"{data_3d_basename}_output")
     convert_numpy_to_nii_gz(numpy_data=data_3d_output, save_filename=save_filepath)
+
+
+def debug_3d(data_3d_filepath, data_3d_input: torch.Tensor):
+    data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
+
+    data_3d_input = data_3d_input.squeeze().squeeze().numpy()
+
+    save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
+    os.makedirs(save_path, exist_ok=True)
+    save_filepath = os.path.join(save_path, f"{data_3d_basename}_input")
+    convert_numpy_to_nii_gz(numpy_data=data_3d_input, save_filename=save_filepath)
 
 
 ##################
@@ -200,6 +202,12 @@ def single_predict(data_3d_filepath):
         # Predict 2D
         data_2d_output = model_2d(data_2d_input)
 
+        (data_2d_input, data_2d_output) = postprocess_2d(
+            data_2d_input=data_2d_input,
+            data_2d_output=data_2d_output,
+            apply_holes_fusion=True
+        )
+
         # DEBUG
         debug_2d(data_3d_filepath=data_3d_filepath, data_2d_input=data_2d_input, data_2d_output=data_2d_output)
 
@@ -212,11 +220,13 @@ def single_predict(data_3d_filepath):
             apply_fusion=True
         )
 
+        # Predict 3D
         data_3d_output = model_3d(data_3d_input)
 
-        debug_3d(data_3d_filepath=data_3d_filepath, data_3d_input=data_3d_input)
-
         postprocess_3d(data_3d_filepath=data_3d_filepath, data_3d_output=data_3d_output)
+
+        # DEBUG
+        debug_3d(data_3d_filepath=data_3d_filepath, data_3d_input=data_3d_input)
 
 
 def test_single_predict():
