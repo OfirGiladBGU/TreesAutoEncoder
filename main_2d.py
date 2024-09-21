@@ -79,5 +79,6 @@ if __name__ == "__main__":
     # TODO: check option that the original input is kept and only the holes are predicted and merged
     # TODO: filter noise
     # TODO: check option to add confidence/classification head for the model to threshold the pixels
+    # TODO: remove punishment on input white area
 
     main()
