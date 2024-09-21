@@ -39,7 +39,7 @@ def preprocess_2d(data_3d_filepath, apply_batch_merge: bool = False):
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
         torch_image = transforms.ToTensor()(image)
         if apply_batch_merge is True:
-            torch_image = torch_image.unsqueeze(0)
+            torch_image = torch_image.squeeze(0)
         data_2d_list.append(torch_image)
 
     # Shape: (1, 6, w, h)
@@ -190,13 +190,18 @@ def single_predict(data_3d_filepath):
     model_3d.load_state_dict(torch.load(model_3d_weights_filepath))
     model_3d.eval()
 
+    if args.input_size_model_2d[0] == 6 and len(args.input_size_model_2d) == 3:
+        apply_batch_merge = True
+    else:
+        apply_batch_merge = False
+
     with torch.no_grad():
         ##############
         # 2D Section #
         ##############
         data_2d_input = preprocess_2d(
             data_3d_filepath=data_3d_filepath,
-            apply_batch_merge=False
+            apply_batch_merge=apply_batch_merge
         )
 
         # Predict 2D
@@ -340,8 +345,12 @@ if __name__ == "__main__":
 
     # Custom Edit:
 
+    # args.model_2d = "ae_6_2d_to_6_2d"
+    # args.input_size_model_2d = (6, 32, 32)
+
     args.model_2d = "ae_2d_to_2d"
     args.input_size_model_2d = (1, 32, 32)
+
     args.model_3d = "ae_3d_to_3d"
     args.input_size_model_3d = (1, 32, 32, 32)
 
