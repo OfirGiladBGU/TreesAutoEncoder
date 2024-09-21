@@ -13,6 +13,9 @@ from datasets.dataset_utils import apply_threshold
 from datasets.custom_datasets_2d import V1_2D_DATASETS, V2_2D_DATASETS
 from trainer import loss_functions
 
+# TODO: remove later
+import torch.nn.functional as F
+
 
 class Trainer(object):
     def __init__(self, args: argparse.Namespace, dataset, model):
@@ -94,10 +97,29 @@ class Trainer(object):
             #     0.5 * loss_functions.l1_loss(out, target, reduction='sum')
             # )
         elif self.args.dataset == 'Trees2DV2':
-            LOSS = (
-                20 * loss_functions.unfilled_holes_loss(out=out, target=target, original=original) +
-                10 * loss_functions.weighted_pixels_diff_loss(out=out, target=target, original=original)
-            )
+            # LOSS = (
+            #     20 * loss_functions.unfilled_holes_loss(out=out, target=target, original=original) +
+            #     10 * loss_functions.weighted_pixels_diff_loss(out=out, target=target, original=original)
+            # )
+
+            # target_clone = target.clone().detach()
+            # original_clone = original.clone().detach()
+            #
+            # apply_threshold(target_clone, 0.01)
+            # apply_threshold(original_clone, 0.01)
+            # mask = target_clone - original_clone
+            #
+            # LOSS = (0.8 * mask * F.mse_loss(out, target)).sum() + 0.2 * F.l1_loss(out, target)
+
+            # real_loss = nn.BCELoss()(discriminator(real), torch.ones_like(real))
+            # fake_loss = nn.BCELoss()(discriminator(fake), torch.zeros_like(fake))
+            # return real_loss + fake_loss
+
+            holes_mask = ((target - original) != 0)
+            non_black_mask = (target != 0)
+            LOSS = (0.6 * F.mse_loss(out[holes_mask], target[holes_mask])  +
+                    0.2 * F.mse_loss(out[non_black_mask], target[non_black_mask]) +
+                    0.2 * F.l1_loss(out, target))
         else:
             raise NotImplementedError
 
@@ -237,7 +259,7 @@ class Trainer(object):
             self.model.load_state_dict(torch.load(self.args.weights_filepath))
 
         with torch.no_grad():
-            for b in range(4):
+            for b in range(6):
                 # Get the images from the test loader
                 batch_num = b + 1
                 data = iter(self.test_loader)

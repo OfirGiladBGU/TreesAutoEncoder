@@ -74,7 +74,7 @@ if __name__ == "__main__":
     # args.dataset = 'Trees2DV1'
     args.dataset = 'Trees2DV2'
 
-    args.epochs = 10
+    args.epochs = 5
 
     # TODO: check option that the original input is kept and only the holes are predicted and merged
 
