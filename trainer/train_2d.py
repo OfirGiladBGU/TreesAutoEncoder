@@ -74,10 +74,18 @@ class Trainer(object):
             #     10 * loss_functions.unfilled_holes_loss(out, target, original)
             # )
 
-            LOSS = (
-                20 * loss_functions.unfilled_holes_loss(out=out, target=target, original=original) +
-                10 * loss_functions.weighted_pixels_diff_loss(out=out, target=target, original=original)
-            )
+
+            # LOSS = (
+            #     20 * loss_functions.unfilled_holes_loss(out=out, target=target, original=original) +
+            #     10 * loss_functions.weighted_pixels_diff_loss(out=out, target=target, original=original)
+            # )
+
+            holes_mask = ((target - original) != 0)
+            non_black_mask = (target != 0)
+            LOSS = (0.6 * F.mse_loss(out[holes_mask], target[holes_mask]) +
+                    0.2 * F.mse_loss(out[non_black_mask], target[non_black_mask]) +
+                    0.2 * F.l1_loss(out, target))
+
 
             # gap_cnn / ae_2d_to_2d
             # LOSS = loss_functions.mse_loss(out, target)
