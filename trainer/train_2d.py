@@ -123,11 +123,16 @@ class Trainer(object):
             # fake_loss = nn.BCELoss()(discriminator(fake), torch.zeros_like(fake))
             # return real_loss + fake_loss
 
+            # holes_mask = ((target - original) != 0)
+            # non_black_mask = (target != 0)
+            # LOSS = (0.6 * F.mse_loss(out[holes_mask], target[holes_mask])  +
+            #         0.2 * F.mse_loss(out[non_black_mask], target[non_black_mask]) +
+            #         0.2 * F.l1_loss(out, target))
+
             holes_mask = ((target - original) != 0)
-            non_black_mask = (target != 0)
-            LOSS = (0.6 * F.mse_loss(out[holes_mask], target[holes_mask])  +
-                    0.2 * F.mse_loss(out[non_black_mask], target[non_black_mask]) +
-                    0.2 * F.l1_loss(out, target))
+            black_mask = (target == 0)
+            LOSS = (0.6 * F.mse_loss(out[holes_mask], target[holes_mask]) +
+                    0.4 * F.mse_loss(out[black_mask], target[black_mask]))
         else:
             raise NotImplementedError
 
