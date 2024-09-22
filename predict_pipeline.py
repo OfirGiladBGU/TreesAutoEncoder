@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import pathlib
 from tqdm import tqdm
 import pandas as pd
+from scipy.ndimage import convolve
 
 from datasets.dataset_utils import (convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, reverse_rotations,
                                     apply_threshold, IMAGES_6_VIEWS)
@@ -112,7 +113,28 @@ def debug_2d(data_3d_filepath, data_2d_input: torch.Tensor, data_2d_output: torc
     plt.close(fig)
 
 
-def preprocess_3d(data_3d_filepath, data_2d_output: torch.Tensor, apply_fusion: bool = False):
+def noise_filter(data_3d_input: np.ndarray):
+    # Define a 3x3x3 kernel that will be used to check 6 neighbors (left, right, up, down, front, back)
+    kernel = np.zeros((3, 3, 3), dtype=int)
+
+    # Set only the 6-connectivity neighbors in the kernel
+    kernel[1, 0, 1] = 1  # Left
+    kernel[1, 2, 1] = 1  # Right
+    kernel[0, 1, 1] = 1  # Up
+    kernel[2, 1, 1] = 1  # Down
+    kernel[1, 1, 0] = 1  # Front
+    kernel[1, 1, 2] = 1  # Back
+
+    # Convolve the binary array with the kernel to count neighbors
+    neighbors_count = convolve(data_3d_input, kernel, mode='constant', cval=0)
+
+    # Filter out voxels that have no neighboring voxels (i.e., neighbors_count == 0)
+    filtered_data_3d_input = np.where((data_3d_input == 1) & (neighbors_count > 0), 1, 0)
+
+    return filtered_data_3d_input
+
+
+def preprocess_3d(data_3d_filepath, data_2d_output: torch.Tensor, apply_fusion: bool = False, apply_noise_filter: bool = False):
     data_2d_output = data_2d_output.numpy()
 
     # Reconstruct 3D
@@ -135,6 +157,9 @@ def preprocess_3d(data_3d_filepath, data_2d_output: torch.Tensor, apply_fusion: 
         data_3d_input = data_3d_fusion
     else:
         data_3d_input = data_3d_reconstruct
+
+    if apply_noise_filter is True:
+        data_3d_input = noise_filter(data_3d_input=data_3d_input)
 
     data_3d_input = torch.Tensor(data_3d_input).unsqueeze(0).unsqueeze(0)
     return data_3d_input
@@ -222,7 +247,8 @@ def single_predict(data_3d_filepath):
         data_3d_input = preprocess_3d(
             data_3d_filepath=data_3d_filepath,
             data_2d_output=data_2d_output,
-            apply_fusion=True
+            apply_fusion=True,
+            apply_noise_filter=True
         )
 
         # Predict 3D
