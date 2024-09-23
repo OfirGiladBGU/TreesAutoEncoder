@@ -80,12 +80,16 @@ class Trainer(object):
             #     10 * loss_functions.weighted_pixels_diff_loss(out=out, target=target, original=original)
             # )
 
-            holes_mask = ((target - original) != 0)
-            non_black_mask = (target != 0)
-            LOSS = (0.6 * F.mse_loss(out[holes_mask], target[holes_mask]) +
-                    0.2 * F.mse_loss(out[non_black_mask], target[non_black_mask]) +
-                    0.2 * F.l1_loss(out, target))
+            # holes_mask = ((target - original) != 0)
+            # non_black_mask = (target != 0)
+            # LOSS = (0.6 * F.mse_loss(out[holes_mask], target[holes_mask]) +
+            #         0.2 * F.mse_loss(out[non_black_mask], target[non_black_mask]) +
+            #         0.2 * F.l1_loss(out, target))
 
+            holes_mask = ((target - original) != 0)
+            black_mask = (target == 0)
+            LOSS = (0.6 * F.l1_loss(out[holes_mask], target[holes_mask]) +
+                    0.4 * F.l1_loss(out[black_mask], target[black_mask]))
 
             # gap_cnn / ae_2d_to_2d
             # LOSS = loss_functions.mse_loss(out, target)
@@ -131,8 +135,8 @@ class Trainer(object):
 
             holes_mask = ((target - original) != 0)
             black_mask = (target == 0)
-            LOSS = (0.6 * F.mse_loss(out[holes_mask], target[holes_mask]) +
-                    0.4 * F.mse_loss(out[black_mask], target[black_mask]))
+            LOSS = (0.6 * F.l1_loss(out[holes_mask], target[holes_mask]) +
+                    0.4 * F.l1_loss(out[black_mask], target[black_mask]))
         else:
             raise NotImplementedError
 
