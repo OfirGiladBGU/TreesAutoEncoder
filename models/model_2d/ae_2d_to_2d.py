@@ -2,6 +2,8 @@ import argparse
 import torch.nn as nn
 
 
+# TODO: change kernel size
+# TODO: attention check
 class Network2D(nn.Module):
     def __init__(self, args: argparse.Namespace):
         super(Network2D, self).__init__()

@@ -88,8 +88,11 @@ class Trainer(object):
 
             holes_mask = ((target - original) != 0)
             black_mask = (target == 0)
+            black_penalty = torch.where(out[holes_mask] < 0.001, 1.0, 0)
+
             LOSS = (0.6 * F.l1_loss(out[holes_mask], target[holes_mask]) +
-                    0.4 * F.l1_loss(out[black_mask], target[black_mask]))
+                    0.2 * F.l1_loss(out[black_mask], target[black_mask]) +
+                    0.2 * black_penalty.sum())
 
             # gap_cnn / ae_2d_to_2d
             # LOSS = loss_functions.mse_loss(out, target)
