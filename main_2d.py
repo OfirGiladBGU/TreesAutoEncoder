@@ -1,10 +1,14 @@
 import argparse
 import os
 import torch
+import wandb
 
 from datasets.dataset_list import init_dataset, MODEL_RESULTS_PATH
 from trainer.train_2d import Trainer
 from models.model_list import init_model
+
+API_Key = os.environ.get("WANDB_API_KEY")
+wandb.login(key=API_Key)
 
 
 def train_model(dataset, model, use_weights: bool):
@@ -22,6 +26,7 @@ def main():
     args.input_size = dataset.input_size
 
     model = init_model(args=args)
+    wandb.init(project="TreesAutoEncoder", name=model.model_name)
 
     # Update save path
     filepath, ext = os.path.splitext(args.weights_filepath)
@@ -33,7 +38,9 @@ def main():
 
     use_weights = False
     train_model(dataset=dataset, model=model, use_weights=use_weights)
-    predict_model(dataset=dataset, model=model)
+    # predict_model(dataset=dataset, model=model)
+
+    wandb.finish()
 
 
 if __name__ == "__main__":
@@ -74,7 +81,7 @@ if __name__ == "__main__":
     args.dataset = 'Trees2DV1'
     # args.dataset = 'Trees2DV2'
 
-    args.epochs = 25
+    args.epochs = 10
 
     # TODO: check option that the original input is kept and only the holes are predicted and merged
     # TODO: filter noise

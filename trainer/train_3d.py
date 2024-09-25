@@ -6,6 +6,7 @@ import copy
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import wandb
 
 from datasets.dataset_utils import convert_numpy_to_nii_gz, apply_threshold
 from datasets.custom_datasets_3d import V1_3D_DATASETS, V2_3D_DATASETS
@@ -27,17 +28,17 @@ class Trainer(object):
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
 
-    def loss_function(self, out, target, original=None):
+    def loss_function(self, output_data, target_data, input_data=None):
         """
-        :param out: model output on the 'original' input
-        :param target: the target data that the model should output
-        :param original: the original input data for the model
+        :param output_data: model output on the 'original' input
+        :param target_data: the target data that the model should output
+        :param input_data: the original input data for the model
         :return:
         """
 
         # LOSS = F.mse_loss(out, target, reduction='sum')
         # LOSS = loss_functions.bce_dice_loss(out, target)
-        LOSS = loss_functions.weighted_bce_dice_loss(out, target)
+        LOSS = loss_functions.weighted_bce_dice_loss(output_data, target_data)
         return LOSS
 
     def _train(self, epoch):
@@ -49,8 +50,12 @@ class Trainer(object):
             target_data = target_data.to(self.device)
 
             self.optimizer.zero_grad()
-            out_data = self.model(input_data)
-            loss = self.loss_function(out=out_data, target=target_data, original=input_data)
+            output_data = self.model(input_data)
+            loss = self.loss_function(
+                output_data=output_data,
+                target_data=target_data,
+                input_data=input_data
+            )
             loss.backward()
 
             train_loss += loss.item()
@@ -64,10 +69,12 @@ class Trainer(object):
                     loss.item() / len(input_data)
                 ))
 
+        train_avg_loss = train_loss / len(self.train_loader.dataset)
         print('> [Train] Epoch: {}, Average Loss: {:.4f}'.format(
             epoch,
-            train_loss / len(self.train_loader.dataset)
+            train_avg_loss
         ))
+        wandb.log({f"Train Loss": train_avg_loss})
 
     def _test(self):
         self.model.eval()
@@ -78,11 +85,16 @@ class Trainer(object):
                 input_data = input_data.to(self.device)
                 target_data = target_data.to(self.device)
 
-                out_data = self.model(input_data)
-                test_loss += self.loss_function(out=out_data, target=target_data, original=input_data).item()
+                output_data = self.model(input_data)
+                test_loss += self.loss_function(
+                    output_data=output_data,
+                    target_data=target_data,
+                    input_data=input_data
+                ).item()
 
-        test_loss /= len(self.test_loader.dataset)
-        print('> [Test] Average Loss: {:.4f}'.format(test_loss))
+        test_avg_loss = test_loss / len(self.test_loader.dataset)
+        print('> [Test] Average Loss: {:.4f}'.format(test_avg_loss))
+        wandb.log({f"Test Loss": test_avg_loss})
 
     def train(self, use_weights=False):
         if use_weights is True:
