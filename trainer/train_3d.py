@@ -74,7 +74,7 @@ class Trainer(object):
             epoch,
             train_avg_loss
         ))
-        wandb.log({f"Train Loss": train_avg_loss})
+        return train_avg_loss
 
     def _test(self):
         self.model.eval()
@@ -94,7 +94,7 @@ class Trainer(object):
 
         test_avg_loss = test_loss / len(self.test_loader.dataset)
         print('> [Test] Average Loss: {:.4f}'.format(test_avg_loss))
-        wandb.log({f"Test Loss": test_avg_loss})
+        return test_avg_loss
 
     def train(self, use_weights=False):
         if use_weights is True:
@@ -104,8 +104,12 @@ class Trainer(object):
         print(f"[Model: '{self.model.model_name}'] Training...")
         try:
             for epoch in range(1, self.args.epochs + 1):
-                self._train(epoch=epoch)
-                self._test()
+                train_avg_loss = self._train(epoch=epoch)
+                test_avg_loss = self._test()
+                wandb.log(
+                    data={"Train Loss": train_avg_loss, "Test Loss": test_avg_loss},
+                    step=epoch
+                )
         except (KeyboardInterrupt, SystemExit):
             print("Manual Interruption")
 
@@ -122,9 +126,10 @@ class Trainer(object):
             self.model.load_state_dict(torch.load(self.args.weights_filepath))
 
         with torch.no_grad():
-            for b in range(4):
+            batches_to_plot = 4
+            for batch_idx in range(batches_to_plot):
                 # Get the images from the test loader
-                batch_num = b + 1
+                batch_num = batch_idx + 1
                 data = iter(self.test_loader)
                 for i in range(batch_num):
                     input_data, target_data = next(data)
@@ -148,12 +153,12 @@ class Trainer(object):
                     target_data_idx = target_data[idx].squeeze().numpy()
                     output_data_idx = output_data[idx].squeeze().numpy()
 
-                    save_filename = f"{self.args.results_path}/{b}_{idx}_target"
+                    save_filename = f"{self.args.results_path}/{batch_num}_{idx}_target"
                     convert_numpy_to_nii_gz(
                         numpy_data=target_data_idx,
                         save_filename=save_filename
                     )
-                    save_filename = f"{self.args.results_path}/{b}_{idx}_output"
+                    save_filename = f"{self.args.results_path}/{batch_num}_{idx}_output"
                     convert_numpy_to_nii_gz(
                         numpy_data=output_data_idx,
                         save_filename=save_filename
@@ -174,14 +179,14 @@ class Trainer(object):
                             ax[j].set_title(f"View {j}:")
 
                         fig.tight_layout()
-                        plt.savefig(os.path.join(self.args.results_path, f"{b}_{idx}_images.png"))
+                        plt.savefig(os.path.join(self.args.results_path, f"{batch_num}_{idx}_images.png"))
 
                         # only the first
                         # exit()
 
                     elif self.args.dataset in V2_3D_DATASETS:
                         input_data_idx = input_data[idx].squeeze().numpy()
-                        save_filename = f"{self.args.results_path}/{b}_{idx}_input"
+                        save_filename = f"{self.args.results_path}/{batch_num}_{idx}_input"
                         convert_numpy_to_nii_gz(
                             numpy_data=input_data_idx,
                             save_filename=save_filename

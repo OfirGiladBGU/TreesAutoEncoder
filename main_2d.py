@@ -1,6 +1,7 @@
 import argparse
 import os
 import torch
+import datetime
 import wandb
 
 from datasets.dataset_list import init_dataset, MODEL_RESULTS_PATH
@@ -26,7 +27,13 @@ def main():
     args.input_size = dataset.input_size
 
     model = init_model(args=args)
-    wandb.init(project="TreesAutoEncoder", name=model.model_name)
+
+    wandb_project = "TreesAutoEncoder"
+    wandb_name = f"{model.model_name} - {datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    wandb.init(
+        project=wandb_project,
+        name=wandb_name
+    )
 
     # Update save path
     filepath, ext = os.path.splitext(args.weights_filepath)
@@ -38,7 +45,7 @@ def main():
 
     use_weights = False
     train_model(dataset=dataset, model=model, use_weights=use_weights)
-    # predict_model(dataset=dataset, model=model)
+    predict_model(dataset=dataset, model=model)
 
     wandb.finish()
 

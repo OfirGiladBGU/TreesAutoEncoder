@@ -227,7 +227,7 @@ class Trainer(object):
             epoch,
             train_avg_loss
         ))
-        wandb.log({f"Train Loss": train_avg_loss})
+        return train_avg_loss
 
     def _test(self):
         self.model.eval()
@@ -262,7 +262,7 @@ class Trainer(object):
 
         test_avg_loss = test_loss / len(self.test_loader.dataset)
         print('> [Test] Average Loss: {:.4f}'.format(test_avg_loss))
-        wandb.log({f"Test Loss": test_avg_loss})
+        return test_avg_loss
 
     def train(self, use_weights=False):
         if use_weights is True:
@@ -272,8 +272,12 @@ class Trainer(object):
         print(f"[Model: '{self.model.model_name}'] Training...")
         try:
             for epoch in range(1, self.args.epochs + 1):
-                self._train(epoch=epoch)
-                self._test()
+                train_avg_loss = self._train(epoch=epoch)
+                test_avg_loss = self._test()
+                wandb.log(
+                    data={"Train Loss": train_avg_loss, "Test Loss": test_avg_loss},
+                    step=epoch
+                )
         except (KeyboardInterrupt, SystemExit):
             print("Manual Interruption")
 
@@ -291,11 +295,12 @@ class Trainer(object):
             self.model.load_state_dict(torch.load(self.args.weights_filepath))
 
         with torch.no_grad():
-            for b in range(6):
+            batches_to_plot = 4
+            for batch_idx in range(batches_to_plot):
                 # Get the images from the test loader
-                batch_num = b + 1
+                batch_num = batch_idx + 1
                 data = iter(self.test_loader)
-                for i in range(batch_num):
+                for _ in range(batch_num):
                     input_images, target_images = next(data)
 
 
@@ -338,7 +343,7 @@ class Trainer(object):
 
                 # Create a grid of images
                 columns = 3
-                rows = 25
+                rows = input_images.shape[0]
                 fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
                 ax = []
                 for i in range(rows):
@@ -363,5 +368,9 @@ class Trainer(object):
                 fig.tight_layout()
                 plt.savefig(os.path.join(
                     self.args.results_path,
-                    f'output_{self.args.dataset}_{self.model.model_name}_{b + 1}.png')
+                    f'output_{self.args.dataset}_{self.model.model_name}_{batch_num + 1}.png')
+                )
+                wandb.log(
+                    data={"Predict Plots": wandb.Image(plt)},
+                    step=batch_num
                 )
