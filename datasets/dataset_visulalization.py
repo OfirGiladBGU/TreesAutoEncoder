@@ -42,6 +42,65 @@ def matplotlib_plot_3d(data_3d: np.ndarray, save_filename):
         plt.savefig(permutation_save_filename)
         plt.close('all')
 
+        # merging_images(save_filename=save_filename)
+
+
+def merging_images(save_filename):
+    from PIL import Image, ImageDraw, ImageFont
+
+    # List of saved image filenames and corresponding labels
+    permutations = list(itertools.permutations(iterable=[0, 1, 2], r=3))  # Example list of permutations
+    image_filenames = [f"{save_filename}_({i},{j},{k}).png" for (i, j, k) in permutations]
+    image_labels = [f"Permutation: ({i}, {j}, {k})" for (i, j, k) in permutations]
+
+    # Load all images
+    images = [Image.open(img) for img in image_filenames]
+
+    # Optional: Load a font, or use default
+    try:
+        font = ImageFont.truetype("arial.ttf", 20)  # Specify a TTF font file if available
+    except IOError:
+        font = ImageFont.load_default()  # Fallback to default font
+
+    # Add text above each image
+    labeled_images = []
+    for img, label in zip(images, image_labels):
+        # Create a new image with space for the text
+        text_height = 30  # Height for the text area above the image
+        new_img = Image.new('RGB', (img.width, img.height + text_height), (255, 255, 255))  # White background
+
+        # Draw the text
+        draw = ImageDraw.Draw(new_img)
+
+        # Use textbbox to get the bounding box of the text (replaces textsize)
+        text_bbox = draw.textbbox((0, 0), label, font=font)
+        text_width = text_bbox[2] - text_bbox[0]  # Width of the text
+        text_position = ((img.width - text_width) // 2, 5)  # Center the text
+        draw.text(text_position, label, font=font, fill=(0, 0, 0))  # Add text in black
+
+        # Paste the original image below the text
+        new_img.paste(img, (0, text_height))
+
+        labeled_images.append(new_img)
+
+    # Now, merge the labeled images into a single image
+    widths, heights = zip(*(img.size for img in labeled_images))
+    total_width = sum(widths)
+    max_height = max(heights)
+
+    # Create a blank image to merge all labeled images
+    merged_image = Image.new('RGB', (total_width, max_height))
+
+    # Paste each labeled image into the merged image
+    x_offset = 0
+    for img in labeled_images:
+        merged_image.paste(img, (x_offset, 0))
+        x_offset += img.width
+
+    # Save the final merged image
+    merged_image.save(f"{save_filename}.png")
+    merged_image.show()
+
 
 def single_plot_3d():
     # data_3d_filepath = os.path.join(RESULTS_PATH, "predict_pipeline", "output_3d", "PA000005_05352_input.nii.gz")
