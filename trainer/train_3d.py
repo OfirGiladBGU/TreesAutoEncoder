@@ -143,9 +143,8 @@ class Trainer(object):
         ax.set_zlabel('Z')
 
         # Display the plot
-        permutation_save_filename = f"{save_filename}_({i},{j},{k})"
         plt.title('3d plot')
-        plt.savefig(permutation_save_filename)
+        plt.savefig(save_filename)
         plt.close('all')
 
     def predict(self):
@@ -185,23 +184,30 @@ class Trainer(object):
 
                 # columns = 3
                 # rows = input_data.shape[0]
-                data_3d_path = os.path.join(f"{self.args.results_path}", "data_3d")
+                data_3d_path = os.path.join(self.args.results_path, "data_3d")
                 os.makedirs(data_3d_path, exist_ok=True)
                 for idx in range(input_data.size(0)):
+                    # Target
                     target_data_idx = target_data[idx].squeeze().numpy()
-                    output_data_idx = output_data[idx].squeeze().numpy()
-
-                    save_filename = os.path.join(data_3d_path, f"{batch_num}_{idx}_target")
+                    save_filename_3d = os.path.join(data_3d_path, f"{batch_num}_{idx}_target")
                     convert_numpy_to_nii_gz(
                         numpy_data=target_data_idx,
-                        save_filename=save_filename
+                        save_filename=save_filename_3d
                     )
-                    save_filename = os.path.join(data_3d_path, f"{batch_num}_{idx}_output")
+                    save_filename_2d = os.path.join(self.args.results_path, f"{batch_num}_{idx}_target")
+                    self._data_3d_to_2d_plot(data_3d=target_data_idx, save_filename=save_filename_2d)
+
+                    # Output
+                    output_data_idx = output_data[idx].squeeze().numpy()
+                    save_filename_3d = os.path.join(data_3d_path, f"{batch_num}_{idx}_output")
                     convert_numpy_to_nii_gz(
                         numpy_data=output_data_idx,
-                        save_filename=save_filename
+                        save_filename=save_filename_3d
                     )
+                    save_filename_2d = os.path.join(self.args.results_path, f"{batch_num}_{idx}_output")
+                    self._data_3d_to_2d_plot(data_3d=output_data_idx, save_filename=save_filename_2d)
 
+                    # Input
                     if self.args.dataset in V1_3D_DATASETS:
                         # Create a grid of images
                         columns = 6
@@ -213,19 +219,23 @@ class Trainer(object):
                             ax.append(fig.add_subplot(rows, columns, j + 1))
                             numpy_image = input_data[idx][j].numpy()
                             plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
-
                             ax[j].set_title(f"View {j}:")
 
                         fig.tight_layout()
-                        save_filename = os.path.join(self.args.results_path, f"{batch_num}_{idx}_input.png")
+                        save_filename = os.path.join(self.args.results_path, f"{batch_num}_{idx}_input")
                         plt.savefig(save_filename)
 
                     elif self.args.dataset in V2_3D_DATASETS:
                         input_data_idx = input_data[idx].squeeze().numpy()
-                        save_filename = os.path.join(data_3d_path, f"{batch_num}_{idx}_input")
+                        save_filename_3d = os.path.join(data_3d_path, f"{batch_num}_{idx}_input")
                         convert_numpy_to_nii_gz(
                             numpy_data=input_data_idx,
-                            save_filename=save_filename
+                            save_filename=save_filename_3d
                         )
+                        save_filename_2d = os.path.join(self.args.results_path, f"{batch_num}_{idx}_input")
+                        self._data_3d_to_2d_plot(data_3d=input_data_idx, save_filename=save_filename_2d)
+
                     else:
                         raise ValueError("Invalid dataset")
+
+                    # Merge images
