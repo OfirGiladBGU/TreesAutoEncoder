@@ -7,6 +7,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import wandb
+from PIL import Image, ImageDraw, ImageFont
 
 from datasets.dataset_utils import convert_numpy_to_nii_gz, apply_threshold
 from datasets.custom_datasets_3d import V1_3D_DATASETS, V2_3D_DATASETS
@@ -184,9 +185,14 @@ class Trainer(object):
 
                 # columns = 3
                 # rows = input_data.shape[0]
+
+                # List of saved image filenames and corresponding labels
+                images_info = list()
                 data_3d_path = os.path.join(self.args.results_path, "data_3d")
                 os.makedirs(data_3d_path, exist_ok=True)
                 for idx in range(input_data.size(0)):
+                    images_info_idx = dict()
+
                     # Target
                     target_data_idx = target_data[idx].squeeze().numpy()
                     save_filename_3d = os.path.join(data_3d_path, f"{batch_num}_{idx}_target")
@@ -196,6 +202,7 @@ class Trainer(object):
                     )
                     save_filename_2d = os.path.join(self.args.results_path, f"{batch_num}_{idx}_target")
                     self._data_3d_to_2d_plot(data_3d=target_data_idx, save_filename=save_filename_2d)
+                    images_info_idx["target"] =save_filename_2d
 
                     # Output
                     output_data_idx = output_data[idx].squeeze().numpy()
@@ -206,8 +213,10 @@ class Trainer(object):
                     )
                     save_filename_2d = os.path.join(self.args.results_path, f"{batch_num}_{idx}_output")
                     self._data_3d_to_2d_plot(data_3d=output_data_idx, save_filename=save_filename_2d)
+                    images_info_idx["output"] = save_filename_2d
 
                     # Input
+                    save_filename_2d = os.path.join(self.args.results_path, f"{batch_num}_{idx}_input")
                     if self.args.dataset in V1_3D_DATASETS:
                         # Create a grid of images
                         columns = 6
@@ -222,8 +231,7 @@ class Trainer(object):
                             ax[j].set_title(f"View {j}:")
 
                         fig.tight_layout()
-                        save_filename = os.path.join(self.args.results_path, f"{batch_num}_{idx}_input")
-                        plt.savefig(save_filename)
+                        plt.savefig(save_filename_2d)
 
                     elif self.args.dataset in V2_3D_DATASETS:
                         input_data_idx = input_data[idx].squeeze().numpy()
@@ -232,10 +240,71 @@ class Trainer(object):
                             numpy_data=input_data_idx,
                             save_filename=save_filename_3d
                         )
-                        save_filename_2d = os.path.join(self.args.results_path, f"{batch_num}_{idx}_input")
                         self._data_3d_to_2d_plot(data_3d=input_data_idx, save_filename=save_filename_2d)
 
                     else:
                         raise ValueError("Invalid dataset")
 
-                    # Merge images
+                    images_info_idx["input"] = save_filename_2d
+                    images_info.append(images_info_idx)
+
+                # Merge images
+
+                # TODO: merge all batch results together
+
+                # List of saved image filenames and corresponding labels
+                save_filename = os.path.join(
+                    self.args.results_path,
+                    f"output_{self.args.dataset}_{self.model.model_name}_{batch_num + 1}.png"
+                )
+                image_filenames = []
+                image_labels = []
+
+                # Load all images
+                images = [Image.open(img) for img in image_filenames]
+
+                # Optional: Load a font, or use default
+                try:
+                    font = ImageFont.truetype("arial.ttf", 20)  # Specify a TTF font file if available
+                except IOError:
+                    font = ImageFont.load_default()  # Fallback to default font
+
+                # Add text above each image
+                labeled_images = []
+                for img, label in zip(images, image_labels):
+                    # Create a new image with space for the text
+                    text_height = 30  # Height for the text area above the image
+                    new_img = Image.new('RGB', (img.width, img.height + text_height),
+                                        (255, 255, 255))  # White background
+
+                    # Draw the text
+                    draw = ImageDraw.Draw(new_img)
+
+                    # Use textbbox to get the bounding box of the text (replaces textsize)
+                    text_bbox = draw.textbbox((0, 0), label, font=font)
+                    text_width = text_bbox[2] - text_bbox[0]  # Width of the text
+                    text_position = ((img.width - text_width) // 2, 5)  # Center the text
+                    draw.text(text_position, label, font=font, fill=(0, 0, 0))  # Add text in black
+
+                    # Paste the original image below the text
+                    new_img.paste(img, (0, text_height))
+
+                    labeled_images.append(new_img)
+
+                # Now, merge the labeled images into a single image
+                widths, heights = zip(*(img.size for img in labeled_images))
+                total_width = sum(widths)
+                max_height = max(heights)
+
+                # Create a blank image to merge all labeled images
+                merged_image = Image.new('RGB', (total_width, max_height))
+
+                # Paste each labeled image into the merged image
+                x_offset = 0
+                for img in labeled_images:
+                    merged_image.paste(img, (x_offset, 0))
+                    x_offset += img.width
+
+                # Save the final merged image
+                merged_image.save(save_filename)
+                merged_image.show()

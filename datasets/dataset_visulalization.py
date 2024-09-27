@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import os
 import itertools
 import cv2
+from PIL import Image, ImageDraw, ImageFont
 
 from datasets.dataset_utils import convert_nii_gz_to_numpy, IMAGES_6_VIEWS
 from datasets.dataset_list import CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESULTS_PATH, PREDICT_PIPELINE_RESULTS_PATH
@@ -45,8 +46,6 @@ def matplotlib_plot_3d(data_3d: np.ndarray, save_filename):
 
 
 def merging_images(save_filename):
-    from PIL import Image, ImageDraw, ImageFont
-
     # List of saved image filenames and corresponding labels
     permutations = list(itertools.permutations(iterable=[0, 1, 2], r=3))  # Example list of permutations
     image_filenames = [f"{save_filename}_({i},{j},{k}).png" for (i, j, k) in permutations]
