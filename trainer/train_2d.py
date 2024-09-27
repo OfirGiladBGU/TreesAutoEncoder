@@ -301,76 +301,79 @@ class Trainer(object):
                 batch_num = batch_idx + 1
                 data = iter(self.test_loader)
                 for _ in range(batch_num):
-                    input_images, target_images = next(data)
-
+                    input_data, target_data = next(data)
 
                 if self.args.dataset in self.datasets_for_holes:
-                    target_images = input_images.clone()
+                    target_data = input_data.clone()
 
                     # TODO: Threshold
-                    # apply_threshold(input_images, 0.5)
-                    # apply_threshold(target_images, 0.5)
+                    # apply_threshold(input_data, 0.5)
+                    # apply_threshold(target_data, 0.5)
 
                     # Fix for Trees dataset - Fixed problem
-                    # if input_images.dtype != torch.float32:
-                    #     input_images = input_images.float()
-                    # if target_images.dtype != torch.float32:
-                    #     target_images = target_images.float()
+                    # if input_data.dtype != torch.float32:
+                    #     input_data = input_data.float()
+                    # if target_data.dtype != torch.float32:
+                    #     target_data = target_data.float()
 
-                    self.create_holes(input_data=input_images)
+                    self.create_holes(input_data=input_data)
 
-                input_images = input_images.to(self.device)
-                target_images = target_images.to(self.device)
+                input_data = input_data.to(self.device)
+                target_data = target_data.to(self.device)
 
                 self.model.eval()
-                output_images = self.model(input_images)
+                output_data = self.model(input_data)
 
                 # TODO: Threshold
                 # apply_threshold(output_images, 0.5)
 
                 # Detach the images from the cuda and move them to CPU
                 if self.args.cuda is True:
-                    input_images = input_images.cpu()
-                    target_images = target_images.cpu()
-                    output_images = output_images.cpu()
+                    input_data = input_data.cpu()
+                    target_data = target_data.cpu()
+                    output_data = output_data.cpu()
 
                 # Convert (b, 6, w, h) to (6*b, 1, w, h) - Trees2DV2
-                if input_images.shape[1] == 6:
+                if input_data.shape[1] == 6:
                     x, y = self.args.input_size[1:]
-                    input_images = input_images.view(-1, 1, x, y)
-                    target_images = target_images.view(-1, 1, x, y)
-                    output_images = output_images.view(-1, 1, x, y)
+                    input_data = input_data.view(-1, 1, x, y)
+                    target_data = target_data.view(-1, 1, x, y)
+                    output_data = output_data.view(-1, 1, x, y)
+
+                #################
+                # Visualization #
+                #################
 
                 # Create a grid of images
                 columns = 3
-                rows = input_images.shape[0]
+                rows = input_data.shape[0]
                 fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
                 ax = []
                 for i in range(rows):
                     # Input
                     ax.append(fig.add_subplot(rows, columns, i * columns + 1))
-                    npimg = input_images[i].numpy()
-                    plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+                    numpy_image = input_data[i].numpy()
+                    plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
 
                     # Target
                     ax.append(fig.add_subplot(rows, columns, i * columns + 2))
-                    npimg = target_images[i].numpy()
-                    plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+                    numpy_image = target_data[i].numpy()
+                    plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
 
                     # Output
                     ax.append(fig.add_subplot(rows, columns, i * columns + 3))
-                    npimg = output_images[i].numpy()
-                    plt.imshow(np.transpose(npimg, (1, 2, 0)), cmap='gray')
+                    numpy_image = output_data[i].numpy()
+                    plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
 
                 ax[0].set_title("Input:")
                 ax[1].set_title("Target:")
                 ax[2].set_title("Output:")
                 fig.tight_layout()
-                plt.savefig(os.path.join(
+                save_filename = os.path.join(
                     self.args.results_path,
-                    f'output_{self.args.dataset}_{self.model.model_name}_{batch_num + 1}.png')
+                    f"output_{self.args.dataset}_{self.model.model_name}_{batch_num + 1}.png"
                 )
+                plt.savefig(save_filename)
                 wandb.log(
-                    data={"Predict Plots": wandb.Image(plt)},
-                    step=batch_num
+                    data={f"Batch {batch_num} - Predict Plots": wandb.Image(plt)},
                 )

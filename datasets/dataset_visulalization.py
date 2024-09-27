@@ -13,7 +13,6 @@ from datasets.dataset_list import CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESU
 ####################
 def matplotlib_plot_3d(data_3d: np.ndarray, save_filename):
     print(f"Save filename: '{save_filename}*'\nData shape: '{data_3d.shape}'\n")
-    data_3d = data_3d
     # Downsample the images
     downsample_factor = 1
     data_downsampled = data_3d[::downsample_factor, ::downsample_factor, ::downsample_factor]
