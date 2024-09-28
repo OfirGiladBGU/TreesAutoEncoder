@@ -369,11 +369,8 @@ class Trainer(object):
                 ax[1].set_title("Target:")
                 ax[2].set_title("Output:")
                 fig.tight_layout()
-                save_filename = os.path.join(
-                    self.args.results_path,
-                    f"output_{self.args.dataset}_{self.model.model_name}_{batch_num + 1}.png"
-                )
+                save_filename = os.path.join(self.args.results_path, f"{self.args.dataset}_{batch_num}.png")
                 plt.savefig(save_filename)
                 wandb.log(
-                    data={f"Batch {batch_num} - Predict Plots": wandb.Image(plt)},
+                    data={f"Batch {batch_num} - Predict Plots": wandb.Image(plt)}
                 )
