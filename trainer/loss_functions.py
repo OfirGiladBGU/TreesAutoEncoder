@@ -115,7 +115,7 @@ def mean_iou(out, target):
     return miou(scaled_out, scaled_target)
 
 
-def total_variation_lost(out, target, p, device):
+def total_variation_loss(out, target, p, device):
     """
     ``p=1`` yields the vectorial total variation norm. It is a generalization
     of the originally proposed (isotropic) 2D total variation norm (see
