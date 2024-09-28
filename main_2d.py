@@ -79,13 +79,13 @@ if __name__ == "__main__":
 
     # Custom Edit:
 
-    # args.model = 'ae_2d_to_2d'
-    # args.model = 'ae_6_2d_to_6_2d'
-
+    args.model = 'ae_2d_to_2d'
     # args.dataset = 'MNIST'
     # args.dataset = 'CIFAR10'
     # args.dataset = 'Trees2DV1S'
     args.dataset = 'Trees2DV1'
+
+    # args.model = 'ae_6_2d_to_6_2d'
     # args.dataset = 'Trees2DV2'
 
     args.epochs = 10

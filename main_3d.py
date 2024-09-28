@@ -79,13 +79,14 @@ if __name__ == "__main__":
 
     # Custom Edit:
 
-    args.model = 'ae_3d_to_3d'
-
+    # args.model = 'ae_6_2d_to_3d'
     # args.dataset = 'Trees3DV1'
+
+    args.model = 'ae_3d_to_3d'
     # args.dataset = 'Trees3DV2'
     args.dataset = 'Trees3DV3'
     # args.dataset = 'Trees3DV4'
 
-    args.epochs = 5
+    args.epochs = 10
 
     main()
