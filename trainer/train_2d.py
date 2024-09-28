@@ -41,6 +41,28 @@ class Trainer(object):
             # For vgg_ae_demo / ae_v2
             self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
 
+        import torchvision.models as models
+        vgg = models.vgg19(pretrained=True).features[:16].eval()  # Use the first few layers of VGG19
+        self.vgg = vgg.to(self.device)
+
+    @staticmethod
+    def total_variation_loss(x):
+        return torch.sum(torch.abs(x[:, :, :-1, :] - x[:, :, 1:, :])) + torch.sum(
+            torch.abs(x[:, :, :, :-1] - x[:, :, :, 1:]))
+
+    # Extract features
+    def perceptual_loss(self, output, target):
+        output_3ch = output.repeat(1, 3, 1, 1)
+        target_3ch = target.repeat(1, 3, 1, 1)
+
+        output_features = self.vgg(output_3ch)
+        target_features = self.vgg(target_3ch)
+        return F.l1_loss(output_features, target_features)
+
+    @staticmethod
+    def downsample(x, scale=2):
+        return F.interpolate(x, scale_factor=1 / scale, mode='bilinear', align_corners=False)
+
     def loss_function(self, output_data, target_data, input_data=None):
         """
         :param output_data: model output on the 'original' input
@@ -75,18 +97,20 @@ class Trainer(object):
             #     10 * loss_functions.unfilled_holes_loss(out, target, original)
             # )
 
-
+            # Test 1
             # LOSS = (
             #     20 * loss_functions.unfilled_holes_loss(out=out, target=target, original=original) +
             #     10 * loss_functions.weighted_pixels_diff_loss(out=out, target=target, original=original)
             # )
 
-            holes_mask = ((target_data - input_data) != 0)
-            black_mask = (target_data == 0)
+            # Test 2
+            # holes_mask = ((target_data - input_data) != 0)
+            # black_mask = (target_data == 0)
+            #
+            # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+            #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
 
-            LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
-                    0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
-
+            # Test 3
             # holes_mask = ((target_data - input_data) > 0)
             # black_mask = (target_data == 0)
             # black_penalty = torch.where(output_data[holes_mask] < 0.001, 1.0, 0)
@@ -94,6 +118,34 @@ class Trainer(object):
             # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
             #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]) +
             #         0.2 * black_penalty.sum())
+
+            # Test 4
+
+            # Existing masks for holes and black areas
+            holes_mask = ((target_data - input_data) != 0)
+            black_mask = (target_data == 0)
+
+            # Base L1 Loss
+            # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+            #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
+
+            # Add Total Variation Loss
+            # tv_loss = self.total_variation_loss(output_data)
+            # LOSS += 0.1 * tv_loss
+
+            # Add Perceptual Loss
+            p_loss = self.perceptual_loss(output_data, target_data)
+            # LOSS += 0.5 * p_loss
+
+            # Add Multi-Scale Loss
+            # output_low = self.downsample(output_data, scale=2)
+            # target_low = self.downsample(target_data, scale=2)
+            # multi_scale_loss = F.l1_loss(output_low, target_low)
+            # LOSS += 0.1 * multi_scale_loss
+
+            LOSS = (0.5 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+                    0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]) +
+                    0.5 * p_loss)
 
             # gap_cnn / ae_2d_to_2d
             # LOSS = loss_functions.mse_loss(out, target)
