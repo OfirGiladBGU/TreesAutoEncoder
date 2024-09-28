@@ -87,7 +87,7 @@ class Trainer(object):
             LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
                     0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
 
-            # holes_mask = ((target_data - input_data) != 0)
+            # holes_mask = ((target_data - input_data) > 0)
             # black_mask = (target_data == 0)
             # black_penalty = torch.where(output_data[holes_mask] < 0.001, 1.0, 0)
             #
