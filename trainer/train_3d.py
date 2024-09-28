@@ -183,7 +183,7 @@ class Trainer(object):
                 # Visualization #
                 #################
 
-                # List of saved image filenames and corresponding labels
+                # Save 3d results and 2d results that will be used for the grid output
                 images_info = list()
                 data_3d_path = os.path.join(self.args.results_path, "data_3d")
                 data_2d_path = os.path.join(self.args.results_path, "data_2d")
@@ -246,95 +246,75 @@ class Trainer(object):
                     images_info_idx["input"] = save_filename_2d
                     images_info.append(images_info_idx)
 
-                # Merge images
-
-                # TODO: merge all batch results together
-
                 # Create a grid of images
+                img_width = 0
+                img_height = 0
+                for image_type in ["input", "target", "output"]:
+                    image_sample = Image.open(fp=f"{images_info[0][image_type]}.png")
+                    img_width = max(img_width, image_sample.size[0])
+                    img_height = max(img_height, image_sample.size[1])
+                    image_sample.close()
+
+                # Define a font size (can adjust based on preferences)
+                font_size = 20
+
+                # Define the text for each column header
+                headers = ["Input:", "Target:", "Output:"]
+
+                # Create a font object (You may need to specify the path to a TTF font on your system)
+                try:
+                    font = ImageFont.truetype("arial.ttf", font_size)
+                except IOError:
+                    font = ImageFont.load_default()
+
+                # Number of columns and rows for the grid
                 columns = 3
                 rows = input_data.shape[0]
-                fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
-                ax = []
+
+                # Create a blank image for the grid, add extra space at the top for the headers
+                header_height = font_size + 10  # Extra space for the header
+                grid_img_width = columns * img_width
+                grid_img_height = rows * img_height + header_height  # Add space for header
+                grid_img = Image.new(
+                    mode='RGB',
+                    size=(grid_img_width, grid_img_height),
+                    color=(255, 255, 255)
+                )  # White background
+
+                # Create a drawing context for the header
+                draw = ImageDraw.Draw(grid_img)
+
+                # Add the headers
+                for col in range(columns):
+                    header_text = headers[col]
+
+                    # Calculate the bounding box of the text using textbbox
+                    text_bbox = draw.textbbox((0, 0), header_text, font=font)
+                    text_width = text_bbox[2] - text_bbox[0]
+
+                    # Center text in the column
+                    x_position = col * img_width + (img_width - text_width) // 2
+                    draw.text((x_position, 5), header_text, font=font, fill="black")  # 5px padding from the top
+
+                # Paste images into the grid (below the header)
                 for i in range(rows):
-                    # Input
-                    ax.append(fig.add_subplot(rows, columns, i * columns + 1))
-                    numpy_image = Image.open(fp=f"{images_info[i]['input']}.png")
-                    plt.imshow(numpy_image, cmap='gray')
+                    # Load Input image and paste into grid
+                    input_image = Image.open(fp=f"{images_info[i]['input']}.png")
+                    grid_img.paste(input_image, (0, header_height + i * img_height))
 
-                    # Target
-                    ax.append(fig.add_subplot(rows, columns, i * columns + 2))
-                    numpy_image = Image.open(fp=f"{images_info[i]['target']}.png")
-                    plt.imshow(numpy_image, cmap='gray')
+                    # Load Target image and paste into grid
+                    target_image = Image.open(fp=f"{images_info[i]['target']}.png")
+                    grid_img.paste(target_image, (img_width, header_height + i * img_height))
 
-                    # Output
-                    ax.append(fig.add_subplot(rows, columns, i * columns + 3))
-                    numpy_image = Image.open(fp=f"{images_info[i]['output']}.png")
-                    plt.imshow(numpy_image, cmap='gray')
+                    # Load Output image and paste into grid
+                    output_image = Image.open(fp=f"{images_info[i]['output']}.png")
+                    grid_img.paste(output_image, (2 * img_width, header_height + i * img_height))
 
-                ax[0].set_title("Input:")
-                ax[1].set_title("Target:")
-                ax[2].set_title("Output:")
-                fig.tight_layout()
+                # Save the combined image
                 save_filename = os.path.join(self.args.results_path, f"{self.args.dataset}_{batch_num}.png")
-                plt.savefig(save_filename)
+                grid_img.save(save_filename)
+
+                # Log the image to wandb
                 wandb.log(
-                    data={f"Batch {batch_num} - Predict Plots": wandb.Image(plt)}
+                    data={f"Batch {batch_num} - Predict Plots": wandb.Image(grid_img)}
                 )
-
-
-                # image_filenames = []
-                # image_labels = []
-                #
-                # # Load all images
-                # images = [Image.open(img) for img in image_filenames]
-                #
-                # # Optional: Load a font, or use default
-                # try:
-                #     font = ImageFont.truetype("arial.ttf", 20)  # Specify a TTF font file if available
-                # except IOError:
-                #     font = ImageFont.load_default()  # Fallback to default font
-                #
-                # # Add text above each image
-                # labeled_images = []
-                # for img, label in zip(images, image_labels):
-                #     # Create a new image with space for the text
-                #     text_height = 30  # Height for the text area above the image
-                #     new_img = Image.new('RGB',
-                #                         (img.width, img.height + text_height),
-                #                         (255, 255, 255))  # White background
-                #
-                #     # Draw the text
-                #     draw = ImageDraw.Draw(new_img)
-                #
-                #     # Use textbbox to get the bounding box of the text (replaces textsize)
-                #     text_bbox = draw.textbbox((0, 0), label, font=font)
-                #     text_width = text_bbox[2] - text_bbox[0]  # Width of the text
-                #     text_position = ((img.width - text_width) // 2, 5)  # Center the text
-                #     draw.text(text_position, label, font=font, fill=(0, 0, 0))  # Add text in black
-                #
-                #     # Paste the original image below the text
-                #     new_img.paste(img, (0, text_height))
-                #
-                #     labeled_images.append(new_img)
-                #
-                # # Now, merge the labeled images into a single image
-                # widths, heights = zip(*(img.size for img in labeled_images))
-                # total_width = sum(widths)
-                # max_height = max(heights)
-                #
-                # # Create a blank image to merge all labeled images
-                # merged_image = Image.new('RGB', (total_width, max_height))
-                #
-                # # Paste each labeled image into the merged image
-                # x_offset = 0
-                # for img in labeled_images:
-                #     merged_image.paste(img, (x_offset, 0))
-                #     x_offset += img.width
-                #
-                #
-                # # Save the final merged image
-                # save_filename = os.path.join(self.args.results_path, f"{self.args.dataset}_{batch_num}.png")
-                # merged_image.save(save_filename)
-                # wandb.log(
-                #     data={f"Batch {batch_num} - Predict Plots": wandb.Image(merged_image)}
-                # )
