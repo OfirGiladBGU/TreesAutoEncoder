@@ -47,7 +47,7 @@ def main():
     train_model(dataset=dataset, model=model, use_weights=use_weights)
     predict_model(dataset=dataset, model=model)
 
-    wandb.finish()
+    # wandb.finish()
 
 
 if __name__ == "__main__":
