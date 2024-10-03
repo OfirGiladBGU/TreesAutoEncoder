@@ -120,32 +120,65 @@ class Trainer(object):
             #         0.2 * black_penalty.sum())
 
             # Test 4
+            if "confidence map" in getattr(self.model, "additional_tasks", list()):
+                output_data, output_confidence_data = output_data
 
-            # Existing masks for holes and black areas
-            holes_mask = ((target_data - input_data) != 0)
-            black_mask = (target_data == 0)
+                # Existing masks for holes and black areas
+                holes_mask = ((target_data - input_data) != 0)
+                black_mask = (target_data == 0)
 
-            # Base L1 Loss
-            # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
-            #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
+                # Base L1 Loss
+                # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+                #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
 
-            # Add Total Variation Loss
-            # tv_loss = self.total_variation_loss(output_data)
-            # LOSS += 0.1 * tv_loss
+                # Add Total Variation Loss
+                # tv_loss = self.total_variation_loss(output_data)
+                # LOSS += 0.1 * tv_loss
 
-            # Add Perceptual Loss
-            p_loss = self.perceptual_loss(output_data, target_data)
-            # LOSS += 0.5 * p_loss
+                # Add Perceptual Loss
+                p_loss = self.perceptual_loss(output_data, target_data)
+                # LOSS += 0.5 * p_loss
 
-            # Add Multi-Scale Loss
-            # output_low = self.downsample(output_data, scale=2)
-            # target_low = self.downsample(target_data, scale=2)
-            # multi_scale_loss = F.l1_loss(output_low, target_low)
-            # LOSS += 0.1 * multi_scale_loss
+                # Add Multi-Scale Loss
+                # output_low = self.downsample(output_data, scale=2)
+                # target_low = self.downsample(target_data, scale=2)
+                # multi_scale_loss = F.l1_loss(output_low, target_low)
+                # LOSS += 0.1 * multi_scale_loss
 
-            LOSS = (0.5 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
-                    0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]) +
-                    0.5 * p_loss)
+                LOSS = (0.5 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+                        0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]) +
+                        0.5 * p_loss)
+
+                # Confidence loss
+                target_confidence_data = (target_data != 0).float()
+                LOSS += F.binary_cross_entropy(output_confidence_data, target_confidence_data)
+
+            else:
+                # Existing masks for holes and black areas
+                holes_mask = ((target_data - input_data) != 0)
+                black_mask = (target_data == 0)
+
+                # Base L1 Loss
+                # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+                #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
+
+                # Add Total Variation Loss
+                # tv_loss = self.total_variation_loss(output_data)
+                # LOSS += 0.1 * tv_loss
+
+                # Add Perceptual Loss
+                p_loss = self.perceptual_loss(output_data, target_data)
+                # LOSS += 0.5 * p_loss
+
+                # Add Multi-Scale Loss
+                # output_low = self.downsample(output_data, scale=2)
+                # target_low = self.downsample(target_data, scale=2)
+                # multi_scale_loss = F.l1_loss(output_low, target_low)
+                # LOSS += 0.1 * multi_scale_loss
+
+                LOSS = (0.5 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+                        0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]) +
+                        0.5 * p_loss)
 
             # gap_cnn / ae_2d_to_2d
             # LOSS = loss_functions.mse_loss(out, target)
@@ -376,6 +409,10 @@ class Trainer(object):
                 self.model.eval()
                 output_data = self.model(input_data)
 
+                output_confidence_data = None
+                if "confidence map" in getattr(self.model, "additional_tasks", list()):
+                    output_data, output_confidence_data = output_data
+
                 # TODO: Threshold
                 # apply_threshold(output_images, 0.5)
 
@@ -385,12 +422,19 @@ class Trainer(object):
                     target_data = target_data.cpu()
                     output_data = output_data.cpu()
 
+                    if output_confidence_data is not None:
+                        output_confidence_data = output_confidence_data.cpu()
+
                 # Convert (b, 6, w, h) to (6*b, 1, w, h) - Trees2DV2
                 if input_data.shape[1] == 6:
                     x, y = self.args.input_size[1:]
                     input_data = input_data.view(-1, 1, x, y)
                     target_data = target_data.view(-1, 1, x, y)
                     output_data = output_data.view(-1, 1, x, y)
+
+                    if output_confidence_data is not None:
+                        output_confidence_data = output_confidence_data.view(-1, 1, x, y)
+                        output_data = np.where(output_confidence_data > 0.5, output_data, 0)
 
                 #################
                 # Visualization #
