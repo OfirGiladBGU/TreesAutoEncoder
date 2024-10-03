@@ -52,7 +52,7 @@ def preprocess_2d(data_3d_filepath, apply_batch_merge: bool = False):
     return data_2d_input
 
 
-def postprocess_2d(data_2d_input: torch.Tensor, data_2d_output: torch.Tensor, apply_holes_fusion: bool = False):
+def postprocess_2d(data_2d_input: torch.Tensor, data_2d_output: torch.Tensor, apply_input_fusion: bool = False):
     # Convert (1, 6, w, h) to (6, w, h)
     if data_2d_input.shape[0] == 1 and data_2d_input.shape[1] == 6:
         data_2d_input = data_2d_input.squeeze(0)
@@ -67,7 +67,7 @@ def postprocess_2d(data_2d_input: torch.Tensor, data_2d_output: torch.Tensor, ap
     else:
         raise ValueError("Invalid shape")
 
-    if apply_holes_fusion is True:
+    if apply_input_fusion is True:
         black_mask = (data_2d_input == 0).float()
         data_2d_output = data_2d_input + (black_mask * data_2d_output)
 
@@ -193,7 +193,7 @@ def debug_3d(data_3d_filepath, data_3d_input: torch.Tensor):
 ##################
 # Core Functions #
 ##################
-def single_predict(data_3d_filepath):
+def single_predict(data_3d_filepath: pathlib.Path):
     os.makedirs(PREDICT_PIPELINE_RESULTS_PATH, exist_ok=True)
 
     # Load models
@@ -235,7 +235,7 @@ def single_predict(data_3d_filepath):
         (data_2d_input, data_2d_output) = postprocess_2d(
             data_2d_input=data_2d_input,
             data_2d_output=data_2d_output,
-            apply_holes_fusion=True
+            apply_input_fusion=True
         )
 
         # DEBUG
@@ -261,8 +261,8 @@ def single_predict(data_3d_filepath):
 
 
 def test_single_predict():
-    data_3d_filepath = os.path.join(CROPPED_PATH, "preds_3d_v6", "PA000005_02584.nii.gz")
-    single_predict(data_3d_filepath=data_3d_filepath)
+    data_3d_filepath = os.path.join(CROPPED_PATH, "preds_3d_v6", "PA000005_11899.nii.gz")
+    single_predict(data_3d_filepath=pathlib.Path(data_3d_filepath))
 
 
 def full_predict():
@@ -315,7 +315,8 @@ def main():
     # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
     # 7. Perform cleanup on the final result (delete small connected components)
 
-    full_predict()
+    test_single_predict()
+    # full_predict()
     # calculate_dice_scores()
 
 
