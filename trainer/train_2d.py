@@ -409,9 +409,9 @@ class Trainer(object):
                 self.model.eval()
                 output_data = self.model(input_data)
 
-                output_confidence_data = None
                 if "confidence map" in getattr(self.model, "additional_tasks", list()):
                     output_data, output_confidence_data = output_data
+                    output_data = torch.where(output_confidence_data > 0.5, output_data, 0)
 
                 # TODO: Threshold
                 # apply_threshold(output_images, 0.5)
@@ -422,19 +422,12 @@ class Trainer(object):
                     target_data = target_data.cpu()
                     output_data = output_data.cpu()
 
-                    if output_confidence_data is not None:
-                        output_confidence_data = output_confidence_data.cpu()
-
                 # Convert (b, 6, w, h) to (6*b, 1, w, h) - Trees2DV2
                 if input_data.shape[1] == 6:
                     x, y = self.args.input_size[1:]
                     input_data = input_data.view(-1, 1, x, y)
                     target_data = target_data.view(-1, 1, x, y)
                     output_data = output_data.view(-1, 1, x, y)
-
-                    if output_confidence_data is not None:
-                        output_confidence_data = output_confidence_data.view(-1, 1, x, y)
-                        output_data = np.where(output_confidence_data > 0.5, output_data, 0)
 
                 #################
                 # Visualization #
