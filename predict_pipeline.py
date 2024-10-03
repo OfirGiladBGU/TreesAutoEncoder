@@ -68,8 +68,7 @@ def postprocess_2d(data_2d_input: torch.Tensor, data_2d_output: torch.Tensor, ap
         raise ValueError("Invalid shape")
 
     if apply_input_fusion is True:
-        black_mask = (data_2d_input == 0).float()
-        data_2d_output = data_2d_input + (black_mask * data_2d_output)
+        data_2d_output = data_2d_input + torch.where(data_2d_input == 0, data_2d_output, 0)
 
     return data_2d_input, data_2d_output
 
