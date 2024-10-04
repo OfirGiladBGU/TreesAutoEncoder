@@ -119,41 +119,54 @@ class Trainer(object):
             #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]) +
             #         0.2 * black_penalty.sum())
 
-            # Test 4
             if "confidence map" in getattr(self.model, "additional_tasks", list()):
                 output_data, output_confidence_data = output_data
 
-                # Existing masks for holes and black areas
+                # Test 4
+                #
+                # # Existing masks for holes and black areas
+                # holes_mask = ((target_data - input_data) != 0)
+                # black_mask = (target_data == 0)
+                #
+                # # Base L1 Loss
+                # # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+                # #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
+                #
+                # # Add Total Variation Loss
+                # # tv_loss = self.total_variation_loss(output_data)
+                # # LOSS += 0.1 * tv_loss
+                #
+                # # Add Perceptual Loss
+                # p_loss = self.perceptual_loss(output_data, target_data)
+                # # LOSS += 0.5 * p_loss
+                #
+                # # Add Multi-Scale Loss
+                # # output_low = self.downsample(output_data, scale=2)
+                # # target_low = self.downsample(target_data, scale=2)
+                # # multi_scale_loss = F.l1_loss(output_low, target_low)
+                # # LOSS += 0.1 * multi_scale_loss
+                #
+                # LOSS = (0.5 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+                #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]) +
+                #         0.5 * p_loss)
+                #
+                # # Confidence loss
+                # target_confidence_data = (target_data != 0).float()
+                # LOSS += F.binary_cross_entropy(output_confidence_data, target_confidence_data)
+
+                # Test 5
                 holes_mask = ((target_data - input_data) != 0)
                 black_mask = (target_data == 0)
 
-                # Base L1 Loss
-                # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
-                #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
-
-                # Add Total Variation Loss
-                # tv_loss = self.total_variation_loss(output_data)
-                # LOSS += 0.1 * tv_loss
-
-                # Add Perceptual Loss
-                p_loss = self.perceptual_loss(output_data, target_data)
-                # LOSS += 0.5 * p_loss
-
-                # Add Multi-Scale Loss
-                # output_low = self.downsample(output_data, scale=2)
-                # target_low = self.downsample(target_data, scale=2)
-                # multi_scale_loss = F.l1_loss(output_low, target_low)
-                # LOSS += 0.1 * multi_scale_loss
-
-                LOSS = (0.5 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
-                        0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]) +
-                        0.5 * p_loss)
+                LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+                        0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
 
                 # Confidence loss
                 target_confidence_data = (target_data != 0).float()
                 LOSS += F.binary_cross_entropy(output_confidence_data, target_confidence_data)
-
             else:
+                # Test 4
+
                 # Existing masks for holes and black areas
                 holes_mask = ((target_data - input_data) != 0)
                 black_mask = (target_data == 0)
