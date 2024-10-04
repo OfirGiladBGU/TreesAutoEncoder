@@ -192,9 +192,7 @@ def debug_3d(data_3d_filepath, data_3d_input: torch.Tensor):
 ##################
 # Core Functions #
 ##################
-def single_predict(data_3d_filepath: pathlib.Path):
-    os.makedirs(PREDICT_PIPELINE_RESULTS_PATH, exist_ok=True)
-
+def init_pipeline_models():
     # Load models
     filepath, ext = os.path.splitext(args.weights_filepath)
 
@@ -205,6 +203,8 @@ def single_predict(data_3d_filepath: pathlib.Path):
     model_2d_weights_filepath = f"{filepath}_{model_2d.model_name}{ext}"
     model_2d.load_state_dict(torch.load(model_2d_weights_filepath))
     model_2d.eval()
+    model_2d.to(args.device)
+    args.model_2d_class = model_2d
 
     # Load 3D model
     args.input_size = args.input_size_model_3d
@@ -213,6 +213,11 @@ def single_predict(data_3d_filepath: pathlib.Path):
     model_3d_weights_filepath = f"{filepath}_{model_3d.model_name}{ext}"
     model_3d.load_state_dict(torch.load(model_3d_weights_filepath))
     model_3d.eval()
+    model_3d.to(args.device)
+    args.model_3d_class = model_3d
+
+def single_predict(data_3d_filepath: pathlib.Path):
+    os.makedirs(PREDICT_PIPELINE_RESULTS_PATH, exist_ok=True)
 
     if args.input_size_model_2d[0] == 6 and len(args.input_size_model_2d) == 3:
         apply_batch_merge = True
@@ -229,10 +234,10 @@ def single_predict(data_3d_filepath: pathlib.Path):
         )
 
         # Predict 2D
-        data_2d_output = model_2d(data_2d_input)
+        data_2d_output = args.model_2d_class(data_2d_input)
 
         # Parse 2D model output
-        if "confidence map" in getattr(model_2d, "additional_tasks", list()):
+        if "confidence map" in getattr(args.model_2d_class, "additional_tasks", list()):
             data_2d_output, data_2d_output_confidence = data_2d_output
             data_2d_output = torch.where(data_2d_output_confidence > 0.5, data_2d_output, 0)
 
@@ -257,7 +262,7 @@ def single_predict(data_3d_filepath: pathlib.Path):
         )
 
         # Predict 3D
-        data_3d_output = model_3d(data_3d_input)
+        data_3d_output = args.model_3d_class(data_3d_input)
 
         postprocess_3d(data_3d_filepath=data_3d_filepath, data_3d_output=data_3d_output)
 
@@ -326,6 +331,7 @@ def main():
     # 5. Save the results in `parse_fixed_mini_cropped_3d_v5`
     # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
     # 7. Perform cleanup on the final result (delete small connected components)
+    init_pipeline_models()
 
     # test_single_predict()
     full_predict()
