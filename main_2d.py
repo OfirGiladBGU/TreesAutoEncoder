@@ -94,6 +94,5 @@ if __name__ == "__main__":
     # TODO: filter noise
     # TODO: check option to add confidence/classification head for the model to threshold the pixels - V
     # TODO: remove punishment on input white area
-    # TODO: add connected components head, and use it to take only the "result" largest connected components
 
     main()

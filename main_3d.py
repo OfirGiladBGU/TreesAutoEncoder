@@ -89,4 +89,6 @@ if __name__ == "__main__":
 
     args.epochs = 10
 
+    # TODO: add connected components head, and use it to take only the "result" largest connected components
+
     main()
