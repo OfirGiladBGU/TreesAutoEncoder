@@ -309,6 +309,13 @@ def calculate_dice_scores():
 
     save_name = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "dice_scores.csv")
     pd.DataFrame(scores_dict.items()).to_csv(save_name)
+    scores_list = list(scores_dict.values())
+    print(
+        "Stats:\n"
+        f"Average Dice Score: {sum(scores_list) / len(scores_list)}\n"
+        f"Max Dice Score: {max(scores_list)}\n"
+        f"Min Dice Score: {min(scores_list)}"
+    )
 
 
 def main():
@@ -320,9 +327,9 @@ def main():
     # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
     # 7. Perform cleanup on the final result (delete small connected components)
 
-    test_single_predict()
-    # full_predict()
-    # calculate_dice_scores()
+    # test_single_predict()
+    full_predict()
+    calculate_dice_scores()
 
 
 if __name__ == "__main__":
