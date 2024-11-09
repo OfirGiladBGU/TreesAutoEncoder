@@ -155,8 +155,8 @@ class Trainer(object):
                 # LOSS += F.binary_cross_entropy(output_confidence_data, target_confidence_data)
 
                 # Test 5
-                holes_mask = ((target_data - input_data) != 0)
-                black_mask = (target_data == 0)
+                holes_mask = ((target_data - input_data) > 0)  # area that should be filled
+                black_mask = (target_data == 0)  # area that should stay black
 
                 LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
                         0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
@@ -235,8 +235,8 @@ class Trainer(object):
             #         0.2 * F.mse_loss(out[non_black_mask], target[non_black_mask]) +
             #         0.2 * F.l1_loss(out, target))
 
-            holes_mask = ((target_data - input_data) != 0)
-            black_mask = (target_data == 0)
+            holes_mask = ((target_data - input_data) > 0)  # area that should be filled
+            black_mask = (target_data == 0)  # area that should stay black
             LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
                     0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
         else:
@@ -429,11 +429,14 @@ class Trainer(object):
                 # TODO: Threshold
                 # apply_threshold(output_images, 0.5)
 
+                fusion_data = input_data + torch.where(input_data == 0, output_data, 0)
+
                 # Detach the images from the cuda and move them to CPU
                 if self.args.cuda is True:
                     input_data = input_data.cpu()
                     target_data = target_data.cpu()
                     output_data = output_data.cpu()
+                    fusion_data = fusion_data.cpu()
 
                 # Convert (b, 6, w, h) to (6*b, 1, w, h) - Trees2DV2
                 if input_data.shape[1] == 6:
@@ -441,35 +444,48 @@ class Trainer(object):
                     input_data = input_data.view(-1, 1, x, y)
                     target_data = target_data.view(-1, 1, x, y)
                     output_data = output_data.view(-1, 1, x, y)
+                    fusion_data = fusion_data.view(-1, 1, x, y)
 
                 #################
                 # Visualization #
                 #################
 
                 # Create a grid of images
-                columns = 3
+                columns = 4
                 rows = input_data.shape[0]
                 fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
                 ax = []
                 for i in range(rows):
+                    j = 0
+
                     # Input
-                    ax.append(fig.add_subplot(rows, columns, i * columns + 1))
+                    j += 1
+                    ax.append(fig.add_subplot(rows, columns, i * columns + j))
                     numpy_image = input_data[i].numpy()
                     plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
 
                     # Target
-                    ax.append(fig.add_subplot(rows, columns, i * columns + 2))
+                    j += 1
+                    ax.append(fig.add_subplot(rows, columns, i * columns + j))
                     numpy_image = target_data[i].numpy()
                     plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
 
                     # Output
-                    ax.append(fig.add_subplot(rows, columns, i * columns + 3))
+                    j += 1
+                    ax.append(fig.add_subplot(rows, columns, i * columns + j))
                     numpy_image = output_data[i].numpy()
+                    plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
+
+                    # Fusion
+                    j += 1
+                    ax.append(fig.add_subplot(rows, columns, i * columns + j))
+                    numpy_image = fusion_data[i].numpy()
                     plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
 
                 ax[0].set_title("Input:")
                 ax[1].set_title("Target:")
                 ax[2].set_title("Output:")
+                ax[3].set_title("Fusion:")
                 fig.tight_layout()
                 save_filename = os.path.join(self.args.results_path, f"{self.args.dataset}_{batch_num}.png")
                 plt.savefig(save_filename)

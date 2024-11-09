@@ -13,6 +13,8 @@ from datasets.dataset_utils import convert_numpy_to_nii_gz, apply_threshold, IMA
 from datasets.custom_datasets_3d import V1_3D_DATASETS, V2_3D_DATASETS
 from trainer import loss_functions
 
+# TODO: remove later
+import torch.nn.functional as F
 
 class Trainer(object):
     def __init__(self, args: argparse.Namespace, dataset, model):
@@ -39,7 +41,13 @@ class Trainer(object):
 
         # LOSS = F.mse_loss(out, target, reduction='sum')
         # LOSS = loss_functions.bce_dice_loss(out, target)
-        LOSS = loss_functions.weighted_bce_dice_loss(output_data, target_data)
+        # LOSS = loss_functions.weighted_bce_dice_loss(output_data, target_data)
+
+        holes_mask = ((target_data - input_data) > 0)  # area that should be filled
+        black_mask = (target_data == 0)  # area that should stay black
+        LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+                0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
+
         return LOSS
 
     def _train(self, epoch):
@@ -162,8 +170,9 @@ class Trainer(object):
                 # Get the images from the test loader
                 batch_num = batch_idx + 1
                 data = iter(self.test_loader)
-                for i in range(batch_num):
+                for _ in range(batch_num):
                     input_data, target_data = next(data)
+
                 input_data = input_data.to(self.device)
                 target_data = target_data.to(self.device)
 
@@ -173,11 +182,14 @@ class Trainer(object):
                 # TODO: Threshold
                 apply_threshold(tensor=output_data, threshold=0.1)
 
+                fusion_data = input_data + torch.where(input_data == 0, output_data, 0)
+
                 # Detach the images from the cuda and move them to CPU
                 if self.args.cuda:
                     input_data = input_data.cpu()
                     target_data = target_data.cpu()
                     output_data = output_data.cpu()
+                    fusion_data = fusion_data.cpu()
 
                 #################
                 # Visualization #
@@ -214,6 +226,17 @@ class Trainer(object):
                     self._data_3d_to_2d_plot(data_3d=output_data_idx, save_filename=save_filename_2d)
                     images_info_idx["output"] = save_filename_2d
 
+                    # Fusion
+                    fusion_data_idx = fusion_data[idx].squeeze().numpy()
+                    save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_fusion")
+                    save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_fusion")
+                    convert_numpy_to_nii_gz(
+                        numpy_data=fusion_data_idx,
+                        save_filename=save_filename_3d
+                    )
+                    self._data_3d_to_2d_plot(data_3d=fusion_data_idx, save_filename=save_filename_2d)
+                    images_info_idx["fusion"] = save_filename_2d
+
                     # Input
                     save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_input")
                     save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_input")
@@ -249,7 +272,8 @@ class Trainer(object):
                 # Create a grid of images
                 img_width = 0
                 img_height = 0
-                for image_type in ["input", "target", "output"]:
+                image_types = ["input", "target", "output", "fusion"]
+                for image_type in image_types:
                     image_sample = Image.open(fp=f"{images_info[0][image_type]}.png")
                     img_width = max(img_width, image_sample.size[0])
                     img_height = max(img_height, image_sample.size[1])
@@ -259,7 +283,7 @@ class Trainer(object):
                 font_size = 20
 
                 # Define the text for each column header
-                headers = ["Input:", "Target:", "Output:"]
+                headers = [f"{image_type}:".title() for image_type in image_types]
 
                 # Create a font object (You may need to specify the path to a TTF font on your system)
                 try:
@@ -268,7 +292,7 @@ class Trainer(object):
                     font = ImageFont.load_default()
 
                 # Number of columns and rows for the grid
-                columns = 3
+                columns = len(headers)
                 rows = input_data.shape[0]
 
                 # Create a blank image for the grid, add extra space at the top for the headers
@@ -298,17 +322,27 @@ class Trainer(object):
 
                 # Paste images into the grid (below the header)
                 for i in range(rows):
+                    j = -1
+
                     # Load Input image and paste into grid
+                    j += 1
                     input_image = Image.open(fp=f"{images_info[i]['input']}.png")
-                    grid_img.paste(input_image, (0, header_height + i * img_height))
+                    grid_img.paste(input_image, (j * img_width, header_height + i * img_height))
 
                     # Load Target image and paste into grid
+                    j += 1
                     target_image = Image.open(fp=f"{images_info[i]['target']}.png")
-                    grid_img.paste(target_image, (img_width, header_height + i * img_height))
+                    grid_img.paste(target_image, (j * img_width, header_height + i * img_height))
 
                     # Load Output image and paste into grid
+                    j += 1
                     output_image = Image.open(fp=f"{images_info[i]['output']}.png")
-                    grid_img.paste(output_image, (2 * img_width, header_height + i * img_height))
+                    grid_img.paste(output_image, (j * img_width, header_height + i * img_height))
+
+                    # Load Fusion image and paste into grid
+                    j += 1
+                    fusion_image = Image.open(fp=f"{images_info[i]['fusion']}.png")
+                    grid_img.paste(fusion_image, (j * img_width, header_height + i * img_height))
 
                 # Save the combined image
                 save_filename = os.path.join(self.args.results_path, f"{self.args.dataset}_{batch_num}.png")
