@@ -275,7 +275,7 @@ def single_predict(data_3d_filepath: pathlib.Path):
         # Predict 3D
         data_3d_output = args.model_3d_class(data_3d_input)
 
-        postprocess_3d(
+        (data_3d_input, data_3d_output) = postprocess_3d(
             data_3d_input=data_3d_input,
             data_3d_output=data_3d_output,
             apply_input_fusion=True
