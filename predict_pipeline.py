@@ -305,11 +305,15 @@ def full_predict():
 
 
 def calculate_dice_scores():
-    output_folder = PREDICT_PIPELINE_RESULTS_PATH
-    target_folder = os.path.join(CROPPED_PATH, "labels_3d_v6")
     data_3d_basename = "PA000005"
 
+    # output_folder = os.path.join(CROPPED_PATH, "preds_fixed_3d_v6")
+    # output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}_*.nii.gz")
+
+    output_folder = PREDICT_PIPELINE_RESULTS_PATH
     output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}_*_output.nii.gz")
+
+    target_folder = os.path.join(CROPPED_PATH, "labels_3d_v6")
     target_filepaths = pathlib.Path(target_folder).rglob(f"{data_3d_basename}_*.nii.gz")
 
     output_filepaths = sorted(output_filepaths)
