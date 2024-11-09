@@ -164,29 +164,40 @@ def preprocess_3d(data_3d_filepath, data_2d_output: torch.Tensor, apply_fusion: 
     return data_3d_input
 
 
-def postprocess_3d(data_3d_filepath, data_3d_output: torch.Tensor):
-    data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
-
-    data_3d_output = data_3d_output.squeeze().squeeze().numpy()
-
-    save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
-    os.makedirs(save_path, exist_ok=True)
+def postprocess_3d(data_3d_input: torch.Tensor, data_3d_output: torch.Tensor, apply_input_fusion: bool = False):
+    data_3d_input = data_3d_input.squeeze().squeeze()
+    data_3d_output = data_3d_output.squeeze().squeeze()
 
     # TODO: Threshold
     apply_threshold(tensor=data_3d_output, threshold=0.5)
-    save_filepath = os.path.join(save_path, f"{data_3d_basename}_output")
-    convert_numpy_to_nii_gz(numpy_data=data_3d_output, save_filename=save_filepath)
+
+    if apply_input_fusion is True:
+        data_3d_output = data_3d_input + torch.where(data_3d_input == 0, data_3d_output, 0)
+
+    return data_3d_input, data_3d_output
 
 
 def debug_3d(data_3d_filepath, data_3d_input: torch.Tensor):
     data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
 
-    data_3d_input = data_3d_input.squeeze().squeeze().numpy()
+    data_3d_input = data_3d_input.clone().numpy()
 
     save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
     os.makedirs(save_path, exist_ok=True)
     save_filepath = os.path.join(save_path, f"{data_3d_basename}_input")
     convert_numpy_to_nii_gz(numpy_data=data_3d_input, save_filename=save_filepath)
+
+
+def export_output(data_3d_filepath, data_3d_output: torch.Tensor):
+    data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
+
+    data_3d_output = data_3d_output.numpy()
+
+    save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
+    os.makedirs(save_path, exist_ok=True)
+
+    save_filepath = os.path.join(save_path, f"{data_3d_basename}_output")
+    convert_numpy_to_nii_gz(numpy_data=data_3d_output, save_filename=save_filepath)
 
 
 ##################
@@ -264,10 +275,16 @@ def single_predict(data_3d_filepath: pathlib.Path):
         # Predict 3D
         data_3d_output = args.model_3d_class(data_3d_input)
 
-        postprocess_3d(data_3d_filepath=data_3d_filepath, data_3d_output=data_3d_output)
+        postprocess_3d(
+            data_3d_input=data_3d_input,
+            data_3d_output=data_3d_output,
+            apply_input_fusion=True
+        )
 
         # DEBUG
         debug_3d(data_3d_filepath=data_3d_filepath, data_3d_input=data_3d_input)
+
+        export_output(data_3d_filepath=data_3d_filepath, data_3d_output=data_3d_output)
 
 
 def test_single_predict():
@@ -340,9 +357,9 @@ def main():
 
 if __name__ == "__main__":
     # 1
-    # TODO: validate that after the 2d projection reconstruct, applying again 2d projection give the same results (artificial tests)
-    # TODO: add plots of 3d data in matplotlib
-    # TODO: creation of the 3d data of fixed 3d pred
+    # TODO: validate that after the 2d projection reconstruct, applying again 2d projection give the same results (artificial tests) - DONE
+    # TODO: add plots of 3d data in matplotlib - DONE
+    # TODO: creation of the 3d data of fixed 3d pred - DONE
 
 
     # 2
@@ -356,7 +373,7 @@ if __name__ == "__main__":
 
     # TODO: try to find new loss functions to the 2D model
     # TODO: try to check how to cleanup the 2D models results on the 3D fusion
-    # TODO: find a way to organize the plots
+    # TODO: find a way to organize the plots - DONE
     # TODO: test the full pipeline on the fixed preds
 
     # completed
