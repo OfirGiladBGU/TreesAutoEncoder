@@ -42,7 +42,8 @@ class Trainer(object):
             self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
 
         import torchvision.models as models
-        vgg = models.vgg19(pretrained=True).features[:16].eval()  # Use the first few layers of VGG19
+        # vgg = models.vgg19(pretrained=True).features[:16].eval()  # Use the first few layers of VGG19 (Legacy)
+        vgg = models.vgg19().features[:16].eval()  # Use the first few layers of VGG19
         self.vgg = vgg.to(self.device)
 
     @staticmethod
@@ -161,9 +162,16 @@ class Trainer(object):
                 LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
                         0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
 
-                # Confidence loss
-                target_confidence_data = (target_data != 0).float()
-                LOSS += F.binary_cross_entropy(output_confidence_data, target_confidence_data)
+                # Confidence loss V2
+                # target_confidence_data = (target_data != 0).float()
+                # LOSS += F.binary_cross_entropy(output_confidence_data, target_confidence_data)
+
+                # Confidence loss V3
+                target_holes_confidence_data = (target_data[holes_mask] > 0).float()
+                target_black_confidence_data = target_data[black_mask]
+
+                LOSS += (0.2 * F.binary_cross_entropy(output_confidence_data[holes_mask], target_holes_confidence_data) +
+                         0.8 * F.binary_cross_entropy(output_confidence_data[black_mask], target_black_confidence_data))
             else:
                 # Test 4
 
@@ -430,6 +438,7 @@ class Trainer(object):
                 # apply_threshold(output_images, 0.5)
 
                 fusion_data = input_data + torch.where(input_data == 0, output_data, 0)
+                # fusion_data = torch.where(input_data == 0, output_data, 0)
 
                 # Detach the images from the cuda and move them to CPU
                 if self.args.cuda is True:
