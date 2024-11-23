@@ -9,19 +9,30 @@ IMAGES_6_VIEWS = ['top', 'bottom', 'front', 'back', 'left', 'right']
 #######################################
 # nii.gz to numpy and numpy to nii.gz #
 #######################################
+
+# TODO: return or apply the affine transformation to the numpy data for the save later
 def convert_nii_gz_to_numpy(data_filepath) -> np.ndarray:
     nib_data = nib.load(data_filepath)
     numpy_data = nib_data.get_fdata()
     return numpy_data
 
 
-def convert_numpy_to_nii_gz(numpy_data: np.ndarray, save_filename=None) -> nib.Nifti1Image:
-    nib_data = nib.Nifti1Image(numpy_data, affine=np.eye(4))
+def convert_nii_gz_to_nibabel_image(data_filepath) -> nib.filebasedimages.FileBasedImage:
+    nib_data = nib.load(data_filepath)
+    return nib_data
+
+
+def convert_numpy_to_nii_gz(numpy_data: np.ndarray, nib_data: nib.filebasedimages.FileBasedImage = None,
+                            save_filename=None) -> nib.Nifti1Image:
+    if nib_data is not None:
+        new_nib_data = nib.Nifti1Image(numpy_data, affine=nib_data.affine, header=nib_data.header)
+    else:
+        new_nib_data = nib.Nifti1Image(numpy_data, affine=np.eye(4))
     if save_filename is not None:
         if not save_filename.endswith(".nii.gz"):
             save_filename = f"{save_filename}.nii.gz"
-        nib.save(img=nib_data, filename=save_filename)
-    return nib_data
+        nib.save(img=new_nib_data, filename=save_filename)
+    return new_nib_data
 
 
 ################

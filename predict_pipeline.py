@@ -10,8 +10,8 @@ from tqdm import tqdm
 import pandas as pd
 from scipy.ndimage import convolve
 
-from datasets.dataset_utils import (convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, reverse_rotations,
-                                    apply_threshold, IMAGES_6_VIEWS)
+from datasets.dataset_utils import (convert_nii_gz_to_numpy, convert_nii_gz_to_nibabel_image, convert_numpy_to_nii_gz,
+                                    reverse_rotations, apply_threshold, IMAGES_6_VIEWS)
 from datasets.dataset_list import DATASET_PATH, CROPPED_PATH, PREDICT_PIPELINE_RESULTS_PATH, MERGE_PIPELINE_RESULTS_PATH
 from models.model_list import init_model
 
@@ -369,6 +369,7 @@ def full_merge():
 
     # Start
     input_data = convert_nii_gz_to_numpy(data_filepath=input_filepath)
+    input_nib_data = convert_nii_gz_to_nibabel_image(data_filepath=input_filepath)
     log_data = pd.read_csv(log_path)
 
     first_column = log_data.columns[0]
@@ -392,7 +393,7 @@ def full_merge():
 
     # Save the final result
     output_filepath = os.path.join(output_folder, data_3d_basename)
-    convert_numpy_to_nii_gz(numpy_data=input_data, save_filename=output_filepath)
+    convert_numpy_to_nii_gz(numpy_data=input_data, nib_data=input_nib_data, save_filename=output_filepath)
 
 
 def main():
