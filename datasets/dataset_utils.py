@@ -35,6 +35,20 @@ def convert_numpy_to_nii_gz(numpy_data: np.ndarray, nib_data: nib.filebasedimage
     return new_nib_data
 
 
+#################################
+# ply to numpy and numpy to ply #
+#################################
+
+# TODO: Check how to make Abstract converter from supported file formats
+
+def convert_ply_to_numpy(data_filepath) -> np.ndarray:
+    pass
+
+
+def convert_numpy_to_ply(numpy_data: np.ndarray, save_filename=None):
+    pass
+
+
 ################
 # Thresholding #
 ################
