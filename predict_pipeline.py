@@ -12,7 +12,7 @@ from scipy.ndimage import convolve
 
 from datasets.dataset_utils import (convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, reverse_rotations,
                                     apply_threshold, IMAGES_6_VIEWS)
-from datasets.dataset_list import CROPPED_PATH, PREDICT_PIPELINE_RESULTS_PATH
+from datasets.dataset_list import DATASET_PATH, CROPPED_PATH, PREDICT_PIPELINE_RESULTS_PATH, MERGE_PIPELINE_RESULTS_PATH
 from models.model_list import init_model
 
 
@@ -344,6 +344,57 @@ def calculate_dice_scores():
     )
 
 
+def full_merge():
+    data_3d_basename = "PA000005"
+
+    # Input 3D object
+    input_folder = os.path.join(DATASET_PATH, "preds")
+    input_filepath = list(pathlib.Path(input_folder).rglob(f"{data_3d_basename}*"))
+    if len(input_filepath) == 1:
+        input_filepath = input_filepath[0]
+    else:
+        raise ValueError(f"Expected 1 input files for '{data_3d_basename}' but got '{len(input_filepath)}'.")
+
+    # Log file
+    # TODO: create csv log per 3D object to improve search
+    log_path = os.path.join(CROPPED_PATH, "log.csv")
+
+    # Pipeline Predicts
+    predict_folder = PREDICT_PIPELINE_RESULTS_PATH
+    predict_filepaths = sorted(pathlib.Path(predict_folder).rglob(f"{data_3d_basename}_*_output.nii.gz"))
+
+    # Pipeline Merge output path
+    output_folder = MERGE_PIPELINE_RESULTS_PATH
+    os.makedirs(output_folder, exist_ok=True)
+
+    # Start
+    input_data = convert_nii_gz_to_numpy(data_filepath=input_filepath)
+    log_data = pd.read_csv(log_path)
+
+    first_column = log_data.columns[0]
+    regex_pattern = f"{data_3d_basename}_.*"
+    matching_rows = log_data[log_data[first_column].str.contains(regex_pattern, regex=True, na=False)]
+
+    # Process the matching rows
+    for idx, row in matching_rows.iterrows():
+        predict_filepath = predict_filepaths[idx]
+        predict_data = convert_nii_gz_to_numpy(data_filepath=predict_filepath)
+
+        start_x, end_x, start_y, end_y, start_z, end_z = (
+            row["start_x"], row["end_x"], row["start_y"], row["end_y"], row["start_z"], row["end_z"]
+        )
+
+        # Perform the logical OR operation on the specific region
+        input_data[start_x:end_x, start_y:end_y, start_z:end_z] = np.logical_or(
+            input_data[start_x:end_x, start_y:end_y, start_z:end_z],
+            predict_data
+        )
+
+    # Save the final result
+    output_filepath = os.path.join(output_folder, data_3d_basename)
+    convert_numpy_to_nii_gz(numpy_data=input_data, save_filename=output_filepath)
+
+
 def main():
     # 1. Use model 1 on the `parse_preds_mini_cropped_v5`
     # 2. Save the results in `parse_fixed_mini_cropped_v5`
@@ -352,11 +403,13 @@ def main():
     # 5. Save the results in `parse_fixed_mini_cropped_3d_v5`
     # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
     # 7. Perform cleanup on the final result (delete small connected components)
-    init_pipeline_models()
+
+    # init_pipeline_models()
 
     # test_single_predict()
-    full_predict()
-    calculate_dice_scores()
+    # full_predict()
+    # calculate_dice_scores()
+    full_merge()
 
 
 if __name__ == "__main__":

@@ -18,6 +18,7 @@ RESULTS_PATH = os.path.join(ROOT_PATH, "results")
 
 MODEL_RESULTS_PATH = os.path.join(RESULTS_PATH, "models")
 PREDICT_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "predict_pipeline")
+MERGE_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "merge_pipeline")
 VISUALIZATION_RESULTS_PATH = os.path.join(RESULTS_PATH, "visualization")
 
 
