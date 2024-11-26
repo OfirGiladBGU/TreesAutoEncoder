@@ -206,7 +206,7 @@ def create_2d_projections_and_3d_cubes():
     log_data = dict()
 
     # Config
-    size = (32, 32, 32)
+    size = (32, 32, 32)  # TODO: TEST: (48, 48, 48)
     step = 16
     white_points_upper_threshold = size[0] * size[0] * 0.9
     white_points_lower_threshold = size[0] * size[0] * 0.1
