@@ -5,7 +5,7 @@ import itertools
 import cv2
 from PIL import Image, ImageDraw, ImageFont
 
-from datasets.dataset_utils import convert_nii_gz_to_numpy, IMAGES_6_VIEWS
+from datasets.dataset_utils import convert_data_file_to_numpy, IMAGES_6_VIEWS
 from datasets.dataset_list import CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESULTS_PATH, PREDICT_PIPELINE_RESULTS_PATH
 
 
@@ -104,7 +104,7 @@ def single_plot_3d():
     # data_3d_filepath = os.path.join(RESULTS_PATH, "predict_pipeline", "output_3d", "PA000005_05352_input.nii.gz")
     # data_3d_filepath = os.path.join(CROPPED_PATH, "labels_3d_v6", "PA000005_05352.nii.gz")
     data_3d_filepath = os.path.join(CROPPED_PATH, "preds_3d_v6", "PA000005_05352.nii.gz")
-    numpy_3d_data = convert_nii_gz_to_numpy(data_filepath=data_3d_filepath)
+    numpy_3d_data = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
 
     save_path = os.path.join(RESULTS_PATH, "single_predict")
     os.makedirs(name=save_path, exist_ok=True)
@@ -134,7 +134,7 @@ def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
         save_filename = os.path.join(str(save_path), f"{data_3d_basename}")
 
         data_3d_filepath = os.path.join(value, f"{data_3d_basename}.nii.gz")
-        numpy_3d_data = convert_nii_gz_to_numpy(data_filepath=data_3d_filepath)
+        numpy_3d_data = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
 
         matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_filename)
 
@@ -149,7 +149,7 @@ def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
             save_filename = os.path.join(str(save_path), f"{data_3d_basename}")
 
             data_3d_filepath = os.path.join(folder_path, f"{data_3d_basename}_{result_type}.nii.gz")
-            numpy_3d_data = convert_nii_gz_to_numpy(data_filepath=data_3d_filepath)
+            numpy_3d_data = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
 
             matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_filename)
 

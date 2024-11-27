@@ -7,7 +7,7 @@ import cv2
 import pathlib
 import pandas as pd
 
-from datasets.dataset_utils import convert_nii_gz_to_numpy
+from datasets.dataset_utils import convert_data_file_to_numpy
 
 
 V1_3D_DATASETS = ['Trees3DV1']
@@ -34,7 +34,7 @@ class TreesCustomDataset3DV1(Dataset):
         current_count -= 1
 
         if current_count > 0:
-            self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.nii.gz")
+            self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.*")
             self.data_files2 = sorted(self.data_files2)
             current_count -= 1
 
@@ -71,7 +71,7 @@ class TreesCustomDataset3DV1(Dataset):
         # 6 images + 1 3D data
         if current_count > 0:
             data_file2 =  str(self.data_files2[idx])
-            numpy_3d_data2 = convert_nii_gz_to_numpy(data_filepath=data_file2)
+            numpy_3d_data2 = convert_data_file_to_numpy(data_filepath=data_file2)
             numpy_3d_data2 = numpy_3d_data2.astype(np.float32)
 
             numpy_3d_data2 = torch.Tensor(numpy_3d_data2)
@@ -104,12 +104,12 @@ class TreesCustomDataset3DV2(Dataset):
         current_count = self.paths_count
 
         # current_count > 0:
-        self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.nii.gz")
+        self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.*")
         self.data_files1 = sorted(self.data_files1)
         current_count -= 1
 
         if current_count > 0:
-            self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.nii.gz")
+            self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.*")
             self.data_files2 = sorted(self.data_files2)
             current_count -= 1
 
@@ -130,7 +130,7 @@ class TreesCustomDataset3DV2(Dataset):
         numpy_3d_data2 = None
 
         data_file1 = str(self.data_files1[idx])
-        numpy_3d_data1 = convert_nii_gz_to_numpy(data_filepath=data_file1)
+        numpy_3d_data1 = convert_data_file_to_numpy(data_filepath=data_file1)
         numpy_3d_data1 = numpy_3d_data1.astype(np.float32)
 
         numpy_3d_data1 = torch.Tensor(numpy_3d_data1)
@@ -142,7 +142,7 @@ class TreesCustomDataset3DV2(Dataset):
         # 1 3D input + 1 3D target
         if current_count > 0:
             data_file2 = str(self.data_files2[idx])
-            numpy_3d_data2 = convert_nii_gz_to_numpy(data_filepath=data_file2)
+            numpy_3d_data2 = convert_data_file_to_numpy(data_filepath=data_file2)
             numpy_3d_data2 = numpy_3d_data2.astype(np.float32)
 
             numpy_3d_data2 = torch.Tensor(numpy_3d_data2)

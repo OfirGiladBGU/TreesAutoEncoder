@@ -8,7 +8,7 @@ from scipy.ndimage import label
 from skimage import color
 
 from dataset_list import DATASET_PATH, CROPPED_PATH
-from dataset_utils import convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, project_3d_to_2d, IMAGES_6_VIEWS
+from dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file, project_3d_to_2d, IMAGES_6_VIEWS
 
 
 #########
@@ -123,8 +123,8 @@ def create_dataset_depth_2d_projections():
         output_idx = label_filepath.name.split(".nii.gz")[0]
         print(f"File: {output_idx}")
 
-        label_numpy_data = convert_nii_gz_to_numpy(data_filepath=label_filepath)
-        pred_numpy_data = convert_nii_gz_to_numpy(data_filepath=pred_filepath)
+        label_numpy_data = convert_data_file_to_numpy(data_filepath=label_filepath)
+        pred_numpy_data = convert_data_file_to_numpy(data_filepath=pred_filepath)
 
         label_projections = project_3d_to_2d(
             data_3d=label_numpy_data,
@@ -162,12 +162,13 @@ def create_preds_components():
 
         output_idx = data_filepath.name.split(".nii.gz")[0]
 
-        numpy_data = convert_nii_gz_to_numpy(data_filepath=data_filepath)
+        numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
         data_3d_components = connected_components_3d(data_3d=numpy_data)[0]
 
         # Save results
         save_filename = os.path.join(output_folder, output_idx)
-        convert_numpy_to_nii_gz(numpy_data=data_3d_components, save_filename=save_filename)
+        convert_numpy_to_data_file(numpy_data=data_3d_components, source_data_filepath=data_filepath,
+                                   save_filename=save_filename)
 
 
 ###############################
@@ -234,9 +235,9 @@ def create_2d_projections_and_3d_cubes():
         pred_component_filepath = input_filepaths["preds_components"][filepath_idx]
 
         # Original data
-        label_numpy_data = convert_nii_gz_to_numpy(data_filepath=label_filepath)
-        pred_numpy_data = convert_nii_gz_to_numpy(data_filepath=pred_filepath)
-        pred_component_numpy_data = convert_nii_gz_to_numpy(data_filepath=pred_component_filepath)
+        label_numpy_data = convert_data_file_to_numpy(data_filepath=label_filepath)
+        pred_numpy_data = convert_data_file_to_numpy(data_filepath=pred_filepath)
+        pred_component_numpy_data = convert_data_file_to_numpy(data_filepath=pred_component_filepath)
 
         # pred_fixed_numpy_data = np.logical_and(label_numpy_data, pred_numpy_data)
         pred_fixed_numpy_data = outlier_removal(pred_data=pred_numpy_data, label_data=label_numpy_data)
@@ -368,24 +369,29 @@ def create_2d_projections_and_3d_cubes():
 
             # 3D Folders - labels
             save_filename = os.path.join(output_folders["labels_3d"], output_3d_format)
-            convert_numpy_to_nii_gz(numpy_data=label_cube, save_filename=save_filename)
+            convert_numpy_to_data_file(numpy_data=label_cube, source_data_filepath=label_filepath,
+                                       save_filename=save_filename)
 
             # 3D Folders - preds
             save_filename = os.path.join(output_folders["preds_3d"], output_3d_format)
-            convert_numpy_to_nii_gz(numpy_data=pred_cube, save_filename=save_filename)
+            convert_numpy_to_data_file(numpy_data=pred_cube, source_data_filepath=pred_filepath,
+                                       save_filename=save_filename)
 
             # 3D Folders - preds components
             save_filename = os.path.join(output_folders["preds_components_3d"], output_3d_format)
-            convert_numpy_to_nii_gz(numpy_data=pred_components_cube, save_filename=save_filename)
+            convert_numpy_to_data_file(numpy_data=pred_components_cube, source_data_filepath=pred_component_filepath,
+                                       save_filename=save_filename)
 
 
             # 3D Folders - preds fixed
             save_filename = os.path.join(output_folders["preds_fixed_3d"], output_3d_format)
-            convert_numpy_to_nii_gz(numpy_data=pred_fixed_cube, save_filename=save_filename)
+            convert_numpy_to_data_file(numpy_data=pred_fixed_cube, source_data_filepath=pred_filepath,
+                                       save_filename=save_filename)
 
             # 3D Folders - preds fixed components
             save_filename = os.path.join(output_folders["preds_fixed_components_3d"], output_3d_format)
-            convert_numpy_to_nii_gz(numpy_data=pred_fixed_components_cube, save_filename=save_filename)
+            convert_numpy_to_data_file(numpy_data=pred_fixed_components_cube, source_data_filepath=pred_component_filepath,
+                                       save_filename=save_filename)
 
 
             # Log 3D info

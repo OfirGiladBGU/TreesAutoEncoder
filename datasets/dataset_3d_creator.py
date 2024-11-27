@@ -4,7 +4,8 @@ import pathlib
 from tqdm import tqdm
 
 from dataset_list import CROPPED_PATH
-from dataset_utils import (convert_nii_gz_to_numpy, convert_numpy_to_nii_gz, reconstruct_3d_from_2d, project_3d_to_2d,
+from dataset_utils import (convert_data_file_to_numpy, convert_numpy_to_data_file,
+                           reconstruct_3d_from_2d, project_3d_to_2d,
                            get_images_6_views, IMAGES_6_VIEWS)
 
 
@@ -116,15 +117,24 @@ def create_3d_reconstructions():
 
         # 3D Folders - labels
         save_filename = label_image_output_filepath.replace("_<VIEW>.png", "")
-        convert_numpy_to_nii_gz(numpy_data=label_numpy_data, save_filename=save_filename)
+        label_3d_path = pathlib.Path(os.path.join(CROPPED_PATH, "labels_3d_v6"))
+        source_label_3d_data_filepath = list(label_3d_path.rglob(str(label_image_relative)))[0]
+        convert_numpy_to_data_file(numpy_data=label_numpy_data, source_data_filepath=source_label_3d_data_filepath,
+                                   save_filename=save_filename)
 
         # 3D Folders - preds
         save_filename = pred_image_output_filepath.replace("_<VIEW>.png", "")
-        convert_numpy_to_nii_gz(numpy_data=pred_numpy_data, save_filename=save_filename)
+        preds_3d_path = pathlib.Path(os.path.join(CROPPED_PATH, "preds_3d_v6"))
+        source_preds_3d_data_filepath = list(preds_3d_path.rglob(str(pred_image_relative)))[0]
+        convert_numpy_to_data_file(numpy_data=pred_numpy_data, source_data_filepath=source_preds_3d_data_filepath,
+                                   save_filename=save_filename)
 
         # 3D Folders - preds fixed
         save_filename = pred_fixed_image_output_filepath.replace("_<VIEW>.png", "")
-        convert_numpy_to_nii_gz(numpy_data=pred_fixed_numpy_data, save_filename=save_filename)
+        preds_fixed_3d_path = pathlib.Path(os.path.join(CROPPED_PATH, "preds_fixed_3d_v6"))
+        source_preds_fixed_3d_data_filepath = list(preds_fixed_3d_path.rglob(str(pred_fixed_image_relative)))[0]
+        convert_numpy_to_data_file(numpy_data=pred_fixed_numpy_data, source_data_filepath=source_preds_fixed_3d_data_filepath,
+                                   save_filename=save_filename)
 
     # format_of_2d_images = r".\parse_labels_mini_cropped_v5\PA000005_vessel_02584_<VIEW>.png"
     # final_data_3d = reconstruct_3d_from_2d(format_of_2d_images)
@@ -155,7 +165,7 @@ def create_3d_fusions():
     # Get the filepaths
     input_filepaths = dict()
     for key, value in input_folders.items():
-        input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.nii.gz"))
+        input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.*"))
 
     filepaths_count = len(input_filepaths["labels_3d_reconstruct"])
     for filepath_idx in tqdm(range(filepaths_count)):
@@ -165,9 +175,9 @@ def create_3d_fusions():
         pred_fixed_3d_filepath = input_filepaths["preds_fixed_3d"][filepath_idx]
 
         # Original data
-        label_3d_reconstruct_numpy_data = convert_nii_gz_to_numpy(data_filepath=label_3d_reconstruct_filepath)
-        pred_3d_numpy_data = convert_nii_gz_to_numpy(data_filepath=pred_3d_filepath)
-        pred_fixed_3d_numpy_data = convert_nii_gz_to_numpy(data_filepath=pred_fixed_3d_filepath)
+        label_3d_reconstruct_numpy_data = convert_data_file_to_numpy(data_filepath=label_3d_reconstruct_filepath)
+        pred_3d_numpy_data = convert_data_file_to_numpy(data_filepath=pred_3d_filepath)
+        pred_fixed_3d_numpy_data = convert_data_file_to_numpy(data_filepath=pred_fixed_3d_filepath)
 
         # Fusions
         pred_3d_fusion = np.logical_or(pred_3d_numpy_data, label_3d_reconstruct_numpy_data)
@@ -185,11 +195,13 @@ def create_3d_fusions():
 
         # 3D Folders - preds fusion
         save_filename = pred_3d_output_filepath
-        convert_numpy_to_nii_gz(numpy_data=pred_3d_fusion, save_filename=save_filename)
+        convert_numpy_to_data_file(numpy_data=pred_3d_fusion, source_data_filepath=pred_3d_filepath,
+                                   save_filename=save_filename)
 
         # 3D Folders - preds fixed
         save_filename = pred_fixed_3d_output_filepath
-        convert_numpy_to_nii_gz(numpy_data=pred_fixed_3d_fusion, save_filename=save_filename)
+        convert_numpy_to_data_file(numpy_data=pred_fixed_3d_fusion, source_data_filepath=pred_fixed_3d_filepath,
+                                   save_filename=save_filename)
 
 
 def test_2d_to_3d_and_back():

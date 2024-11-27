@@ -6,33 +6,50 @@ import cv2
 IMAGES_6_VIEWS = ['top', 'bottom', 'front', 'back', 'left', 'right']
 
 
+def convert_data_file_to_numpy(data_filepath: str) -> np.ndarray:
+    if data_filepath.endswith(".nii.gz"):
+        numpy_data = _convert_nii_gz_to_numpy(data_filepath=data_filepath)
+    elif data_filepath.endswith(".ply"):
+        numpy_data = _convert_ply_to_numpy(data_filepath=data_filepath)
+    else:
+        raise ValueError("Invalid data format")
+
+    return numpy_data
+
+
+def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath: str = None, save_filename: str = None):
+    if source_data_filepath.endswith(".nii.gz"):
+        _convert_numpy_to_nii_gz(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
+                                save_filename=save_filename)
+    elif source_data_filepath.endswith(".ply"):
+        _convert_numpy_to_ply(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
+                             save_filename=save_filename)
+    else:
+        raise ValueError("Invalid data format")
+
+
 #######################################
 # nii.gz to numpy and numpy to nii.gz #
 #######################################
 
 # TODO: return or apply the affine transformation to the numpy data for the save later
-def convert_nii_gz_to_numpy(data_filepath) -> np.ndarray:
+def _convert_nii_gz_to_numpy(data_filepath: str) -> np.ndarray:
     nib_data = nib.load(data_filepath)
     numpy_data = nib_data.get_fdata()
     return numpy_data
 
 
-def convert_nii_gz_to_nibabel_image(data_filepath) -> nib.filebasedimages.FileBasedImage:
-    nib_data = nib.load(data_filepath)
-    return nib_data
-
-
-def convert_numpy_to_nii_gz(numpy_data: np.ndarray, nib_data: nib.filebasedimages.FileBasedImage = None,
-                            save_filename=None) -> nib.Nifti1Image:
-    if nib_data is not None:
-        new_nib_data = nib.Nifti1Image(numpy_data, affine=nib_data.affine, header=nib_data.header)
+def _convert_numpy_to_nii_gz(numpy_data: np.ndarray, source_data_filepath: str = None, save_filename: str = None) -> nib.Nifti1Image:
+    if source_data_filepath is not None:
+        nifti_data = nib.load(source_data_filepath)
+        new_nifti_data = nib.Nifti1Image(numpy_data, affine=nifti_data.affine, header=nifti_data.header)
     else:
-        new_nib_data = nib.Nifti1Image(numpy_data, affine=np.eye(4))
+        new_nifti_data = nib.Nifti1Image(numpy_data, affine=np.eye(4))
     if save_filename is not None:
         if not save_filename.endswith(".nii.gz"):
             save_filename = f"{save_filename}.nii.gz"
-        nib.save(img=new_nib_data, filename=save_filename)
-    return new_nib_data
+        nib.save(img=new_nifti_data, filename=save_filename)
+    return new_nifti_data
 
 
 #################################
@@ -41,11 +58,11 @@ def convert_numpy_to_nii_gz(numpy_data: np.ndarray, nib_data: nib.filebasedimage
 
 # TODO: Check how to make Abstract converter from supported file formats
 
-def convert_ply_to_numpy(data_filepath) -> np.ndarray:
+def _convert_ply_to_numpy(data_filepath) -> np.ndarray:
     pass
 
 
-def convert_numpy_to_ply(numpy_data: np.ndarray, save_filename=None):
+def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None):
     pass
 
 
