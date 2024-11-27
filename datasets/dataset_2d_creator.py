@@ -8,7 +8,8 @@ from scipy.ndimage import label
 from skimage import color
 
 from dataset_list import DATASET_PATH, CROPPED_PATH
-from dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file, project_3d_to_2d, IMAGES_6_VIEWS
+from dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file, project_3d_to_2d,
+                           IMAGES_6_VIEWS)
 
 
 #########
@@ -120,7 +121,7 @@ def create_dataset_depth_2d_projections():
         label_filepath = input_filepaths["labels"][filepath_idx]
         pred_filepath = input_filepaths["preds"][filepath_idx]
 
-        output_idx = label_filepath.name.split(".nii.gz")[0]
+        output_idx = get_data_file_stem(data_filepath=label_filepath)
         print(f"File: {output_idx}")
 
         label_numpy_data = convert_data_file_to_numpy(data_filepath=label_filepath)
@@ -219,7 +220,7 @@ def create_2d_projections_and_3d_cubes():
     input_filepaths = dict()
     filepaths_found = list()
     for key, value in input_folders.items():
-        input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.nii.gz"))
+        input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.*"))
         filepaths_found.append(len(input_filepaths[key]))
 
     # Validation
@@ -250,7 +251,7 @@ def create_2d_projections_and_3d_cubes():
         pred_fixed_cubes = crop_mini_cubes(data_3d=pred_fixed_numpy_data, size=size, step=step)
         pred_fixed_components_cubes = crop_mini_cubes(data_3d=pred_fixed_component_numpy_data, size=size, step=step)
 
-        output_idx = label_filepath.name.split(".nii.gz")[0]
+        output_idx = get_data_file_stem(data_filepath=label_filepath)
         print(
             f"File: {output_idx}\n"
             f"Total Mini Cubes: {len(label_cubes)}\n"

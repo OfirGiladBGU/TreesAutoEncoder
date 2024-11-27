@@ -1,9 +1,22 @@
+import pathlib
 import numpy as np
 import nibabel as nib
 import torch
 import cv2
 
 IMAGES_6_VIEWS = ['top', 'bottom', 'front', 'back', 'left', 'right']
+
+
+def get_data_file_stem(data_filepath) -> str:
+    data_filepath = str(data_filepath)
+    if data_filepath.endswith(".nii.gz"):
+        data_filepath_stem = pathlib.Path(data_filepath.replace(".nii.gz", "")).name
+    elif data_filepath.endswith(".ply"):
+        data_filepath_stem =  pathlib.Path(data_filepath.replace(".ply", "")).name
+    else:
+        raise ValueError("Invalid data format")
+
+    return data_filepath_stem
 
 
 def convert_data_file_to_numpy(data_filepath) -> np.ndarray:
@@ -18,7 +31,7 @@ def convert_data_file_to_numpy(data_filepath) -> np.ndarray:
     return numpy_data
 
 
-def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, save_filename: str = None):
+def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, save_filename = None):
     source_data_filepath = str(source_data_filepath)
     if source_data_filepath.endswith(".nii.gz"):
         _convert_numpy_to_nii_gz(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
@@ -41,13 +54,15 @@ def _convert_nii_gz_to_numpy(data_filepath: str) -> np.ndarray:
     return numpy_data
 
 
-def _convert_numpy_to_nii_gz(numpy_data: np.ndarray, source_data_filepath: str = None, save_filename: str = None) -> nib.Nifti1Image:
+def _convert_numpy_to_nii_gz(numpy_data: np.ndarray, source_data_filepath: str = None,
+                             save_filename=None) -> nib.Nifti1Image:
     if source_data_filepath is not None:
         nifti_data = nib.load(source_data_filepath)
         new_nifti_data = nib.Nifti1Image(numpy_data, affine=nifti_data.affine, header=nifti_data.header)
     else:
         new_nifti_data = nib.Nifti1Image(numpy_data, affine=np.eye(4))
     if save_filename is not None:
+        save_filename = str(save_filename)
         if not save_filename.endswith(".nii.gz"):
             save_filename = f"{save_filename}.nii.gz"
         nib.save(img=new_nifti_data, filename=save_filename)
