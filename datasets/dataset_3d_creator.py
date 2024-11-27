@@ -118,21 +118,24 @@ def create_3d_reconstructions():
         # 3D Folders - labels
         save_filename = label_image_output_filepath.replace("_<VIEW>.png", "")
         label_3d_path = pathlib.Path(os.path.join(CROPPED_PATH, "labels_3d_v6"))
-        source_label_3d_data_filepath = list(label_3d_path.rglob(str(label_image_relative)))[0]
+        label_3d_relative = str(label_image_relative).replace("_<VIEW>.png", "*")
+        source_label_3d_data_filepath = list(label_3d_path.rglob(label_3d_relative))[0]
         convert_numpy_to_data_file(numpy_data=label_numpy_data, source_data_filepath=source_label_3d_data_filepath,
                                    save_filename=save_filename)
 
         # 3D Folders - preds
         save_filename = pred_image_output_filepath.replace("_<VIEW>.png", "")
         preds_3d_path = pathlib.Path(os.path.join(CROPPED_PATH, "preds_3d_v6"))
-        source_preds_3d_data_filepath = list(preds_3d_path.rglob(str(pred_image_relative)))[0]
+        preds_3d_relative = str(label_image_relative).replace("_<VIEW>.png", "*")
+        source_preds_3d_data_filepath = list(preds_3d_path.rglob(preds_3d_relative))[0]
         convert_numpy_to_data_file(numpy_data=pred_numpy_data, source_data_filepath=source_preds_3d_data_filepath,
                                    save_filename=save_filename)
 
         # 3D Folders - preds fixed
         save_filename = pred_fixed_image_output_filepath.replace("_<VIEW>.png", "")
         preds_fixed_3d_path = pathlib.Path(os.path.join(CROPPED_PATH, "preds_fixed_3d_v6"))
-        source_preds_fixed_3d_data_filepath = list(preds_fixed_3d_path.rglob(str(pred_fixed_image_relative)))[0]
+        preds_fixed_3d_relative = str(label_image_relative).replace("_<VIEW>.png", "*")
+        source_preds_fixed_3d_data_filepath = list(preds_fixed_3d_path.rglob(preds_fixed_3d_relative))[0]
         convert_numpy_to_data_file(numpy_data=pred_fixed_numpy_data, source_data_filepath=source_preds_fixed_3d_data_filepath,
                                    save_filename=save_filename)
 
@@ -237,10 +240,10 @@ def test_2d_to_3d_and_back():
 
 
 def main():
-    # create_3d_reconstructions()
-    # create_3d_fusions()
+    create_3d_reconstructions()
+    create_3d_fusions()
 
-    test_2d_to_3d_and_back()
+    # test_2d_to_3d_and_back()
 
 
 if __name__ == "__main__":
