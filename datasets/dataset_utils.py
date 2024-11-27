@@ -6,7 +6,8 @@ import cv2
 IMAGES_6_VIEWS = ['top', 'bottom', 'front', 'back', 'left', 'right']
 
 
-def convert_data_file_to_numpy(data_filepath: str) -> np.ndarray:
+def convert_data_file_to_numpy(data_filepath) -> np.ndarray:
+    data_filepath = str(data_filepath)
     if data_filepath.endswith(".nii.gz"):
         numpy_data = _convert_nii_gz_to_numpy(data_filepath=data_filepath)
     elif data_filepath.endswith(".ply"):
@@ -17,13 +18,14 @@ def convert_data_file_to_numpy(data_filepath: str) -> np.ndarray:
     return numpy_data
 
 
-def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath: str = None, save_filename: str = None):
+def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, save_filename: str = None):
+    source_data_filepath = str(source_data_filepath)
     if source_data_filepath.endswith(".nii.gz"):
         _convert_numpy_to_nii_gz(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
-                                save_filename=save_filename)
+                                 save_filename=save_filename)
     elif source_data_filepath.endswith(".ply"):
         _convert_numpy_to_ply(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
-                             save_filename=save_filename)
+                              save_filename=save_filename)
     else:
         raise ValueError("Invalid data format")
 

@@ -8,12 +8,14 @@ import pathlib
 from datasets.custom_datasets_2d import TreesCustomDataloader2D
 from datasets.custom_datasets_3d import TreesCustomDataloader3D
 
+# Define dataset folder
+DATASET_FOLDER = "parse2022" # TODO: Read from config file
 
 # Define paths
 ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
 DATA_PATH = os.path.join(ROOT_PATH, "data")
-DATASET_PATH = os.path.join(DATA_PATH, "parse2022")  # TODO: Read from config file
-CROPPED_PATH = os.path.join(DATA_PATH, "cropped_data")
+DATASET_PATH = os.path.join(DATA_PATH, DATASET_FOLDER)
+CROPPED_PATH = os.path.join(DATA_PATH, "cropped_data", DATASET_FOLDER)
 RESULTS_PATH = os.path.join(ROOT_PATH, "results")
 
 MODEL_RESULTS_PATH = os.path.join(RESULTS_PATH, "models")

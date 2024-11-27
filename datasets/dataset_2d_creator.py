@@ -153,20 +153,19 @@ def create_preds_components():
     output_folder = os.path.join(DATASET_PATH, "preds_components")
 
     os.makedirs(output_folder, exist_ok=True)
-    data_filepaths = sorted(pathlib.Path(input_folder).rglob("*.nii.gz"))
+    data_filepaths = sorted(pathlib.Path(input_folder).rglob("*.*"))
 
     filepaths_count = len(data_filepaths)
     for filepath_idx in tqdm(range(filepaths_count)):
         # Get index data:
         data_filepath = data_filepaths[filepath_idx]
 
-        output_idx = data_filepath.name.split(".nii.gz")[0]
-
         numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
         data_3d_components = connected_components_3d(data_3d=numpy_data)[0]
 
         # Save results
-        save_filename = os.path.join(output_folder, output_idx)
+        save_name = data_filepath.relative_to(input_folder)
+        save_filename = os.path.join(output_folder, save_name)
         convert_numpy_to_data_file(numpy_data=data_3d_components, source_data_filepath=data_filepath,
                                    save_filename=save_filename)
 
