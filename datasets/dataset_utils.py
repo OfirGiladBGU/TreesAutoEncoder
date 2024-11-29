@@ -49,8 +49,8 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
 
 # TODO: return or apply the affine transformation to the numpy data for the save later
 def _convert_nii_gz_to_numpy(data_filepath: str) -> np.ndarray:
-    nib_data = nib.load(data_filepath)
-    numpy_data = nib_data.get_fdata()
+    nifti_data = nib.load(data_filepath)
+    numpy_data = nifti_data.get_fdata()
     return numpy_data
 
 
