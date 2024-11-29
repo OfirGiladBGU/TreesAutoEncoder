@@ -69,6 +69,22 @@ def _convert_numpy_to_nii_gz(numpy_data: np.ndarray, source_data_filepath: str =
     return new_nifti_data
 
 
+def save_nii_gz_in_identity_affine(save_filename, numpy_data=None, data_filepath=None):
+    if data_filepath is not None:
+        nifti_data = nib.load(data_filepath)
+        numpy_data = nifti_data.get_fdata()
+    elif numpy_data is not None:
+        pass
+    else:
+        raise ValueError("Provide either numpy data or data filepath")
+
+    new_nifti_data = nib.Nifti1Image(numpy_data, affine=np.eye(4))
+    save_filename = str(save_filename)
+    if not save_filename.endswith(".nii.gz"):
+        save_filename = f"{save_filename}.nii.gz"
+    nib.save(img=new_nifti_data, filename=save_filename)
+
+
 #################################
 # ply to numpy and numpy to ply #
 #################################
