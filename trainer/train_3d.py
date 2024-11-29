@@ -208,10 +208,11 @@ class Trainer(object):
                     target_data_idx = target_data[idx].squeeze().numpy()
                     save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_target")
                     save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_target")
-                    convert_numpy_to_nii_gz(
-                        numpy_data=target_data_idx,
-                        save_filename=save_filename_3d
-                    )
+                    np.save(file=save_filename_3d, arr=target_data_idx)
+                    # convert_numpy_to_nii_gz(
+                    #     numpy_data=target_data_idx,
+                    #     save_filename=save_filename_3d
+                    # )
                     self._data_3d_to_2d_plot(data_3d=target_data_idx, save_filename=save_filename_2d)
                     images_info_idx["target"] = save_filename_2d
 
@@ -219,10 +220,11 @@ class Trainer(object):
                     output_data_idx = output_data[idx].squeeze().numpy()
                     save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_output")
                     save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_output")
-                    convert_numpy_to_nii_gz(
-                        numpy_data=output_data_idx,
-                        save_filename=save_filename_3d
-                    )
+                    np.save(file=save_filename_3d, arr=output_data_idx)
+                    # convert_numpy_to_nii_gz(
+                    #     numpy_data=output_data_idx,
+                    #     save_filename=save_filename_3d
+                    # )
                     self._data_3d_to_2d_plot(data_3d=output_data_idx, save_filename=save_filename_2d)
                     images_info_idx["output"] = save_filename_2d
 
@@ -230,10 +232,11 @@ class Trainer(object):
                     fusion_data_idx = fusion_data[idx].squeeze().numpy()
                     save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_fusion")
                     save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_fusion")
-                    convert_numpy_to_nii_gz(
-                        numpy_data=fusion_data_idx,
-                        save_filename=save_filename_3d
-                    )
+                    np.save(file=save_filename_3d, arr=fusion_data_idx)
+                    # convert_numpy_to_nii_gz(
+                    #     numpy_data=fusion_data_idx,
+                    #     save_filename=save_filename_3d
+                    # )
                     self._data_3d_to_2d_plot(data_3d=fusion_data_idx, save_filename=save_filename_2d)
                     images_info_idx["fusion"] = save_filename_2d
 
@@ -257,10 +260,11 @@ class Trainer(object):
 
                     elif self.args.dataset in V2_3D_DATASETS:
                         input_data_idx = input_data[idx].squeeze().numpy()
-                        convert_numpy_to_nii_gz(
-                            numpy_data=input_data_idx,
-                            save_filename=save_filename_3d
-                        )
+                        np.save(file=save_filename_3d, arr=input_data_idx)
+                        # convert_numpy_to_nii_gz(
+                        #     numpy_data=input_data_idx,
+                        #     save_filename=save_filename_3d
+                        # )
                         self._data_3d_to_2d_plot(data_3d=input_data_idx, save_filename=save_filename_2d)
 
                     else:

@@ -9,7 +9,7 @@ from skimage import color
 
 from dataset_list import DATASET_PATH, CROPPED_PATH
 from dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file, project_3d_to_2d,
-                           IMAGES_6_VIEWS)
+                           IMAGES_6_VIEWS, save_nii_gz_in_identity_affine)
 
 
 #########
@@ -150,7 +150,7 @@ def create_dataset_depth_2d_projections():
 #################
 def create_preds_components():
     input_folder = os.path.join(DATASET_PATH, "preds")
-    output_folder = os.path.join(DATASET_PATH, "preds_components")
+    output_folder = os.path.join(DATASET_PATH, "preds_components_x")
 
     os.makedirs(output_folder, exist_ok=True)
     data_filepaths = sorted(pathlib.Path(input_folder).rglob("*.*"))
@@ -168,6 +168,9 @@ def create_preds_components():
         save_filename = os.path.join(output_folder, save_name)
         convert_numpy_to_data_file(numpy_data=data_3d_components, source_data_filepath=data_filepath,
                                    save_filename=save_filename)
+        # TODO: Debug
+        # save_nii_gz_in_identity_affine(numpy_data=data_3d_components, data_filepath=data_filepath,
+        #                                save_filename=save_filename)
 
 
 ###############################
@@ -409,8 +412,8 @@ def create_2d_projections_and_3d_cubes():
             log_data[output_3d_format] = cube_data
 
             # DEBUG
-            # convert_numpy_to_nii_gz(label_cube, save_name="1")
-            # convert_numpy_to_nii_gz(pred_cube, save_name="2")
+            # _convert_numpy_to_nii_gz(label_cube, save_name="1")
+            # _convert_numpy_to_nii_gz(pred_cube, save_name="2")
 
         if filepath_idx == 19:
             break

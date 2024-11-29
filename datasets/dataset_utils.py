@@ -31,7 +31,7 @@ def convert_data_file_to_numpy(data_filepath) -> np.ndarray:
     return numpy_data
 
 
-def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, save_filename = None):
+def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, save_filename=None):
     source_data_filepath = str(source_data_filepath)
     if source_data_filepath.endswith(".nii.gz"):
         _convert_numpy_to_nii_gz(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
@@ -59,9 +59,12 @@ def _convert_numpy_to_nii_gz(numpy_data: np.ndarray, source_data_filepath: str =
     if source_data_filepath is not None:
         nifti_data = nib.load(source_data_filepath)
         new_nifti_data = nib.Nifti1Image(numpy_data, affine=nifti_data.affine, header=nifti_data.header)
+        if "int" in str(numpy_data.dtype):  # Keep integer type for components data
+            new_nifti_data.header.set_data_dtype(np.int16) # Assumption: Max value will be less than 32767
     else:
         new_nifti_data = nib.Nifti1Image(numpy_data, affine=np.eye(4))
-    if save_filename is not None:
+
+    if save_filename is not None and len(save_filename) > 0:
         save_filename = str(save_filename)
         if not save_filename.endswith(".nii.gz"):
             save_filename = f"{save_filename}.nii.gz"
@@ -69,7 +72,7 @@ def _convert_numpy_to_nii_gz(numpy_data: np.ndarray, source_data_filepath: str =
     return new_nifti_data
 
 
-def save_nii_gz_in_identity_affine(save_filename, numpy_data=None, data_filepath=None):
+def save_nii_gz_in_identity_affine(numpy_data=None, data_filepath=None, save_filename=None):
     if data_filepath is not None:
         nifti_data = nib.load(data_filepath)
         numpy_data = nifti_data.get_fdata()
@@ -77,12 +80,14 @@ def save_nii_gz_in_identity_affine(save_filename, numpy_data=None, data_filepath
         pass
     else:
         raise ValueError("Provide either numpy data or data filepath")
-
     new_nifti_data = nib.Nifti1Image(numpy_data, affine=np.eye(4))
-    save_filename = str(save_filename)
-    if not save_filename.endswith(".nii.gz"):
-        save_filename = f"{save_filename}.nii.gz"
-    nib.save(img=new_nifti_data, filename=save_filename)
+
+    if save_filename is not None and len(save_filename) > 0:
+        save_filename = str(save_filename)
+        if not save_filename.endswith(".nii.gz"):
+            save_filename = f"{save_filename}.nii.gz"
+        nib.save(img=new_nifti_data, filename=save_filename)
+    return new_nifti_data
 
 
 #################################

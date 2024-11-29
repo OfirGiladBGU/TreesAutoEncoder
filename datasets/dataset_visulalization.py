@@ -113,7 +113,7 @@ def single_plot_3d():
     matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_name)
 
 
-
+# TODO: support for any 3D data
 def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
     folder_paths = {
         "labels_3d": os.path.join(CROPPED_PATH, "labels_3d_v6"),
