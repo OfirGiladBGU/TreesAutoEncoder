@@ -122,7 +122,6 @@ def create_dataset_depth_2d_projections():
         pred_filepath = input_filepaths["preds"][filepath_idx]
 
         output_idx = get_data_file_stem(data_filepath=label_filepath)
-        print(f"[File: {output_idx}, Index: {filepath_idx + 1}/{filepaths_count}]")
 
         label_numpy_data = convert_data_file_to_numpy(data_filepath=label_filepath)
         pred_numpy_data = convert_data_file_to_numpy(data_filepath=pred_filepath)
@@ -253,6 +252,7 @@ def create_2d_projections_and_3d_cubes():
 
         output_idx = get_data_file_stem(data_filepath=label_filepath)
         print(
+            f"\n"
             f"[File: {output_idx}, Index: {filepath_idx + 1}/{filepaths_count}]\n"
             f"Total Mini Cubes: {len(label_cubes)}\n"
         )
