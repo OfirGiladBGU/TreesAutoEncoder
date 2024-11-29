@@ -9,7 +9,7 @@ import numpy as np
 import wandb
 from PIL import Image, ImageDraw, ImageFont
 
-from datasets.dataset_utils import convert_numpy_to_nii_gz, apply_threshold, IMAGES_6_VIEWS
+from datasets.dataset_utils import convert_numpy_to_data_file, apply_threshold, IMAGES_6_VIEWS
 from datasets.custom_datasets_3d import V1_3D_DATASETS, V2_3D_DATASETS
 from trainer import loss_functions
 

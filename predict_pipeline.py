@@ -10,7 +10,7 @@ from tqdm import tqdm
 import pandas as pd
 from scipy.ndimage import convolve
 
-from datasets.dataset_utils import (convert_nii_gz_to_numpy, convert_nii_gz_to_nibabel_image, convert_numpy_to_nii_gz,
+from datasets.dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                                     reverse_rotations, apply_threshold, IMAGES_6_VIEWS)
 from datasets.dataset_list import DATASET_PATH, CROPPED_PATH, PREDICT_PIPELINE_RESULTS_PATH, MERGE_PIPELINE_RESULTS_PATH
 from models.model_list import init_model
@@ -20,7 +20,7 @@ from models.model_list import init_model
 # Utils #
 #########
 def preprocess_2d(data_3d_filepath, apply_batch_merge: bool = False):
-    data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
+    data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
     data_2d_basename = f"{data_3d_basename}_<VIEW>"
 
     # Get relative path parts
@@ -74,7 +74,7 @@ def postprocess_2d(data_2d_input: torch.Tensor, data_2d_output: torch.Tensor, ap
 
 
 def debug_2d(data_3d_filepath, data_2d_input: torch.Tensor, data_2d_output: torch.Tensor):
-    data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
+    data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
 
     data_2d_input_copy = data_2d_input.clone().numpy()
     data_2d_output_copy = data_2d_output.clone().numpy()
@@ -150,7 +150,7 @@ def preprocess_3d(data_3d_filepath, data_2d_output: torch.Tensor, apply_fusion: 
 
     # Fusion 3D
     if apply_fusion is True:
-        pred_3d = convert_nii_gz_to_numpy(data_filepath=data_3d_filepath)
+        pred_3d = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
         data_3d_fusion = np.logical_or(data_3d_reconstruct, pred_3d)
         data_3d_fusion = data_3d_fusion.astype(np.float32)
         data_3d_input = data_3d_fusion
@@ -185,10 +185,12 @@ def debug_3d(data_3d_filepath, data_3d_input: torch.Tensor):
     save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
     os.makedirs(save_path, exist_ok=True)
     save_filepath = os.path.join(save_path, f"{data_3d_basename}_input")
-    convert_numpy_to_nii_gz(numpy_data=data_3d_input, save_filename=save_filepath)
+    convert_numpy_to_data_file(numpy_data=data_3d_input, source_data_filepath=data_3d_filepath,
+                               save_filename=save_filepath)
 
 
 def export_output(data_3d_filepath, data_3d_output: torch.Tensor):
+
     data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
 
     data_3d_output = data_3d_output.numpy()
@@ -197,7 +199,8 @@ def export_output(data_3d_filepath, data_3d_output: torch.Tensor):
     os.makedirs(save_path, exist_ok=True)
 
     save_filepath = os.path.join(save_path, f"{data_3d_basename}_output")
-    convert_numpy_to_nii_gz(numpy_data=data_3d_output, save_filename=save_filepath)
+    convert_numpy_to_data_file(numpy_data=data_3d_output, source_data_filepath=data_3d_filepath,
+                               save_filename=save_filepath)
 
 
 ##################
@@ -308,13 +311,13 @@ def calculate_dice_scores():
     data_3d_basename = "PA000005"
 
     # output_folder = os.path.join(CROPPED_PATH, "preds_fixed_3d_v6")
-    # output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}_*.nii.gz")
+    # output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}_*.*")
 
     output_folder = PREDICT_PIPELINE_RESULTS_PATH
-    output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}_*_output.nii.gz")
+    output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}_*_output.*")
 
     target_folder = os.path.join(CROPPED_PATH, "labels_3d_v6")
-    target_filepaths = pathlib.Path(target_folder).rglob(f"{data_3d_basename}_*.nii.gz")
+    target_filepaths = pathlib.Path(target_folder).rglob(f"{data_3d_basename}_*.*")
 
     output_filepaths = sorted(output_filepaths)
     target_filepaths = sorted(target_filepaths)
@@ -325,12 +328,12 @@ def calculate_dice_scores():
         output_filepath = output_filepaths[idx]
         target_filepath = target_filepaths[idx]
 
-        output_3d_numpy = convert_nii_gz_to_numpy(data_filepath=output_filepath)
-        target_3d_numpy = convert_nii_gz_to_numpy(data_filepath=target_filepath)
+        output_3d_numpy = convert_data_file_to_numpy(data_filepath=output_filepath)
+        target_3d_numpy = convert_data_file_to_numpy(data_filepath=target_filepath)
 
         dice_score = 2 * np.sum(output_3d_numpy * target_3d_numpy) / (np.sum(output_3d_numpy) + np.sum(target_3d_numpy))
 
-        idx_format = os.path.basename(target_filepath).replace(".nii.gz", "")
+        idx_format = get_data_file_stem(data_filepath=target_filepath)
         scores_dict[idx_format] = dice_score
 
     save_name = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "dice_scores.csv")
@@ -368,8 +371,7 @@ def full_merge():
     os.makedirs(output_folder, exist_ok=True)
 
     # Start
-    input_data = convert_nii_gz_to_numpy(data_filepath=input_filepath)
-    input_nib_data = convert_nii_gz_to_nibabel_image(data_filepath=input_filepath)
+    input_data = convert_data_file_to_numpy(data_filepath=input_filepath)
     log_data = pd.read_csv(log_path)
 
     first_column = log_data.columns[0]
@@ -379,7 +381,7 @@ def full_merge():
     # Process the matching rows
     for idx, row in matching_rows.iterrows():
         predict_filepath = predict_filepaths[idx]
-        predict_data = convert_nii_gz_to_numpy(data_filepath=predict_filepath)
+        predict_data = convert_data_file_to_numpy(data_filepath=predict_filepath)
 
         start_x, end_x, start_y, end_y, start_z, end_z = (
             row["start_x"], row["end_x"], row["start_y"], row["end_y"], row["start_z"], row["end_z"]
@@ -392,8 +394,9 @@ def full_merge():
         )
 
     # Save the final result
-    output_filepath = os.path.join(output_folder, data_3d_basename)
-    convert_numpy_to_nii_gz(numpy_data=input_data, nib_data=input_nib_data, save_filename=output_filepath)
+    save_filename = os.path.join(output_folder, data_3d_basename)
+    convert_numpy_to_data_file(numpy_data=input_data, source_data_filepath=input_filepath,
+                               save_filename=save_filename)
 
 
 def main():
