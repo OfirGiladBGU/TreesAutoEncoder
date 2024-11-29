@@ -178,7 +178,7 @@ def postprocess_3d(data_3d_input: torch.Tensor, data_3d_output: torch.Tensor, ap
 
 
 def debug_3d(data_3d_filepath, data_3d_input: torch.Tensor):
-    data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
+    data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
 
     data_3d_input = data_3d_input.clone().numpy()
 
@@ -190,8 +190,7 @@ def debug_3d(data_3d_filepath, data_3d_input: torch.Tensor):
 
 
 def export_output(data_3d_filepath, data_3d_output: torch.Tensor):
-
-    data_3d_basename = str(os.path.basename(data_3d_filepath)).replace(".nii.gz", "")
+    data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
 
     data_3d_output = data_3d_output.numpy()
 
@@ -300,7 +299,7 @@ def full_predict():
     # input_folder = os.path.join(CROPPED_PATH, "preds_fixed_3d_v6")
     input_format = "PA000005"
 
-    data_3d_filepaths = pathlib.Path(input_folder).rglob(f"{input_format}_*.nii.gz")
+    data_3d_filepaths = pathlib.Path(input_folder).rglob(f"{input_format}_*.*")
     data_3d_filepaths = sorted(data_3d_filepaths)
 
     for data_3d_filepath in tqdm(data_3d_filepaths):
@@ -364,7 +363,7 @@ def full_merge():
 
     # Pipeline Predicts
     predict_folder = PREDICT_PIPELINE_RESULTS_PATH
-    predict_filepaths = sorted(pathlib.Path(predict_folder).rglob(f"{data_3d_basename}_*_output.nii.gz"))
+    predict_filepaths = sorted(pathlib.Path(predict_folder).rglob(f"{data_3d_basename}_*_output.*"))
 
     # Pipeline Merge output path
     output_folder = MERGE_PIPELINE_RESULTS_PATH
