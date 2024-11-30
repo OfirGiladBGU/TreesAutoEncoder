@@ -7,8 +7,8 @@ import open3d as o3d
 import numpy as np
 
 # File paths (update with your file paths if needed)
-file_1 = r"C:\Users\ofirg\PycharmProjects\TreesAutoEncoder\data_pypipes\PyPipes\label\0_mesh.ply"
-file_2 = r"C:\Users\ofirg\PycharmProjects\TreesAutoEncoder\data_pypipes\PyPipes\label\0_pcd.ply"
+file_1 = r"..\data\PyPipes\label\0_mesh.ply"
+file_2 = r"..\data\PyPipes\label\0_pcd.ply"
 
 # Load the PLY files
 # mesh = o3d.io.read_triangle_mesh(file_1)  # For mesh files
