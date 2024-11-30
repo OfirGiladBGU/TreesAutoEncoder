@@ -4,6 +4,7 @@ import os
 import itertools
 import cv2
 from PIL import Image, ImageDraw, ImageFont
+import plotly.graph_objects as go
 
 from datasets.dataset_utils import convert_data_file_to_numpy, IMAGES_6_VIEWS
 from datasets.dataset_list import CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESULTS_PATH, PREDICT_PIPELINE_RESULTS_PATH
@@ -43,6 +44,38 @@ def matplotlib_plot_3d(data_3d: np.ndarray, save_filename):
         plt.close('all')
 
         # merging_images(save_filename=save_filename)
+
+
+def interactive_plot_3d(data_3d: np.ndarray):
+    threshold = 0.5 * np.max(data_3d)
+    x, y, z = np.where(data_3d > threshold)
+
+    # Create the Plotly 3D scatter plot
+    fig = go.Figure(data=[go.Scatter3d(
+        x=x, y=y, z=z,
+        mode='markers',
+        marker=dict(
+            size=2,
+            color=data_3d[x, y, z],
+            colorscale='Viridis',
+            opacity=0.6
+        )
+    )])
+
+    # aspect_ratios = data_3d.shape  # Lengths of each dimension
+    fig.update_layout(scene=dict(
+        xaxis_title='X-axis',
+        yaxis_title='Y-axis',
+        zaxis_title='Z-axis',
+        # aspectmode="manual",  # Use manual aspect ratios
+        # aspectratio=dict(
+        #     x=aspect_ratios[0] / max(aspect_ratios),
+        #     y=aspect_ratios[1] / max(aspect_ratios),
+        #     z=aspect_ratios[2] / max(aspect_ratios),
+        # )
+    ), title="3D Volume Visualization")
+
+    fig.show()
 
 
 def merging_images(save_filename):
@@ -199,15 +232,15 @@ def full_plot_2d(data_3d_basename: str):
 
 
 def main():
-    # single_plot_3d()
+    single_plot_3d()
 
-    data_3d_basename = "PA000005_11899"
+    # data_3d_basename = "PA000005_11899"
     # data_3d_basename = "PA000005_09039"
     # data_3d_basename = "PA000005_10017"
 
     # full_plot_3d(data_3d_basename=data_3d_basename)
-    full_plot_3d(data_3d_basename=data_3d_basename, include_pipeline_results=True)
-    full_plot_2d(data_3d_basename=data_3d_basename)
+    # full_plot_3d(data_3d_basename=data_3d_basename, include_pipeline_results=True)
+    # full_plot_2d(data_3d_basename=data_3d_basename)
 
 
 if __name__ == "__main__":
