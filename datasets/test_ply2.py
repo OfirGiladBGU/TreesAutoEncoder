@@ -25,4 +25,6 @@ def single_plot_3d():
     os.makedirs(name=save_path, exist_ok=True)
     save_name = os.path.join(save_path, "pcd")
 
-    matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_name)
+    matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_name, set_aspect_ratios=True)
+
+single_plot_3d()

@@ -13,8 +13,11 @@ from datasets.dataset_list import CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESU
 ####################
 # 3D visualization #
 ####################
-def matplotlib_plot_3d(data_3d: np.ndarray, save_filename):
-    print(f"Save filename: '{save_filename}*'\nData shape: '{data_3d.shape}'\n")
+def matplotlib_plot_3d(data_3d: np.ndarray, save_filename, set_aspect_ratios=False):
+    print(
+        f"Save filename: '{save_filename}*'\n"
+        f"Data shape: '{data_3d.shape}'\n"
+    )
     # Downsample the images
     downsample_factor = 1
     data_downsampled = data_3d[::downsample_factor, ::downsample_factor, ::downsample_factor]
@@ -36,6 +39,11 @@ def matplotlib_plot_3d(data_3d: np.ndarray, save_filename):
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
+
+        # Set aspect ratios
+        if set_aspect_ratios:
+            aspect_ratios = np.array([data_3d.shape[i],data_3d.shape[j], data_3d.shape[k]])  # Use the actual shape of the volume
+            ax.set_box_aspect(aspect_ratios)
 
         # Display the plot
         permutation_save_filename = f"{save_filename}_({i},{j},{k})"
