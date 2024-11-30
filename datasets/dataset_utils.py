@@ -1,8 +1,14 @@
 import pathlib
 import numpy as np
-import nibabel as nib
 import torch
 import cv2
+
+# For .nii.gz
+import nibabel as nib
+
+# For .ply
+import trimesh
+import open3d as o3d
 
 IMAGES_6_VIEWS = ['top', 'bottom', 'front', 'back', 'left', 'right']
 
@@ -97,7 +103,31 @@ def save_nii_gz_in_identity_affine(numpy_data=None, data_filepath=None, save_fil
 # TODO: Check how to make Abstract converter from supported file formats
 
 def _convert_ply_to_numpy(data_filepath) -> np.ndarray:
-    pass
+    voxel_size = 0.05  # Define voxel size (the size of each grid cell)
+
+    # Mesh PLY
+    if data_filepath.endswith("mesh.ply"):
+        mesh = trimesh.load(data_filepath)
+        voxelized = mesh.voxelized(pitch=voxel_size)  # Pitch = voxel size
+
+        numpy_data = voxelized.matrix.astype(np.uint8)
+    # Point Cloud PLY
+    elif data_filepath.endswith("pcd.ply"):
+        pcd = o3d.io.read_point_cloud(data_filepath)
+        voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=pcd, voxel_size=voxel_size)  # Voxelize pcd
+        voxels = np.array([voxel.grid_index for voxel in voxel_grid.get_voxels()])  # Get voxel centers
+        max_bounds = np.max(voxels, axis=0)
+        min_bounds = np.min(voxels, axis=0)
+        grid_shape = max_bounds - min_bounds + 1  # Determine grid dimensions
+
+        numpy_data = np.zeros(shape=grid_shape, dtype=np.uint8)
+        for voxel in voxels:
+            grid_index = voxel - min_bounds  # Shift indices to start at 0
+            numpy_data[tuple(grid_index)] = 1  # 1 = occupied, 0 = empty
+    else:
+        raise ValueError("Invalid data format")
+
+    return numpy_data
 
 
 def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None):
