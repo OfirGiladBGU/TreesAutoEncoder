@@ -15,4 +15,3 @@ pip install open3d
 pip install trimesh
 pip install tqdm
 pip install wandb
-pip install open3d
