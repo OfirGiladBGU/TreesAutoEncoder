@@ -1,5 +1,4 @@
 import argparse
-import random
 import torch
 import torch.utils.data
 from torch import optim
@@ -7,12 +6,12 @@ import copy
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-from torchvision.utils import save_image
 import wandb
 
 from datasets.dataset_utils import apply_threshold
 from datasets.custom_datasets_2d import V1_2D_DATASETS, V2_2D_DATASETS
 from trainer import loss_functions
+from train_utils import create_holes
 
 # TODO: remove later
 import torch.nn.functional as F
@@ -46,11 +45,13 @@ class Trainer(object):
         vgg = models.vgg19().features[:16].eval()  # Use the first few layers of VGG19
         self.vgg = vgg.to(self.device)
 
+    # TODO: Remove later
     @staticmethod
     def total_variation_loss(x):
         return torch.sum(torch.abs(x[:, :, :-1, :] - x[:, :, 1:, :])) + torch.sum(
             torch.abs(x[:, :, :, :-1] - x[:, :, :, 1:]))
 
+    # TODO: Remove later
     # Extract features
     def perceptual_loss(self, output, target):
         output_3ch = output.repeat(1, 3, 1, 1)
@@ -60,6 +61,7 @@ class Trainer(object):
         target_features = self.vgg(target_3ch)
         return F.l1_loss(output_features, target_features)
 
+    # TODO: Remove later
     @staticmethod
     def downsample(x, scale=2):
         return F.interpolate(x, scale_factor=1 / scale, mode='bilinear', align_corners=False)
@@ -252,27 +254,6 @@ class Trainer(object):
 
         return LOSS
 
-    @staticmethod
-    def zero_out_radius(tensor, point, radius):
-        x, y = point[1], point[2]  # Get the coordinates
-        for i in range(max(0, x - radius), min(tensor.size(1), x + radius + 1)):
-            for j in range(max(0, y - radius), min(tensor.size(2), y + radius + 1)):
-                if (i - x) ** 2 + (j - y) ** 2 <= radius ** 2:
-                    tensor[0, i, j] = 0
-
-    def create_holes(self, input_data):
-        for idx in range(len(input_data)):
-            white_points = torch.nonzero(input_data[idx] > 0.6)
-
-            if white_points.size(0) > 0:
-                # Randomly select one of the non-zero points
-                random_point = random.choice(white_points)
-                radius = random.randint(3, 5)
-                self.zero_out_radius(input_data[idx], random_point, radius)
-
-                # plt.imshow(input_data[idx].permute(1, 2, 0))
-                # save_image(input_data[idx], 'img1.png')
-
     def _train(self, epoch):
         self.model.train()
         train_loss = 0
@@ -298,7 +279,7 @@ class Trainer(object):
                 # print(res.max())
                 # print(res.min())
 
-                self.create_holes(input_data=input_data)
+                create_holes(input_data=input_data)
 
             input_data = input_data.to(self.device)
             target_data = target_data.to(self.device)
@@ -354,7 +335,7 @@ class Trainer(object):
                     # if target_data.dtype != torch.float32:
                     #     target_data = target_data.float()
 
-                    self.create_holes(input_data=input_data)
+                    create_holes(input_data=input_data)
 
                 input_data = input_data.to(self.device)
                 target_data = target_data.to(self.device)
@@ -422,7 +403,7 @@ class Trainer(object):
                     # if target_data.dtype != torch.float32:
                     #     target_data = target_data.float()
 
-                    self.create_holes(input_data=input_data)
+                    create_holes(input_data=input_data)
 
                 input_data = input_data.to(self.device)
                 target_data = target_data.to(self.device)

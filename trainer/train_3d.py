@@ -9,9 +9,10 @@ import numpy as np
 import wandb
 from PIL import Image, ImageDraw, ImageFont
 
-from datasets.dataset_utils import convert_numpy_to_data_file, apply_threshold, IMAGES_6_VIEWS
+from datasets.dataset_utils import apply_threshold, IMAGES_6_VIEWS
 from datasets.custom_datasets_3d import V1_3D_DATASETS, V2_3D_DATASETS
 from trainer import loss_functions
+from train_utils import data_3d_to_2d_plot
 
 # TODO: remove later
 import torch.nn.functional as F
@@ -126,36 +127,6 @@ class Trainer(object):
         model_parameters = copy.deepcopy(self.model.state_dict())
         torch.save(model_parameters, self.args.weights_filepath)
 
-    @staticmethod
-    def _data_3d_to_2d_plot(data_3d: np.ndarray, save_filename):
-        # Downsample the images
-        downsample_factor = 1
-        data_downsampled = data_3d[::downsample_factor, ::downsample_factor, ::downsample_factor]
-
-        # Get the indices of non-zero values in the downsampled array
-        nonzero_indices = np.where(data_downsampled != 0)
-
-        # Plot the cubes based on the non-zero indices
-        permutation = [0, 1, 2]
-
-        # Create a figure and a 3D axis
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-
-        # Get the permutation
-        i, j, k = permutation
-        ax.bar3d(nonzero_indices[i], nonzero_indices[j], nonzero_indices[k], 1, 1, 1, color='b')
-
-        # Set labels
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
-        ax.set_zlabel('Z')
-
-        # Display the plot
-        plt.title('3d plot')
-        plt.savefig(save_filename)
-        plt.close('all')
-
     def predict(self):
         print(f"[Model: '{self.model.model_name}'] Predicting...")
         os.makedirs(name=self.args.results_path, exist_ok=True)
@@ -213,7 +184,7 @@ class Trainer(object):
                     #     numpy_data=target_data_idx,
                     #     save_filename=save_filename_3d
                     # )
-                    self._data_3d_to_2d_plot(data_3d=target_data_idx, save_filename=save_filename_2d)
+                    data_3d_to_2d_plot(data_3d=target_data_idx, save_filename=save_filename_2d)
                     images_info_idx["target"] = save_filename_2d
 
                     # Output
@@ -225,7 +196,7 @@ class Trainer(object):
                     #     numpy_data=output_data_idx,
                     #     save_filename=save_filename_3d
                     # )
-                    self._data_3d_to_2d_plot(data_3d=output_data_idx, save_filename=save_filename_2d)
+                    data_3d_to_2d_plot(data_3d=output_data_idx, save_filename=save_filename_2d)
                     images_info_idx["output"] = save_filename_2d
 
                     # Fusion
@@ -237,7 +208,7 @@ class Trainer(object):
                     #     numpy_data=fusion_data_idx,
                     #     save_filename=save_filename_3d
                     # )
-                    self._data_3d_to_2d_plot(data_3d=fusion_data_idx, save_filename=save_filename_2d)
+                    data_3d_to_2d_plot(data_3d=fusion_data_idx, save_filename=save_filename_2d)
                     images_info_idx["fusion"] = save_filename_2d
 
                     # Input
@@ -265,7 +236,7 @@ class Trainer(object):
                         #     numpy_data=input_data_idx,
                         #     save_filename=save_filename_3d
                         # )
-                        self._data_3d_to_2d_plot(data_3d=input_data_idx, save_filename=save_filename_2d)
+                        data_3d_to_2d_plot(data_3d=input_data_idx, save_filename=save_filename_2d)
 
                     else:
                         raise ValueError("Invalid dataset")
