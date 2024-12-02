@@ -1,5 +1,4 @@
 from dataset_utils import save_nii_gz_in_identity_affine, _convert_numpy_to_nii_gz
-from new_test import numpy_data
 
 # data_filepath=r"C:\Users\ofirg\PycharmProjects\TreesAutoEncoder\data\parse2022\preds_components\PA000005_vessel.nii.gz"
 # save_nii_gz_in_identity_affine(data_filepath=data_filepath, save_filename="test")
