@@ -150,7 +150,7 @@ def create_dataset_depth_2d_projections():
 #################
 def create_preds_components():
     input_folder = os.path.join(DATASET_PATH, "preds")
-    output_folder = os.path.join(DATASET_PATH, "preds_components_x")
+    output_folder = os.path.join(DATASET_PATH, "preds_components")
 
     os.makedirs(output_folder, exist_ok=True)
     data_filepaths = sorted(pathlib.Path(input_folder).rglob("*.*"))
