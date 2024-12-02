@@ -15,7 +15,7 @@ file_2 = r"..\data\PyPipes\label\0_pcd.ply"
 
 # IN
 
-import open3d as o3d
+# import open3d as o3d
 import numpy as np
 
 # Load the PLY file
@@ -92,15 +92,37 @@ _convert_numpy_to_nii_gz(voxel_array, save_filename="test_mesh")
 # OUT
 output_filepath = "test_mesh.ply"
 numpy_data = voxel_array
+#
+# # Convert the 3D binary array back to a trimesh VoxelGrid
+# voxels = trimesh.voxel.VoxelGrid.from_binary(numpy_data, pitch=0.05)
+#
+# # Convert VoxelGrid to a Mesh
+# mesh = voxels.as_boxes()  # Each voxel becomes a box
+#
+# # Save to PLY
+# mesh.export(output_filepath)
+# print(f"Mesh saved to {output_filepath}")
 
-# Convert the 3D binary array back to a trimesh VoxelGrid
-voxels = trimesh.voxel.VoxelGrid(matrix=numpy_data, pitch=0.05)
+voxel_size = 0.05
 
-# Convert VoxelGrid to a Mesh
-mesh = voxels.as_boxes()  # Each voxel becomes a box
+# Get the indices of occupied voxels
+occupied_indices = np.argwhere(numpy_data == 1)
+
+# Convert voxel indices to actual coordinates
+voxel_centers = occupied_indices * voxel_size
+
+# Create cube meshes for each occupied voxel
+cubes = []
+for center in voxel_centers:
+    # Create a cube for each voxel
+    cube = trimesh.creation.box(extents=[voxel_size] * 3, transform=trimesh.transformations.translation_matrix(center))
+    cubes.append(cube)
+
+# Combine all cubes into a single mesh
+combined_mesh = trimesh.util.concatenate(cubes)
 
 # Save to PLY
-mesh.export(output_filepath)
+combined_mesh.export(output_filepath)
 print(f"Mesh saved to {output_filepath}")
 
 ########################
