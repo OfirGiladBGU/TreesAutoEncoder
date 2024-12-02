@@ -135,7 +135,27 @@ def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, sav
 
     # Mesh PLY
     if source_data_filepath.endswith("mesh.ply"):
-        raise NotImplementedError
+        occupied_indices = np.argwhere(numpy_data == 1)  # Find occupied voxels (indices where numpy_data == 1)
+        centers = occupied_indices * voxel_size  # Convert indices to real-world coordinates (Scale by voxel size)
+
+        # Create cube meshes for each occupied voxel
+        cubes = []
+        for center in centers:
+            # Create a cube for each voxel
+            cube = trimesh.creation.box(
+                extents=[voxel_size] * 3,
+                transform=trimesh.transformations.translation_matrix(center)
+            )
+            cubes.append(cube)
+        mesh = trimesh.util.concatenate(cubes) # Combine all cubes into a single mesh
+
+        if save_filename is not None and len(save_filename) > 0:
+            save_filename = str(save_filename)
+            if not save_filename.endswith("mesh.ply"):
+                save_filename = f"{save_filename}_mesh.ply"
+            mesh.export(file_obj=save_filename)  # Save to PLY
+
+        new_ply_data = mesh
 
     # Point Cloud PLY
     elif source_data_filepath.endswith("pcd.ply"):
@@ -147,9 +167,9 @@ def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, sav
 
         if save_filename is not None and len(save_filename) > 0:
             save_filename = str(save_filename)
-            if not save_filename.endswith(".ply"):
-                save_filename = f"{save_filename}.ply"
-            o3d.io.write_point_cloud(save_filename, pcd)  # Save to PLY
+            if not save_filename.endswith("pcd.ply"):
+                save_filename = f"{save_filename}_pcd.ply"
+            o3d.io.write_point_cloud(filename=save_filename, pointcloud=pcd)  # Save to PLY
 
         new_ply_data = pcd
     else:
