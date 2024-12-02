@@ -15,7 +15,7 @@ file_2 = r"..\data\PyPipes\label\0_pcd.ply"
 
 # IN
 
-# import open3d as o3d
+import open3d as o3d
 import numpy as np
 
 # Load the PLY file
