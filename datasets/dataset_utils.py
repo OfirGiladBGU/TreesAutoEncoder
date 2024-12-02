@@ -131,7 +131,31 @@ def _convert_ply_to_numpy(data_filepath) -> np.ndarray:
 
 
 def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None):
-    pass
+    voxel_size = 0.05  # Define voxel size (the size of each grid cell)
+
+    # Mesh PLY
+    if source_data_filepath.endswith("mesh.ply"):
+        raise NotImplementedError
+
+    # Point Cloud PLY
+    elif source_data_filepath.endswith("pcd.ply"):
+        occupied_indices = np.argwhere(numpy_data == 1)  # Find occupied voxels (indices where numpy_data == 1)
+        points = occupied_indices * voxel_size  # Convert indices to real-world coordinates (Scale by voxel size)
+
+        pcd = o3d.geometry.PointCloud() # Create Open3D PointCloud
+        pcd.points = o3d.utility.Vector3dVector(points)
+
+        if save_filename is not None and len(save_filename) > 0:
+            save_filename = str(save_filename)
+            if not save_filename.endswith(".ply"):
+                save_filename = f"{save_filename}.ply"
+            o3d.io.write_point_cloud(save_filename, pcd)  # Save to PLY
+
+        new_ply_data = pcd
+    else:
+        raise ValueError("Invalid data format")
+
+    return new_ply_data
 
 
 ################
