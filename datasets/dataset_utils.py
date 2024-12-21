@@ -31,6 +31,10 @@ def convert_data_file_to_numpy(data_filepath) -> np.ndarray:
         numpy_data = _convert_nii_gz_to_numpy(data_filepath=data_filepath)
     elif data_filepath.endswith(".ply"):
         numpy_data = _convert_ply_to_numpy(data_filepath=data_filepath)
+    elif data_filepath.endswith(".obj"):
+        numpy_data = _convert_obj_to_numpy(data_filepath=data_filepath)
+    elif data_filepath.endswith(".pcd"):
+        numpy_data = _convert_pcd_to_numpy(data_filepath=data_filepath)
     else:
         raise ValueError("Invalid data format")
 
@@ -44,6 +48,12 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
                                  save_filename=save_filename)
     elif source_data_filepath.endswith(".ply"):
         _convert_numpy_to_ply(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
+                              save_filename=save_filename)
+    elif source_data_filepath.endswith(".obj"):
+        _convert_numpy_to_obj(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
+                              save_filename=save_filename)
+    elif source_data_filepath.endswith(".pcd"):
+        _convert_numpy_to_pcd(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
                               save_filename=save_filename)
     else:
         raise ValueError("Invalid data format")
@@ -176,6 +186,86 @@ def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, sav
         raise ValueError("Invalid data format")
 
     return new_ply_data
+
+
+#################################
+# obj to numpy and numpy to obj #
+#################################
+def _convert_obj_to_numpy(data_filepath) -> np.ndarray:
+    voxel_size = 1.0  # Define voxel size (the size of each grid cell)
+
+    mesh = trimesh.load(data_filepath)
+    voxelized = mesh.voxelized(pitch=voxel_size)  # Pitch = voxel size
+
+    numpy_data = voxelized.matrix.astype(np.uint8)
+    return numpy_data
+
+
+def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None) -> trimesh.Trimesh:
+    voxel_size = 1.0  # Define voxel size (the size of each grid cell)
+
+    occupied_indices = np.argwhere(numpy_data == 1)  # Find occupied voxels (indices where numpy_data == 1)
+    centers = occupied_indices * voxel_size  # Convert indices to real-world coordinates (Scale by voxel size)
+
+    # Create cube meshes for each occupied voxel
+    cubes = []
+    for center in centers:
+        # Create a cube for each voxel
+        cube = trimesh.creation.box(
+            extents=[voxel_size] * 3,
+            transform=trimesh.transformations.translation_matrix(center)
+        )
+        cubes.append(cube)
+    mesh = trimesh.util.concatenate(cubes)  # Combine all cubes into a single mesh
+
+    if save_filename is not None and len(save_filename) > 0:
+        save_filename = str(save_filename)
+        if not save_filename.endswith("obj"):
+            save_filename = f"{save_filename}.obj"
+        mesh.export(file_obj=save_filename)  # Save to OBJ
+
+    new_obj_data = mesh
+    return new_obj_data
+
+
+#################################
+# pcd to numpy and numpy to pcd #
+#################################
+def _convert_pcd_to_numpy(data_filepath) -> np.ndarray:
+    voxel_size = 1.0  # Define voxel size (the size of each grid cell)
+
+    pcd = o3d.io.read_point_cloud(data_filepath)
+    voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=pcd, voxel_size=voxel_size)  # Voxelize pcd
+    voxels = np.array([voxel.grid_index for voxel in voxel_grid.get_voxels()])  # Get voxel centers
+    max_bounds = np.max(voxels, axis=0)
+    min_bounds = np.min(voxels, axis=0)
+    grid_shape = max_bounds - min_bounds + 1  # Determine grid dimensions
+
+    numpy_data = np.zeros(shape=grid_shape, dtype=np.uint8)
+    for voxel in voxels:
+        grid_index = voxel - min_bounds  # Shift indices to start at 0
+        numpy_data[tuple(grid_index)] = 1  # 1 = occupied, 0 = empty
+
+    return numpy_data
+
+
+def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None) -> o3d.geometry.PointCloud:
+    voxel_size = 1.0  # Define voxel size (the size of each grid cell)
+
+    occupied_indices = np.argwhere(numpy_data == 1)  # Find occupied voxels (indices where numpy_data == 1)
+    points = occupied_indices * voxel_size  # Convert indices to real-world coordinates (Scale by voxel size)
+
+    pcd = o3d.geometry.PointCloud()  # Create Open3D PointCloud
+    pcd.points = o3d.utility.Vector3dVector(points)
+
+    if save_filename is not None and len(save_filename) > 0:
+        save_filename = str(save_filename)
+        if not save_filename.endswith(".pcd"):
+            save_filename = f"{save_filename}.pcd"
+        o3d.io.write_point_cloud(filename=save_filename, pointcloud=pcd)  # Save to PCD
+
+    new_pcd_data = pcd
+    return new_pcd_data
 
 
 ################
