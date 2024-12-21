@@ -192,7 +192,7 @@ def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, sav
 # obj to numpy and numpy to obj #
 #################################
 def _convert_obj_to_numpy(data_filepath) -> np.ndarray:
-    voxel_size = 1.0  # Define voxel size (the size of each grid cell)
+    voxel_size = 2.0  # Define voxel size (the size of each grid cell)
 
     mesh = trimesh.load(data_filepath)
     voxelized = mesh.voxelized(pitch=voxel_size)  # Pitch = voxel size
@@ -202,7 +202,7 @@ def _convert_obj_to_numpy(data_filepath) -> np.ndarray:
 
 
 def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None) -> trimesh.Trimesh:
-    voxel_size = 1.0  # Define voxel size (the size of each grid cell)
+    voxel_size = 2.0  # Define voxel size (the size of each grid cell)
 
     occupied_indices = np.argwhere(numpy_data == 1)  # Find occupied voxels (indices where numpy_data == 1)
     centers = occupied_indices * voxel_size  # Convert indices to real-world coordinates (Scale by voxel size)
@@ -232,7 +232,7 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
 # pcd to numpy and numpy to pcd #
 #################################
 def _convert_pcd_to_numpy(data_filepath) -> np.ndarray:
-    voxel_size = 1.0  # Define voxel size (the size of each grid cell)
+    voxel_size = 2.0  # Define voxel size (the size of each grid cell)
 
     pcd = o3d.io.read_point_cloud(data_filepath)
     voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=pcd, voxel_size=voxel_size)  # Voxelize pcd
@@ -250,7 +250,7 @@ def _convert_pcd_to_numpy(data_filepath) -> np.ndarray:
 
 
 def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None) -> o3d.geometry.PointCloud:
-    voxel_size = 1.0  # Define voxel size (the size of each grid cell)
+    voxel_size = 2.0  # Define voxel size (the size of each grid cell)
 
     occupied_indices = np.argwhere(numpy_data == 1)  # Find occupied voxels (indices where numpy_data == 1)
     points = occupied_indices * voxel_size  # Convert indices to real-world coordinates (Scale by voxel size)
