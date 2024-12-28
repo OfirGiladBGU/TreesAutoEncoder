@@ -5,7 +5,9 @@ from tqdm import tqdm
 from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file
 from datasets.dataset_list import DATA_PATH
 
+
 DATASET_PATH = os.path.join(DATA_PATH, "Pipes3DGenerator")
+
 
 def generate_holes():
     input_folder = os.path.join(DATASET_PATH, "labels")

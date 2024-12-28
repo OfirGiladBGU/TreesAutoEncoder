@@ -35,6 +35,8 @@ def convert_data_file_to_numpy(data_filepath) -> np.ndarray:
         numpy_data = _convert_obj_to_numpy(data_filepath=data_filepath)
     elif data_filepath.endswith(".pcd"):
         numpy_data = _convert_pcd_to_numpy(data_filepath=data_filepath)
+    elif data_filepath.endswith(".npy"):
+        numpy_data = _convert_npy_to_numpy(data_filepath=data_filepath)
     else:
         raise ValueError("Invalid data format")
 
@@ -54,6 +56,9 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
                               save_filename=save_filename)
     elif source_data_filepath.endswith(".pcd"):
         _convert_numpy_to_pcd(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
+                              save_filename=save_filename)
+    elif source_data_filepath.endswith(".npy"):
+        _convert_numpy_to_npy(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
                               save_filename=save_filename)
     else:
         raise ValueError("Invalid data format")
@@ -84,7 +89,7 @@ def _convert_numpy_to_nii_gz(numpy_data: np.ndarray, source_data_filepath: str =
         save_filename = str(save_filename)
         if not save_filename.endswith(".nii.gz"):
             save_filename = f"{save_filename}.nii.gz"
-        nib.save(img=new_nifti_data, filename=save_filename)
+        nib.save(img=new_nifti_data, filename=save_filename)  # Save to NII.GZ
     return new_nifti_data
 
 
@@ -102,7 +107,7 @@ def save_nii_gz_in_identity_affine(numpy_data=None, data_filepath=None, save_fil
         save_filename = str(save_filename)
         if not save_filename.endswith(".nii.gz"):
             save_filename = f"{save_filename}.nii.gz"
-        nib.save(img=new_nifti_data, filename=save_filename)
+        nib.save(img=new_nifti_data, filename=save_filename)  # Save to NII.GZ
     return new_nifti_data
 
 
@@ -266,6 +271,23 @@ def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, sav
 
     new_pcd_data = pcd
     return new_pcd_data
+
+
+#################################
+# npy to numpy and numpy to npy #
+#################################
+def _convert_npy_to_numpy(data_filepath) -> np.ndarray:
+    numpy_data = np.load(file=data_filepath)
+    return numpy_data
+
+
+def _convert_numpy_to_npy(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None) -> np.ndarray:
+    if save_filename is not None and len(save_filename) > 0:
+        save_filename = str(save_filename)
+        if not save_filename.endswith(".npy"):
+            save_filename = f"{save_filename}.npy"
+        np.save(file=save_filename, arr=numpy_data)  # Save to NPY
+    return numpy_data
 
 
 ################
