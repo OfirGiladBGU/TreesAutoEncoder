@@ -9,7 +9,26 @@ from datasets.dataset_list import DATA_PATH
 DATASET_PATH = os.path.join(DATA_PATH, "Pipes3DGenerator")
 
 
-def generate_holes():
+def convert_original_data_to_npy():
+    input_folder = os.path.join(DATASET_PATH, "originals")
+    output_folder = os.path.join(DATASET_PATH, "labels")
+
+    os.makedirs(output_folder, exist_ok=True)
+    data_filepaths = sorted(pathlib.Path(input_folder).rglob("*.*"))
+
+    filepaths_count = len(data_filepaths)
+    for filepath_idx in tqdm(range(filepaths_count)):
+        # Get index data:
+        data_filepath = data_filepaths[filepath_idx]
+        numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
+
+        # Save data:
+        save_filename = os.path.join(output_folder, data_filepath.stem)
+        convert_numpy_to_data_file(numpy_data=numpy_data, source_data_filepath="dummy.npy",
+                                   save_filename=save_filename)
+
+
+def generate_holes_in_data():
     input_folder = os.path.join(DATASET_PATH, "labels")
     output_folder = os.path.join(DATASET_PATH, "preds")
 
@@ -32,7 +51,8 @@ def generate_holes():
 
 
 def main():
-    generate_holes()
+    # convert_original_data_to_npy()
+    generate_holes_in_data()
 
 
 if __name__ == '__main__':
