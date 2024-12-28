@@ -7,7 +7,8 @@ from PIL import Image, ImageDraw, ImageFont
 import plotly.graph_objects as go
 
 from datasets.dataset_utils import convert_data_file_to_numpy, IMAGES_6_VIEWS
-from datasets.dataset_list import CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESULTS_PATH, PREDICT_PIPELINE_RESULTS_PATH
+from datasets.dataset_list import (DATA_PATH, CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESULTS_PATH,
+                                   PREDICT_PIPELINE_RESULTS_PATH)
 
 
 ####################
@@ -54,7 +55,7 @@ def matplotlib_plot_3d(data_3d: np.ndarray, save_filename, set_aspect_ratios=Fal
         # merging_images(save_filename=save_filename)
 
 
-def interactive_plot_3d(data_3d: np.ndarray):
+def interactive_plot_3d_v1(data_3d: np.ndarray):
     threshold = 0.5 * np.max(data_3d)
     x, y, z = np.where(data_3d > threshold)
 
@@ -84,6 +85,38 @@ def interactive_plot_3d(data_3d: np.ndarray):
     ), title="3D Volume Visualization")
 
     fig.show()
+
+
+def interactive_plot_3d_v2(data_3d: np.ndarray, set_aspect_ratios=False):
+    # Downsample the images
+    downsample_factor = 1
+    data_downsampled = data_3d[::downsample_factor, ::downsample_factor, ::downsample_factor]
+
+    # Get the indices of non-zero values in the downsampled array
+    nonzero_indices = np.where(data_downsampled != 0)
+
+    # Create a figure and a 3D axis
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Get the permutation
+    ax.bar3d(nonzero_indices[0], nonzero_indices[1], nonzero_indices[2], 1, 1, 1, color='b')
+
+    # Set labels
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+
+    # Set aspect ratios
+    if set_aspect_ratios:
+        aspect_ratios = np.array(
+            [data_3d.shape[0], data_3d.shape[1], data_3d.shape[2]])  # Use the actual shape of the volume
+        ax.set_box_aspect(aspect_ratios)
+
+    # Display the plot
+    plt.title('3d plot')
+    plt.show()
+    plt.close('all')
 
 
 def merging_images(save_filename):
@@ -141,17 +174,23 @@ def merging_images(save_filename):
     merged_image.show()
 
 
-def single_plot_3d():
-    # data_3d_filepath = os.path.join(RESULTS_PATH, "predict_pipeline", "output_3d", "PA000005_05352_input.nii.gz")
-    # data_3d_filepath = os.path.join(CROPPED_PATH, "labels_3d_v6", "PA000005_05352.nii.gz")
-    data_3d_filepath = os.path.join(CROPPED_PATH, "preds_3d_v6", "PA000005_05352.nii.gz")
+##################
+# Core functions #
+##################
+def single_plot_3d(data_3d_filepath, interactive_mode: bool = False, interactive_version: int = 1):
     numpy_3d_data = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
 
-    save_path = os.path.join(RESULTS_PATH, "single_predict")
-    os.makedirs(name=save_path, exist_ok=True)
-    save_name = os.path.join(save_path, "pred_og")
+    if interactive_mode is False:
+        save_path = os.path.join(RESULTS_PATH, "single_predict")
+        os.makedirs(name=save_path, exist_ok=True)
+        save_name = os.path.join(save_path, "pred_og")
 
-    matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_name)
+        matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_name)
+    else:
+        if interactive_version == 1:
+            interactive_plot_3d_v1(data_3d=numpy_3d_data)
+        elif interactive_version == 2:
+            interactive_plot_3d_v2(data_3d=numpy_3d_data, set_aspect_ratios=True)
 
 
 # TODO: support for any 3D data
@@ -174,7 +213,8 @@ def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
         os.makedirs(name=save_path, exist_ok=True)
         save_filename = os.path.join(str(save_path), f"{data_3d_basename}")
 
-        data_3d_filepath = os.path.join(value, f"{data_3d_basename}.nii.gz")
+        # data_3d_filepath = os.path.join(value, f"{data_3d_basename}.nii.gz")
+        data_3d_filepath = os.path.join(value, f"{data_3d_basename}.*")
         numpy_3d_data = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
 
         matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_filename)
@@ -189,7 +229,8 @@ def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
             os.makedirs(name=save_path, exist_ok=True)
             save_filename = os.path.join(str(save_path), f"{data_3d_basename}")
 
-            data_3d_filepath = os.path.join(folder_path, f"{data_3d_basename}_{result_type}.nii.gz")
+            # data_3d_filepath = os.path.join(folder_path, f"{data_3d_basename}_{result_type}.nii.gz")
+            data_3d_filepath = os.path.join(folder_path, f"{data_3d_basename}_{result_type}.*")
             numpy_3d_data = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
 
             matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_filename)
@@ -217,6 +258,9 @@ def matplotlib_plot_2d(save_filepath, data_2d_list):
     plt.close(fig)
 
 
+##################
+# Core functions #
+##################
 def full_plot_2d(data_3d_basename: str):
     folder_paths = {
         "labels_2d": os.path.join(CROPPED_PATH, "labels_2d_v6"),
@@ -240,7 +284,17 @@ def full_plot_2d(data_3d_basename: str):
 
 
 def main():
-    single_plot_3d()
+    # Single Test #
+
+    # data_3d_filepath = os.path.join(RESULTS_PATH, "predict_pipeline", "output_3d", "PA000005_05352_input.nii.gz")
+    # data_3d_filepath = os.path.join(CROPPED_PATH, "labels_3d_v6", "PA000005_05352.nii.gz")
+    # data_3d_filepath = os.path.join(CROPPED_PATH, "preds_3d_v6", "PA000005_05352.nii.gz")
+    data_3d_filepath = os.path.join(DATA_PATH, "Pipes3DGenerator", "labels", "01.npy")
+
+    single_plot_3d(data_3d_filepath=data_3d_filepath, interactive_mode=True, interactive_version=1)
+
+
+    # Multiple Tests #
 
     # data_3d_basename = "PA000005_11899"
     # data_3d_basename = "PA000005_09039"
