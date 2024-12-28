@@ -8,6 +8,7 @@ import pathlib
 from datasets.custom_datasets_2d import TreesCustomDataloader2D
 from datasets.custom_datasets_3d import TreesCustomDataloader3D
 
+
 # Define dataset folder
 DATASET_FOLDER = "parse2022" # TODO: Read from config file
 

@@ -10,6 +10,7 @@ import nibabel as nib
 import trimesh
 import open3d as o3d
 
+
 IMAGES_6_VIEWS = ['top', 'bottom', 'front', 'back', 'left', 'right']
 
 

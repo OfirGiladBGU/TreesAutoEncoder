@@ -6,10 +6,16 @@ from tqdm import tqdm
 import pandas as pd
 from scipy.ndimage import label
 from skimage import color
+from enum import Enum
 
 from dataset_list import DATASET_PATH, CROPPED_PATH
 from dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file, project_3d_to_2d,
                            IMAGES_6_VIEWS, save_nii_gz_in_identity_affine)
+
+
+class TaskType(Enum):
+    CONNECT_COMPONENTS = 1
+    PATCH_HOLES = 2
 
 
 #########
@@ -176,7 +182,7 @@ def create_preds_components():
 ###############################
 # 2D Projections and 3D Cubes #
 ###############################
-def create_2d_projections_and_3d_cubes():
+def create_2d_projections_and_3d_cubes(task_type: TaskType):
     # Inputs
     input_folders = {
         "labels": os.path.join(DATASET_PATH, "labels"),
@@ -271,12 +277,21 @@ def create_2d_projections_and_3d_cubes():
             pred_fixed_cube = pred_fixed_cubes[cube_idx]
             pred_fixed_components_cube = pred_fixed_components_cubes[cube_idx]
 
-            # check that there are 2 or more components to connect
-            global_components_3d_indices = list(np.unique(pred_components_cube))
-            global_components_3d_indices.remove(0)
-            global_components_3d_count = len(global_components_3d_indices)
-            if global_components_3d_count < 2:
-                continue
+            # TODO: enable 2 modes
+            if task_type == TaskType.CONNECT_COMPONENTS:
+                # check that there are 2 or more components to connect
+                global_components_3d_indices = list(np.unique(pred_components_cube))
+                global_components_3d_indices.remove(0)
+                global_components_3d_count = len(global_components_3d_indices)
+                if global_components_3d_count < 2:
+                    continue
+            elif task_type == TaskType.PATCH_HOLES:
+                # TODO: Check if (label - pred_fixed) > 0.5
+                delta = (label_cube - pred_fixed_cube) > 0.5
+                if np.count_nonzero(delta) == 0:
+                    continue
+            else:
+                raise ValueError("Invalid Task Type")
 
             # Project 3D to 2D (Labels)
             label_projections = project_3d_to_2d(
@@ -426,7 +441,8 @@ def main():
     # create_dataset_depth_2d_projections()
 
     # create_preds_components()
-    create_2d_projections_and_3d_cubes()
+    task_type = TaskType.CONNECT_COMPONENTS
+    create_2d_projections_and_3d_cubes(task_type=task_type)
 
 
 if __name__ == "__main__":
