@@ -16,7 +16,8 @@ def _zero_out_radius(tensor, point, radius):
                 tensor[0, i, j] = 0
 
 
-def create_holes(input_data):
+def create_2d_holes(input_data: torch.Tensor):
+    # input_data: (batch_size, 1, 32, 32)
     for idx in range(len(input_data)):
         white_points = torch.nonzero(input_data[idx] > 0.6)
 
@@ -24,7 +25,7 @@ def create_holes(input_data):
             # Randomly select one of the non-zero points
             random_point = random.choice(white_points)
             radius = random.randint(3, 5)
-            _zero_out_radius(input_data[idx], random_point, radius)
+            _zero_out_radius(tensor=input_data[idx], point=random_point, radius=radius)
 
             # plt.imshow(input_data[idx].permute(1, 2, 0))
             # save_image(input_data[idx], 'img1.png')
