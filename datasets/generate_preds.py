@@ -26,8 +26,8 @@ def generate_holes():
         # TODO: implement
 
         # Save data:
-        save_filename = os.path.join(output_folder, data_filepath.name)
-        convert_numpy_to_data_file(numpy_data=numpy_data, source_data_filepath=data_filepath,
+        save_filename = os.path.join(output_folder, data_filepath.stem)
+        convert_numpy_to_data_file(numpy_data=numpy_data, source_data_filepath="dummy.npy",
                                    save_filename=save_filename)
 
 
