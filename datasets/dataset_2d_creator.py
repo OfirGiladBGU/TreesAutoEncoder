@@ -285,11 +285,23 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
                 global_components_3d_count = len(global_components_3d_indices)
                 if global_components_3d_count < 2:
                     continue
+
+                # Log 3D info
+                cubes_data[cube_idx].update({
+                    # "name": output_3d_format,
+                    "pred_global_components": global_components_3d_count,
+                })
             elif task_type == TaskType.PATCH_HOLES:
                 # TODO: Check if (label - pred_fixed) > 0.5
                 delta = (label_cube - pred_fixed_cube) > 0.5
                 if np.count_nonzero(delta) == 0:
                     continue
+
+                # Log 3D info
+                cubes_data[cube_idx].update({
+                    # "name": output_3d_format,
+                    "label_pred_delta": delta,
+                })
             else:
                 raise ValueError("Invalid Task Type")
 
@@ -353,10 +365,10 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
             #     print("Debug")
 
             # Validate the conditions
-            if not (condition1 is True and condition2 is True):
+            conditions = [condition1, condition2]
+            if not all(conditions):
                 continue
 
-            cube_data = cubes_data[cube_idx]
             cube_idx_str = str(cube_idx).zfill(cubes_count_digits_count)
 
             for image_view in IMAGES_6_VIEWS:
@@ -411,20 +423,23 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
             convert_numpy_to_data_file(numpy_data=pred_fixed_components_cube, source_data_filepath=pred_component_filepath,
                                        save_filename=save_filename)
 
+            if task_type == TaskType.CONNECT_COMPONENTS:
+                label_components_cube = connected_components_3d(data_3d=label_cube)[0]
 
-            # Log 3D info
-            label_components_cube = connected_components_3d(data_3d=label_cube)[0]
+                local_components_3d_indices = list(np.unique(label_components_cube))
+                local_components_3d_indices.remove(0)
+                local_components_3d_count = len(local_components_3d_indices)
 
-            local_components_3d_indices = list(np.unique(label_components_cube))
-            local_components_3d_indices.remove(0)
-            local_components_3d_count = len(local_components_3d_indices)
+                # Log 3D info
+                cubes_data[cube_idx].update({
+                    "label_local_components": local_components_3d_count
+                })
+            elif task_type == TaskType.PATCH_HOLES:
+                pass
+            else:
+                raise ValueError("Invalid Task Type")
 
-            cube_data.update({
-                # "name": output_3d_format,
-                "pred_global_components": global_components_3d_count,
-                "label_local_components": local_components_3d_count
-            })
-            log_data[output_3d_format] = cube_data
+            log_data[output_3d_format] = cubes_data[cube_idx]
 
             # DEBUG
             # _convert_numpy_to_nii_gz(label_cube, save_name="1")
