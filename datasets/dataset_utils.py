@@ -17,12 +17,19 @@ IMAGES_6_VIEWS = ['top', 'bottom', 'front', 'back', 'left', 'right']
 def get_data_file_stem(data_filepath) -> str:
     data_filepath = str(data_filepath)
     if data_filepath.endswith(".nii.gz"):
-        data_filepath_stem = pathlib.Path(data_filepath.replace(".nii.gz", "")).name
+        replace_extension = ".nii.gz"
     elif data_filepath.endswith(".ply"):
-        data_filepath_stem =  pathlib.Path(data_filepath.replace(".ply", "")).name
+        replace_extension = ".ply"
+    elif data_filepath.endswith(".obj"):
+        replace_extension = ".obj"
+    elif data_filepath.endswith(".pcd"):
+        replace_extension = ".pcd"
+    elif data_filepath.endswith(".npy"):
+        replace_extension = ".npy"
     else:
         raise ValueError("Invalid data format")
 
+    data_filepath_stem = pathlib.Path(data_filepath.replace(replace_extension, "")).name
     return data_filepath_stem
 
 

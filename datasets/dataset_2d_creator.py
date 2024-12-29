@@ -119,7 +119,7 @@ def create_dataset_depth_2d_projections():
     # Get the filepaths
     input_filepaths = dict()
     for key, value in input_folders.items():
-        input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.nii.gz"))
+        input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.*"))
 
     filepaths_count = len(input_filepaths["labels"])
     for filepath_idx in tqdm(range(filepaths_count)):
@@ -456,6 +456,7 @@ def main():
     # create_dataset_depth_2d_projections()
 
     # create_preds_components()
+
     task_type = TaskType.CONNECT_COMPONENTS
     create_2d_projections_and_3d_cubes(task_type=task_type)
 
