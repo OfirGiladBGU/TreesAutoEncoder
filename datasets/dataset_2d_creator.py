@@ -293,14 +293,15 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
                 })
             elif task_type == TaskType.PATCH_HOLES:
                 # TODO: Check if (label - pred_fixed) > 0.5
-                delta = (label_cube - pred_fixed_cube) > 0.5
-                if np.count_nonzero(delta) == 0:
+                delta = np.abs(label_cube - pred_cube) > 0.5
+                delta_count = np.count_nonzero(delta)
+                if delta_count == 0:
                     continue
 
                 # Log 3D info
                 cubes_data[cube_idx].update({
                     # "name": output_3d_format,
-                    "label_pred_delta": delta,
+                    "delta_count": delta_count,
                 })
             else:
                 raise ValueError("Invalid Task Type")
@@ -457,7 +458,9 @@ def main():
 
     # create_preds_components()
 
-    task_type = TaskType.CONNECT_COMPONENTS
+    # task_type = TaskType.CONNECT_COMPONENTS
+
+    task_type = TaskType.PATCH_HOLES
     create_2d_projections_and_3d_cubes(task_type=task_type)
 
 
