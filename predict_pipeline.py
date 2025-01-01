@@ -386,10 +386,12 @@ def full_merge():
             row["start_x"], row["end_x"], row["start_y"], row["end_y"], row["start_z"], row["end_z"]
         )
 
+        size_x, size_y, size_z = end_x - start_x, end_y - start_y, end_z - start_z
+
         # Perform the logical OR operation on the specific region
         input_data[start_x:end_x, start_y:end_y, start_z:end_z] = np.logical_or(
             input_data[start_x:end_x, start_y:end_y, start_z:end_z],
-            predict_data
+            predict_data[:size_x, :size_y, :size_z]
         )
 
     # Save the final result

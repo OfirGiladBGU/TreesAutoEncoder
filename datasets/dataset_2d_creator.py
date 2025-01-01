@@ -38,21 +38,30 @@ def connected_components_3d(data_3d: np.ndarray):
 def crop_mini_cubes(data_3d: np.ndarray, size: tuple = (28, 28, 28), step: int = 14, cubes_data: bool = False):
     mini_cubes = list()
     mini_cubes_data = list()
+
     for x in range(0, data_3d.shape[0], step):
         for y in range(0, data_3d.shape[1], step):
             for z in range(0, data_3d.shape[2], step):
-                # print(i, j, k)
-                if (
-                    x + size[0] > data_3d.shape[0] or
-                    y + size[1] > data_3d.shape[1] or
-                    z + size[2] > data_3d.shape[2]
-                ):
-                    continue
+                # print(x, y, z)
 
                 start_x, start_y, start_z = x, y, z
-                end_x, end_y, end_z = x + size[0], y + size[1], z + size[2]
+                end_x = min(x + size[0], data_3d.shape[0])
+                end_y = min(y + size[1], data_3d.shape[1])
+                end_z = min(z + size[2], data_3d.shape[2])
 
                 mini_cube = data_3d[start_x:end_x, start_y:end_y, start_z:end_z]
+
+                # Pad with zeros if the cube is smaller than the requested size
+                pad_x = size[0] - mini_cube.shape[0]
+                pad_y = size[1] - mini_cube.shape[1]
+                pad_z = size[2] - mini_cube.shape[2]
+                mini_cube = np.pad(
+                    array=mini_cube,
+                    pad_width=((0, pad_x), (0, pad_y), (0, pad_z)),
+                    mode='constant',
+                    constant_values=0
+                )
+
                 mini_cubes.append(mini_cube)
 
                 if cubes_data is True:
@@ -62,7 +71,12 @@ def crop_mini_cubes(data_3d: np.ndarray, size: tuple = (28, 28, 28), step: int =
                         "start_z": start_z,
                         "end_x": end_x,
                         "end_y": end_y,
-                        "end_z": end_z
+                        "end_z": end_z,
+
+                        # Optional
+                        "size_x": end_x - start_x,
+                        "size_y": end_y - start_y,
+                        "size_z": end_z - start_z
                     })
 
     if cubes_data is False:
