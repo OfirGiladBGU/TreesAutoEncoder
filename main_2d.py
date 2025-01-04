@@ -95,4 +95,6 @@ if __name__ == "__main__":
     # TODO: check option to add confidence/classification head for the model to threshold the pixels - V
     # TODO: remove punishment on input white area
 
+    # TODO: In pipes dataset - since the pipes are circular, holes in the pipes are not necessarily holes in the image (because the other side of the pipe might be visible)
+
     main()
