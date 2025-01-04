@@ -12,7 +12,7 @@ from PIL import Image, ImageDraw, ImageFont
 from datasets.dataset_utils import apply_threshold, IMAGES_6_VIEWS
 from datasets.custom_datasets_3d import V1_3D_DATASETS, V2_3D_DATASETS
 from trainer import loss_functions
-from train_utils import data_3d_to_2d_plot
+from trainer import train_utils
 
 # TODO: remove later
 import torch.nn.functional as F
@@ -184,7 +184,7 @@ class Trainer(object):
                     #     numpy_data=target_data_idx,
                     #     save_filename=save_filename_3d
                     # )
-                    data_3d_to_2d_plot(data_3d=target_data_idx, save_filename=save_filename_2d)
+                    train_utils.data_3d_to_2d_plot(data_3d=target_data_idx, save_filename=save_filename_2d)
                     images_info_idx["target"] = save_filename_2d
 
                     # Output
@@ -196,7 +196,7 @@ class Trainer(object):
                     #     numpy_data=output_data_idx,
                     #     save_filename=save_filename_3d
                     # )
-                    data_3d_to_2d_plot(data_3d=output_data_idx, save_filename=save_filename_2d)
+                    train_utils.data_3d_to_2d_plot(data_3d=output_data_idx, save_filename=save_filename_2d)
                     images_info_idx["output"] = save_filename_2d
 
                     # Fusion
@@ -208,7 +208,7 @@ class Trainer(object):
                     #     numpy_data=fusion_data_idx,
                     #     save_filename=save_filename_3d
                     # )
-                    data_3d_to_2d_plot(data_3d=fusion_data_idx, save_filename=save_filename_2d)
+                    train_utils.data_3d_to_2d_plot(data_3d=fusion_data_idx, save_filename=save_filename_2d)
                     images_info_idx["fusion"] = save_filename_2d
 
                     # Input
@@ -236,7 +236,7 @@ class Trainer(object):
                         #     numpy_data=input_data_idx,
                         #     save_filename=save_filename_3d
                         # )
-                        data_3d_to_2d_plot(data_3d=input_data_idx, save_filename=save_filename_2d)
+                        train_utils.data_3d_to_2d_plot(data_3d=input_data_idx, save_filename=save_filename_2d)
 
                     else:
                         raise ValueError("Invalid dataset")

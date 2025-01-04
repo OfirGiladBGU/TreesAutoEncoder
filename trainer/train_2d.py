@@ -11,7 +11,7 @@ import wandb
 from datasets.dataset_utils import apply_threshold
 from datasets.custom_datasets_2d import V1_2D_DATASETS, V2_2D_DATASETS
 from trainer import loss_functions
-from train_utils import create_2d_holes
+from trainer import train_utils
 
 # TODO: remove later
 import torch.nn.functional as F
@@ -279,7 +279,7 @@ class Trainer(object):
                 # print(res.max())
                 # print(res.min())
 
-                create_2d_holes(input_data=input_data)
+                train_utils.create_2d_holes(input_data=input_data)
 
             input_data = input_data.to(self.device)
             target_data = target_data.to(self.device)
@@ -335,7 +335,7 @@ class Trainer(object):
                     # if target_data.dtype != torch.float32:
                     #     target_data = target_data.float()
 
-                    create_2d_holes(input_data=input_data)
+                    train_utils.create_2d_holes(input_data=input_data)
 
                 input_data = input_data.to(self.device)
                 target_data = target_data.to(self.device)
@@ -403,7 +403,7 @@ class Trainer(object):
                     # if target_data.dtype != torch.float32:
                     #     target_data = target_data.float()
 
-                    create_2d_holes(input_data=input_data)
+                    train_utils.create_2d_holes(input_data=input_data)
 
                 input_data = input_data.to(self.device)
                 target_data = target_data.to(self.device)
