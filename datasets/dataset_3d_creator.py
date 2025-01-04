@@ -4,9 +4,9 @@ import pathlib
 from tqdm import tqdm
 
 from dataset_list import CROPPED_PATH
-from dataset_utils import (convert_data_file_to_numpy, convert_numpy_to_data_file,
-                           reconstruct_3d_from_2d, project_3d_to_2d,
-                           get_images_6_views, IMAGES_6_VIEWS)
+from dataset_utils import (IMAGES_6_VIEWS,
+                           convert_data_file_to_numpy, convert_numpy_to_data_file,
+                           project_3d_to_2d, get_images_6_views, reconstruct_3d_from_2d)
 
 
 ############################
@@ -71,19 +71,19 @@ def create_3d_reconstructions():
         pred_fixed_2d_filepath = input_filepaths["preds_fixed_2d"][filepath_idx]
 
         # Label
-        label_image_split = str(label_2d_filepath).rsplit("_", 1)
+        label_image_split = str(label_2d_filepath).rsplit(sep="_", maxsplit=1)
         label_image_split[1] = "<VIEW>.png"
         label_image_format = "_".join(label_image_split)
         labels_image_format_set.add(label_image_format)
 
         # Pred
-        pred_image_split = str(pred_2d_filepath).rsplit("_", 1)
+        pred_image_split = str(pred_2d_filepath).rsplit(sep="_", maxsplit=1)
         pred_image_split[1] = "<VIEW>.png"
         pred_image_format = "_".join(pred_image_split)
         preds_image_format_set.add(pred_image_format)
 
         # Pred Fixed
-        pred_fixed_image_split = str(pred_fixed_2d_filepath).rsplit("_", 1)
+        pred_fixed_image_split = str(pred_fixed_2d_filepath).rsplit(sep="_", maxsplit=1)
         pred_fixed_image_split[1] = "<VIEW>.png"
         pred_fixed_image_format = "_".join(pred_fixed_image_split)
         preds_fixed_image_format_set.add(pred_fixed_image_format)
@@ -243,10 +243,11 @@ def main():
     create_3d_reconstructions()
     create_3d_fusions()
 
+    # TODO: DEBUG
     # test_2d_to_3d_and_back()
 
 
 if __name__ == "__main__":
     # TODO:
-    # 1. Make sure "parse2022" folder is present in the root directory
+    # 1. Make sure DATASET_FOLDER folder is present in the root directory
     main()

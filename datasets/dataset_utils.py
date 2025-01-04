@@ -2,16 +2,22 @@ import pathlib
 import numpy as np
 import torch
 import cv2
+from enum import Enum
 
 # For .nii.gz
 import nibabel as nib
 
-# For .ply
+# For .ply and .obj
 import trimesh
 import open3d as o3d
 
 
 IMAGES_6_VIEWS = ['top', 'bottom', 'front', 'back', 'left', 'right']
+
+
+class TaskType(Enum):
+    CONNECT_COMPONENTS = 1
+    PATCH_HOLES = 2
 
 
 def get_data_file_stem(data_filepath) -> str:
