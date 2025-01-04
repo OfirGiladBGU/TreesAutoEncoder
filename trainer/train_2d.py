@@ -7,6 +7,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import wandb
+from tqdm import tqdm
 
 from datasets.dataset_utils import apply_threshold
 from datasets.custom_datasets_2d import V1_2D_DATASETS, V2_2D_DATASETS
@@ -373,7 +374,7 @@ class Trainer(object):
         torch.save(model_parameters, self.args.weights_filepath)
 
     # TODO: Handle V1 and V2 cases
-    def predict(self):
+    def predict(self, max_batches_to_plot=4):
         print(f"[Model: '{self.model.model_name}'] Predicting...")
         os.makedirs(name=self.args.results_path, exist_ok=True)
 
@@ -382,8 +383,8 @@ class Trainer(object):
             self.model.load_state_dict(torch.load(self.args.weights_filepath))
 
         with torch.no_grad():
-            batches_to_plot = 4
-            for batch_idx in range(batches_to_plot):
+            batches_to_plot = min(len(self.test_loader), max_batches_to_plot)
+            for batch_idx in tqdm(range(batches_to_plot)):
                 # Get the images from the test loader
                 batch_num = batch_idx + 1
                 data = iter(self.test_loader)
