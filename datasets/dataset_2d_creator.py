@@ -84,11 +84,11 @@ def outlier_removal(pred_data: np.ndarray, label_data: np.ndarray):
     # # V1
     # pred_data_fixed = np.logical_and(label_numpy_data, pred_numpy_data)
 
-    # # V2
+    # # V2 - CONNECTED COMPONENTS
     # outlier_data = np.maximum(pred_data - label_data, 0)
     # pred_data_fixed = pred_data - outlier_data
 
-    # V3
+    # V3 - PATCH HOLES
     pred_data_fixed = np.where(label_data > 0, pred_data, 0)
     return pred_data_fixed
 
