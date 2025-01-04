@@ -17,7 +17,7 @@ ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
 DATA_PATH = os.path.join(ROOT_PATH, "data")
 DATASET_PATH = os.path.join(DATA_PATH, DATASET_FOLDER)
 CROPPED_PATH = os.path.join(DATA_PATH, "cropped_data", DATASET_FOLDER)
-RESULTS_PATH = os.path.join(ROOT_PATH, "results")
+RESULTS_PATH = os.path.join(ROOT_PATH, "results", DATASET_FOLDER)
 
 MODEL_RESULTS_PATH = os.path.join(RESULTS_PATH, "models")
 PREDICT_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "predict_pipeline")
