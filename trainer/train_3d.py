@@ -71,7 +71,7 @@ class Trainer(object):
             train_loss += loss.item()
             self.optimizer.step()
             if batch_idx % self.args.log_interval == 0:
-                print('[Train] Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                print('[Train] Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {}'.format(
                     epoch,
                     batch_idx * len(input_data),
                     len(self.train_loader.dataset),
@@ -80,7 +80,7 @@ class Trainer(object):
                 ))
 
         train_avg_loss = train_loss / len(self.train_loader.dataset)
-        print('> [Train] Epoch: {}, Average Loss: {:.4f}'.format(
+        print('> [Train] Epoch: {}, Average Loss: {}'.format(
             epoch,
             train_avg_loss
         ))
@@ -103,7 +103,7 @@ class Trainer(object):
                 ).item()
 
         test_avg_loss = test_loss / len(self.test_loader.dataset)
-        print('> [Test] Average Loss: {:.4f}'.format(test_avg_loss))
+        print('> [Test] Average Loss: {}'.format(test_avg_loss))
         return test_avg_loss
 
     def train(self, use_weights=False):
