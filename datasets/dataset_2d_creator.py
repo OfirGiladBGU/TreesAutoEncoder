@@ -81,9 +81,15 @@ def crop_mini_cubes(data_3d: np.ndarray, size: tuple = (28, 28, 28), step: int =
 
 
 def outlier_removal(pred_data: np.ndarray, label_data: np.ndarray):
+    # # V1
     # pred_data_fixed = np.logical_and(label_numpy_data, pred_numpy_data)
-    outlier_data = np.maximum(pred_data - label_data, 0)
-    pred_data_fixed = pred_data - outlier_data
+
+    # # V2
+    # outlier_data = np.maximum(pred_data - label_data, 0)
+    # pred_data_fixed = pred_data - outlier_data
+
+    # V3
+    pred_data_fixed = np.where(label_data > 0, pred_data, 0)
     return pred_data_fixed
 
 
@@ -278,6 +284,9 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
         pred_fixed_numpy_data = outlier_removal(pred_data=pred_numpy_data, label_data=label_numpy_data)
         # pred_fixed_component_numpy_data = np.where(pred_fixed_numpy_data > 0.0, pred_component_numpy_data, 0.0)
 
+        if (pred_numpy_data - pred_fixed_numpy_data).sum() != 0:
+            raise ValueError("Outlier Removal Failed")
+
         # Crop Mini Cubes
         label_cubes, cubes_data = crop_mini_cubes(data_3d=label_numpy_data, size=size, step=step, cubes_data=True)
         pred_cubes = crop_mini_cubes(data_3d=pred_numpy_data, size=size, step=step)
@@ -347,7 +356,7 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
                 pred_fixed_components_cube = None
 
                 # TODO: Check if (label - pred_fixed) > 0.5
-                delta = np.abs(label_cube - pred_cube) > 0.5
+                delta = np.abs(label_cube - pred_fixed_cube) > 0.5
                 delta_count = np.count_nonzero(delta)
                 if delta_count == 0:
                     continue
