@@ -70,8 +70,6 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
     if data_extension in extension_map.keys():
         extension_map[data_extension](numpy_data=numpy_data, source_data_filepath=source_data_filepath,
                                       save_filename=save_filename)
-        _convert_numpy_to_nii_gz(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
-                                 save_filename=save_filename)
     else:
         raise ValueError("Invalid data format")
 
