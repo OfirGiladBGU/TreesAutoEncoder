@@ -46,7 +46,7 @@ def generate_holes_in_data():
         numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
 
         # Generate holes:
-        # TODO: implement
+        # TODO: implement (Use different method)
         num_of_holes = 5
         white_points = np.argwhere(numpy_data > 0.5)
         if len(white_points) > 0:
