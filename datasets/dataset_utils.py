@@ -251,37 +251,71 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
 # pcd to numpy and numpy to pcd #
 #################################
 def _convert_pcd_to_numpy(data_filepath) -> np.ndarray:
-    voxel_size = 2.0  # Define voxel size (the size of each grid cell)
+    # V1 - Using Open3D VoxelGrid
+    # voxel_size = 2.0  # Define voxel size (the size of each grid cell)
+    #
+    # pcd = o3d.io.read_point_cloud(data_filepath)
+    # voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=pcd, voxel_size=voxel_size)  # Voxelize pcd
+    # voxels = np.array([voxel.grid_index for voxel in voxel_grid.get_voxels()])  # Get voxel centers
+    # max_bounds = np.max(voxels, axis=0)
+    # min_bounds = np.min(voxels, axis=0)
+    # grid_shape = max_bounds - min_bounds + 1  # Determine grid dimensions
+    #
+    # numpy_data = np.zeros(shape=grid_shape, dtype=np.uint8)
+    # for voxel in voxels:
+    #     grid_index = voxel - min_bounds  # Shift indices to start at 0
+    #     numpy_data[tuple(grid_index)] = 1  # 1 = occupied, 0 = empty
 
+
+    # V2 - Convert Points to Discrete Voxels
     pcd = o3d.io.read_point_cloud(data_filepath)
-    voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=pcd, voxel_size=voxel_size)  # Voxelize pcd
-    voxels = np.array([voxel.grid_index for voxel in voxel_grid.get_voxels()])  # Get voxel centers
-    max_bounds = np.max(voxels, axis=0)
-    min_bounds = np.min(voxels, axis=0)
-    grid_shape = max_bounds - min_bounds + 1  # Determine grid dimensions
+    points = np.asarray(pcd.points)
 
-    numpy_data = np.zeros(shape=grid_shape, dtype=np.uint8)
-    for voxel in voxels:
-        grid_index = voxel - min_bounds  # Shift indices to start at 0
-        numpy_data[tuple(grid_index)] = 1  # 1 = occupied, 0 = empty
+    rounded_points = np.round(points).astype(int)  # Round the point coordinates to the nearest integer
+
+    min_coords = rounded_points.min(axis=0)  # Compute the minimum coordinates to shift all points to the positive space
+    shifted_points = rounded_points - min_coords
+
+    max_coords = shifted_points.max(axis=0)  # Determine the size of the voxel grid
+    numpy_data = np.zeros((max_coords[0] + 1, max_coords[1] + 1, max_coords[2] + 1), dtype=np.uint8)
+
+    for point in shifted_points:  # Set voxels corresponding to points to 1 (white)
+        x, y, z = point
+        numpy_data[x, y, z] = 1
 
     return numpy_data
 
 
 def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None) -> o3d.geometry.PointCloud:
-    voxel_size = 2.0  # Define voxel size (the size of each grid cell)
+    # V1 - Using Open3D VoxelGrid
+    # voxel_size = 2.0  # Define voxel size (the size of each grid cell)
+    #
+    # occupied_indices = np.argwhere(numpy_data == 1)  # Find occupied voxels (indices where numpy_data == 1)
+    # points = occupied_indices * voxel_size  # Convert indices to real-world coordinates (Scale by voxel size)
+    #
+    # pcd = o3d.geometry.PointCloud()  # Create Open3D PointCloud
+    # pcd.points = o3d.utility.Vector3dVector(points)
 
-    occupied_indices = np.argwhere(numpy_data == 1)  # Find occupied voxels (indices where numpy_data == 1)
-    points = occupied_indices * voxel_size  # Convert indices to real-world coordinates (Scale by voxel size)
 
-    pcd = o3d.geometry.PointCloud()  # Create Open3D PointCloud
-    pcd.points = o3d.utility.Vector3dVector(points)
+    # V2 - Convert Points to Discrete Voxels
+    pcd_data = o3d.io.read_point_cloud(source_data_filepath)  # Load the original PCD file to retrieve the shift
+    pcd_data_points = np.asarray(pcd_data.points)
+    shift = np.floor(pcd_data_points.min(axis=0)).astype(int)  # Recompute the original shift
 
+    voxel_indices = np.array(np.nonzero(numpy_data)).T  # Find the indices of all non-zero voxels [Shape: (N, 3)]
+
+    original_points = voxel_indices + shift  # Apply the inverse shift to recover the original coordinates
+
+    pcd = o3d.geometry.PointCloud()  # Convert the points to Open3D PointCloud
+    pcd.points = o3d.utility.Vector3dVector(original_points)
+
+
+    # Save the PCD
     if save_filename is not None and len(save_filename) > 0:
         save_filename = str(save_filename)
         if not save_filename.endswith(".pcd"):
             save_filename = f"{save_filename}.pcd"
-        o3d.io.write_point_cloud(filename=save_filename, pointcloud=pcd)  # Save to PCD
+        o3d.io.write_point_cloud(filename=save_filename, pointcloud=pcd, write_ascii=True)  # Save to PCD
 
     new_pcd_data = pcd
     return new_pcd_data

@@ -12,7 +12,7 @@ DATASET_PATH = os.path.join(DATA_PATH, "Pipes3DGenerator")
 
 
 # Create new 'labels' folder with numpy data
-def convert_original_data_to_npy():
+def convert_original_data_to_discrete_data(save_as_npy: bool = False):
     input_folder = os.path.join(DATASET_PATH, "originals")
     output_folder = os.path.join(DATASET_PATH, "labels")
 
@@ -27,7 +27,10 @@ def convert_original_data_to_npy():
 
         # Save data:
         save_filename = os.path.join(output_folder, data_filepath.stem)
-        convert_numpy_to_data_file(numpy_data=numpy_data, source_data_filepath="dummy.npy",
+
+        if save_as_npy is True:
+            data_filepath += ".npy"
+        convert_numpy_to_data_file(numpy_data=numpy_data, source_data_filepath=data_filepath,
                                    save_filename=save_filename)
 
 
@@ -69,7 +72,7 @@ def generate_holes_in_data():
 
 
 def main():
-    # convert_original_data_to_npy()
+    # convert_original_data_to_discrete_data(save_as_npy=True)
     generate_holes_in_data()
 
 
