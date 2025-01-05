@@ -9,7 +9,7 @@ from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_
 from datasets.dataset_list import DATA_PATH
 
 
-DATASET_PATH = os.path.join(DATA_PATH, "Pipes3DGeneratorPCD")
+DATASET_PATH = os.path.join(DATA_PATH, "Pipes3DGeneratorTree")
 
 
 ###################
@@ -121,7 +121,7 @@ def generate_plane_holes(numpy_data: np.ndarray):
     white_points = np.argwhere(numpy_data > 0.5)
     if len(white_points) > 0:
         for _ in range(num_of_centers):
-            size = random.randint(1, 3)
+            size = random.randint(0, 1)
 
             # Randomly select one of the non-zero points
             random_point = random.choice(white_points)
@@ -180,8 +180,8 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
 
 
 def main():
-    convert_originals_data_to_labels_data(save_as_npy=False, increase_density=True)
-    # convert_labels_data_to_preds_data(save_as_npy=False)
+    # convert_originals_data_to_labels_data(save_as_npy=True, increase_density=False)
+    convert_labels_data_to_preds_data(save_as_npy=True)
 
 
 if __name__ == '__main__':
