@@ -8,11 +8,43 @@ from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_
 from datasets.dataset_list import DATA_PATH
 
 
-DATASET_PATH = os.path.join(DATA_PATH, "Pipes3DGenerator")
+DATASET_PATH = os.path.join(DATA_PATH, "Pipes3DGeneratorPCD")
+
+
+# Very slow method to expand the connected neighbors
+def expand_connected_neighbors(array: np.ndarray) -> np.ndarray:
+    """
+    Expands the value of `1` to all 6-connected neighbors in a 3D numpy array.
+    Args:
+        array (np.ndarray): A 3D numpy array with binary values (0 and 1).
+
+    Returns:
+        np.ndarray: A 3D numpy array with the neighbors of all `1` voxels set to `1`.
+    """
+    # Get the shape of the array
+    x_max, y_max, z_max = array.shape
+
+    # Create a copy of the array to store results
+    expanded_array = array.copy()
+
+    # Iterate over the array to find all 1's and expand to their 6 neighbors
+    for x in range(x_max):
+        for y in range(y_max):
+            for z in range(z_max):
+                if array[x, y, z] == 1:
+                    # Update neighbors in 6 directions
+                    if x > 0: expanded_array[x - 1, y, z] = 1
+                    if x < x_max - 1: expanded_array[x + 1, y, z] = 1
+                    if y > 0: expanded_array[x, y - 1, z] = 1
+                    if y < y_max - 1: expanded_array[x, y + 1, z] = 1
+                    if z > 0: expanded_array[x, y, z - 1] = 1
+                    if z < z_max - 1: expanded_array[x, y, z + 1] = 1
+
+    return expanded_array
 
 
 # Create new 'labels' folder with numpy data
-def convert_original_data_to_discrete_data(save_as_npy: bool = False):
+def convert_original_data_to_discrete_data(save_as_npy: bool = False, increase_density: bool = False):
     input_folder = os.path.join(DATASET_PATH, "originals")
     output_folder = os.path.join(DATASET_PATH, "labels")
 
@@ -25,11 +57,14 @@ def convert_original_data_to_discrete_data(save_as_npy: bool = False):
         data_filepath = data_filepaths[filepath_idx]
         numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
 
+        if increase_density is True:
+            numpy_data = expand_connected_neighbors(array=numpy_data)
+
         # Save data:
         save_filename = os.path.join(output_folder, data_filepath.stem)
 
         if save_as_npy is True:
-            data_filepath += ".npy"
+            data_filepath = f"{data_filepath}.npy"
         convert_numpy_to_data_file(numpy_data=numpy_data, source_data_filepath=data_filepath,
                                    save_filename=save_filename)
 
@@ -69,14 +104,14 @@ def generate_holes_in_data(save_as_npy: bool = False):
         save_filename = os.path.join(output_folder, data_filepath.stem)
 
         if save_as_npy is True:
-            data_filepath += ".npy"
+            data_filepath = f"{data_filepath}.npy"
         convert_numpy_to_data_file(numpy_data=numpy_data, source_data_filepath=data_filepath,
                                    save_filename=save_filename)
 
 
 def main():
-    # convert_original_data_to_discrete_data(save_as_npy=True)
-    generate_holes_in_data(save_as_npy=True)
+    convert_original_data_to_discrete_data(save_as_npy=False, increase_density=True)
+    # generate_holes_in_data(save_as_npy=False)
 
 
 if __name__ == '__main__':
