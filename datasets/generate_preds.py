@@ -76,7 +76,7 @@ def generate_holes_in_data(save_as_npy: bool = False):
 
 def main():
     # convert_original_data_to_discrete_data(save_as_npy=True)
-    generate_holes_in_data()
+    generate_holes_in_data(save_as_npy=True)
 
 
 if __name__ == '__main__':
