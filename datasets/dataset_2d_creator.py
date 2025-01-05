@@ -31,47 +31,101 @@ def connected_components_3d(data_3d: np.ndarray):
 
 
 def crop_mini_cubes(data_3d: np.ndarray, size: tuple = (28, 28, 28), step: int = 14, cubes_data: bool = False):
-    mini_cubes = list()
-    mini_cubes_data = list()
+    # Slower method
+    # mini_cubes = list()
+    # mini_cubes_data = list()
+    #
+    # for x in range(0, data_3d.shape[0], step):
+    #     for y in range(0, data_3d.shape[1], step):
+    #         for z in range(0, data_3d.shape[2], step):
+    #             # print(x, y, z)
+    #
+    #             start_x, start_y, start_z = x, y, z
+    #             end_x = min(x + size[0], data_3d.shape[0])
+    #             end_y = min(y + size[1], data_3d.shape[1])
+    #             end_z = min(z + size[2], data_3d.shape[2])
+    #
+    #             mini_cube = data_3d[start_x:end_x, start_y:end_y, start_z:end_z]
+    #
+    #             # Pad with zeros if the cube is smaller than the requested size
+    #             pad_x = size[0] - mini_cube.shape[0]
+    #             pad_y = size[1] - mini_cube.shape[1]
+    #             pad_z = size[2] - mini_cube.shape[2]
+    #             mini_cube = np.pad(
+    #                 array=mini_cube,
+    #                 pad_width=((0, pad_x), (0, pad_y), (0, pad_z)),
+    #                 mode='constant',
+    #                 constant_values=0
+    #             )
+    #
+    #             mini_cubes.append(mini_cube)
+    #
+    #             if cubes_data is True:
+    #                 mini_cubes_data.append({
+    #                     "start_x": start_x,
+    #                     "start_y": start_y,
+    #                     "start_z": start_z,
+    #                     "end_x": end_x,
+    #                     "end_y": end_y,
+    #                     "end_z": end_z,
+    #
+    #                     # Optional
+    #                     "size_x": end_x - start_x,
+    #                     "size_y": end_y - start_y,
+    #                     "size_z": end_z - start_z
+    #                 })
 
-    for x in range(0, data_3d.shape[0], step):
-        for y in range(0, data_3d.shape[1], step):
-            for z in range(0, data_3d.shape[2], step):
-                # print(x, y, z)
 
-                start_x, start_y, start_z = x, y, z
-                end_x = min(x + size[0], data_3d.shape[0])
-                end_y = min(y + size[1], data_3d.shape[1])
-                end_z = min(z + size[2], data_3d.shape[2])
+    # Faster method
+    # Compute padding required to ensure all cubes fit within bounds
+    pad_x = (0, max(0, (data_3d.shape[0] - size[0]) % step))
+    pad_y = (0, max(0, (data_3d.shape[1] - size[1]) % step))
+    pad_z = (0, max(0, (data_3d.shape[2] - size[2]) % step))
 
-                mini_cube = data_3d[start_x:end_x, start_y:end_y, start_z:end_z]
+    # Calculate the padding required to ensure all cubes fit within bounds
+    if pad_x[1] > 0:
+        pad_x = (0, step - pad_x[1])
+    if pad_y[1] > 0:
+        pad_y = (0, step - pad_y[1])
+    if pad_z[1] > 0:
+        pad_z = (0, step - pad_z[1])
 
-                # Pad with zeros if the cube is smaller than the requested size
-                pad_x = size[0] - mini_cube.shape[0]
-                pad_y = size[1] - mini_cube.shape[1]
-                pad_z = size[2] - mini_cube.shape[2]
-                mini_cube = np.pad(
-                    array=mini_cube,
-                    pad_width=((0, pad_x), (0, pad_y), (0, pad_z)),
-                    mode='constant',
-                    constant_values=0
-                )
+    # Apply zero padding to the original array
+    padded_data = np.pad(
+        array=data_3d,
+        pad_width=(pad_x, pad_y, pad_z),
+        mode='constant',
+        constant_values=0
+    )
 
+    mini_cubes = []
+    mini_cubes_data = []
+
+    # Iterate over the padded data with fixed steps
+    for x in range(0, padded_data.shape[0], step):
+        for y in range(0, padded_data.shape[1], step):
+            for z in range(0, padded_data.shape[2], step):
+                # Crop the mini-cube
+                mini_cube = padded_data[x:x + size[0], y:y + size[1], z:z + size[2]]
                 mini_cubes.append(mini_cube)
 
                 if cubes_data is True:
+                    end_x = min(x + size[0], data_3d.shape[0])
+                    end_y = min(y + size[1], data_3d.shape[1])
+                    end_z = min(z + size[2], data_3d.shape[2])
+
                     mini_cubes_data.append({
-                        "start_x": start_x,
-                        "start_y": start_y,
-                        "start_z": start_z,
+                        "start_x": x,
+                        "start_y": y,
+                        "start_z": z,
                         "end_x": end_x,
                         "end_y": end_y,
                         "end_z": end_z,
 
                         # Optional
-                        "size_x": end_x - start_x,
-                        "size_y": end_y - start_y,
-                        "size_z": end_z - start_z
+                        "size_x": end_x - x,
+                        "size_y": end_y - y,
+                        "size_z": end_z - z
                     })
 
     if cubes_data is False:
@@ -273,7 +327,7 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
     if len(set(filepaths_found)) != 1:
         raise ValueError("Different number of files found in the Input folders")
 
-    print("Cropping Mini Cubes...\n")
+    print("Cropping Mini Cubes...")
     filepaths_count = len(input_filepaths["labels"])
     for filepath_idx in range(filepaths_count):
         # Get index data:
