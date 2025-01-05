@@ -3,6 +3,7 @@ import pathlib
 from tqdm import tqdm
 import numpy as np
 import random
+from scipy.ndimage import convolve
 
 from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file
 from datasets.dataset_list import DATA_PATH
@@ -21,24 +22,39 @@ def expand_connected_neighbors(array: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: A 3D numpy array with the neighbors of all `1` voxels set to `1`.
     """
+    # V1: Very slow method
     # Get the shape of the array
-    x_max, y_max, z_max = array.shape
+    # x_max, y_max, z_max = array.shape
+    #
+    # # Create a copy of the array to store results
+    # expanded_array = array.copy()
+    #
+    # # Iterate over the array to find all 1's and expand to their 6 neighbors
+    # for x in range(x_max):
+    #     for y in range(y_max):
+    #         for z in range(z_max):
+    #             if array[x, y, z] == 1:
+    #                 # Update neighbors in 6 directions
+    #                 if x > 0: expanded_array[x - 1, y, z] = 1
+    #                 if x < x_max - 1: expanded_array[x + 1, y, z] = 1
+    #                 if y > 0: expanded_array[x, y - 1, z] = 1
+    #                 if y < y_max - 1: expanded_array[x, y + 1, z] = 1
+    #                 if z > 0: expanded_array[x, y, z - 1] = 1
+    #                 if z < z_max - 1: expanded_array[x, y, z + 1] = 1
 
-    # Create a copy of the array to store results
-    expanded_array = array.copy()
+    # V2: Faster method
+    # Define a kernel for 6-connected neighbors
+    kernel = np.array([
+        [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
+        [[0, 1, 0], [1, 0, 1], [0, 1, 0]],
+        [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
+    ])
 
-    # Iterate over the array to find all 1's and expand to their 6 neighbors
-    for x in range(x_max):
-        for y in range(y_max):
-            for z in range(z_max):
-                if array[x, y, z] == 1:
-                    # Update neighbors in 6 directions
-                    if x > 0: expanded_array[x - 1, y, z] = 1
-                    if x < x_max - 1: expanded_array[x + 1, y, z] = 1
-                    if y > 0: expanded_array[x, y - 1, z] = 1
-                    if y < y_max - 1: expanded_array[x, y + 1, z] = 1
-                    if z > 0: expanded_array[x, y, z - 1] = 1
-                    if z < z_max - 1: expanded_array[x, y, z + 1] = 1
+    # Apply the convolution
+    convolved = convolve(array, kernel, mode='constant', cval=0)
+
+    # Threshold the result to binary (0 or 1)
+    expanded_array = (convolved > 0).astype(np.uint8)
 
     return expanded_array
 
