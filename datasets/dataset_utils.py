@@ -24,33 +24,29 @@ def get_data_file_stem(data_filepath) -> str:
     data_filepath = str(data_filepath)
     if data_filepath.endswith(".nii.gz"):
         replace_extension = ".nii.gz"
-    elif data_filepath.endswith(".ply"):
-        replace_extension = ".ply"
-    elif data_filepath.endswith(".obj"):
-        replace_extension = ".obj"
-    elif data_filepath.endswith(".pcd"):
-        replace_extension = ".pcd"
-    elif data_filepath.endswith(".npy"):
-        replace_extension = ".npy"
     else:
-        raise ValueError("Invalid data format")
+        replace_extension = pathlib.Path(data_filepath).suffix
 
     data_filepath_stem = pathlib.Path(data_filepath.replace(replace_extension, "")).name
     return data_filepath_stem
 
 
 def convert_data_file_to_numpy(data_filepath) -> np.ndarray:
+    extension_map = {
+        ".nii.gz": _convert_nii_gz_to_numpy,
+        ".ply": _convert_ply_to_numpy,
+        ".obj": _convert_obj_to_numpy,
+        ".pcd": _convert_pcd_to_numpy,
+        ".npy": _convert_npy_to_numpy
+    }
     data_filepath = str(data_filepath)
     if data_filepath.endswith(".nii.gz"):
-        numpy_data = _convert_nii_gz_to_numpy(data_filepath=data_filepath)
-    elif data_filepath.endswith(".ply"):
-        numpy_data = _convert_ply_to_numpy(data_filepath=data_filepath)
-    elif data_filepath.endswith(".obj"):
-        numpy_data = _convert_obj_to_numpy(data_filepath=data_filepath)
-    elif data_filepath.endswith(".pcd"):
-        numpy_data = _convert_pcd_to_numpy(data_filepath=data_filepath)
-    elif data_filepath.endswith(".npy"):
-        numpy_data = _convert_npy_to_numpy(data_filepath=data_filepath)
+        data_extension = ".nii.gz"
+    else:
+        data_extension = pathlib.Path(data_filepath).suffix
+
+    if data_extension in extension_map.keys():
+        numpy_data = extension_map[data_extension](data_filepath=data_filepath)
     else:
         raise ValueError("Invalid data format")
 
@@ -58,22 +54,24 @@ def convert_data_file_to_numpy(data_filepath) -> np.ndarray:
 
 
 def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, save_filename=None):
+    extension_map = {
+        ".nii.gz": _convert_numpy_to_nii_gz,
+        ".ply": _convert_numpy_to_ply,
+        ".obj": _convert_numpy_to_obj,
+        ".pcd": _convert_numpy_to_pcd,
+        ".npy": _convert_numpy_to_npy  # Notice: Save as .npy ignores the source_data_filepath
+    }
     source_data_filepath = str(source_data_filepath)
     if source_data_filepath.endswith(".nii.gz"):
+        data_extension = ".nii.gz"
+    else:
+        data_extension = pathlib.Path(source_data_filepath).suffix
+
+    if data_extension in extension_map.keys():
+        extension_map[data_extension](numpy_data=numpy_data, source_data_filepath=source_data_filepath,
+                                      save_filename=save_filename)
         _convert_numpy_to_nii_gz(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
                                  save_filename=save_filename)
-    elif source_data_filepath.endswith(".ply"):
-        _convert_numpy_to_ply(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
-                              save_filename=save_filename)
-    elif source_data_filepath.endswith(".obj"):
-        _convert_numpy_to_obj(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
-                              save_filename=save_filename)
-    elif source_data_filepath.endswith(".pcd"):
-        _convert_numpy_to_pcd(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
-                              save_filename=save_filename)
-    elif source_data_filepath.endswith(".npy"):
-        _convert_numpy_to_npy(numpy_data=numpy_data, source_data_filepath=source_data_filepath,
-                              save_filename=save_filename)
     else:
         raise ValueError("Invalid data format")
 
