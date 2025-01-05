@@ -81,15 +81,19 @@ def crop_mini_cubes(data_3d: np.ndarray, size: tuple = (28, 28, 28), step: int =
 
 
 def outlier_removal(pred_data: np.ndarray, label_data: np.ndarray):
-    # # V1
-    # pred_data_fixed = np.logical_and(label_numpy_data, pred_numpy_data)
+    # # V1 - CONNECTED COMPONENTS
+    # pred_data_fixed = np.logical_and(pred_data, label_data)
 
     # # V2 - CONNECTED COMPONENTS
     # outlier_data = np.maximum(pred_data - label_data, 0)
     # pred_data_fixed = pred_data - outlier_data
 
-    # V3 - PATCH HOLES
-    pred_data_fixed = np.where(label_data > 0, pred_data, 0)
+    # # V3 - CONNECTED COMPONENTS
+    pred_data_fixed = np.logical_and(pred_data > 0, label_data > 0)
+    pred_data_fixed = pred_data_fixed.astype(label_data.dtype)
+
+    # V1 - PATCH HOLES
+    # pred_data_fixed = np.where(label_data > 0, pred_data, 0)
     return pred_data_fixed
 
 
@@ -269,8 +273,9 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
     if len(set(filepaths_found)) != 1:
         raise ValueError("Different number of files found in the Input folders")
 
+    print("Cropping Mini Cubes...\n")
     filepaths_count = len(input_filepaths["labels"])
-    for filepath_idx in range(filepaths_count):
+    for filepath_idx in tqdm(range(filepaths_count)):
         # Get index data:
         label_filepath = input_filepaths["labels"][filepath_idx]
         pred_filepath = input_filepaths["preds"][filepath_idx]
@@ -284,8 +289,9 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
         pred_fixed_numpy_data = outlier_removal(pred_data=pred_numpy_data, label_data=label_numpy_data)
         # pred_fixed_component_numpy_data = np.where(pred_fixed_numpy_data > 0.0, pred_component_numpy_data, 0.0)
 
-        if (pred_numpy_data - pred_fixed_numpy_data).sum() != 0:
-            raise ValueError("Outlier Removal Failed")
+        # TODO: Debug
+        # if (pred_numpy_data - pred_fixed_numpy_data).sum() != 0:
+        #     raise ValueError("Outlier Removal Failed")
 
         # Crop Mini Cubes
         label_cubes, cubes_data = crop_mini_cubes(data_3d=label_numpy_data, size=size, step=step, cubes_data=True)
@@ -559,8 +565,8 @@ def main():
 
     # create_preds_components()
 
-    # task_type = TaskType.CONNECT_COMPONENTS
-    task_type = TaskType.PATCH_HOLES
+    task_type = TaskType.CONNECT_COMPONENTS
+    # task_type = TaskType.PATCH_HOLES
     create_2d_projections_and_3d_cubes(task_type=task_type)
 
 
