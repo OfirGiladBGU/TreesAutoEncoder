@@ -12,7 +12,9 @@ from datasets.dataset_list import DATA_PATH
 DATASET_PATH = os.path.join(DATA_PATH, "Pipes3DGeneratorPCD")
 
 
-# Very slow method to expand the connected neighbors
+###################
+# Generate Labels #
+###################
 def expand_connected_neighbors(array: np.ndarray) -> np.ndarray:
     """
     Expands the value of `1` to all 6-connected neighbors in a 3D numpy array.
@@ -60,7 +62,13 @@ def expand_connected_neighbors(array: np.ndarray) -> np.ndarray:
 
 
 # Create new 'labels' folder with numpy data
-def convert_original_data_to_discrete_data(save_as_npy: bool = False, increase_density: bool = False):
+def convert_originals_data_to_labels_data(save_as_npy: bool = False, increase_density: bool = False):
+    """
+    Converts the original data to discrete data for numpy array, and then save the result in labels folder.
+    :param save_as_npy:
+    :param increase_density:
+    :return:
+    """
     input_folder = os.path.join(DATASET_PATH, "originals")
     output_folder = os.path.join(DATASET_PATH, "labels")
 
@@ -85,8 +93,66 @@ def convert_original_data_to_discrete_data(save_as_npy: bool = False, increase_d
                                    save_filename=save_filename)
 
 
+##################
+# Generate Preds #
+##################
+def generate_circular_holes(numpy_data: np.ndarray):
+    num_of_centers = 5
+    white_points = np.argwhere(numpy_data > 0.5)
+    if len(white_points) > 0:
+        for _ in range(num_of_centers):
+            radius = random.randint(3, 5)
+
+            # Randomly select one of the non-zero points
+            random_point = random.choice(white_points)
+            x, y, z = random_point[0], random_point[1], random_point[2]  # Get the coordinates
+
+            for i in range(max(0, x - radius), min(numpy_data.shape[0], x + radius + 1)):
+                for j in range(max(0, y - radius), min(numpy_data.shape[1], y + radius + 1)):
+                    for k in range(max(0, z - radius), min(numpy_data.shape[2], z + radius + 1)):
+                        if (i - x) ** 2 + (j - y) ** 2 + (k - z) ** 2 <= radius ** 2:
+                            numpy_data[i, j, k] = 0
+
+    return numpy_data
+
+
+def generate_plane_holes(numpy_data: np.ndarray):
+    num_of_centers = 5
+    white_points = np.argwhere(numpy_data > 0.5)
+    if len(white_points) > 0:
+        for _ in range(num_of_centers):
+            size = random.randint(1, 3)
+
+            # Randomly select one of the non-zero points
+            random_point = random.choice(white_points)
+            x, y, z = random_point[0], random_point[1], random_point[2]  # Get the coordinates
+
+            # Define cube boundaries
+            x_min = max(0, x - size)
+            x_max = min(numpy_data.shape[0], x + size + 1)
+            y_min = max(0, y - size)
+            y_max = min(numpy_data.shape[1], y + size + 1)
+            z_min = max(0, z - size)
+            z_max = min(numpy_data.shape[2], z + size + 1)
+
+            # Set the cube to black
+            numpy_data[x_min:x_max, :, :] = 0  # Modify along the YZ planes
+            numpy_data[:, y_min:y_max, :] = 0  # Modify along the XZ planes
+            numpy_data[:, :, z_min:z_max] = 0  # Modify along the XY planes
+
+            # Set all points on the same x, y, and z planes to black
+            numpy_data[x, :, :] = 0  # Set all points on the plane parallel to YZ to black
+            numpy_data[:, y, :] = 0  # Set all points on the plane parallel to XZ to black
+            numpy_data[:, :, z] = 0  # Set all points on the plane parallel to XY to black
+
+
 # Create new 'preds' folder with holes in numpy data
-def generate_holes_in_data(save_as_npy: bool = False):
+def convert_labels_data_to_preds_data(save_as_npy: bool = False):
+    """
+    Converts the labels data to preds data with holes in numpy array, and then save the result in preds folder.
+    :param save_as_npy:
+    :return:
+    """
     input_folder = os.path.join(DATASET_PATH, "labels")
     output_folder = os.path.join(DATASET_PATH, "preds")
 
@@ -101,20 +167,8 @@ def generate_holes_in_data(save_as_npy: bool = False):
 
         # Generate holes:
         # TODO: implement (Use different method)
-        num_of_holes = 5
-        white_points = np.argwhere(numpy_data > 0.5)
-        if len(white_points) > 0:
-            for _ in range(num_of_holes):
-                # Randomly select one of the non-zero points
-                random_point = random.choice(white_points)
-                radius = random.randint(3, 5)
-
-                x, y, z = random_point[0], random_point[1], random_point[2]  # Get the coordinates
-                for i in range(max(0, x - radius), min(numpy_data.shape[0], x + radius + 1)):
-                    for j in range(max(0, y - radius), min(numpy_data.shape[1], y + radius + 1)):
-                        for k in range(max(0, z - radius), min(numpy_data.shape[2], z + radius + 1)):
-                            if (i - x) ** 2 + (j - y) ** 2 + (k - z) ** 2 <= radius ** 2:
-                                numpy_data[i, j, k] = 0
+        # generate_circular_holes(numpy_data=numpy_data)
+        generate_plane_holes(numpy_data=numpy_data)
 
         # Save data:
         save_filename = os.path.join(output_folder, data_filepath.stem)
@@ -126,8 +180,8 @@ def generate_holes_in_data(save_as_npy: bool = False):
 
 
 def main():
-    convert_original_data_to_discrete_data(save_as_npy=False, increase_density=True)
-    # generate_holes_in_data(save_as_npy=False)
+    convert_originals_data_to_labels_data(save_as_npy=False, increase_density=True)
+    # convert_labels_data_to_preds_data(save_as_npy=False)
 
 
 if __name__ == '__main__':
