@@ -275,7 +275,7 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
 
     print("Cropping Mini Cubes...\n")
     filepaths_count = len(input_filepaths["labels"])
-    for filepath_idx in tqdm(range(filepaths_count)):
+    for filepath_idx in range(filepaths_count):
         # Get index data:
         label_filepath = input_filepaths["labels"][filepath_idx]
         pred_filepath = input_filepaths["preds"][filepath_idx]
