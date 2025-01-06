@@ -1,3 +1,4 @@
+import argparse
 import torch
 import torch.utils.data
 from torch import nn
@@ -7,10 +8,10 @@ import numpy as np
 
 # Layers
 class CNN_Encoder(nn.Module):
-    def __init__(self, output_size, input_size=(1, 28, 28)):
+    def __init__(self, output_size, data_size=(1, 28, 28)):
         super(CNN_Encoder, self).__init__()
 
-        self.input_size = input_size
+        self.data_size = data_size
         self.channel_mult = 16
 
         # convolutions
@@ -40,22 +41,21 @@ class CNN_Encoder(nn.Module):
         )
 
     def get_flat_fts(self, fts):
-        f = fts(Variable(torch.ones(1, *self.input_size)))
+        f = fts(Variable(torch.ones(1, *self.data_size)))
         return int(np.prod(f.size()[1:]))
 
     def forward(self, x):
-        x = self.conv(x.view(-1, *self.input_size))
+        x = self.conv(x.view(-1, *self.data_size))
         x = x.view(-1, self.flat_fts)
         return self.linear(x)
 
 
 class CNN_Decoder(nn.Module):
-    def __init__(self, embedding_size, input_size=(1, 28, 28)):
+    def __init__(self, embedding_size, data_size=(1, 28, 28)):
         super(CNN_Decoder, self).__init__()
 
-        self.output_channels = input_size[0]
-        self.input_height = input_size[1]
-        self.input_width = input_size[2]
+        self.data_size = data_size
+        self.output_channels = data_size[0]
         self.input_dim = embedding_size
         self.channel_mult = 16
         self.fc_output_dim = 512
@@ -66,7 +66,7 @@ class CNN_Decoder(nn.Module):
             nn.ReLU(True)
         )
 
-        if input_size == (1, 28, 28):
+        if data_size == (1, 28, 28):
             self.deconv = nn.Sequential(
                 # input is Z, going into a convolution
                 nn.ConvTranspose2d(self.fc_output_dim, self.channel_mult * 4,
@@ -89,7 +89,7 @@ class CNN_Decoder(nn.Module):
                 nn.Sigmoid()
                 # state size. self.output_channels x 28 x 28
             )
-        elif input_size == (1, 64, 64):
+        elif data_size == (1, 64, 64):
             self.deconv = nn.Sequential(
                 # input is Z, going into a convolution
                 nn.ConvTranspose2d(self.fc_output_dim, self.channel_mult * 4,
@@ -124,22 +124,20 @@ class CNN_Decoder(nn.Module):
         x = self.fc(x)
         x = x.view(-1, self.fc_output_dim, 1, 1)
         x = self.deconv(x)
-        return x.view(-1, self.input_width * self.input_height)
+        return x.view(-1, *self.data_size)
 
 
 # Model
-class Network(nn.Module):
-    def __init__(self, args):
-        super(Network, self).__init__()
+class Network2D(nn.Module):
+    def __init__(self, args: argparse.Namespace):
+        super(Network2D, self).__init__()
 
+        self.model_name = 'ae'
+        self.input_size = args.input_size
         self.output_size = args.embedding_size
-        if args.dataset == 'Trees':
-            self.input_size = (1, 64, 64)
-        else:
-            self.input_size = (1, 28, 28)
 
-        self.encoder = CNN_Encoder(output_size=self.output_size, input_size=self.input_size)
-        self.decoder = CNN_Decoder(embedding_size=self.output_size, input_size=self.input_size)
+        self.encoder = CNN_Encoder(output_size=self.output_size, data_size=self.input_size)
+        self.decoder = CNN_Decoder(embedding_size=self.output_size, data_size=self.input_size)
 
     def encode(self, x):
         return self.encoder(x)

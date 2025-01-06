@@ -1,6 +1,17 @@
+Python 3.10
+
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 pip3 install imageio
 pip install scipy
 pip install nibabel
 pip install matplotlib
 pip install opencv-python
+pip install pandas
+pip install git+https://github.com/Po-Hsun-Su/pytorch-ssim.git
+pip install torchmetrics
+pip install torcheval
+pip install scikit-image
+pip install open3d
+pip install trimesh
+pip install tqdm
+pip install wandb
