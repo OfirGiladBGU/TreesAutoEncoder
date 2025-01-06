@@ -10,7 +10,7 @@ from datasets.custom_datasets_3d import TreesCustomDataloader3D
 
 
 # Define dataset folder
-DATASET_FOLDER = "parse2022" # TODO: Read from config file
+DATASET_FOLDER = "Pipes3DGeneratorTree" # TODO: Read from config file
 
 # Define paths
 ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
