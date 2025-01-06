@@ -175,6 +175,14 @@ class Trainer(object):
 
                 LOSS += (0.2 * F.binary_cross_entropy(output_confidence_data[holes_mask], target_holes_confidence_data) +
                          0.8 * F.binary_cross_entropy(output_confidence_data[black_mask], target_black_confidence_data))
+
+                # Summary
+                # TODO: Replace mask usage to multiple and check differentiation
+                # TODO: Make sure crop include lines that needs to be connected (that the completion is not to a line out of image)
+                # TODO: Output - input (in the network itself)
+                # TODO: change the rotations of the pipes planes
+                # TODO: remove use of PCDs
+
             else:
                 # Test 4
 
