@@ -88,9 +88,9 @@ def create_3d_reconstructions():
         pred_fixed_image_format = "_".join(pred_fixed_image_split)
         preds_fixed_image_format_set.add(pred_fixed_image_format)
 
-    labels_image_format_set = list(labels_image_format_set)
-    preds_image_format_set = list(preds_image_format_set)
-    preds_fixed_image_format_set = list(preds_fixed_image_format_set)
+    labels_image_format_set = sorted(list(labels_image_format_set))
+    preds_image_format_set = sorted(list(preds_image_format_set))
+    preds_fixed_image_format_set = sorted(list(preds_fixed_image_format_set))
 
     filepaths_count = len(labels_image_format_set)
     for filepath_idx in tqdm(range(filepaths_count)):

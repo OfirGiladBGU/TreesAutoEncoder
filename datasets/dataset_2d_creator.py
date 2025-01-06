@@ -58,6 +58,10 @@ def crop_mini_cubes(data_3d: np.ndarray, size: tuple = (28, 28, 28), step: int =
     #                 constant_values=0
     #             )
     #
+    #             # Validate the mini-cube size
+    #             if mini_cube.shape != size:
+    #                 raise ValueError("[BUG] Invalid Mini Cube Size")
+    #
     #             mini_cubes.append(mini_cube)
     #
     #             if cubes_data is True:
@@ -84,11 +88,11 @@ def crop_mini_cubes(data_3d: np.ndarray, size: tuple = (28, 28, 28), step: int =
 
     # Calculate the padding required to ensure all cubes fit within bounds
     if pad_x[1] > 0:
-        pad_x = (0, step - pad_x[1])
+        pad_x = (0, size[0] - pad_x[1])
     if pad_y[1] > 0:
-        pad_y = (0, step - pad_y[1])
+        pad_y = (0, size[1] - pad_y[1])
     if pad_z[1] > 0:
-        pad_z = (0, step - pad_z[1])
+        pad_z = (0, size[2] - pad_z[1])
 
     # Apply zero padding to the original array
     padded_data = np.pad(
@@ -102,12 +106,16 @@ def crop_mini_cubes(data_3d: np.ndarray, size: tuple = (28, 28, 28), step: int =
     mini_cubes_data = []
 
     # Iterate over the padded data with fixed steps
-    for x in range(0, padded_data.shape[0], step):
-        for y in range(0, padded_data.shape[1], step):
-            for z in range(0, padded_data.shape[2], step):
+    for x in range(0, data_3d.shape[0], step):
+        for y in range(0, data_3d.shape[1], step):
+            for z in range(0, data_3d.shape[2], step):
                 # Crop the mini-cube
                 mini_cube = padded_data[x:x + size[0], y:y + size[1], z:z + size[2]]
                 mini_cubes.append(mini_cube)
+
+                # Validate the mini-cube size
+                if mini_cube.shape != size:
+                    raise ValueError("[BUG] Invalid Mini Cube Size")
 
                 if cubes_data is True:
                     end_x = min(x + size[0], data_3d.shape[0])
