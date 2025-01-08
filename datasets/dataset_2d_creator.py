@@ -217,6 +217,15 @@ def create_dataset_depth_2d_projections():
     for key, value in input_folders.items():
         input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.*"))
 
+    projection_options = {
+        "front": True,
+        "back": True,
+        "top": True,
+        "bottom": True,
+        "left": True,
+        "right": True
+    }
+
     filepaths_count = len(input_filepaths["labels"])
     for filepath_idx in tqdm(range(filepaths_count)):
         # Get index data:
@@ -230,11 +239,11 @@ def create_dataset_depth_2d_projections():
 
         label_projections = project_3d_to_2d(
             data_3d=label_numpy_data,
-            front=True, back=True, top=True, bottom=True, left=True, right=True
+            projection_options=projection_options
         )
         pred_projections = project_3d_to_2d(
             data_3d=pred_numpy_data,
-            front=True, back=True, top=True, bottom=True, left=True, right=True
+            projection_options=projection_options
         )
 
         for image_view in IMAGES_6_VIEWS:
@@ -349,6 +358,15 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
     if len(set(filepaths_found)) != 1:
         raise ValueError("Different number of files found in the Input folders")
 
+    projection_options = {
+        "front": True,
+        "back": True,
+        "top": True,
+        "bottom": True,
+        "left": True,
+        "right": True
+    }
+
     print("Cropping Mini Cubes...")
     filepaths_count = len(input_filepaths["labels"])
     for filepath_idx in range(filepaths_count):
@@ -454,21 +472,21 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
             # Project 3D to 2D (Labels)
             label_projections = project_3d_to_2d(
                 data_3d=label_cube,
-                front=True, back=True, top=True, bottom=True, left=True, right=True
+                projection_options=projection_options,
             )
 
             # Project 3D to 2D (Preds)
             pred_projections = project_3d_to_2d(
                 data_3d=pred_cube,
-                component_3d=pred_components_cube,
-                front=True, back=True, top=True, bottom=True, left=True, right=True
+                projection_options=projection_options,
+                component_3d=pred_components_cube
             )
 
             # Project 3D to 2D (Preds Fixed)
             pred_fixed_projections = project_3d_to_2d(
                 data_3d=pred_fixed_cube,
-                component_3d=pred_fixed_components_cube,
-                front=True, back=True, top=True, bottom=True, left=True, right=True
+                projection_options=projection_options,
+                component_3d=pred_fixed_components_cube
             )
 
             condition1 = True

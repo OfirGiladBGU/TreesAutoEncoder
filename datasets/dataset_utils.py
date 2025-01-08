@@ -378,13 +378,8 @@ def _calculate_depth_projection(data_3d, component_3d=None, axis=0):
 
 
 def project_3d_to_2d(data_3d: np.ndarray,
-                     component_3d: np.ndarray = None,
-                     front=False,
-                     back=False,
-                     top=False,
-                     bottom=False,
-                     left=False,
-                     right=False):
+                     projection_options: dict[str, bool],
+                     component_3d: np.ndarray = None) -> dict[str, np.ndarray]:
     projections = dict()
 
     rotated_data_3d = data_3d
@@ -401,7 +396,7 @@ def project_3d_to_2d(data_3d: np.ndarray,
         rotated_component_3d = None
 
     # Front projection (XY plane)
-    if front is True:
+    if projection_options.get("front", False) is True:
         flipped_data_3d = rotated_data_3d
 
         # Option 1
@@ -420,7 +415,7 @@ def project_3d_to_2d(data_3d: np.ndarray,
             )
 
     # Back projection (XY plane)
-    if back is True:
+    if projection_options.get("back", False) is True:
         flipped_data_3d = rotated_data_3d
         flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(1, 2))
 
@@ -441,7 +436,7 @@ def project_3d_to_2d(data_3d: np.ndarray,
             )
 
     # Top projection (XZ plane)
-    if top is True:
+    if projection_options.get("top", False) is True:
         flipped_data_3d = rotated_data_3d
         flipped_data_3d = np.rot90(flipped_data_3d, k=1, axes=(1, 2))
 
@@ -462,7 +457,7 @@ def project_3d_to_2d(data_3d: np.ndarray,
             )
 
     # Bottom projection (XZ plane)
-    if bottom is True:
+    if projection_options.get("bottom", False) is True:
         flipped_data_3d = rotated_data_3d
         flipped_data_3d = np.rot90(flipped_data_3d, k=1, axes=(1, 2))
         flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(0, 1))
@@ -485,7 +480,7 @@ def project_3d_to_2d(data_3d: np.ndarray,
             )
 
     # Right projection (YZ plane)
-    if right is True:
+    if projection_options.get("right", False) is True:
         flipped_data_3d = rotated_data_3d
         flipped_data_3d = np.flip(flipped_data_3d, axis=1)
 
@@ -506,7 +501,7 @@ def project_3d_to_2d(data_3d: np.ndarray,
             )
 
     # Left projection (YZ plane)
-    if left is True:
+    if projection_options.get("left", False) is True:
         flipped_data_3d = rotated_data_3d
         flipped_data_3d = np.flip(flipped_data_3d, axis=1)
         flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(1, 2))
