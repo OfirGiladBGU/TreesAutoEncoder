@@ -239,6 +239,11 @@ def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
 ####################
 # 2D visualization #
 ####################
+def interactive_plot_2d(data_2d: np.ndarray):
+    plt.imshow(data_2d, cmap='gray')
+    plt.show()
+
+
 def matplotlib_plot_2d(save_filepath, data_2d_list):
     columns = 6
     rows = 1
@@ -261,6 +266,15 @@ def matplotlib_plot_2d(save_filepath, data_2d_list):
 ##################
 # Core functions #
 ##################
+def single_plot_2d(data_2d_filepath, interactive_mode: bool = False):
+    numpy_2d_data = cv2.imread(data_2d_filepath, cv2.IMREAD_GRAYSCALE)
+
+    if interactive_mode is False:
+        pass
+    else:
+        interactive_plot_2d(data_2d=numpy_2d_data)
+
+
 def full_plot_2d(data_3d_basename: str):
     folder_paths = {
         "labels_2d": os.path.join(CROPPED_PATH, "labels_2d_v6"),
