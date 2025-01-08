@@ -543,6 +543,15 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
                     if new_components == original_components:
                         binary_pred_fixed = temp_pred_fixed
 
+                # Update the pred_fixed_image
+                pred_fixed_image = np.where(binary_pred_fixed > 0, 255, 0).astype(np.uint8)
+                pred_fixed_projections[f"{image_view}_image"] = pred_fixed_image
+
+                if task_type == TaskType.CONNECT_COMPONENTS:
+                    pred_fixed_components = pred_fixed_projections[f"{image_view}_components"]
+                    pred_fixed_projections[f"{image_view}_components"] = color.label2rgb(
+                        label=np.where(pred_fixed_image > 0, pred_fixed_components, 0)
+                    ) * 255
 
             # DEBUG
             # if cube_idx == 3253:
