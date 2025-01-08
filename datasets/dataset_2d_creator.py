@@ -120,9 +120,10 @@ def crop_mini_cubes(data_3d: np.ndarray, size: tuple = (28, 28, 28), step: int =
     mini_cubes_data = []
 
     # Iterate over the padded data with fixed steps
-    for x in range(0, data_3d.shape[0], step):
-        for y in range(0, data_3d.shape[1], step):
-            for z in range(0, data_3d.shape[2], step):
+    # Notice: `data_3d.shape[i] - size[i] + 1` is to exclude the last half mini-cube
+    for x in range(0, data_3d.shape[0] - size[0] + 1, step):
+        for y in range(0, data_3d.shape[1] - size[1] + 1, step):
+            for z in range(0, data_3d.shape[2] - size[2] + 1, step):
                 # Crop the mini-cube
                 mini_cube = padded_data[x:x + size[0], y:y + size[1], z:z + size[2]]
                 mini_cubes.append(mini_cube)
@@ -561,7 +562,7 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
                             binary_pred_fixed = temp_pred_fixed
 
                     # Update the pred_fixed_image
-                    pred_fixed_image = np.where(binary_pred_fixed > 0, 255, 0).astype(np.uint8)
+                    pred_fixed_image += np.where(binary_pred_fixed > 0, label_image, 0).astype(np.uint8)
                     pred_fixed_projections[f"{image_view}_image"] = pred_fixed_image
 
                     # Calculate the connected components for the fixed preds
