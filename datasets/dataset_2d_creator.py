@@ -471,6 +471,7 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
 
             condition1 = True
             condition2 = True
+            condition3 = True
             for image_view in IMAGES_6_VIEWS:
                 pred_image = pred_projections[f"{image_view}_image"]
                 label_image = label_projections[f"{image_view}_image"]
@@ -486,21 +487,6 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
                 # pred_fixed_projections[f"{image_view}_components"] = color.label2rgb(
                 #     label=np.where(pred_fixed_image > 0, pred_fixed_components, 0)
                 # ) * 255
-
-                if task_type == TaskType.CONNECT_COMPONENTS:
-                    pred_components = pred_projections[f"{image_view}_components"]
-                    pred_projections[f"{image_view}_components"] = color.label2rgb(
-                        label=np.where(pred_image > 0, pred_components, 0)
-                    ) * 255
-
-                    pred_fixed_components = pred_fixed_projections[f"{image_view}_components"]
-                    pred_fixed_projections[f"{image_view}_components"] = color.label2rgb(
-                        label=np.where(pred_fixed_image > 0, pred_fixed_components, 0)
-                    ) * 255
-                elif task_type == TaskType.PATCH_HOLES:
-                    pass
-                else:
-                    raise ValueError("Invalid Task Type")
 
                 # Repair the labels - TODO: Check how to do smartly
                 # label_projections[f"{image_6_view}_repaired_image"] = image_missing_connected_components_removal(
@@ -520,45 +506,60 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
                     break
 
                 # TODO: repair pred fix to include connectable components
-                binary_label = np.where(label_image > 0, 1, 0)
-                binary_pred_fixed = np.where(pred_fixed_image > 0, 1, 0)
-                binary_delta = ((binary_label - binary_pred_fixed) > 0.5).astype(np.uint8)
-
-                # Identify connected components in binary_delta
-                labeled_delta, num_delta_components = connected_components_2d(binary_delta)
-
-                # Iterate through connected components in binary_delta
-                for component_label in range(1, num_delta_components + 1):
-                    # Create a mask for the current connected component
-                    component_mask = np.equal(labeled_delta, component_label).astype(np.uint8)
-
-                    # Check the number of connected components before adding the mask
-                    original_components = connected_components_2d(binary_pred_fixed)[1]
-
-                    # Create a temporary image with the component added
-                    temp_pred_fixed = np.logical_or(binary_pred_fixed, component_mask)
-                    new_components = connected_components_2d(temp_pred_fixed)[1]
-
-                    # Add the component only if it does not increase the number of connected components
-                    if new_components == original_components:
-                        binary_pred_fixed = temp_pred_fixed
-
-                # Update the pred_fixed_image
-                pred_fixed_image = np.where(binary_pred_fixed > 0, 255, 0).astype(np.uint8)
-                pred_fixed_projections[f"{image_view}_image"] = pred_fixed_image
-
                 if task_type == TaskType.CONNECT_COMPONENTS:
+                    # TODO: check if local components num is similar between label and pred
+                    condition3 = True
+
+                    # Calculate the connected components for the preds
+                    pred_components = pred_projections[f"{image_view}_components"]
+                    pred_projections[f"{image_view}_components"] = color.label2rgb(
+                        label=np.where(pred_image > 0, pred_components, 0)
+                    ) * 255
+
+                    # Calculate the connected components for the fixed preds
+                    binary_label = np.where(label_image > 0, 1, 0)
+                    binary_pred_fixed = np.where(pred_fixed_image > 0, 1, 0)
+                    binary_delta = ((binary_label - binary_pred_fixed) > 0.5).astype(np.uint8)
+
+                    # Identify connected components in binary_delta
+                    labeled_delta, num_delta_components = connected_components_2d(binary_delta)
+
+                    # Iterate through connected components in binary_delta
+                    for component_label in range(1, num_delta_components + 1):
+                        # Create a mask for the current connected component
+                        component_mask = np.equal(labeled_delta, component_label).astype(np.uint8)
+
+                        # Check the number of connected components before adding the mask
+                        original_components = connected_components_2d(binary_pred_fixed)[1]
+
+                        # Create a temporary image with the component added
+                        temp_pred_fixed = np.logical_or(binary_pred_fixed, component_mask)
+                        new_components = connected_components_2d(temp_pred_fixed)[1]
+
+                        # Add the component only if it does not increase the number of connected components
+                        if new_components == original_components:
+                            binary_pred_fixed = temp_pred_fixed
+
+                    # Update the pred_fixed_image
+                    pred_fixed_image = np.where(binary_pred_fixed > 0, 255, 0).astype(np.uint8)
+                    pred_fixed_projections[f"{image_view}_image"] = pred_fixed_image
+
+                    # Calculate the connected components for the fixed preds
                     pred_fixed_components = pred_fixed_projections[f"{image_view}_components"]
                     pred_fixed_projections[f"{image_view}_components"] = color.label2rgb(
                         label=np.where(pred_fixed_image > 0, pred_fixed_components, 0)
                     ) * 255
+                elif task_type == TaskType.PATCH_HOLES:
+                    pass
+                else:
+                    raise ValueError("Invalid Task Type")
 
             # DEBUG
             # if cube_idx == 3253:
             #     print("Debug")
 
             # Validate the conditions
-            conditions = [condition1, condition2]
+            conditions = [condition1, condition2, condition3]
             if not all(conditions):
                 continue
 
