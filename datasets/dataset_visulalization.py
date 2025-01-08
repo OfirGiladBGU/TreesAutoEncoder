@@ -14,6 +14,76 @@ from datasets.dataset_list import (DATA_PATH, CROPPED_PATH, VISUALIZATION_RESULT
 ####################
 # 3D visualization #
 ####################
+
+# Interactive Plot 3D
+def interactive_plot_3d(data_3d: np.ndarray, version: int = 1, set_aspect_ratios: bool = False):
+    if version == 1:
+        threshold = 0.5 * np.max(data_3d)
+        x, y, z = np.where(data_3d > threshold)
+
+        # Create the Plotly 3D scatter plot
+        fig = go.Figure(data=[go.Scatter3d(
+            x=x, y=y, z=z,
+            mode='markers',
+            marker=dict(
+                size=2,
+                color=data_3d[x, y, z],
+                colorscale='Viridis',
+                opacity=0.6
+            )
+        )])
+
+        # aspect_ratios = data_3d.shape  # Lengths of each dimension
+        fig.update_layout(scene=dict(
+            xaxis_title='X-axis',
+            yaxis_title='Y-axis',
+            zaxis_title='Z-axis',
+            # aspectmode="manual",  # Use manual aspect ratios
+            # aspectratio=dict(
+            #     x=aspect_ratios[0] / max(aspect_ratios),
+            #     y=aspect_ratios[1] / max(aspect_ratios),
+            #     z=aspect_ratios[2] / max(aspect_ratios),
+            # )
+        ), title="3D Volume Visualization")
+
+        fig.show()
+
+    elif version == 2:
+        # Downsample the images
+        downsample_factor = 1
+        data_downsampled = data_3d[::downsample_factor, ::downsample_factor, ::downsample_factor]
+
+        # Get the indices of non-zero values in the downsampled array
+        nonzero_indices = np.where(data_downsampled != 0)
+
+        # Create a figure and a 3D axis
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Get the permutation
+        ax.bar3d(nonzero_indices[0], nonzero_indices[1], nonzero_indices[2], 1, 1, 1, color='b')
+
+        # Set labels
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+
+        # Set aspect ratios
+        if set_aspect_ratios:
+            aspect_ratios = np.array(
+                [data_3d.shape[0], data_3d.shape[1], data_3d.shape[2]])  # Use the actual shape of the volume
+            ax.set_box_aspect(aspect_ratios)
+
+        # Display the plot
+        plt.title('3d plot')
+        plt.show()
+        plt.close('all')
+
+    else:
+        raise ValueError("Invalid version number. Please use either 1 or 2.")
+
+
+# Matplotlib Plot 3D
 def matplotlib_plot_3d(data_3d: np.ndarray, save_filename, set_aspect_ratios=False):
     print(
         f"Save filename: '{save_filename}*'\n"
@@ -53,70 +123,6 @@ def matplotlib_plot_3d(data_3d: np.ndarray, save_filename, set_aspect_ratios=Fal
         plt.close('all')
 
         # merging_images(save_filename=save_filename)
-
-
-def interactive_plot_3d_v1(data_3d: np.ndarray):
-    threshold = 0.5 * np.max(data_3d)
-    x, y, z = np.where(data_3d > threshold)
-
-    # Create the Plotly 3D scatter plot
-    fig = go.Figure(data=[go.Scatter3d(
-        x=x, y=y, z=z,
-        mode='markers',
-        marker=dict(
-            size=2,
-            color=data_3d[x, y, z],
-            colorscale='Viridis',
-            opacity=0.6
-        )
-    )])
-
-    # aspect_ratios = data_3d.shape  # Lengths of each dimension
-    fig.update_layout(scene=dict(
-        xaxis_title='X-axis',
-        yaxis_title='Y-axis',
-        zaxis_title='Z-axis',
-        # aspectmode="manual",  # Use manual aspect ratios
-        # aspectratio=dict(
-        #     x=aspect_ratios[0] / max(aspect_ratios),
-        #     y=aspect_ratios[1] / max(aspect_ratios),
-        #     z=aspect_ratios[2] / max(aspect_ratios),
-        # )
-    ), title="3D Volume Visualization")
-
-    fig.show()
-
-
-def interactive_plot_3d_v2(data_3d: np.ndarray, set_aspect_ratios=False):
-    # Downsample the images
-    downsample_factor = 1
-    data_downsampled = data_3d[::downsample_factor, ::downsample_factor, ::downsample_factor]
-
-    # Get the indices of non-zero values in the downsampled array
-    nonzero_indices = np.where(data_downsampled != 0)
-
-    # Create a figure and a 3D axis
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-
-    # Get the permutation
-    ax.bar3d(nonzero_indices[0], nonzero_indices[1], nonzero_indices[2], 1, 1, 1, color='b')
-
-    # Set labels
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-
-    # Set aspect ratios
-    if set_aspect_ratios:
-        aspect_ratios = np.array(
-            [data_3d.shape[0], data_3d.shape[1], data_3d.shape[2]])  # Use the actual shape of the volume
-        ax.set_box_aspect(aspect_ratios)
-
-    # Display the plot
-    plt.title('3d plot')
-    plt.show()
-    plt.close('all')
 
 
 def merging_images(save_filename):
@@ -174,9 +180,9 @@ def merging_images(save_filename):
     merged_image.show()
 
 
-##################
-# Core functions #
-##################
+#####################
+# 3D Core functions #
+#####################
 def single_plot_3d(data_3d_filepath, interactive_mode: bool = False, interactive_version: int = 1):
     numpy_3d_data = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
 
@@ -187,10 +193,7 @@ def single_plot_3d(data_3d_filepath, interactive_mode: bool = False, interactive
 
         matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_name)
     else:
-        if interactive_version == 1:
-            interactive_plot_3d_v1(data_3d=numpy_3d_data)
-        elif interactive_version == 2:
-            interactive_plot_3d_v2(data_3d=numpy_3d_data, set_aspect_ratios=True)
+        interactive_plot_3d(data_3d=numpy_3d_data, version=interactive_version, set_aspect_ratios=True)
 
 
 # TODO: support for any 3D data
@@ -239,11 +242,14 @@ def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
 ####################
 # 2D visualization #
 ####################
+
+# Interactive Plot 2D
 def interactive_plot_2d(data_2d: np.ndarray):
     plt.imshow(data_2d, cmap='gray')
     plt.show()
 
 
+# Matplotlib Plot 2D
 def matplotlib_plot_2d(save_filepath, data_2d_list):
     columns = 6
     rows = 1
@@ -263,9 +269,9 @@ def matplotlib_plot_2d(save_filepath, data_2d_list):
     plt.close(fig)
 
 
-##################
-# Core functions #
-##################
+#####################
+# 2D Core functions #
+#####################
 def single_plot_2d(data_2d_filepath, interactive_mode: bool = False):
     numpy_2d_data = cv2.imread(data_2d_filepath, cv2.IMREAD_GRAYSCALE)
 
