@@ -17,6 +17,13 @@ from datasets.dataset_list import (DATA_PATH, CROPPED_PATH, VISUALIZATION_RESULT
 
 # Interactive Plot 3D
 def interactive_plot_3d(data_3d: np.ndarray, version: int = 1, set_aspect_ratios: bool = False):
+    """
+    Interactive 3D plot using Plotly or Matplotlib
+    :param data_3d:
+    :param version:
+    :param set_aspect_ratios:
+    :return:
+    """
     if version == 1:
         threshold = 0.5 * np.max(data_3d)
         x, y, z = np.where(data_3d > threshold)
@@ -245,6 +252,11 @@ def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
 
 # Interactive Plot 2D
 def interactive_plot_2d(data_2d: np.ndarray):
+    """
+    Interactive 2D plot using Matplotlib
+    :param data_2d:
+    :return:
+    """
     plt.imshow(data_2d, cmap='gray')
     plt.show()
 

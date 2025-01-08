@@ -13,6 +13,8 @@ from dataset_list import DATASET_PATH, CROPPED_PATH
 from dataset_utils import (IMAGES_6_VIEWS, TaskType,
                            get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                            save_nii_gz_in_identity_affine, project_3d_to_2d)
+# TODO: Debug Tools
+from dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
 
 #########
