@@ -538,6 +538,7 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
                     ) * 255
 
                     # Calculate the connected components for the fixed preds
+                    old_pred_fixed_image = pred_fixed_image.copy()  # DEBUG
                     binary_label = np.where(label_image > 0, 1, 0)
                     binary_pred_fixed = np.where(pred_fixed_image > 0, 1, 0)
                     binary_delta = ((binary_label - binary_pred_fixed) > 0.5).astype(np.uint8)
@@ -557,12 +558,12 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
                         temp_pred_fixed = np.logical_or(binary_pred_fixed, component_mask)
                         new_components = connected_components_2d(temp_pred_fixed)[1]
 
-                        # Add the component only if it does not increase the number of connected components
-                        if new_components == original_components:
+                        # Add the component only if it does not decrease the number of connected components
+                        if new_components >= original_components:
                             binary_pred_fixed = temp_pred_fixed
 
                     # Update the pred_fixed_image
-                    pred_fixed_image += np.where(binary_pred_fixed > 0, label_image, 0).astype(np.uint8)
+                    pred_fixed_image = np.where(binary_pred_fixed > 0, label_image, pred_fixed_image)
                     pred_fixed_projections[f"{image_view}_image"] = pred_fixed_image
 
                     # Calculate the connected components for the fixed preds
