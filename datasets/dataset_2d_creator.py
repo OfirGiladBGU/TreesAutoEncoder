@@ -2,6 +2,8 @@ import numpy as np
 import cv2
 import os
 import pathlib
+
+from typing import Tuple
 from tqdm import tqdm
 import pandas as pd
 from scipy.ndimage import label
@@ -16,13 +18,23 @@ from dataset_utils import (IMAGES_6_VIEWS, TaskType,
 #########
 # Utils #
 #########
-def connected_components_3d(data_3d: np.ndarray):
+def connected_components_3d(data_3d: np.ndarray) -> Tuple[np.ndarray, int]:
     # Define the structure for connectivity
     # Here, we use a structure that connects each voxel to its immediate neighbors
     structure = np.ones((3, 3, 3), dtype=np.int8)  # 26-connectivity
 
     # Label connected components
     labeled_array, num_features = label(data_3d, structure=structure)
+
+    # print("Labeled Array:", labeled_array)
+    # print("Number of Features:", num_features)
+
+    return labeled_array, num_features
+
+
+def connected_components_2d(data_2d: np.ndarray) -> Tuple[np.ndarray, int]:
+    # Label connected components
+    labeled_array, num_features = label(data_2d)
 
     # print("Labeled Array:", labeled_array)
     # print("Number of Features:", num_features)
@@ -506,6 +518,31 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
                 if not (white_points_upper_threshold > np.count_nonzero(label_image) > white_points_lower_threshold):
                     condition2 = False
                     break
+
+                # TODO: repair pred fix to include connectable components
+                binary_label = np.where(label_image > 0, 1, 0)
+                binary_pred_fixed = np.where(pred_fixed_image > 0, 1, 0)
+                binary_delta = ((binary_label - binary_pred_fixed) > 0.5).astype(np.uint8)
+
+                # Identify connected components in binary_delta
+                labeled_delta, num_delta_components = connected_components_2d(binary_delta)
+
+                # Iterate through connected components in binary_delta
+                for component_label in range(1, num_delta_components + 1):
+                    # Create a mask for the current connected component
+                    component_mask = np.equal(labeled_delta, component_label).astype(np.uint8)
+
+                    # Check the number of connected components before adding the mask
+                    original_components = connected_components_2d(binary_pred_fixed)[1]
+
+                    # Create a temporary image with the component added
+                    temp_pred_fixed = np.logical_or(binary_pred_fixed, component_mask)
+                    new_components = connected_components_2d(temp_pred_fixed)[1]
+
+                    # Add the component only if it does not increase the number of connected components
+                    if new_components == original_components:
+                        binary_pred_fixed = temp_pred_fixed
+
 
             # DEBUG
             # if cube_idx == 3253:
