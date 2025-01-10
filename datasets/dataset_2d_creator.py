@@ -3,7 +3,7 @@ import cv2
 import os
 import pathlib
 
-from typing import Tuple
+from typing import Tuple, List
 from tqdm import tqdm
 import pandas as pd
 from scipy.ndimage import label
@@ -44,7 +44,11 @@ def connected_components_2d(data_2d: np.ndarray) -> Tuple[np.ndarray, int]:
     return labeled_array, num_features
 
 
-def crop_mini_cubes(data_3d: np.ndarray, size: tuple = (28, 28, 28), step: int = 14, cubes_data: bool = False):
+def crop_mini_cubes(data_3d: np.ndarray,
+                    other_data_3d_list: List[np.ndarray] = None,
+                    cube_dim: Tuple[int, int, int] = (28, 28, 28),
+                    stride_dim: Tuple[int, int, int] = (14, 14, 14),
+                    cubes_data: bool = False):
     # Slower method
     # mini_cubes = list()
     # mini_cubes_data = list()
@@ -95,18 +99,15 @@ def crop_mini_cubes(data_3d: np.ndarray, size: tuple = (28, 28, 28), step: int =
 
 
     # Faster method
-    # Compute padding required to ensure all cubes fit within bounds
-    pad_x = (0, max(0, (data_3d.shape[0] - size[0]) % step))
-    pad_y = (0, max(0, (data_3d.shape[1] - size[1]) % step))
-    pad_z = (0, max(0, (data_3d.shape[2] - size[2]) % step))
+    # Compute necessary padding to ensure all cubes fit within bounds
+    def compute_padding(data_size, cube_dim_size, stride_size):
+        remainder = (data_size - cube_dim_size) % stride_size
+        pad_size = cube_dim_size - remainder if remainder > 0 else 0
+        return tuple([0, pad_size])
 
-    # Calculate the padding required to ensure all cubes fit within bounds
-    if pad_x[1] > 0:
-        pad_x = (0, size[0] - pad_x[1])
-    if pad_y[1] > 0:
-        pad_y = (0, size[1] - pad_y[1])
-    if pad_z[1] > 0:
-        pad_z = (0, size[2] - pad_z[1])
+    pad_x = compute_padding(data_size=data_3d.shape[0], cube_dim_size=cube_dim[0], stride_size=stride_dim[0])
+    pad_y = compute_padding(data_size=data_3d.shape[1], cube_dim_size=cube_dim[1], stride_size=stride_dim[1])
+    pad_z = compute_padding(data_size=data_3d.shape[2], cube_dim_size=cube_dim[2], stride_size=stride_dim[2])
 
     # Apply zero padding to the original array
     padded_data = np.pad(
@@ -116,26 +117,45 @@ def crop_mini_cubes(data_3d: np.ndarray, size: tuple = (28, 28, 28), step: int =
         constant_values=0
     )
 
+    if other_data_3d_list is not None:
+        other_padded_data_list = [
+            np.pad(
+                array=other_data_3d,
+                pad_width=(pad_x, pad_y, pad_z),
+                mode='constant',
+                constant_values=0
+            )
+            for other_data_3d in other_data_3d_list
+        ]
+    else:
+        other_padded_data_list = []
+
     mini_cubes = []
+    other_mini_cubes_list = [[] for _ in other_padded_data_list]
     mini_cubes_data = []
 
     # Iterate over the padded data with fixed steps
-    # Notice: `data_3d.shape[i] - size[i] + 1` is to exclude the last half mini-cube
-    for x in range(0, data_3d.shape[0] - size[0] + 1, step):
-        for y in range(0, data_3d.shape[1] - size[1] + 1, step):
-            for z in range(0, data_3d.shape[2] - size[2] + 1, step):
+    # Notice: data_3d.shape[i] - cube_dim[i] + 1 is to exclude the last half mini-cube
+    for x in range(0, data_3d.shape[0] - cube_dim[0] + 1, stride_dim[0]):
+        for y in range(0, data_3d.shape[1] - cube_dim[1] + 1, stride_dim[1]):
+            for z in range(0, data_3d.shape[2] - cube_dim[2] + 1, stride_dim[2]):
                 # Crop the mini-cube
-                mini_cube = padded_data[x:x + size[0], y:y + size[1], z:z + size[2]]
+                mini_cube = padded_data[x:x + cube_dim[0], y:y + cube_dim[1], z:z + cube_dim[2]]
                 mini_cubes.append(mini_cube)
 
                 # Validate the mini-cube size
-                if mini_cube.shape != size:
+                if mini_cube.shape != cube_dim:
                     raise ValueError("[BUG] Invalid Mini Cube Size")
 
+                for idx, other_padded_data in enumerate(other_padded_data_list):
+                    # Crop the mini-cube
+                    other_mini_cube = other_padded_data[x:x + cube_dim[0], y:y + cube_dim[1], z:z + cube_dim[2]]
+                    other_mini_cubes_list[idx].append(other_mini_cube)
+
                 if cubes_data is True:
-                    end_x = min(x + size[0], data_3d.shape[0])
-                    end_y = min(y + size[1], data_3d.shape[1])
-                    end_z = min(z + size[2], data_3d.shape[2])
+                    end_x = min(x + cube_dim[0], data_3d.shape[0])
+                    end_y = min(y + cube_dim[1], data_3d.shape[1])
+                    end_z = min(z + cube_dim[2], data_3d.shape[2])
 
                     mini_cubes_data.append({
                         "start_x": x,
@@ -151,10 +171,17 @@ def crop_mini_cubes(data_3d: np.ndarray, size: tuple = (28, 28, 28), step: int =
                         "size_z": end_z - z
                     })
 
-    if cubes_data is False:
-        return mini_cubes
+    # Prepare return values
+    if cubes_data is True:
+        if other_data_3d_list is None:
+            return mini_cubes, mini_cubes_data
+        else:
+            return mini_cubes, other_mini_cubes_list, mini_cubes_data
     else:
-        return mini_cubes, mini_cubes_data
+        if other_data_3d_list is None:
+            return mini_cubes
+        else:
+            return mini_cubes, other_mini_cubes_list
 
 
 def outlier_removal(pred_data: np.ndarray, label_data: np.ndarray):
@@ -295,7 +322,7 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
         "preds": os.path.join(DATASET_PATH, "preds"),
     }
     if task_type == TaskType.CONNECT_COMPONENTS:
-        input_folders.updete({
+        input_folders.update({
             "preds_components": os.path.join(DATASET_PATH, "preds_components")
         })
     # Outputs
@@ -312,7 +339,7 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
         "preds_fixed_3d": os.path.join(CROPPED_PATH, "preds_fixed_3d_v6"),
     }
     if task_type == TaskType.CONNECT_COMPONENTS:
-        output_folders.updete({
+        output_folders.update({
             # Preds Components
             "preds_components_2d": os.path.join(CROPPED_PATH, "preds_components_2d_v6"),
             "preds_components_3d": os.path.join(CROPPED_PATH, "preds_components_3d_v6"),
@@ -327,10 +354,10 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
     log_data = dict()
 
     # Config
-    size = (32, 32, 32)  # TODO: TEST: (48, 48, 48)
-    step = 16
-    white_points_upper_threshold = size[0] * size[0] * 0.9
-    white_points_lower_threshold = size[0] * size[0] * 0.1
+    cube_dim = (32, 32, 32)  # TODO: TEST: (48, 48, 48)
+    stride_dim = (16, 16, 16)
+    white_points_upper_threshold = cube_dim[0] * cube_dim[0] * 0.9  # TODO: Support dynamic calculation
+    white_points_lower_threshold = cube_dim[0] * cube_dim[0] * 0.1  # TODO: Support dynamic calculation
 
     # Create Output Folders
     for output_folder in output_folders.values():
@@ -377,12 +404,18 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
         #     raise ValueError("Outlier Removal Failed")
 
         # Crop Mini Cubes
-        label_cubes, cubes_data = crop_mini_cubes(data_3d=label_numpy_data, size=size, step=step, cubes_data=True)
-        pred_cubes = crop_mini_cubes(data_3d=pred_numpy_data, size=size, step=step)
-        # pred_components_cubes = crop_mini_cubes(data_3d=pred_component_numpy_data, size=size, step=step)
+        output_idx = get_data_file_stem(data_filepath=label_filepath)
+        print(f"[File: {output_idx}, Index: {filepath_idx + 1}/{filepaths_count}]")
 
-        pred_fixed_cubes = crop_mini_cubes(data_3d=pred_fixed_numpy_data, size=size, step=step)
-        # pred_fixed_components_cubes = crop_mini_cubes(data_3d=pred_fixed_component_numpy_data, size=size, step=step)
+        label_cubes, other_cubes_list, cubes_data = crop_mini_cubes(
+            data_3d=label_numpy_data,
+            other_data_3d_list=[pred_numpy_data, pred_fixed_numpy_data],
+            cube_dim=cube_dim,
+            stride_dim=stride_dim,
+            cubes_data=True
+        )
+        pred_cubes = other_cubes_list[0]
+        pred_fixed_cubes = other_cubes_list[1]
 
         if task_type == TaskType.CONNECT_COMPONENTS:
             # Get index data:
@@ -394,20 +427,19 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
             pred_fixed_component_numpy_data = np.where(pred_fixed_numpy_data > 0.0, pred_component_numpy_data, 0.0)
 
             # Crop Mini Cubes
-            pred_components_cubes = crop_mini_cubes(data_3d=pred_component_numpy_data, size=size, step=step)
-
-            pred_fixed_components_cubes = crop_mini_cubes(data_3d=pred_fixed_component_numpy_data, size=size, step=step)
+            pred_components_cubes, other_cubes_list = crop_mini_cubes(
+                data_3d=pred_component_numpy_data,
+                other_data_3d_list=[pred_fixed_component_numpy_data],
+                cube_dim=cube_dim,
+                stride_dim=stride_dim
+            )
+            pred_fixed_components_cubes = other_cubes_list[0]
         elif task_type == TaskType.PATCH_HOLES:
             pass
         else:
             raise ValueError("Invalid Task Type")
 
-        output_idx = get_data_file_stem(data_filepath=label_filepath)
-        print(
-            f"\n"
-            f"[File: {output_idx}, Index: {filepath_idx + 1}/{filepaths_count}]\n"
-            f"Total Mini Cubes: {len(label_cubes)}\n"
-        )
+        print(f"Total Mini Cubes: {len(label_cubes)}\n")
 
         cubes_count = len(label_cubes)
         cubes_count_digits_count = len(str(cubes_count))
