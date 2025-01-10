@@ -293,10 +293,11 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
     input_folders = {
         "labels": os.path.join(DATASET_PATH, "labels"),
         "preds": os.path.join(DATASET_PATH, "preds"),
-        # (Used in: CONNECT_COMPONENTS)
-        "preds_components": os.path.join(DATASET_PATH, "preds_components")
     }
-
+    if task_type == TaskType.CONNECT_COMPONENTS:
+        input_folders.updete({
+            "preds_components": os.path.join(DATASET_PATH, "preds_components")
+        })
     # Outputs
     output_folders = {
         # Labels
@@ -305,17 +306,21 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
         # Preds
         "preds_2d": os.path.join(CROPPED_PATH, "preds_2d_v6"),
         "preds_3d": os.path.join(CROPPED_PATH, "preds_3d_v6"),
-        # Preds Components (Used in: CONNECT_COMPONENTS)
-        "preds_components_2d": os.path.join(CROPPED_PATH, "preds_components_2d_v6"),
-        "preds_components_3d": os.path.join(CROPPED_PATH, "preds_components_3d_v6"),
 
         # Preds Fixed
         "preds_fixed_2d": os.path.join(CROPPED_PATH, "preds_fixed_2d_v6"),
         "preds_fixed_3d": os.path.join(CROPPED_PATH, "preds_fixed_3d_v6"),
-        # Preds Fixed Components (Used in: CONNECT_COMPONENTS)
-        "preds_fixed_components_2d": os.path.join(CROPPED_PATH, "preds_fixed_components_2d_v6"),
-        "preds_fixed_components_3d": os.path.join(CROPPED_PATH, "preds_fixed_components_3d_v6")
     }
+    if task_type == TaskType.CONNECT_COMPONENTS:
+        output_folders.updete({
+            # Preds Components
+            "preds_components_2d": os.path.join(CROPPED_PATH, "preds_components_2d_v6"),
+            "preds_components_3d": os.path.join(CROPPED_PATH, "preds_components_3d_v6"),
+
+            # Preds Fixed Components (Used in: CONNECT_COMPONENTS)
+            "preds_fixed_components_2d": os.path.join(CROPPED_PATH, "preds_fixed_components_2d_v6"),
+            "preds_fixed_components_3d": os.path.join(CROPPED_PATH, "preds_fixed_components_3d_v6")
+        })
 
     # Log
     log_filepath = os.path.join(CROPPED_PATH, "log.csv")
@@ -329,30 +334,13 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
 
     # Create Output Folders
     for output_folder in output_folders.values():
-        if task_type == TaskType.CONNECT_COMPONENTS:
-            os.makedirs(output_folder, exist_ok=True)
-        elif task_type == TaskType.PATCH_HOLES:
-            if "components" not in output_folder:
-                os.makedirs(output_folder, exist_ok=True)
-            else:
-                continue
-        else:
-            raise ValueError("Invalid Task Type")
+        os.makedirs(output_folder, exist_ok=True)
 
     # Get the filepaths
     input_filepaths = dict()
     filepaths_found = list()
     for key, value in input_folders.items():
-        if task_type == TaskType.CONNECT_COMPONENTS:
-            input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.*"))
-        elif task_type == TaskType.PATCH_HOLES:
-            if "components" not in value:
-                input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.*"))
-            else:
-                continue
-        else:
-            raise ValueError("Invalid Task Type")
-
+        input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.*"))
         filepaths_found.append(len(input_filepaths[key]))
 
     # Validation
