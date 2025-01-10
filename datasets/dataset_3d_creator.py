@@ -222,10 +222,18 @@ def test_2d_to_3d_and_back():
     data_list = get_images_6_views(format_of_2d_images=format_of_2d_images, convert_to_3d=False)
 
     # Reconstruct 3D from 2D and Project 3D to 2D again
+    projection_options = {
+        "front": True,
+        "back": True,
+        "top": True,
+        "bottom": True,
+        "left": True,
+        "right": True
+    }
     data_3d = reconstruct_3d_from_2d(format_of_2d_images=format_of_2d_images)
     projections = project_3d_to_2d(
         data_3d=data_3d,
-        front=True, back=True, top=True, bottom=True, left=True, right=True
+        projection_options=projection_options
     )
 
     # Compare the 2D projections with the original 2D images
