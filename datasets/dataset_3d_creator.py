@@ -1,11 +1,12 @@
 import numpy as np
 import os
 import pathlib
+import pandas as pd
 from tqdm import tqdm
 
-from dataset_list import CROPPED_PATH
+from dataset_list import DATA_PATH, CROPPED_PATH
 from dataset_utils import (IMAGES_6_VIEWS,
-                           convert_data_file_to_numpy, convert_numpy_to_data_file,
+                           get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                            project_3d_to_2d, get_images_6_views, reconstruct_3d_from_2d)
 # TODO: Debug Tools
 from dataset_visulalization import interactive_plot_2d, interactive_plot_3d
@@ -38,6 +39,13 @@ from dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
 
 def create_3d_reconstructions():
+    # Sources
+    source_folders = {
+        "labels_3d": os.path.join(CROPPED_PATH, "labels_3d_v6"),
+        "preds_3d": os.path.join(CROPPED_PATH, "preds_3d_v6"),
+        "preds_fixed_3d": os.path.join(CROPPED_PATH, "preds_fixed_3d_v6")
+    }
+
     # Inputs
     input_folders = {
         "labels_2d": os.path.join(CROPPED_PATH, "labels_2d_v6"),
@@ -61,49 +69,29 @@ def create_3d_reconstructions():
     for key, value in input_folders.items():
         input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.png"))
 
-    labels_image_format_set = set()
-    preds_image_format_set = set()
-    preds_fixed_image_format_set = set()
+    log_filepath = os.path.join(CROPPED_PATH, "log.csv")
+    log_data = pd.read_csv(log_filepath)
 
-    filepaths_count = len(input_filepaths["labels_2d"])
+    labels_image_format_list = list()
+    preds_image_format_list = list()
+    preds_fixed_image_format_list = list()
+
+    # Using iloc to select the first column
+    for data_basename in tqdm(log_data.iloc[:, 0]):
+        labels_image_format = os.path.join(input_folders["labels_2d"], f"{data_basename}_<VIEW>.png")
+        pred_image_format = os.path.join(input_folders["preds_2d"], f"{data_basename}_<VIEW>.png")
+        pred_fixed_image_format = os.path.join(input_folders["preds_fixed_2d"], f"{data_basename}_<VIEW>.png")
+
+        labels_image_format_list.append(labels_image_format)
+        preds_image_format_list.append(pred_image_format)
+        preds_fixed_image_format_list.append(pred_fixed_image_format)
+
+    filepaths_count = len(labels_image_format_list)
     for filepath_idx in tqdm(range(filepaths_count)):
-        # Get index data:
-        label_2d_filepath = input_filepaths["labels_2d"][filepath_idx]
-        pred_2d_filepath = input_filepaths["preds_2d"][filepath_idx]
-        pred_fixed_2d_filepath = input_filepaths["preds_fixed_2d"][filepath_idx]
-
-        # Label
-        label_image_split = str(label_2d_filepath).rsplit(sep="_", maxsplit=1)
-        label_image_split[1] = "<VIEW>.png"
-        label_image_format = "_".join(label_image_split)
-        labels_image_format_set.add(label_image_format)
-
-        # Pred
-        pred_image_split = str(pred_2d_filepath).rsplit(sep="_", maxsplit=1)
-        pred_image_split[1] = "<VIEW>.png"
-        pred_image_format = "_".join(pred_image_split)
-        preds_image_format_set.add(pred_image_format)
-
-        # Pred Fixed
-        pred_fixed_image_split = str(pred_fixed_2d_filepath).rsplit(sep="_", maxsplit=1)
-        pred_fixed_image_split[1] = "<VIEW>.png"
-        pred_fixed_image_format = "_".join(pred_fixed_image_split)
-        preds_fixed_image_format_set.add(pred_fixed_image_format)
-
-    labels_image_format_set = sorted(list(labels_image_format_set))
-    preds_image_format_set = sorted(list(preds_image_format_set))
-    preds_fixed_image_format_set = sorted(list(preds_fixed_image_format_set))
-
-    filepaths_count = len(labels_image_format_set)
-    for filepath_idx in tqdm(range(filepaths_count)):
-        # Get index data:
-        label_image_format = labels_image_format_set[filepath_idx]
-        pred_image_format = preds_image_format_set[filepath_idx]
-        pred_fixed_image_format = preds_fixed_image_format_set[filepath_idx]
-
-        label_numpy_data = reconstruct_3d_from_2d(format_of_2d_images=label_image_format)
-        pred_numpy_data = reconstruct_3d_from_2d(format_of_2d_images=pred_image_format)
-        pred_fixed_numpy_data = reconstruct_3d_from_2d(format_of_2d_images=pred_fixed_image_format)
+        # Get index data
+        label_image_format = labels_image_format_list[filepath_idx]
+        pred_image_format = preds_image_format_list[filepath_idx]
+        pred_fixed_image_format = preds_fixed_image_format_list[filepath_idx]
 
         # Label
         label_image_relative = pathlib.Path(label_image_format).relative_to(input_folders["labels_2d"])
@@ -119,27 +107,63 @@ def create_3d_reconstructions():
 
         # 3D Folders - labels
         save_filename = label_image_output_filepath.replace("_<VIEW>.png", "")
-        label_3d_path = pathlib.Path(os.path.join(CROPPED_PATH, "labels_3d_v6"))
+        label_3d_path = source_folders["labels_3d"]
         label_3d_relative = str(label_image_relative).replace("_<VIEW>.png", "*")
         source_label_3d_data_filepath = list(label_3d_path.rglob(label_3d_relative))[0]
-        convert_numpy_to_data_file(numpy_data=label_numpy_data, source_data_filepath=source_label_3d_data_filepath,
-                                   save_filename=save_filename)
+
+        label_rotation = convert_data_file_to_numpy(
+            data_filepath=source_label_3d_data_filepath,
+            extract_rotation=True
+        )[1]
+        label_numpy_data = reconstruct_3d_from_2d(
+            format_of_2d_images=label_image_format,
+            data_rotation=label_rotation
+        )
+        convert_numpy_to_data_file(
+            numpy_data=label_numpy_data,
+            source_data_filepath=source_label_3d_data_filepath,
+            save_filename=save_filename
+        )
 
         # 3D Folders - preds
         save_filename = pred_image_output_filepath.replace("_<VIEW>.png", "")
-        preds_3d_path = pathlib.Path(os.path.join(CROPPED_PATH, "preds_3d_v6"))
-        preds_3d_relative = str(label_image_relative).replace("_<VIEW>.png", "*")
-        source_preds_3d_data_filepath = list(preds_3d_path.rglob(preds_3d_relative))[0]
-        convert_numpy_to_data_file(numpy_data=pred_numpy_data, source_data_filepath=source_preds_3d_data_filepath,
-                                   save_filename=save_filename)
+        pred_3d_path = source_folders["preds_3d"]
+        pred_3d_relative = str(pred_image_relative).replace("_<VIEW>.png", "*")
+        source_pred_3d_data_filepath = list(pred_3d_path.rglob(pred_3d_relative))[0]
+
+        pred_rotation = convert_data_file_to_numpy(
+            data_filepath=source_pred_3d_data_filepath,
+            extract_rotation=True
+        )[1]
+        pred_numpy_data = reconstruct_3d_from_2d(
+            format_of_2d_images=pred_image_format,
+            data_rotation=pred_rotation
+        )
+        convert_numpy_to_data_file(
+            numpy_data=pred_numpy_data,
+            source_data_filepath=source_pred_3d_data_filepath,
+            save_filename=save_filename
+        )
 
         # 3D Folders - preds fixed
         save_filename = pred_fixed_image_output_filepath.replace("_<VIEW>.png", "")
-        preds_fixed_3d_path = pathlib.Path(os.path.join(CROPPED_PATH, "preds_fixed_3d_v6"))
-        preds_fixed_3d_relative = str(label_image_relative).replace("_<VIEW>.png", "*")
-        source_preds_fixed_3d_data_filepath = list(preds_fixed_3d_path.rglob(preds_fixed_3d_relative))[0]
-        convert_numpy_to_data_file(numpy_data=pred_fixed_numpy_data, source_data_filepath=source_preds_fixed_3d_data_filepath,
-                                   save_filename=save_filename)
+        pred_fixed_3d_path = source_folders["preds_fixed"]
+        pred_fixed_3d_relative = str(pred_fixed_image_relative).replace("_<VIEW>.png", "*")
+        source_pred_fixed_3d_data_filepath = list(pred_fixed_3d_path.rglob(pred_fixed_3d_relative))[0]
+
+        pred_fixed_rotation = convert_data_file_to_numpy(
+            data_filepath=source_pred_fixed_3d_data_filepath,
+            extract_rotation=True
+        )[1]
+        pred_fixed_numpy_data = reconstruct_3d_from_2d(
+            format_of_2d_images=pred_fixed_image_format,
+            data_rotation=pred_fixed_rotation
+        )
+        convert_numpy_to_data_file(
+            numpy_data=pred_fixed_numpy_data,
+            source_data_filepath=source_pred_fixed_3d_data_filepath,
+            save_filename=save_filename
+        )
 
     # format_of_2d_images = r".\parse_labels_mini_cropped_v5\PA000005_vessel_02584_<VIEW>.png"
     # final_data_3d = reconstruct_3d_from_2d(format_of_2d_images)
@@ -174,7 +198,7 @@ def create_3d_fusions():
 
     filepaths_count = len(input_filepaths["labels_3d_reconstruct"])
     for filepath_idx in tqdm(range(filepaths_count)):
-        # Get index data:
+        # Get index data
         label_3d_reconstruct_filepath = input_filepaths["labels_3d_reconstruct"][filepath_idx]
         pred_3d_filepath = input_filepaths["preds_3d"][filepath_idx]
         pred_fixed_3d_filepath = input_filepaths["preds_fixed_3d"][filepath_idx]
@@ -200,23 +224,31 @@ def create_3d_fusions():
 
         # 3D Folders - preds fusion
         save_filename = pred_3d_output_filepath
-        convert_numpy_to_data_file(numpy_data=pred_3d_fusion, source_data_filepath=pred_3d_filepath,
-                                   save_filename=save_filename)
+        convert_numpy_to_data_file(
+            numpy_data=pred_3d_fusion,
+            source_data_filepath=pred_3d_filepath,
+            save_filename=save_filename
+        )
 
         # 3D Folders - preds fixed
         save_filename = pred_fixed_3d_output_filepath
-        convert_numpy_to_data_file(numpy_data=pred_fixed_3d_fusion, source_data_filepath=pred_fixed_3d_filepath,
-                                   save_filename=save_filename)
+        convert_numpy_to_data_file(
+            numpy_data=pred_fixed_3d_fusion,
+            source_data_filepath=pred_fixed_3d_filepath,
+            save_filename=save_filename
+        )
 
 
-def test_2d_to_3d_and_back():
+def test_2d_to_3d_and_back(data_3d_filepath, cropped_data_path):
     # Use the 2d projections to create a 3d reconstruction
     # Use the 3d reconstruction to create a 2d projection
     # Compare the new 2d projection with the original 2d projection
-
-    data_3d_basename = "PA000005_11899"
-    input_folder = os.path.join(CROPPED_PATH, "labels_2d_v6")
-    format_of_2d_images = os.path.join(input_folder, f"{data_3d_basename}_<VIEW>.png")
+    data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
+    source_numpy_data, source_numpy_rotation = convert_data_file_to_numpy(
+        data_filepath=data_3d_filepath,
+        extract_rotation=True
+    )
+    format_of_2d_images = os.path.join(cropped_data_path, f"{data_3d_basename}_<VIEW>.png")
 
     # Get the locally saved 2D images
     data_list = get_images_6_views(format_of_2d_images=format_of_2d_images, convert_to_3d=False)
@@ -230,10 +262,12 @@ def test_2d_to_3d_and_back():
         "left": True,
         "right": True
     }
-    data_3d = reconstruct_3d_from_2d(format_of_2d_images=format_of_2d_images)
+
+    data_3d = reconstruct_3d_from_2d(format_of_2d_images=format_of_2d_images, data_rotation=source_numpy_rotation)
     projections = project_3d_to_2d(
         data_3d=data_3d,
-        projection_options=projection_options
+        projection_options=projection_options,
+        data_rotation=source_numpy_rotation
     )
 
     # Compare the 2D projections with the original 2D images
@@ -254,7 +288,9 @@ def main():
     create_3d_fusions()
 
     # TODO: DEBUG
-    # test_2d_to_3d_and_back()
+    data_3d_filepath = os.path.join(DATA_PATH, "parse2022", "labels", "PA000005_11899.nii.gz")
+    cropped_data_path = os.path.join(DATA_PATH, "parse2022", "labels_2d_v6")
+    test_2d_to_3d_and_back(data_3d_filepath=data_3d_filepath, cropped_data_path=cropped_data_path)
 
 
 if __name__ == "__main__":

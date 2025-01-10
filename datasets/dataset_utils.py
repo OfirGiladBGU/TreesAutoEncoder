@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import cv2
 from enum import Enum
+from typing import Union, Tuple
 
 # For .nii.gz
 import nibabel as nib
@@ -20,6 +21,7 @@ class TaskType(Enum):
     PATCH_HOLES = 2
 
 
+# TODO: Support for relative stem from the dataset folder (to support sub folders)
 def get_data_file_stem(data_filepath) -> str:
     data_filepath = str(data_filepath)
     if data_filepath.endswith(".nii.gz"):
@@ -31,7 +33,8 @@ def get_data_file_stem(data_filepath) -> str:
     return data_filepath_stem
 
 
-def convert_data_file_to_numpy(data_filepath) -> np.ndarray:
+def convert_data_file_to_numpy(data_filepath,
+                               extract_rotation: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     extension_map = {
         ".nii.gz": _convert_nii_gz_to_numpy,
         ".ply": _convert_ply_to_numpy,
@@ -46,11 +49,15 @@ def convert_data_file_to_numpy(data_filepath) -> np.ndarray:
         data_extension = pathlib.Path(data_filepath).suffix
 
     if data_extension in extension_map.keys():
-        numpy_data = extension_map[data_extension](data_filepath=data_filepath)
+        data = extension_map[data_extension](data_filepath=data_filepath, extract_rotation=extract_rotation)
+        if extract_rotation is True:
+            numpy_data, numpy_rotation = data
+            return numpy_data, numpy_rotation
+        else:
+            numpy_data = data
+            return numpy_data
     else:
         raise ValueError("Invalid data format")
-
-    return numpy_data
 
 
 def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, save_filename=None):
@@ -79,10 +86,15 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
 #######################################
 
 # TODO: return or apply the affine transformation to the numpy data for the save later
-def _convert_nii_gz_to_numpy(data_filepath: str) -> np.ndarray:
+def _convert_nii_gz_to_numpy(data_filepath: str,
+                             extract_rotation: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     nifti_data = nib.load(data_filepath)
     numpy_data = nifti_data.get_fdata()
-    return numpy_data
+    if extract_rotation is True:
+        numpy_rotation = nifti_data.affine[:3, :3]
+        return numpy_data, numpy_rotation
+    else:
+        return numpy_data
 
 
 def _convert_numpy_to_nii_gz(numpy_data: np.ndarray, source_data_filepath: str = None,
@@ -377,8 +389,10 @@ def _calculate_depth_projection(data_3d, component_3d=None, axis=0):
     # return (255 * (1 - (depth_projection / axis_size))).astype(int)
 
 
+# TODO: Add support for data rotation
 def project_3d_to_2d(data_3d: np.ndarray,
                      projection_options: dict[str, bool],
+                     data_rotation: np.ndarray = None,
                      component_3d: np.ndarray = None) -> dict[str, np.ndarray]:
     projections = dict()
 
@@ -529,7 +543,11 @@ def project_3d_to_2d(data_3d: np.ndarray,
 #############################
 # 3D from 2D reconstruction #
 #############################
-def reverse_rotations(numpy_image: np.ndarray, view_type: str) -> np.ndarray:
+
+# TODO: Add support for data rotation
+def reverse_rotations(numpy_image: np.ndarray,
+                      view_type: str,
+                      data_rotation: np.ndarray = None) -> np.ndarray:
     # Convert to 3D
     data_3d = np.zeros(shape=(numpy_image.shape[0], numpy_image.shape[0], numpy_image.shape[0]), dtype=np.uint8)
     for i in range(numpy_image.shape[0]):
@@ -576,13 +594,16 @@ def reverse_rotations(numpy_image: np.ndarray, view_type: str) -> np.ndarray:
     return data_3d
 
 
-def get_images_6_views(format_of_2d_images: str, convert_to_3d: bool = False) -> list:
+# TODO: Do changes in all required places
+def get_images_6_views(format_of_2d_images: str,
+                       convert_to_3d: bool = False,
+                       data_rotation: np.ndarray = None) -> list:
     data_list = list()
     for image_view in IMAGES_6_VIEWS:
         image_path = format_of_2d_images.replace("<VIEW>", image_view)
         numpy_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
         if convert_to_3d is True:
-            data_3d = reverse_rotations(numpy_image, image_view)
+            data_3d = reverse_rotations(numpy_image=numpy_image, view_type=image_view, data_rotation=data_rotation)
             data_list.append(data_3d)
         else:
             data_list.append(numpy_image)
@@ -590,8 +611,13 @@ def get_images_6_views(format_of_2d_images: str, convert_to_3d: bool = False) ->
     return data_list
 
 
-def reconstruct_3d_from_2d(format_of_2d_images) -> np.ndarray:
-    data_list = get_images_6_views(format_of_2d_images=format_of_2d_images, convert_to_3d=True)
+# TODO: Do changes in all required places
+def reconstruct_3d_from_2d(format_of_2d_images, data_rotation: np.ndarray = None) -> np.ndarray:
+    data_list = get_images_6_views(
+        format_of_2d_images=format_of_2d_images,
+        convert_to_3d=True,
+        data_rotation=data_rotation
+    )
 
     merged_data_3d = data_list[0]
     for i in range(1, len(data_list)):
