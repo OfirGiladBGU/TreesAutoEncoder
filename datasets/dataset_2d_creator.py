@@ -262,24 +262,18 @@ def create_dataset_depth_2d_projections():
 
         output_idx = get_data_file_stem(data_filepath=label_filepath)
 
-        label_numpy_data, label_numpy_rotation = convert_data_file_to_numpy(
-            data_filepath=label_filepath,
-            extract_rotation=True
-        )
-        pred_numpy_data, pred_numpy_rotation = convert_data_file_to_numpy(
-            data_filepath=pred_filepath,
-            extract_rotation=True
-        )
+        label_numpy_data = convert_data_file_to_numpy(data_filepath=label_filepath)
+        pred_numpy_data = convert_data_file_to_numpy(data_filepath=pred_filepath)
 
         label_projections = project_3d_to_2d(
             data_3d=label_numpy_data,
             projection_options=projection_options,
-            data_rotation=label_numpy_rotation
+            source_data_filepath=label_filepath
         )
         pred_projections = project_3d_to_2d(
             data_3d=pred_numpy_data,
             projection_options=projection_options,
-            data_rotation=pred_numpy_rotation
+            source_data_filepath=pred_filepath
         )
 
         for image_view in IMAGES_6_VIEWS:
@@ -287,11 +281,12 @@ def create_dataset_depth_2d_projections():
 
             label_image = label_projections[f"{image_view}_image"]
             # TODO: find the operation
-            cv2.imwrite(os.path.join(output_folders["labels_2d"], f"{output_2d_format}.png"), np.flipud(label_image.T))
+            cv2.imwrite(os.path.join(output_folders["labels_2d"], f"{output_2d_format}.png"), label_image)
             # TODO: find the operation
             pred_image = pred_projections[f"{image_view}_image"]
-            cv2.imwrite(os.path.join(output_folders["preds_2d"], f"{output_2d_format}.png"), np.flipud(pred_image.T))
+            cv2.imwrite(os.path.join(output_folders["preds_2d"], f"{output_2d_format}.png"), pred_image)
 
+        exit()
 
 #################
 # 3D Components #
@@ -404,14 +399,8 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
         # pred_component_filepath = input_filepaths["preds_components"][filepath_idx]
 
         # Original data
-        label_numpy_data, label_numpy_rotation = convert_data_file_to_numpy(
-            data_filepath=label_filepath,
-            extract_rotation=True
-        )
-        pred_numpy_data, pred_numpy_rotation = convert_data_file_to_numpy(
-            data_filepath=pred_filepath,
-            extract_rotation=True
-        )
+        label_numpy_data = convert_data_file_to_numpy(data_filepath=label_filepath)
+        pred_numpy_data = convert_data_file_to_numpy(data_filepath=pred_filepath)
         # pred_component_numpy_data = convert_data_file_to_numpy(data_filepath=pred_component_filepath)
 
         pred_fixed_numpy_data = outlier_removal(pred_data=pred_numpy_data, label_data=label_numpy_data)
@@ -453,7 +442,7 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
             )
             pred_fixed_components_cubes = other_cubes_list[0]
         elif task_type == TaskType.PATCH_HOLES:
-            pass
+            pred_component_filepath = None
         else:
             raise ValueError("Invalid Task Type")
 
@@ -512,7 +501,7 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
             label_projections = project_3d_to_2d(
                 data_3d=label_cube,
                 projection_options=projection_options,
-                data_rotation=label_numpy_rotation
+                source_data_filepath=label_filepath
             )
 
             # Project 3D to 2D (Preds)
@@ -520,7 +509,7 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
                 data_3d=pred_cube,
                 projection_options=projection_options,
                 component_3d=pred_components_cube,
-                data_rotation=pred_numpy_rotation
+                source_data_filepath=pred_filepath
             )
 
             # Project 3D to 2D (Preds Fixed)
@@ -528,7 +517,7 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
                 data_3d=pred_fixed_cube,
                 projection_options=projection_options,
                 component_3d=pred_fixed_components_cube,
-                data_rotation=pred_numpy_rotation
+                source_data_filepath=pred_filepath
             )
 
             condition1 = True
@@ -708,7 +697,7 @@ def create_2d_projections_and_3d_cubes(task_type: TaskType):
                 convert_numpy_to_data_file(
                     numpy_data=pred_components_cube,
                     source_data_filepath=pred_component_filepath,
-                     save_filename=save_filename
+                    save_filename=save_filename
                 )
 
                 # 3D Folders - preds fixed components
@@ -750,6 +739,7 @@ def main():
     # TODO: DEBUG
     create_dataset_depth_2d_projections()
 
+    # TODO: Required for: TaskType.CONNECT_COMPONENTS
     # create_preds_components()
 
     # task_type = TaskType.CONNECT_COMPONENTS

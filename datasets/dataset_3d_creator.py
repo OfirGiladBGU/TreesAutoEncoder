@@ -111,13 +111,9 @@ def create_3d_reconstructions():
         label_3d_relative = str(label_image_relative).replace("_<VIEW>.png", "*")
         source_label_3d_data_filepath = list(label_3d_path.rglob(label_3d_relative))[0]
 
-        label_rotation = convert_data_file_to_numpy(
-            data_filepath=source_label_3d_data_filepath,
-            extract_rotation=True
-        )[1]
         label_numpy_data = reconstruct_3d_from_2d(
             format_of_2d_images=label_image_format,
-            data_rotation=label_rotation
+            source_data_filepath=source_label_3d_data_filepath
         )
         convert_numpy_to_data_file(
             numpy_data=label_numpy_data,
@@ -131,13 +127,9 @@ def create_3d_reconstructions():
         pred_3d_relative = str(pred_image_relative).replace("_<VIEW>.png", "*")
         source_pred_3d_data_filepath = list(pred_3d_path.rglob(pred_3d_relative))[0]
 
-        pred_rotation = convert_data_file_to_numpy(
-            data_filepath=source_pred_3d_data_filepath,
-            extract_rotation=True
-        )[1]
         pred_numpy_data = reconstruct_3d_from_2d(
             format_of_2d_images=pred_image_format,
-            data_rotation=pred_rotation
+            source_data_filepath=source_pred_3d_data_filepath
         )
         convert_numpy_to_data_file(
             numpy_data=pred_numpy_data,
@@ -151,13 +143,9 @@ def create_3d_reconstructions():
         pred_fixed_3d_relative = str(pred_fixed_image_relative).replace("_<VIEW>.png", "*")
         source_pred_fixed_3d_data_filepath = list(pred_fixed_3d_path.rglob(pred_fixed_3d_relative))[0]
 
-        pred_fixed_rotation = convert_data_file_to_numpy(
-            data_filepath=source_pred_fixed_3d_data_filepath,
-            extract_rotation=True
-        )[1]
         pred_fixed_numpy_data = reconstruct_3d_from_2d(
             format_of_2d_images=pred_fixed_image_format,
-            data_rotation=pred_fixed_rotation
+            source_data_filepath=source_pred_fixed_3d_data_filepath
         )
         convert_numpy_to_data_file(
             numpy_data=pred_fixed_numpy_data,
@@ -244,14 +232,14 @@ def test_2d_to_3d_and_back(data_3d_filepath, cropped_data_path):
     # Use the 3d reconstruction to create a 2d projection
     # Compare the new 2d projection with the original 2d projection
     data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
-    source_numpy_data, source_numpy_rotation = convert_data_file_to_numpy(
-        data_filepath=data_3d_filepath,
-        extract_rotation=True
-    )
     format_of_2d_images = os.path.join(cropped_data_path, f"{data_3d_basename}_<VIEW>.png")
 
     # Get the locally saved 2D images
-    data_list = get_images_6_views(format_of_2d_images=format_of_2d_images, convert_to_3d=False)
+    data_list = get_images_6_views(
+        format_of_2d_images=format_of_2d_images,
+        convert_to_3d=False,
+        source_data_filepath=None
+    )
 
     # Reconstruct 3D from 2D and Project 3D to 2D again
     projection_options = {
@@ -263,11 +251,14 @@ def test_2d_to_3d_and_back(data_3d_filepath, cropped_data_path):
         "right": True
     }
 
-    data_3d = reconstruct_3d_from_2d(format_of_2d_images=format_of_2d_images, data_rotation=source_numpy_rotation)
+    data_3d = reconstruct_3d_from_2d(
+        format_of_2d_images=format_of_2d_images,
+        source_data_filepath=data_3d_filepath
+    )
     projections = project_3d_to_2d(
         data_3d=data_3d,
         projection_options=projection_options,
-        data_rotation=source_numpy_rotation
+        source_data_filepath=data_3d_filepath
     )
 
     # Compare the 2D projections with the original 2D images

@@ -3,7 +3,6 @@ import numpy as np
 import torch
 import cv2
 from enum import Enum
-from typing import Union, Tuple
 
 # For .nii.gz
 import nibabel as nib
@@ -13,8 +12,8 @@ import trimesh
 import open3d as o3d
 
 
-IMAGES_6_VIEWS = ['top', 'bottom', 'front', 'back', 'left', 'right']
-
+IMAGES_6_VIEWS = ["top", "bottom", "front", "back", "left", "right"]
+PROJECTION_MODE = "visualization"  # "visualization" or "training"
 
 class TaskType(Enum):
     CONNECT_COMPONENTS = 1
@@ -33,8 +32,7 @@ def get_data_file_stem(data_filepath) -> str:
     return data_filepath_stem
 
 
-def convert_data_file_to_numpy(data_filepath,
-                               extract_rotation: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+def convert_data_file_to_numpy(data_filepath) -> np.ndarray:
     extension_map = {
         ".nii.gz": _convert_nii_gz_to_numpy,
         ".ply": _convert_ply_to_numpy,
@@ -49,13 +47,8 @@ def convert_data_file_to_numpy(data_filepath,
         data_extension = pathlib.Path(data_filepath).suffix
 
     if data_extension in extension_map.keys():
-        data = extension_map[data_extension](data_filepath=data_filepath, extract_rotation=extract_rotation)
-        if extract_rotation is True:
-            numpy_data, numpy_rotation = data
-            return numpy_data, numpy_rotation
-        else:
-            numpy_data = data
-            return numpy_data
+        numpy_data = extension_map[data_extension](data_filepath=data_filepath)
+        return numpy_data
     else:
         raise ValueError("Invalid data format")
 
@@ -75,8 +68,11 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
         data_extension = pathlib.Path(source_data_filepath).suffix
 
     if data_extension in extension_map.keys():
-        extension_map[data_extension](numpy_data=numpy_data, source_data_filepath=source_data_filepath,
-                                      save_filename=save_filename)
+        extension_map[data_extension](
+            numpy_data=numpy_data,
+            source_data_filepath=source_data_filepath,
+            save_filename=save_filename
+        )
     else:
         raise ValueError("Invalid data format")
 
@@ -86,15 +82,10 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
 #######################################
 
 # TODO: return or apply the affine transformation to the numpy data for the save later
-def _convert_nii_gz_to_numpy(data_filepath: str,
-                             extract_rotation: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+def _convert_nii_gz_to_numpy(data_filepath: str) -> np.ndarray:
     nifti_data = nib.load(data_filepath)
     numpy_data = nifti_data.get_fdata()
-    if extract_rotation is True:
-        numpy_rotation = nifti_data.affine[:3, :3]
-        return numpy_data, numpy_rotation
-    else:
-        return numpy_data
+    return numpy_data
 
 
 def _convert_numpy_to_nii_gz(numpy_data: np.ndarray, source_data_filepath: str = None,
@@ -139,8 +130,7 @@ def save_nii_gz_in_identity_affine(numpy_data=None, data_filepath=None, save_fil
 
 # TODO: Check how to make Abstract converter from supported file formats
 
-def _convert_ply_to_numpy(data_filepath,
-                          extract_rotation: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+def _convert_ply_to_numpy(data_filepath) -> np.ndarray:
     voxel_size = 0.05  # Define voxel size (the size of each grid cell)
 
     # Mesh PLY
@@ -165,11 +155,7 @@ def _convert_ply_to_numpy(data_filepath,
     else:
         raise ValueError("Invalid data format")
 
-    if extract_rotation is True:
-        numpy_rotation = np.identity(3)
-        return numpy_data, numpy_rotation
-    else:
-        return numpy_data
+    return numpy_data
 
 
 def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None):
@@ -223,20 +209,14 @@ def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, sav
 #################################
 # obj to numpy and numpy to obj #
 #################################
-def _convert_obj_to_numpy(data_filepath,
-                          extract_rotation: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+def _convert_obj_to_numpy(data_filepath) -> np.ndarray:
     voxel_size = 2.0  # Define voxel size (the size of each grid cell)
 
     mesh = trimesh.load(data_filepath)
     voxelized = mesh.voxelized(pitch=voxel_size)  # Pitch = voxel size
 
     numpy_data = voxelized.matrix.astype(np.uint8)
-
-    if extract_rotation is True:
-        numpy_rotation = np.identity(3)
-        return numpy_data, numpy_rotation
-    else:
-        return numpy_data
+    return numpy_data
 
 
 def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None) -> trimesh.Trimesh:
@@ -269,8 +249,7 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
 #################################
 # pcd to numpy and numpy to pcd #
 #################################
-def _convert_pcd_to_numpy(data_filepath,
-                          extract_rotation: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+def _convert_pcd_to_numpy(data_filepath) -> np.ndarray:
     # V1 - Using Open3D VoxelGrid
     # voxel_size = 2.0  # Define voxel size (the size of each grid cell)
     #
@@ -303,11 +282,7 @@ def _convert_pcd_to_numpy(data_filepath,
         x, y, z = point
         numpy_data[x, y, z] = 1
 
-    if extract_rotation is True:
-        numpy_rotation = np.identity(3)
-        return numpy_data, numpy_rotation
-    else:
-        return numpy_data
+    return numpy_data
 
 
 def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None) -> o3d.geometry.PointCloud:
@@ -348,14 +323,9 @@ def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, sav
 #################################
 # npy to numpy and numpy to npy #
 #################################
-def _convert_npy_to_numpy(data_filepath,
-                          extract_rotation: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+def _convert_npy_to_numpy(data_filepath) -> np.ndarray:
     numpy_data = np.load(file=data_filepath)
-    if extract_rotation is True:
-        numpy_rotation = np.identity(3)
-        return numpy_data, numpy_rotation
-    else:
-        return numpy_data
+    return numpy_data
 
 
 def _convert_numpy_to_npy(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None) -> np.ndarray:
@@ -443,7 +413,6 @@ def _calculate_depth_projection(data_3d: np.ndarray, component_3d: np.ndarray = 
         0
     )
 
-    grayscale_depth_projection = np.flipud(grayscale_depth_projection.T) # For openCV compatibility
     if component_3d is None:
         return grayscale_depth_projection
     else:
@@ -460,7 +429,6 @@ def _calculate_depth_projection(data_3d: np.ndarray, component_3d: np.ndarray = 
                     else:
                         raise ValueError("Invalid axis")
 
-        components_depth_projection = np.flipud(components_depth_projection.T)  # For openCV compatibility
         return grayscale_depth_projection, components_depth_projection
 
     # return (255 * (1 - (depth_projection / axis_size))).astype(int)
@@ -471,14 +439,37 @@ def _calculate_depth_projection(data_3d: np.ndarray, component_3d: np.ndarray = 
 # TODO: also the first 3 rotations shouldn't be needed after transpose (need to find the correct one)
 def project_3d_to_2d(data_3d: np.ndarray,
                      projection_options: dict[str, bool],
-                     data_rotation: np.ndarray = None,
+                     source_data_filepath=None,
                      component_3d: np.ndarray = None) -> dict[str, np.ndarray]:
-    medical = False
-
     projections = dict()
 
     rotated_data_3d = data_3d
     rotated_component_3d = component_3d
+
+    if source_data_filepath is None:
+        pass # No need for rotation
+    # Medical data (nii.gz) has different axis order
+    elif str(source_data_filepath).endswith(".nii.gz") is True:
+        rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 2))
+        rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(1, 2))
+        rotated_data_3d = np.flip(rotated_data_3d, axis=1)
+
+        if component_3d is not None:
+            rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(0, 2))
+            rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(1, 2))
+            rotated_component_3d = np.flip(rotated_component_3d, axis=1)
+    # Other data formats
+    else:
+        rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 2))
+        rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(1, 2))
+        rotated_data_3d = np.flip(rotated_data_3d, axis=1)
+        rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 2))
+
+        if component_3d is not None:
+            rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(0, 2))
+            rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(1, 2))
+            rotated_component_3d = np.flip(rotated_component_3d, axis=1)
+            rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(0, 2))
 
     # Front projection (XY plane)
     if projection_options.get("front", False) is True:
@@ -489,51 +480,51 @@ def project_3d_to_2d(data_3d: np.ndarray,
 
         # Option 2
         if rotated_component_3d is None:
-            projections["front_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=1)
+            projections["front_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=2)
         else:
             flipped_component_3d = rotated_component_3d
 
             projections["front_image"], projections["front_components"] = _calculate_depth_projection(
                 data_3d=flipped_data_3d,
                 component_3d=flipped_component_3d,
-                axis=1
+                axis=2
             )
 
     # Back projection (XY plane)
     if projection_options.get("back", False) is True:
         flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(0, 1))
+        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(1, 2))
 
         # Option 1
         # projections["back_image"] = np.max(flipped_data_3d, axis=2)
 
         # Option 2
         if rotated_component_3d is None:
-            projections["back_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=1)
+            projections["back_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=2)
         else:
             flipped_component_3d = rotated_component_3d
-            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(0, 1))
+            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(1, 2))
 
             projections["back_image"], projections["back_components"] = _calculate_depth_projection(
                 data_3d=flipped_data_3d,
                 component_3d=flipped_component_3d,
-                axis=1
+                axis=2
             )
 
     # Top projection (XZ plane)
     if projection_options.get("top", False) is True:
         flipped_data_3d = rotated_data_3d
-        # flipped_data_3d = np.rot90(flipped_data_3d, k=1, axes=(1, 2))
+        flipped_data_3d = np.rot90(flipped_data_3d, k=1, axes=(1, 2))
 
         # Option 1
         # projections["top_image"] = np.max(data_3d, axis=1)
 
         # Option 2
         if rotated_component_3d is None:
-            projections["top_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=2)
+            projections["top_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=0)
         else:
             flipped_component_3d = rotated_component_3d
-            # flipped_component_3d = np.rot90(flipped_component_3d, k=1, axes=(1, 2))
+            flipped_component_3d = np.rot90(flipped_component_3d, k=1, axes=(1, 2))
 
             projections["top_image"], projections["top_components"] = _calculate_depth_projection(
                 data_3d=flipped_data_3d,
@@ -544,19 +535,19 @@ def project_3d_to_2d(data_3d: np.ndarray,
     # Bottom projection (XZ plane)
     if projection_options.get("bottom", False) is True:
         flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(1, 2))
-        # flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(0, 1))
+        flipped_data_3d = np.rot90(flipped_data_3d, k=1, axes=(1, 2))
+        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(0, 1))
 
         # Option 1
         # projections["bottom_image"] = np.max(flipped_data_3d, axis=1)
 
         # Option 2
         if rotated_component_3d is None:
-            projections["bottom_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=2)
+            projections["bottom_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=0)
         else:
             flipped_component_3d = rotated_component_3d
-            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(1, 2))
-            # flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(0, 1))
+            flipped_component_3d = np.rot90(flipped_component_3d, k=1, axes=(1, 2))
+            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(0, 1))
 
             projections["bottom_image"], projections["bottom_components"] = _calculate_depth_projection(
                 data_3d=flipped_data_3d,
@@ -567,17 +558,17 @@ def project_3d_to_2d(data_3d: np.ndarray,
     # Right projection (YZ plane)
     if projection_options.get("right", False) is True:
         flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.flip(flipped_data_3d, axis=0)
+        flipped_data_3d = np.flip(flipped_data_3d, axis=1)
 
         # Option 1
         # projections["right_image"] = np.max(flipped_data_3d, axis=0)
 
         # Option 2
         if rotated_component_3d is None:
-            projections["right_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=0)
+            projections["right_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=1)
         else:
             flipped_component_3d = rotated_component_3d
-            flipped_component_3d = np.flip(flipped_component_3d, axis=0)
+            flipped_component_3d = np.flip(flipped_component_3d, axis=1)
 
             projections["right_image"], projections["right_components"] = _calculate_depth_projection(
                 data_3d=flipped_data_3d,
@@ -588,19 +579,19 @@ def project_3d_to_2d(data_3d: np.ndarray,
     # Left projection (YZ plane)
     if projection_options.get("left", False) is True:
         flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.flip(flipped_data_3d, axis=0)
-        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(0, 1))
+        flipped_data_3d = np.flip(flipped_data_3d, axis=1)
+        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(1, 2))
 
         # Option 1
         # projections["left_image"] = np.max(data_3d, axis=0)
 
         # Option 2
         if rotated_component_3d is None:
-            projections["left_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=0)
+            projections["left_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=1)
         else:
             flipped_component_3d = rotated_component_3d
-            flipped_component_3d = np.flip(flipped_component_3d, axis=0)
-            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(0, 1))
+            flipped_component_3d = np.flip(flipped_component_3d, axis=1)
+            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(1, 2))
 
             projections["left_image"], projections["left_components"] = _calculate_depth_projection(
                 data_3d=flipped_data_3d,
@@ -618,7 +609,7 @@ def project_3d_to_2d(data_3d: np.ndarray,
 # TODO: Add support for data rotation
 def reverse_rotations(numpy_image: np.ndarray,
                       view_type: str,
-                      data_rotation: np.ndarray = None) -> np.ndarray:
+                      source_data_filepath=None) -> np.ndarray:
     # Convert to 3D
     data_3d = np.zeros(shape=(numpy_image.shape[0], numpy_image.shape[0], numpy_image.shape[0]), dtype=np.uint8)
     for i in range(numpy_image.shape[0]):
@@ -657,11 +648,16 @@ def reverse_rotations(numpy_image: np.ndarray,
         data_3d = np.rot90(data_3d, k=2, axes=(2, 1))
         data_3d = np.flip(data_3d, axis=1)
 
-    # Apply data rotation
-    if data_rotation is not None and not np.array_equal(data_rotation, np.identity(3)):
+    # Reverse the initial rotations
+    if source_data_filepath is None:
+        pass
+    elif str(source_data_filepath).endswith(".nii.gz") is True:
         # TODO: check how to use the angles correctly
-
-        # Reverse the initial rotations
+        data_3d = np.flip(data_3d, axis=1)
+        data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
+        data_3d = np.rot90(data_3d, k=1, axes=(2, 0))
+    else:
+        data_3d = np.rot90(data_3d, k=1, axes=(2, 0))
         data_3d = np.flip(data_3d, axis=1)
         data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
         data_3d = np.rot90(data_3d, k=1, axes=(2, 0))
@@ -672,13 +668,17 @@ def reverse_rotations(numpy_image: np.ndarray,
 # TODO: Do changes in all required places
 def get_images_6_views(format_of_2d_images: str,
                        convert_to_3d: bool = False,
-                       data_rotation: np.ndarray = None) -> list:
+                       source_data_filepath=None) -> list:
     data_list = list()
     for image_view in IMAGES_6_VIEWS:
         image_path = format_of_2d_images.replace("<VIEW>", image_view)
         numpy_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
         if convert_to_3d is True:
-            data_3d = reverse_rotations(numpy_image=numpy_image, view_type=image_view, data_rotation=data_rotation)
+            data_3d = reverse_rotations(
+                numpy_image=numpy_image,
+                view_type=image_view,
+                source_data_filepath=source_data_filepath
+            )
             data_list.append(data_3d)
         else:
             data_list.append(numpy_image)
@@ -687,11 +687,11 @@ def get_images_6_views(format_of_2d_images: str,
 
 
 # TODO: Do changes in all required places
-def reconstruct_3d_from_2d(format_of_2d_images, data_rotation: np.ndarray = None) -> np.ndarray:
+def reconstruct_3d_from_2d(format_of_2d_images, source_data_filepath=None) -> np.ndarray:
     data_list = get_images_6_views(
         format_of_2d_images=format_of_2d_images,
         convert_to_3d=True,
-        data_rotation=data_rotation
+        source_data_filepath=source_data_filepath
     )
 
     merged_data_3d = data_list[0]

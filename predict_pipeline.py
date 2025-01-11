@@ -137,14 +137,14 @@ def preprocess_3d(data_3d_filepath,
                   data_2d_output: torch.Tensor,
                   apply_fusion: bool = False,
                   apply_noise_filter: bool = False):
-    pred_3d, pred_rotation = convert_data_file_to_numpy(data_filepath=data_3d_filepath, extract_rotation=True)
+    pred_3d = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
     data_2d_output = data_2d_output.numpy()
 
     # Reconstruct 3D
     data_3d_list = list()
     for idx, image_view in enumerate(IMAGES_6_VIEWS):
         numpy_image = data_2d_output[idx] * 255
-        data_3d = reverse_rotations(numpy_image=numpy_image, view_type=image_view, data_rotation=pred_rotation)
+        data_3d = reverse_rotations(numpy_image=numpy_image, view_type=image_view, source_data_filepath=data_3d_filepath)
         data_3d_list.append(data_3d)
 
     data_3d_reconstruct = data_3d_list[0]
