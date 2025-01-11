@@ -903,10 +903,6 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
                     condition = False
                     break
 
-            # DEBUG
-            # if cube_idx == 3253:
-            #     print("Debug")
-
             # Validate the condition
             if not condition:
                 continue
@@ -940,7 +936,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
             )
 
             if task_type == TaskType.CONNECT_COMPONENTS:
-                # 3D Folders - preds components
+                # 3D Folders - evals components
                 save_filename = os.path.join(output_folders["evals_components_3d"], output_3d_format)
                 convert_numpy_to_data_file(
                     numpy_data=eval_components_cube,
@@ -953,10 +949,6 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
                 raise ValueError("Invalid Task Type")
 
             log_data[output_3d_format] = cubes_data[cube_idx]
-
-            # DEBUG
-            # _convert_numpy_to_nii_gz(label_cube, save_name="1")
-            # _convert_numpy_to_nii_gz(pred_cube, save_name="2")
 
         if filepath_idx == 19:
             break
