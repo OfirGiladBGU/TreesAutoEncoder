@@ -432,7 +432,7 @@ def apply_rotation(data_3d: np.ndarray,
 ########################
 # 3D to 2D projections #
 ########################
-def _calculate_depth_projection(data_3d, component_3d=None, axis=0):
+def _calculate_depth_projection(data_3d: np.ndarray, component_3d: np.ndarray = None, axis: int = 0):
     depth_projection = np.argmax(data_3d, axis=axis)
     max_projection = np.max(data_3d, axis=axis)
     axis_size = data_3d.shape[axis]
@@ -443,6 +443,7 @@ def _calculate_depth_projection(data_3d, component_3d=None, axis=0):
         0
     )
 
+    grayscale_depth_projection = np.flipud(grayscale_depth_projection.T) # For openCV compatibility
     if component_3d is None:
         return grayscale_depth_projection
     else:
@@ -459,6 +460,7 @@ def _calculate_depth_projection(data_3d, component_3d=None, axis=0):
                     else:
                         raise ValueError("Invalid axis")
 
+        components_depth_projection = np.flipud(components_depth_projection.T)  # For openCV compatibility
         return grayscale_depth_projection, components_depth_projection
 
     # return (255 * (1 - (depth_projection / axis_size))).astype(int)
@@ -471,25 +473,12 @@ def project_3d_to_2d(data_3d: np.ndarray,
                      projection_options: dict[str, bool],
                      data_rotation: np.ndarray = None,
                      component_3d: np.ndarray = None) -> dict[str, np.ndarray]:
+    medical = False
+
     projections = dict()
 
     rotated_data_3d = data_3d
     rotated_component_3d = component_3d
-
-    # Apply data rotation
-    # if data_rotation is not None and not np.array_equal(data_rotation, np.identity(3)):
-    #     # rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 2))
-    #     # rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(1, 2))
-    #     # rotated_data_3d = np.flip(rotated_data_3d, axis=1)
-    #
-    #     # rotated_data_3d = np.flipud(rotated_data_3d) # For openCV compatibility
-    #
-    #     if component_3d is not None:
-    #         # rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(0, 2))
-    #         # rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(1, 2))
-    #         # rotated_component_3d = np.flip(rotated_component_3d, axis=1)
-    #
-    #         # rotated_component_3d = np.flipud(rotated_component_3d)  # For openCV compatibility
 
     # Front projection (XY plane)
     if projection_options.get("front", False) is True:
@@ -500,51 +489,51 @@ def project_3d_to_2d(data_3d: np.ndarray,
 
         # Option 2
         if rotated_component_3d is None:
-            projections["front_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=2)
+            projections["front_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=1)
         else:
             flipped_component_3d = rotated_component_3d
 
             projections["front_image"], projections["front_components"] = _calculate_depth_projection(
                 data_3d=flipped_data_3d,
                 component_3d=flipped_component_3d,
-                axis=2
+                axis=1
             )
 
     # Back projection (XY plane)
     if projection_options.get("back", False) is True:
         flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(1, 2))
+        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(0, 1))
 
         # Option 1
         # projections["back_image"] = np.max(flipped_data_3d, axis=2)
 
         # Option 2
         if rotated_component_3d is None:
-            projections["back_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=2)
+            projections["back_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=1)
         else:
             flipped_component_3d = rotated_component_3d
-            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(1, 2))
+            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(0, 1))
 
             projections["back_image"], projections["back_components"] = _calculate_depth_projection(
                 data_3d=flipped_data_3d,
                 component_3d=flipped_component_3d,
-                axis=2
+                axis=1
             )
 
     # Top projection (XZ plane)
     if projection_options.get("top", False) is True:
         flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.rot90(flipped_data_3d, k=1, axes=(1, 2))
+        # flipped_data_3d = np.rot90(flipped_data_3d, k=1, axes=(1, 2))
 
         # Option 1
         # projections["top_image"] = np.max(data_3d, axis=1)
 
         # Option 2
         if rotated_component_3d is None:
-            projections["top_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=0)
+            projections["top_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=2)
         else:
             flipped_component_3d = rotated_component_3d
-            flipped_component_3d = np.rot90(flipped_component_3d, k=1, axes=(1, 2))
+            # flipped_component_3d = np.rot90(flipped_component_3d, k=1, axes=(1, 2))
 
             projections["top_image"], projections["top_components"] = _calculate_depth_projection(
                 data_3d=flipped_data_3d,
@@ -555,19 +544,19 @@ def project_3d_to_2d(data_3d: np.ndarray,
     # Bottom projection (XZ plane)
     if projection_options.get("bottom", False) is True:
         flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.rot90(flipped_data_3d, k=1, axes=(1, 2))
-        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(0, 1))
+        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(1, 2))
+        # flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(0, 1))
 
         # Option 1
         # projections["bottom_image"] = np.max(flipped_data_3d, axis=1)
 
         # Option 2
         if rotated_component_3d is None:
-            projections["bottom_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=0)
+            projections["bottom_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=2)
         else:
             flipped_component_3d = rotated_component_3d
-            flipped_component_3d = np.rot90(flipped_component_3d, k=1, axes=(1, 2))
-            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(0, 1))
+            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(1, 2))
+            # flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(0, 1))
 
             projections["bottom_image"], projections["bottom_components"] = _calculate_depth_projection(
                 data_3d=flipped_data_3d,
@@ -578,17 +567,17 @@ def project_3d_to_2d(data_3d: np.ndarray,
     # Right projection (YZ plane)
     if projection_options.get("right", False) is True:
         flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.flip(flipped_data_3d, axis=1)
+        flipped_data_3d = np.flip(flipped_data_3d, axis=0)
 
         # Option 1
         # projections["right_image"] = np.max(flipped_data_3d, axis=0)
 
         # Option 2
         if rotated_component_3d is None:
-            projections["right_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=1)
+            projections["right_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=0)
         else:
             flipped_component_3d = rotated_component_3d
-            flipped_component_3d = np.flip(flipped_component_3d, axis=1)
+            flipped_component_3d = np.flip(flipped_component_3d, axis=0)
 
             projections["right_image"], projections["right_components"] = _calculate_depth_projection(
                 data_3d=flipped_data_3d,
@@ -599,19 +588,19 @@ def project_3d_to_2d(data_3d: np.ndarray,
     # Left projection (YZ plane)
     if projection_options.get("left", False) is True:
         flipped_data_3d = rotated_data_3d
-        flipped_data_3d = np.flip(flipped_data_3d, axis=1)
-        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(1, 2))
+        flipped_data_3d = np.flip(flipped_data_3d, axis=0)
+        flipped_data_3d = np.rot90(flipped_data_3d, k=2, axes=(0, 1))
 
         # Option 1
         # projections["left_image"] = np.max(data_3d, axis=0)
 
         # Option 2
         if rotated_component_3d is None:
-            projections["left_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=1)
+            projections["left_image"] = _calculate_depth_projection(data_3d=flipped_data_3d, axis=0)
         else:
             flipped_component_3d = rotated_component_3d
-            flipped_component_3d = np.flip(flipped_component_3d, axis=1)
-            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(1, 2))
+            flipped_component_3d = np.flip(flipped_component_3d, axis=0)
+            flipped_component_3d = np.rot90(flipped_component_3d, k=2, axes=(0, 1))
 
             projections["left_image"], projections["left_components"] = _calculate_depth_projection(
                 data_3d=flipped_data_3d,
