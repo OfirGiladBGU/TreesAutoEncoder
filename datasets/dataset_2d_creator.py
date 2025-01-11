@@ -286,10 +286,11 @@ def create_dataset_depth_2d_projections():
             output_2d_format = f"{output_idx}_{image_view}"
 
             label_image = label_projections[f"{image_view}_image"]
-            cv2.imwrite(os.path.join(output_folders["labels_2d"], f"{output_2d_format}.png"), label_image)
-
+            # TODO: find the operation
+            cv2.imwrite(os.path.join(output_folders["labels_2d"], f"{output_2d_format}.png"), np.flipud(label_image.T))
+            # TODO: find the operation
             pred_image = pred_projections[f"{image_view}_image"]
-            cv2.imwrite(os.path.join(output_folders["preds_2d"], f"{output_2d_format}.png"), pred_image)
+            cv2.imwrite(os.path.join(output_folders["preds_2d"], f"{output_2d_format}.png"), np.flipud(pred_image.T))
 
 
 #################

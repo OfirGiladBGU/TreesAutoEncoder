@@ -139,7 +139,8 @@ def save_nii_gz_in_identity_affine(numpy_data=None, data_filepath=None, save_fil
 
 # TODO: Check how to make Abstract converter from supported file formats
 
-def _convert_ply_to_numpy(data_filepath) -> np.ndarray:
+def _convert_ply_to_numpy(data_filepath,
+                          extract_rotation: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     voxel_size = 0.05  # Define voxel size (the size of each grid cell)
 
     # Mesh PLY
@@ -164,7 +165,11 @@ def _convert_ply_to_numpy(data_filepath) -> np.ndarray:
     else:
         raise ValueError("Invalid data format")
 
-    return numpy_data
+    if extract_rotation is True:
+        numpy_rotation = np.identity(3)
+        return numpy_data, numpy_rotation
+    else:
+        return numpy_data
 
 
 def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None):
@@ -218,14 +223,20 @@ def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, sav
 #################################
 # obj to numpy and numpy to obj #
 #################################
-def _convert_obj_to_numpy(data_filepath) -> np.ndarray:
+def _convert_obj_to_numpy(data_filepath,
+                          extract_rotation: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     voxel_size = 2.0  # Define voxel size (the size of each grid cell)
 
     mesh = trimesh.load(data_filepath)
     voxelized = mesh.voxelized(pitch=voxel_size)  # Pitch = voxel size
 
     numpy_data = voxelized.matrix.astype(np.uint8)
-    return numpy_data
+
+    if extract_rotation is True:
+        numpy_rotation = np.identity(3)
+        return numpy_data, numpy_rotation
+    else:
+        return numpy_data
 
 
 def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None) -> trimesh.Trimesh:
@@ -258,7 +269,8 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
 #################################
 # pcd to numpy and numpy to pcd #
 #################################
-def _convert_pcd_to_numpy(data_filepath) -> np.ndarray:
+def _convert_pcd_to_numpy(data_filepath,
+                          extract_rotation: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     # V1 - Using Open3D VoxelGrid
     # voxel_size = 2.0  # Define voxel size (the size of each grid cell)
     #
@@ -291,7 +303,11 @@ def _convert_pcd_to_numpy(data_filepath) -> np.ndarray:
         x, y, z = point
         numpy_data[x, y, z] = 1
 
-    return numpy_data
+    if extract_rotation is True:
+        numpy_rotation = np.identity(3)
+        return numpy_data, numpy_rotation
+    else:
+        return numpy_data
 
 
 def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None) -> o3d.geometry.PointCloud:
@@ -332,9 +348,14 @@ def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, sav
 #################################
 # npy to numpy and numpy to npy #
 #################################
-def _convert_npy_to_numpy(data_filepath) -> np.ndarray:
+def _convert_npy_to_numpy(data_filepath,
+                          extract_rotation: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     numpy_data = np.load(file=data_filepath)
-    return numpy_data
+    if extract_rotation is True:
+        numpy_rotation = np.identity(3)
+        return numpy_data, numpy_rotation
+    else:
+        return numpy_data
 
 
 def _convert_numpy_to_npy(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None) -> np.ndarray:
@@ -352,6 +373,60 @@ def _convert_numpy_to_npy(numpy_data: np.ndarray, source_data_filepath=None, sav
 def apply_threshold(tensor: torch.Tensor, threshold: float):
     tensor[tensor >= threshold] = 1.0
     tensor[tensor < threshold] = 0.0
+
+
+#################
+# 3D transforms #
+#################
+
+# TODO: Edit to support for cubes
+def apply_rotation(data_3d: np.ndarray,
+                    data_rotation: np.ndarray,
+                    reverse: bool = False) -> np.ndarray:
+    if np.array_equal(data_rotation, np.identity(3)):
+        return data_3d
+    else:
+        # Ensure the rotation matrix is valid
+        if data_rotation.shape != (3, 3):
+            raise ValueError("Rotation matrix must be 3x3.")
+
+        # Extract the indices of points with the target value
+        points = np.argwhere(data_3d > 0)  # Nx3 array of coordinates
+
+        if points.size == 0:
+            # No points to rotate
+            return np.zeros_like(data_3d)
+
+        # Compute the center of the array
+        center = np.array(data_3d.shape) / 2
+
+        # Translate points to the center
+        points_centered = points - center
+
+        # Apply reverse rotation if specified
+        if reverse:
+            data_rotation = data_rotation.T  # Transpose is the inverse for a rotation matrix
+
+        # Rotate the centered points
+        rotated_points_centered = points_centered @ data_rotation.T  # Nx3 array
+
+        # Translate points back to the original coordinate space
+        rotated_points = rotated_points_centered + center
+
+        # Round and cast to integer for indexing
+        rotated_points = np.round(rotated_points).astype(int)
+
+        # Create a new 3D array for the output
+        output_array = np.zeros_like(data_3d)
+
+        # Map rotated points back into the array, ensuring they are within bounds
+        for point in rotated_points:
+            if (0 <= point[0] < data_3d.shape[0] and
+                    0 <= point[1] < data_3d.shape[1] and
+                    0 <= point[2] < data_3d.shape[2]):
+                output_array[tuple(point)] = 1.0
+
+        return output_array
 
 
 ########################
@@ -390,6 +465,8 @@ def _calculate_depth_projection(data_3d, component_3d=None, axis=0):
 
 
 # TODO: Add support for data rotation
+# TODO: nifty needs no data rotation, but matrix transpose since the order is (Z, Y, X) and not (X, Y, Z)
+# TODO: also the first 3 rotations shouldn't be needed after transpose (need to find the correct one)
 def project_3d_to_2d(data_3d: np.ndarray,
                      projection_options: dict[str, bool],
                      data_rotation: np.ndarray = None,
@@ -397,17 +474,22 @@ def project_3d_to_2d(data_3d: np.ndarray,
     projections = dict()
 
     rotated_data_3d = data_3d
-    rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 2))
-    rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(1, 2))
-    rotated_data_3d = np.flip(rotated_data_3d, axis=1)
+    rotated_component_3d = component_3d
 
-    if component_3d is not None:
-        rotated_component_3d = component_3d
-        rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(0, 2))
-        rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(1, 2))
-        rotated_component_3d = np.flip(rotated_component_3d, axis=1)
-    else:
-        rotated_component_3d = None
+    # Apply data rotation
+    # if data_rotation is not None and not np.array_equal(data_rotation, np.identity(3)):
+    #     # rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 2))
+    #     # rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(1, 2))
+    #     # rotated_data_3d = np.flip(rotated_data_3d, axis=1)
+    #
+    #     # rotated_data_3d = np.flipud(rotated_data_3d) # For openCV compatibility
+    #
+    #     if component_3d is not None:
+    #         # rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(0, 2))
+    #         # rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(1, 2))
+    #         # rotated_component_3d = np.flip(rotated_component_3d, axis=1)
+    #
+    #         # rotated_component_3d = np.flipud(rotated_component_3d)  # For openCV compatibility
 
     # Front projection (XY plane)
     if projection_options.get("front", False) is True:
@@ -586,10 +668,14 @@ def reverse_rotations(numpy_image: np.ndarray,
         data_3d = np.rot90(data_3d, k=2, axes=(2, 1))
         data_3d = np.flip(data_3d, axis=1)
 
-    # Reverse the initial rotations
-    data_3d = np.flip(data_3d, axis=1)
-    data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
-    data_3d = np.rot90(data_3d, k=1, axes=(2, 0))
+    # Apply data rotation
+    if data_rotation is not None and not np.array_equal(data_rotation, np.identity(3)):
+        # TODO: check how to use the angles correctly
+
+        # Reverse the initial rotations
+        data_3d = np.flip(data_3d, axis=1)
+        data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
+        data_3d = np.rot90(data_3d, k=1, axes=(2, 0))
 
     return data_3d
 
