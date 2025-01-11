@@ -252,12 +252,11 @@ def create_dataset_depth_2d_projections(data_options: dict):
         os.makedirs(output_folder, exist_ok=True)
 
     # Get the filepaths
-    filepaths_count = 0
+    filepaths_counts = []
     input_filepaths = dict()
     for key, value in input_folders.items():
         input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.*"))
-        if filepaths_count == 0:
-            filepaths_count = len(input_filepaths[key])
+        filepaths_counts.append(len(input_filepaths[key]))
 
     projection_options = {
         "front": True,
@@ -268,8 +267,12 @@ def create_dataset_depth_2d_projections(data_options: dict):
         "right": True
     }
 
+    filepaths_count = max(filepaths_counts)
     for filepath_idx in tqdm(range(filepaths_count)):
         for key in input_filepaths.keys():
+            if filepath_idx >= len(input_filepaths[key]):
+                continue  # No more files
+
             # Get index data:
             data_filepath = input_filepaths[key][filepath_idx]
             output_idx = get_data_file_stem(data_filepath=data_filepath)
@@ -311,16 +314,19 @@ def create_data_components(data_options):
         os.makedirs(output_folder, exist_ok=True)
 
     # Get the filepaths
-    filepaths_count = 0
+    filepaths_counts = []
     input_filepaths = dict()
     for key, value in input_folders.items():
         input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.*"))
-        if filepaths_count == 0:
-            filepaths_count = len(input_filepaths[key])
+        filepaths_counts.append(len(input_filepaths[key]))
 
+    filepaths_count = max(filepaths_counts)
     for filepath_idx in tqdm(range(filepaths_count)):
         # Get index data:
         for key in input_filepaths.keys():
+            if filepath_idx >= len(input_filepaths[key]):
+                continue  # No more files
+
             data_filepath = input_filepaths[key][filepath_idx]
 
             numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
@@ -961,16 +967,16 @@ def main():
     data_options = {
         "labels": True,
         "preds": True,
-        "evals": True
+        "evals": False
     }
-    create_dataset_depth_2d_projections(data_options=data_options)
+    # create_dataset_depth_2d_projections(data_options=data_options)
 
     # TODO: Required for: TaskType.CONNECT_COMPONENTS
     create_data_components(data_options=data_options)
 
-    # task_type = TaskType.CONNECT_COMPONENTS
+    task_type = TaskType.CONNECT_COMPONENTS
     # task_type = TaskType.PATCH_HOLES
-    # create_2d_projections_and_3d_cubes_for_training(task_type=task_type)
+    create_2d_projections_and_3d_cubes_for_training(task_type=task_type)
     # create_2d_projections_and_3d_cubes_for_evaluation(task_type=task_type)
 
 
