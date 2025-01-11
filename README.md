@@ -114,3 +114,7 @@ https://github.com/connectedcompany/alph
 ## VGG loss:
 
 https://github.com/crowsonkb/vgg_loss/tree/master
+
+## Tool to visualize cube:
+
+https://3dthis.com/photocube.htm
