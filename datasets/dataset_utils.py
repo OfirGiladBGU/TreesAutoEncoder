@@ -460,16 +460,12 @@ def project_3d_to_2d(data_3d: np.ndarray,
             rotated_component_3d = np.flip(rotated_component_3d, axis=1)
     # Other data formats
     else:
-        rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 2))
-        rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(1, 2))
-        rotated_data_3d = np.flip(rotated_data_3d, axis=1)
-        rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 2))
+        rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 1))
+        rotated_data_3d = np.flip(rotated_data_3d, axis=2)
 
         if component_3d is not None:
-            rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(0, 2))
-            rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(1, 2))
-            rotated_component_3d = np.flip(rotated_component_3d, axis=1)
-            rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(0, 2))
+            rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 1))
+            rotated_data_3d = np.flip(rotated_data_3d, axis=2)
 
     # Front projection (XY plane)
     if projection_options.get("front", False) is True:
@@ -657,10 +653,8 @@ def reverse_rotations(numpy_image: np.ndarray,
         data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
         data_3d = np.rot90(data_3d, k=1, axes=(2, 0))
     else:
-        data_3d = np.rot90(data_3d, k=1, axes=(2, 0))
-        data_3d = np.flip(data_3d, axis=1)
-        data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
-        data_3d = np.rot90(data_3d, k=1, axes=(2, 0))
+        data_3d = np.flip(data_3d, axis=2)
+        data_3d = np.rot90(data_3d, k=1, axes=(1, 0))
 
     return data_3d
 
