@@ -9,7 +9,7 @@ import pandas as pd
 from scipy.ndimage import label
 from skimage import color
 
-from dataset_list import DATASET_PATH, CROPPED_PATH, EVAL_PATH
+from dataset_list import DATASET_PATH, TRAIN_CROPPED_PATH, EVAL_CROPPED_PATH
 from dataset_utils import (IMAGES_6_VIEWS, TaskType,
                            get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                            save_nii_gz_in_identity_affine, project_3d_to_2d)
@@ -224,6 +224,11 @@ def outlier_removal(pred_data: np.ndarray, label_data: np.ndarray):
 # 2D Projections #
 ##################
 def create_dataset_depth_2d_projections(data_options: dict):
+    """
+    Debug function to create 2D projections for the labels, preds, and evals
+    :param data_options:
+    :return:
+    """
     # Inputs
     input_folders = {}
 
@@ -247,9 +252,12 @@ def create_dataset_depth_2d_projections(data_options: dict):
         os.makedirs(output_folder, exist_ok=True)
 
     # Get the filepaths
+    filepaths_count = 0
     input_filepaths = dict()
     for key, value in input_folders.items():
         input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.*"))
+        if filepaths_count == 0:
+            filepaths_count = len(input_filepaths[key])
 
     projection_options = {
         "front": True,
@@ -260,82 +268,91 @@ def create_dataset_depth_2d_projections(data_options: dict):
         "right": True
     }
 
-    filepaths_count = len(input_filepaths["labels"])
     for filepath_idx in tqdm(range(filepaths_count)):
-        # Get index data:
-        label_filepath = input_filepaths["labels"][filepath_idx]
-        pred_filepath = input_filepaths["preds"][filepath_idx]
-        eval_filepath = input_filepaths["evals"][filepath_idx]
+        for key in input_filepaths.keys():
+            # Get index data:
+            data_filepath = input_filepaths[key][filepath_idx]
+            output_idx = get_data_file_stem(data_filepath=data_filepath)
 
-        output_idx = get_data_file_stem(data_filepath=label_filepath)
+            data_numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
+            data_projections = project_3d_to_2d(
+                data_3d=data_numpy_data,
+                projection_options=projection_options,
+                source_data_filepath=data_filepath
+            )
 
-        label_numpy_data = convert_data_file_to_numpy(data_filepath=label_filepath)
-        pred_numpy_data = convert_data_file_to_numpy(data_filepath=pred_filepath)
-        eval_numpy_data = convert_data_file_to_numpy(data_filepath=eval_filepath)
+            for image_view in IMAGES_6_VIEWS:
+                output_2d_format = f"{output_idx}_{image_view}"
 
-        label_projections = project_3d_to_2d(
-            data_3d=label_numpy_data,
-            projection_options=projection_options,
-            source_data_filepath=label_filepath
-        )
-        pred_projections = project_3d_to_2d(
-            data_3d=pred_numpy_data,
-            projection_options=projection_options,
-            source_data_filepath=pred_filepath
-        )
-        eval_projections = project_3d_to_2d(
-            data_3d=eval_numpy_data,
-            projection_options=projection_options,
-            source_data_filepath=eval_filepath
-        )
+                data_image = data_projections[f"{image_view}_image"]
+                cv2.imwrite(os.path.join(output_folders[f"{key}_2d"], f"{output_2d_format}.png"), data_image)
 
-        for image_view in IMAGES_6_VIEWS:
-            output_2d_format = f"{output_idx}_{image_view}"
-
-            label_image = label_projections[f"{image_view}_image"]
-            cv2.imwrite(os.path.join(output_folders["labels_2d"], f"{output_2d_format}.png"), label_image)
-
-            pred_image = pred_projections[f"{image_view}_image"]
-            cv2.imwrite(os.path.join(output_folders["preds_2d"], f"{output_2d_format}.png"), pred_image)
-
-            eval_image = eval_projections[f"{image_view}_image"]
-            cv2.imwrite(os.path.join(output_folders["evals_2d"], f"{output_2d_format}.png"), eval_image)
 
 #################
 # 3D Components #
 #################
-def create_preds_components():
-    input_folder = os.path.join(DATASET_PATH, "preds")
-    output_folder = os.path.join(DATASET_PATH, "preds_components")
+def create_data_components(data_options):
+    # Inputs
+    input_folders = {}
 
-    os.makedirs(output_folder, exist_ok=True)
-    data_filepaths = sorted(pathlib.Path(input_folder).rglob("*.*"))
+    # Outputs
+    output_folders = {}
 
-    filepaths_count = len(data_filepaths)
+    if data_options.get("preds", False) is True:
+        input_folders["preds"] = os.path.join(DATASET_PATH, "preds")
+        output_folders["preds_components"] = os.path.join(DATASET_PATH, "preds_components")
+
+    if data_options.get("evals", False) is True:
+        input_folders["evals"] = os.path.join(DATASET_PATH, "evals")
+        output_folders["evals_components"] = os.path.join(DATASET_PATH, "evals_components")
+
+    # Create Output Folders
+    for output_folder in output_folders.values():
+        os.makedirs(output_folder, exist_ok=True)
+
+    # Get the filepaths
+    filepaths_count = 0
+    input_filepaths = dict()
+    for key, value in input_folders.items():
+        input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.*"))
+        if filepaths_count == 0:
+            filepaths_count = len(input_filepaths[key])
+
     for filepath_idx in tqdm(range(filepaths_count)):
         # Get index data:
-        data_filepath = data_filepaths[filepath_idx]
+        for key in input_filepaths.keys():
+            data_filepath = input_filepaths[key][filepath_idx]
 
-        numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
-        data_3d_components = connected_components_3d(data_3d=numpy_data)[0]
+            numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
+            data_3d_components = connected_components_3d(data_3d=numpy_data)[0]
 
-        # Save results
-        save_name = data_filepath.relative_to(input_folder)
-        save_filename = os.path.join(output_folder, save_name)
-        convert_numpy_to_data_file(
-            numpy_data=data_3d_components,
-            source_data_filepath=data_filepath,
-            save_filename=save_filename
-        )
-        # TODO: Debug
-        # save_nii_gz_in_identity_affine(numpy_data=data_3d_components, data_filepath=data_filepath,
-        #                                save_filename=save_filename)
+            # Save results
+            save_name = data_filepath.relative_to(input_folders[key])
+            save_filename = os.path.join(output_folders[f"{key}_components"], save_name)
+            convert_numpy_to_data_file(
+                numpy_data=data_3d_components,
+                source_data_filepath=data_filepath,
+                save_filename=save_filename
+            )
+
+            # TODO: Debug
+            # save_nii_gz_in_identity_affine(numpy_data=data_3d_components, data_filepath=data_filepath,
+            #                                save_filename=save_filename)
 
 
 ###############################
 # 2D Projections and 3D Cubes #
 ###############################
 def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
+    projection_options = {
+        "front": True,
+        "back": True,
+        "top": True,
+        "bottom": True,
+        "left": True,
+        "right": True
+    }
+
     # Inputs
     input_folders = {
         "labels": os.path.join(DATASET_PATH, "labels"),
@@ -348,29 +365,29 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
     # Outputs
     output_folders = {
         # Labels
-        "labels_2d": os.path.join(CROPPED_PATH, "labels_2d_v6"),
-        "labels_3d": os.path.join(CROPPED_PATH, "labels_3d_v6"),
+        "labels_2d": os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6"),
+        "labels_3d": os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6"),
         # Preds
-        "preds_2d": os.path.join(CROPPED_PATH, "preds_2d_v6"),
-        "preds_3d": os.path.join(CROPPED_PATH, "preds_3d_v6"),
+        "preds_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_2d_v6"),
+        "preds_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6"),
 
         # Preds Fixed
-        "preds_fixed_2d": os.path.join(CROPPED_PATH, "preds_fixed_2d_v6"),
-        "preds_fixed_3d": os.path.join(CROPPED_PATH, "preds_fixed_3d_v6"),
+        "preds_fixed_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6"),
+        "preds_fixed_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6"),
     }
     if task_type == TaskType.CONNECT_COMPONENTS:
         output_folders.update({
             # Preds Components
-            "preds_components_2d": os.path.join(CROPPED_PATH, "preds_components_2d_v6"),
-            "preds_components_3d": os.path.join(CROPPED_PATH, "preds_components_3d_v6"),
+            "preds_components_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_components_2d_v6"),
+            "preds_components_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_components_3d_v6"),
 
             # Preds Fixed Components (Used in: CONNECT_COMPONENTS)
-            "preds_fixed_components_2d": os.path.join(CROPPED_PATH, "preds_fixed_components_2d_v6"),
-            "preds_fixed_components_3d": os.path.join(CROPPED_PATH, "preds_fixed_components_3d_v6")
+            "preds_fixed_components_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_components_2d_v6"),
+            "preds_fixed_components_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_components_3d_v6")
         })
 
     # Log
-    log_filepath = os.path.join(CROPPED_PATH, "log.csv")
+    log_filepath = os.path.join(TRAIN_CROPPED_PATH, "log.csv")
     log_data = dict()
 
     # Config
@@ -393,15 +410,6 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
     # Validation
     if len(set(filepaths_found)) != 1:
         raise ValueError("Different number of files found in the Input folders")
-
-    projection_options = {
-        "front": True,
-        "back": True,
-        "top": True,
-        "bottom": True,
-        "left": True,
-        "right": True
-    }
 
     print("Cropping Mini Cubes...")
     filepaths_count = len(input_filepaths["labels"])
@@ -444,7 +452,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             # Original data
             pred_component_numpy_data = convert_data_file_to_numpy(data_filepath=pred_component_filepath)
 
-            pred_fixed_component_numpy_data = np.where(pred_fixed_numpy_data > 0.0, pred_component_numpy_data, 0.0)
+            pred_fixed_component_numpy_data = pred_component_numpy_data.copy()
 
             # Crop Mini Cubes
             pred_components_cubes, other_cubes_list = crop_mini_cubes(
@@ -456,6 +464,9 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             pred_fixed_components_cubes = other_cubes_list[0]
         elif task_type == TaskType.PATCH_HOLES:
             pred_component_filepath = None
+
+            pred_components_cubes = None
+            pred_fixed_components_cubes = None
         else:
             raise ValueError("Invalid Task Type")
 
@@ -749,6 +760,15 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
 
 
 def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
+    projection_options = {
+        "front": True,
+        "back": True,
+        "top": True,
+        "bottom": True,
+        "left": True,
+        "right": True
+    }
+
     # Inputs
     input_folders = {
         "evals": os.path.join(DATASET_PATH, "evals"),
@@ -760,18 +780,18 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
     # Outputs
     output_folders = {
         # Evals
-        "evals_2d": os.path.join(EVAL_PATH, "evals_2d_v6"),
-        "evals_3d": os.path.join(EVAL_PATH, "evals_3d_v6"),
+        "evals_2d": os.path.join(EVAL_CROPPED_PATH, "evals_2d_v6"),
+        "evals_3d": os.path.join(EVAL_CROPPED_PATH, "evals_3d_v6"),
     }
     if task_type == TaskType.CONNECT_COMPONENTS:
         output_folders.update({
             # Evals Components
-            "evals_components_2d": os.path.join(EVAL_PATH, "evals_components_2d_v6"),
-            "evals_components_3d": os.path.join(EVAL_PATH, "evals_components_3d_v6"),
+            "evals_components_2d": os.path.join(EVAL_CROPPED_PATH, "evals_components_2d_v6"),
+            "evals_components_3d": os.path.join(EVAL_CROPPED_PATH, "evals_components_3d_v6"),
         })
 
     # Log
-    log_filepath = os.path.join(EVAL_PATH, "log.csv")
+    log_filepath = os.path.join(EVAL_CROPPED_PATH, "log.csv")
     log_data = dict()
 
     # Config
@@ -795,94 +815,62 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
     if len(set(filepaths_found)) != 1:
         raise ValueError("Different number of files found in the Input folders")
 
-    projection_options = {
-        "front": True,
-        "back": True,
-        "top": True,
-        "bottom": True,
-        "left": True,
-        "right": True
-    }
-
     # TODO: Implement
     print("Cropping Mini Cubes...")
     filepaths_count = len(input_filepaths["evals"])
     for filepath_idx in range(filepaths_count):
         # Get index data:
         eval_filepath = input_filepaths["evals"][filepath_idx]
-        label_filepath = None
-        pred_filepath = None
 
         # Original data
-        label_numpy_data = convert_data_file_to_numpy(data_filepath=label_filepath)
-        pred_numpy_data = convert_data_file_to_numpy(data_filepath=pred_filepath)
-        # pred_component_numpy_data = convert_data_file_to_numpy(data_filepath=pred_component_filepath)
-
-        pred_fixed_numpy_data = outlier_removal(pred_data=pred_numpy_data, label_data=label_numpy_data)
-        # pred_fixed_component_numpy_data = np.where(pred_fixed_numpy_data > 0.0, pred_component_numpy_data, 0.0)
-
-        # TODO: Debug
-        # if (pred_numpy_data - pred_fixed_numpy_data).sum() != 0:
-        #     raise ValueError("Outlier Removal Failed")
+        eval_numpy_data = convert_data_file_to_numpy(data_filepath=eval_filepath)
 
         # Crop Mini Cubes
-        output_idx = get_data_file_stem(data_filepath=label_filepath)
+        output_idx = get_data_file_stem(data_filepath=eval_filepath)
         print(f"[File: {output_idx}, Index: {filepath_idx + 1}/{filepaths_count}]")
 
-        label_cubes, other_cubes_list, cubes_data = crop_mini_cubes(
-            data_3d=label_numpy_data,
-            other_data_3d_list=[pred_numpy_data, pred_fixed_numpy_data],
+        eval_cubes, cubes_data = crop_mini_cubes(
+            data_3d=eval_numpy_data,
             cube_dim=cube_dim,
             stride_dim=stride_dim,
             cubes_data=True
         )
-        pred_cubes = other_cubes_list[0]
-        pred_fixed_cubes = other_cubes_list[1]
 
         if task_type == TaskType.CONNECT_COMPONENTS:
             # Get index data:
-            pred_component_filepath = input_filepaths["preds_components"][filepath_idx]
+            eval_component_filepath = input_filepaths["evals_components"][filepath_idx]
 
             # Original data
-            pred_component_numpy_data = convert_data_file_to_numpy(data_filepath=pred_component_filepath)
-
-            pred_fixed_component_numpy_data = np.where(pred_fixed_numpy_data > 0.0, pred_component_numpy_data, 0.0)
+            eval_component_numpy_data = convert_data_file_to_numpy(data_filepath=eval_component_filepath)
 
             # Crop Mini Cubes
-            pred_components_cubes, other_cubes_list = crop_mini_cubes(
-                data_3d=pred_component_numpy_data,
-                other_data_3d_list=[pred_fixed_component_numpy_data],
+            eval_components_cubes = crop_mini_cubes(
+                data_3d=eval_component_numpy_data,
                 cube_dim=cube_dim,
                 stride_dim=stride_dim
             )
-            pred_fixed_components_cubes = other_cubes_list[0]
         elif task_type == TaskType.PATCH_HOLES:
-            pred_component_filepath = None
+            eval_component_filepath = None
+
+            eval_components_cubes = None
         else:
             raise ValueError("Invalid Task Type")
 
-        print(f"Total Mini Cubes: {len(label_cubes)}\n")
+        print(f"Total Mini Cubes: {len(eval_cubes)}\n")
 
-        cubes_count = len(label_cubes)
+        cubes_count = len(eval_cubes)
         cubes_count_digits_count = len(str(cubes_count))
         for cube_idx in tqdm(range(cubes_count)):
             # Get index data:
-            label_cube = label_cubes[cube_idx]
-            pred_cube = pred_cubes[cube_idx]
-            # pred_components_cube = pred_components_cubes[cube_idx]
-
-            pred_fixed_cube = pred_fixed_cubes[cube_idx]
-            # pred_fixed_components_cube = pred_fixed_components_cubes[cube_idx]
+            eval_cube = eval_cubes[cube_idx]
 
             # TODO: enable 2 modes
             if task_type == TaskType.CONNECT_COMPONENTS:
                 # Get index data:
-                pred_components_cube = pred_components_cubes[cube_idx]
-
-                pred_fixed_components_cube = pred_fixed_components_cubes[cube_idx]
+                eval_components_cube = eval_components_cubes[cube_idx]
 
                 # check that there are 2 or more components to connect
-                global_components_3d_indices = list(np.unique(pred_components_cube))
+                global_components_3d_indices = list(np.unique(eval_components_cube))
                 global_components_3d_indices.remove(0)
                 global_components_3d_count = len(global_components_3d_indices)
                 if global_components_3d_count < 2:
@@ -891,143 +879,36 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
                 # Log 3D info
                 cubes_data[cube_idx].update({
                     # "name": output_3d_format,
-                    "pred_global_components": global_components_3d_count,
+                    "eval_global_components": global_components_3d_count,
                 })
             elif task_type == TaskType.PATCH_HOLES:
-                pred_components_cube = None
-
-                pred_fixed_components_cube = None
-
-                # TODO: Check if (label - pred_fixed) > 0.5
-                delta = np.abs(label_cube - pred_fixed_cube) > 0.5
-                delta_count = np.count_nonzero(delta)
-                if delta_count == 0:
-                    continue
-
-                # Log 3D info
-                cubes_data[cube_idx].update({
-                    # "name": output_3d_format,
-                    "delta_count": delta_count,
-                })
+                eval_components_cube = None
             else:
                 raise ValueError("Invalid Task Type")
 
-            # Project 3D to 2D (Labels)
-            label_projections = project_3d_to_2d(
-                data_3d=label_cube,
+            # Project 3D to 2D (Evals)
+            eval_projections = project_3d_to_2d(
+                data_3d=eval_cube,
                 projection_options=projection_options,
-                source_data_filepath=label_filepath
+                source_data_filepath=eval_filepath,
+                component_3d=eval_components_cube
             )
 
-            # Project 3D to 2D (Preds)
-            pred_projections = project_3d_to_2d(
-                data_3d=pred_cube,
-                projection_options=projection_options,
-                component_3d=pred_components_cube,
-                source_data_filepath=pred_filepath
-            )
-
-            # Project 3D to 2D (Preds Fixed)
-            pred_fixed_projections = project_3d_to_2d(
-                data_3d=pred_fixed_cube,
-                projection_options=projection_options,
-                component_3d=pred_fixed_components_cube,
-                source_data_filepath=pred_filepath
-            )
-
-            condition1 = True
-            condition2 = True
-            condition3 = True
+            condition = True
             for image_view in IMAGES_6_VIEWS:
-                pred_image = pred_projections[f"{image_view}_image"]
-                label_image = label_projections[f"{image_view}_image"]
+                eval_image = eval_projections[f"{image_view}_image"]
 
-                pred_fixed_image = pred_fixed_projections[f"{image_view}_image"]
-
-                # pred_components = pred_projections[f"{image_view}_components"]
-                # pred_projections[f"{image_view}_components"] = color.label2rgb(
-                #     label=np.where(pred_image > 0, pred_components, 0)
-                # ) * 255
-
-                # pred_fixed_components = pred_fixed_projections[f"{image_view}_components"]
-                # pred_fixed_projections[f"{image_view}_components"] = color.label2rgb(
-                #     label=np.where(pred_fixed_image > 0, pred_fixed_components, 0)
-                # ) * 255
-
-                # Repair the labels - TODO: Check how to do smartly
-                # label_projections[f"{image_6_view}_repaired_image"] = image_missing_connected_components_removal(
-                #     pred=pred_image,
-                #     label=label_image
-                # )
-                # repaired_label_image = label_projections[f"{image_6_view}_repaired_image"]
-
-                # Check Condition 1 (If condition fails, skip the current mini cube):
-                if not (white_points_upper_threshold > np.count_nonzero(pred_fixed_image) > white_points_lower_threshold):
-                    condition1 = False
+                # Check Condition (If condition fails, skip the current mini cube):
+                if not (white_points_upper_threshold > np.count_nonzero(eval_image) > white_points_lower_threshold):
+                    condition = False
                     break
-
-                # Check Condition 2 (If condition fails, skip the current mini cube):
-                if not (white_points_upper_threshold > np.count_nonzero(label_image) > white_points_lower_threshold):
-                    condition2 = False
-                    break
-
-                # TODO: repair pred fix to include connectable components
-                if task_type == TaskType.CONNECT_COMPONENTS:
-                    # TODO: check if local components num is similar between label and pred
-                    condition3 = True
-
-                    # Calculate the connected components for the preds
-                    pred_components = pred_projections[f"{image_view}_components"]
-                    pred_projections[f"{image_view}_components"] = color.label2rgb(
-                        label=np.where(pred_image > 0, pred_components, 0)
-                    ) * 255
-
-                    # Calculate the connected components for the fixed preds
-                    old_pred_fixed_image = pred_fixed_image.copy()  # DEBUG
-                    binary_label = np.where(label_image > 0, 1, 0)
-                    binary_pred_fixed = np.where(pred_fixed_image > 0, 1, 0)
-                    binary_delta = ((binary_label - binary_pred_fixed) > 0.5).astype(np.uint8)
-
-                    # Identify connected components in binary_delta
-                    labeled_delta, num_delta_components = connected_components_2d(binary_delta)
-
-                    # Iterate through connected components in binary_delta
-                    for component_label in range(1, num_delta_components + 1):
-                        # Create a mask for the current connected component
-                        component_mask = np.equal(labeled_delta, component_label).astype(np.uint8)
-
-                        # Check the number of connected components before adding the mask
-                        original_components = connected_components_2d(binary_pred_fixed)[1]
-
-                        # Create a temporary image with the component added
-                        temp_pred_fixed = np.logical_or(binary_pred_fixed, component_mask)
-                        new_components = connected_components_2d(temp_pred_fixed)[1]
-
-                        # Add the component only if it does not decrease the number of connected components
-                        if new_components >= original_components:
-                            binary_pred_fixed = temp_pred_fixed
-
-                    # Update the pred_fixed_image
-                    pred_fixed_image = np.where(binary_pred_fixed > 0, label_image, pred_fixed_image)
-                    pred_fixed_projections[f"{image_view}_image"] = pred_fixed_image
-
-                    # Calculate the connected components for the fixed preds
-                    pred_fixed_components = pred_fixed_projections[f"{image_view}_components"]
-                    pred_fixed_projections[f"{image_view}_components"] = color.label2rgb(
-                        label=np.where(pred_fixed_image > 0, pred_fixed_components, 0)
-                    ) * 255
-                elif task_type == TaskType.PATCH_HOLES:
-                    pass
-                else:
-                    raise ValueError("Invalid Task Type")
 
             # DEBUG
             # if cube_idx == 3253:
             #     print("Debug")
 
-            # Validate the conditions
-            conditions = [condition1, condition2, condition3]
-            if not all(conditions):
+            # Validate the condition
+            if not condition:
                 continue
 
             cube_idx_str = str(cube_idx).zfill(cubes_count_digits_count)
@@ -1035,35 +916,14 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
             for image_view in IMAGES_6_VIEWS:
                 output_2d_format = f"{output_idx}_{cube_idx_str}_{image_view}"
 
-                # 2D Folders - labels
-                label_2d = label_projections[f"{image_view}_image"]
-                cv2.imwrite(os.path.join(output_folders["labels_2d"], f"{output_2d_format}.png"), label_2d)
-
-                # 2D Folder - preds
-                pred_2d = pred_projections[f"{image_view}_image"]
-                cv2.imwrite(os.path.join(output_folders["preds_2d"], f"{output_2d_format}.png"), pred_2d)
-
-                # # 2D Folders - preds components
-                # pred_components_2d = pred_projections[f"{image_view}_components"]
-                # cv2.imwrite(os.path.join(output_folders["preds_components_2d"], f"{output_2d_format}.png"), pred_components_2d)
-
-
-                # 2D Folder - preds fixed
-                pred_fixed_2d = pred_fixed_projections[f"{image_view}_image"]
-                cv2.imwrite(os.path.join(output_folders["preds_fixed_2d"], f"{output_2d_format}.png"), pred_fixed_2d)
-
-                # # 2D Folders - preds fixed components
-                # pred_fixed_components_2d = pred_fixed_projections[f"{image_view}_components"]
-                # cv2.imwrite(os.path.join(output_folders["preds_fixed_components_2d"], f"{output_2d_format}.png"), pred_fixed_components_2d)
+                # 2D Folders - evals
+                eval_2d = eval_projections[f"{image_view}_image"]
+                cv2.imwrite(os.path.join(output_folders["evals_2d"], f"{output_2d_format}.png"), eval_2d)
 
                 if task_type == TaskType.CONNECT_COMPONENTS:
-                    # 2D Folders - preds components
-                    pred_components_2d = pred_projections[f"{image_view}_components"]
-                    cv2.imwrite(os.path.join(output_folders["preds_components_2d"], f"{output_2d_format}.png"), pred_components_2d)
-
-                    # 2D Folders - preds fixed components
-                    pred_fixed_components_2d = pred_fixed_projections[f"{image_view}_components"]
-                    cv2.imwrite(os.path.join(output_folders["preds_fixed_components_2d"], f"{output_2d_format}.png"), pred_fixed_components_2d)
+                    # 2D Folders - evals components
+                    eval_components_2d = eval_projections[f"{image_view}_components"]
+                    cv2.imwrite(os.path.join(output_folders["evals_components_2d"], f"{output_2d_format}.png"), eval_components_2d)
                 elif task_type == TaskType.PATCH_HOLES:
                     pass
                 else:
@@ -1071,68 +931,22 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
 
             output_3d_format = f"{output_idx}_{cube_idx_str}"
 
-            # 3D Folders - labels
-            save_filename = os.path.join(output_folders["labels_3d"], output_3d_format)
+            # 3D Folders - evals
+            save_filename = os.path.join(output_folders["evals_3d"], output_3d_format)
             convert_numpy_to_data_file(
-                numpy_data=label_cube,
-                source_data_filepath=label_filepath,
+                numpy_data=eval_cube,
+                source_data_filepath=eval_filepath,
                 save_filename=save_filename
             )
-
-            # 3D Folders - preds
-            save_filename = os.path.join(output_folders["preds_3d"], output_3d_format)
-            convert_numpy_to_data_file(
-                numpy_data=pred_cube,
-                source_data_filepath=pred_filepath,
-                save_filename=save_filename
-            )
-
-            # # 3D Folders - preds components
-            # save_filename = os.path.join(output_folders["preds_components_3d"], output_3d_format)
-            # convert_numpy_to_data_file(numpy_data=pred_components_cube, source_data_filepath=pred_component_filepath,
-            #                            save_filename=save_filename)
-
-
-            # 3D Folders - preds fixed
-            save_filename = os.path.join(output_folders["preds_fixed_3d"], output_3d_format)
-            convert_numpy_to_data_file(
-                numpy_data=pred_fixed_cube,
-                source_data_filepath=pred_filepath,
-                save_filename=save_filename
-            )
-
-            # # 3D Folders - preds fixed components
-            # save_filename = os.path.join(output_folders["preds_fixed_components_3d"], output_3d_format)
-            # convert_numpy_to_data_file(numpy_data=pred_fixed_components_cube, source_data_filepath=pred_component_filepath,
-            #                            save_filename=save_filename)
 
             if task_type == TaskType.CONNECT_COMPONENTS:
                 # 3D Folders - preds components
-                save_filename = os.path.join(output_folders["preds_components_3d"], output_3d_format)
+                save_filename = os.path.join(output_folders["evals_components_3d"], output_3d_format)
                 convert_numpy_to_data_file(
-                    numpy_data=pred_components_cube,
-                    source_data_filepath=pred_component_filepath,
+                    numpy_data=eval_components_cube,
+                    source_data_filepath=eval_component_filepath,
                     save_filename=save_filename
                 )
-
-                # 3D Folders - preds fixed components
-                save_filename = os.path.join(output_folders["preds_fixed_components_3d"], output_3d_format)
-                convert_numpy_to_data_file(
-                    numpy_data=pred_fixed_components_cube,
-                    source_data_filepath=pred_component_filepath,
-                    save_filename=save_filename
-                )
-
-                label_components_cube = connected_components_3d(data_3d=label_cube)[0]
-
-                local_components_3d_indices = list(np.unique(label_components_cube))
-                local_components_3d_indices.remove(0)
-                local_components_3d_count = len(local_components_3d_indices)
-
-                # Log 3D info
-                cubes_data[cube_idx].update({
-                    "label_local_components": local_components_3d_count
-                })
             elif task_type == TaskType.PATCH_HOLES:
                 pass
             else:
@@ -1160,7 +974,7 @@ def main():
     create_dataset_depth_2d_projections(data_options=data_options)
 
     # TODO: Required for: TaskType.CONNECT_COMPONENTS
-    # create_preds_components()
+    create_data_components(data_options=data_options)
 
     # task_type = TaskType.CONNECT_COMPONENTS
     # task_type = TaskType.PATCH_HOLES

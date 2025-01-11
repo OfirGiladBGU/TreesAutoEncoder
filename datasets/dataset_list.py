@@ -10,13 +10,14 @@ from datasets.custom_datasets_3d import TreesCustomDataloader3D
 
 
 # Define dataset folder
-DATASET_FOLDER = "Pipes3DGeneratorTree" # TODO: Read from config file
+DATASET_FOLDER = "parse2022" # TODO: Read from config file
 
 # Define paths
 ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
 DATA_PATH = os.path.join(ROOT_PATH, "data")
 DATASET_PATH = os.path.join(DATA_PATH, DATASET_FOLDER)
-CROPPED_PATH = os.path.join(DATA_PATH, "cropped_data", DATASET_FOLDER)
+TRAIN_CROPPED_PATH = os.path.join(DATA_PATH, "train_cropped_data", DATASET_FOLDER)
+EVAL_CROPPED_PATH = os.path.join(DATA_PATH, "eval_cropped_data", DATASET_FOLDER)
 RESULTS_PATH = os.path.join(ROOT_PATH, "results", DATASET_FOLDER)
 
 MODEL_RESULTS_PATH = os.path.join(RESULTS_PATH, "models")
@@ -114,7 +115,7 @@ class TreesDataset2DV1S(object):
     def __init__(self, args):
         self.input_size = (1, 32, 32)
 
-        src_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
+        src_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
 
         data_paths = [src_path]
         trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args)
@@ -126,8 +127,8 @@ class TreesDataset2DV1(object):
     def __init__(self, args):
         self.input_size = (1, 32, 32)
 
-        src_path = os.path.join(CROPPED_PATH, "preds_fixed_2d_v6")
-        dst_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
+        src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
+        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args)
@@ -139,8 +140,8 @@ class TreesDataset2DV2(object):
     def __init__(self, args):
         self.input_size = (6, 32, 32)
 
-        src_path = os.path.join(CROPPED_PATH, "preds_fixed_2d_v6")
-        dst_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
+        src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
+        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args)
@@ -152,9 +153,9 @@ class TreesDataset2DV2M(object):
     def __init__(self, args):
         self.input_size = (6, 32, 32)
 
-        src_path = os.path.join(CROPPED_PATH, "preds_fixed_2d_v6")
-        dst_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
-        log_path = os.path.join(CROPPED_PATH, "log.csv")
+        src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
+        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
+        log_path = os.path.join(TRAIN_CROPPED_PATH, "log.csv")
 
         data_paths = [src_path, dst_path, log_path]
         trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args)
@@ -166,8 +167,8 @@ class TreesDataset3DV1(object):
     def __init__(self, args):
         self.input_size = (6, 1, 32, 32)
 
-        src_path = os.path.join(CROPPED_PATH, "labels_2d_v6")
-        dst_path = os.path.join(CROPPED_PATH, "labels_3d_v6")
+        src_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
+        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
@@ -179,8 +180,8 @@ class TreesDataset3DV2(object):
     def __init__(self, args):
         self.input_size = (1, 32, 32, 32)
 
-        src_path = os.path.join(CROPPED_PATH, "labels_3d_reconstruct_v6")
-        dst_path = os.path.join(CROPPED_PATH, "labels_3d_v6")
+        src_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_reconstruct_v6")
+        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
@@ -192,9 +193,9 @@ class TreesDataset3DV2M(object):
     def __init__(self, args):
         self.input_size = (1, 32, 32, 32)
 
-        src_path = os.path.join(CROPPED_PATH, "labels_3d_reconstruct_v6")
-        dst_path = os.path.join(CROPPED_PATH, "labels_3d_v6")
-        log_path = os.path.join(CROPPED_PATH, "log.csv")
+        src_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_reconstruct_v6")
+        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
+        log_path = os.path.join(TRAIN_CROPPED_PATH, "log.csv")
 
         data_paths = [src_path, dst_path, log_path]
         trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
@@ -206,8 +207,8 @@ class TreesDataset3DV3(object):
     def __init__(self, args):
         self.input_size = (1, 32, 32, 32)
 
-        src_path = os.path.join(CROPPED_PATH, "preds_fixed_3d_fusion_v6")
-        dst_path = os.path.join(CROPPED_PATH, "labels_3d_v6")
+        src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_fusion_v6")
+        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
@@ -219,8 +220,8 @@ class TreesDataset3DV4(object):
     def __init__(self, args):
         self.input_size = (1, 32, 32, 32)
 
-        src_path = os.path.join(CROPPED_PATH, "preds_fixed_3d_v6")
-        dst_path = os.path.join(CROPPED_PATH, "labels_3d_v6")
+        src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6")
+        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)

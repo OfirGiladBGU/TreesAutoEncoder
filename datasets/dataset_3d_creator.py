@@ -4,7 +4,7 @@ import pathlib
 import pandas as pd
 from tqdm import tqdm
 
-from dataset_list import DATA_PATH, CROPPED_PATH
+from dataset_list import DATA_PATH, TRAIN_CROPPED_PATH
 from dataset_utils import (IMAGES_6_VIEWS,
                            get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                            project_3d_to_2d, get_images_6_views, reconstruct_3d_from_2d)
@@ -41,23 +41,23 @@ from dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 def create_3d_reconstructions():
     # Sources
     source_folders = {
-        "labels_3d": os.path.join(CROPPED_PATH, "labels_3d_v6"),
-        "preds_3d": os.path.join(CROPPED_PATH, "preds_3d_v6"),
-        "preds_fixed_3d": os.path.join(CROPPED_PATH, "preds_fixed_3d_v6")
+        "labels_3d": os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6"),
+        "preds_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6"),
+        "preds_fixed_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6")
     }
 
     # Inputs
     input_folders = {
-        "labels_2d": os.path.join(CROPPED_PATH, "labels_2d_v6"),
-        "preds_2d": os.path.join(CROPPED_PATH, "preds_2d_v6"),
-        "preds_fixed_2d": os.path.join(CROPPED_PATH, "preds_fixed_2d_v6")
+        "labels_2d": os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6"),
+        "preds_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_2d_v6"),
+        "preds_fixed_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
     }
 
     # Outputs
     output_folders = {
-        "labels_3d_reconstruct": os.path.join(CROPPED_PATH, "labels_3d_reconstruct_v6"),
-        "preds_3d_reconstruct": os.path.join(CROPPED_PATH, "preds_3d_reconstruct_v6"),
-        "preds_fixed_3d_reconstruct": os.path.join(CROPPED_PATH, "preds_fixed_3d_reconstruct_v6")
+        "labels_3d_reconstruct": os.path.join(TRAIN_CROPPED_PATH, "labels_3d_reconstruct_v6"),
+        "preds_3d_reconstruct": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_reconstruct_v6"),
+        "preds_fixed_3d_reconstruct": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_reconstruct_v6")
     }
 
     # Create Output Folders
@@ -69,7 +69,7 @@ def create_3d_reconstructions():
     for key, value in input_folders.items():
         input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.png"))
 
-    log_filepath = os.path.join(CROPPED_PATH, "log.csv")
+    log_filepath = os.path.join(TRAIN_CROPPED_PATH, "log.csv")
     log_data = pd.read_csv(log_filepath)
 
     labels_image_format_list = list()
@@ -164,15 +164,15 @@ def create_3d_reconstructions():
 def create_3d_fusions():
     # Inputs
     input_folders = {
-        "labels_3d_reconstruct": os.path.join(CROPPED_PATH, "labels_3d_reconstruct_v6"),
-        "preds_3d": os.path.join(CROPPED_PATH, "preds_3d_v6"),
-        "preds_fixed_3d": os.path.join(CROPPED_PATH, "preds_fixed_3d_v6")
+        "labels_3d_reconstruct": os.path.join(TRAIN_CROPPED_PATH, "labels_3d_reconstruct_v6"),
+        "preds_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6"),
+        "preds_fixed_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6")
     }
 
     # Outputs
     output_folders = {
-        "preds_3d_fusion": os.path.join(CROPPED_PATH, "preds_3d_fusion_v6"),
-        "preds_fixed_3d_fusion": os.path.join(CROPPED_PATH, "preds_fixed_3d_fusion_v6")
+        "preds_3d_fusion": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_fusion_v6"),
+        "preds_fixed_3d_fusion": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_fusion_v6")
     }
 
     # Create Output Folders

@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 import plotly.graph_objects as go
 
 from datasets.dataset_utils import convert_data_file_to_numpy, IMAGES_6_VIEWS
-from datasets.dataset_list import (DATA_PATH, CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESULTS_PATH,
+from datasets.dataset_list import (DATA_PATH, TRAIN_CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESULTS_PATH,
                                    PREDICT_PIPELINE_RESULTS_PATH)
 
 
@@ -206,16 +206,16 @@ def single_plot_3d(data_3d_filepath, interactive_mode: bool = False, interactive
 # TODO: support for any 3D data
 def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
     folder_paths = {
-        "labels_3d": os.path.join(CROPPED_PATH, "labels_3d_v6"),
-        "labels_3d_reconstruct": os.path.join(CROPPED_PATH, "labels_3d_reconstruct_v6"),
+        "labels_3d": os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6"),
+        "labels_3d_reconstruct": os.path.join(TRAIN_CROPPED_PATH, "labels_3d_reconstruct_v6"),
 
-        "preds_3d": os.path.join(CROPPED_PATH, "preds_3d_v6"),
-        "preds_3d_reconstruct": os.path.join(CROPPED_PATH, "preds_3d_reconstruct_v6"),
-        "preds_3d_fusion": os.path.join(CROPPED_PATH, "preds_3d_fusion_v6"),
+        "preds_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6"),
+        "preds_3d_reconstruct": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_reconstruct_v6"),
+        "preds_3d_fusion": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_fusion_v6"),
 
-        "preds_fixed_3d": os.path.join(CROPPED_PATH, "preds_fixed_3d_v6"),
-        "preds_fixed_3d_reconstruct": os.path.join(CROPPED_PATH, "preds_fixed_3d_reconstruct_v6"),
-        "preds_fixed_3d_fusion": os.path.join(CROPPED_PATH, "preds_fixed_3d_fusion_v6")
+        "preds_fixed_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6"),
+        "preds_fixed_3d_reconstruct": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_reconstruct_v6"),
+        "preds_fixed_3d_fusion": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_fusion_v6")
     }
 
     for key, value in folder_paths.items():
@@ -295,9 +295,9 @@ def single_plot_2d(data_2d_filepath, interactive_mode: bool = False):
 
 def full_plot_2d(data_3d_basename: str):
     folder_paths = {
-        "labels_2d": os.path.join(CROPPED_PATH, "labels_2d_v6"),
-        "preds_2d": os.path.join(CROPPED_PATH, "preds_2d_v6"),
-        "preds_fixed_2d": os.path.join(CROPPED_PATH, "preds_fixed_2d_v6")
+        "labels_2d": os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6"),
+        "preds_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_2d_v6"),
+        "preds_fixed_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
     }
 
     for key, value in folder_paths.items():
@@ -319,8 +319,8 @@ def main():
     # Single Test #
 
     # data_3d_filepath = os.path.join(RESULTS_PATH, "predict_pipeline", "output_3d", "PA000005_05352_input.nii.gz")
-    # data_3d_filepath = os.path.join(CROPPED_PATH, "labels_3d_v6", "PA000005_05352.nii.gz")
-    # data_3d_filepath = os.path.join(CROPPED_PATH, "preds_3d_v6", "PA000005_05352.nii.gz")
+    # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6", "PA000005_05352.nii.gz")
+    # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6", "PA000005_05352.nii.gz")
     data_3d_filepath = os.path.join(DATA_PATH, "Pipes3DGenerator", "labels", "01.npy")
 
     single_plot_3d(data_3d_filepath=data_3d_filepath, interactive_mode=True, interactive_version=1)
