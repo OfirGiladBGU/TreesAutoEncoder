@@ -603,6 +603,9 @@ def project_3d_to_2d(data_3d: np.ndarray,
 def reverse_rotations(numpy_image: np.ndarray,
                       view_type: str,
                       source_data_filepath=None) -> np.ndarray:
+    # TODO: Validate correct Axis
+    axis = 1  # Default axis for the 2D images
+
     # Convert to 3D
     data_3d = np.zeros(shape=(numpy_image.shape[0], numpy_image.shape[0], numpy_image.shape[0]), dtype=np.uint8)
     for i in range(numpy_image.shape[0]):
@@ -611,47 +614,43 @@ def reverse_rotations(numpy_image: np.ndarray,
             if gray_value > 0:
                 rescale_gray_value = int(numpy_image.shape[0] * (1 - (gray_value / 255)))
 
-                if view_type in ["front", "back"]:
-                    data_3d[i, j, rescale_gray_value] = 1
-                elif view_type in ["top", "bottom"]:
+                if axis == 0:
                     data_3d[rescale_gray_value, i, j] = 1
-                elif view_type in ["right", "left"]:
+                elif axis == 1:
                     data_3d[i, rescale_gray_value, j] = 1
+                elif axis == 2:
+                    data_3d[i, j, rescale_gray_value] = 1
                 else:
-                    raise ValueError("Invalid view type")
+                    raise ValueError("Invalid axis")
 
     # Reverse the rotations
     if view_type == "front":
-        pass
+        pass  # No need for rotation
 
     if view_type == "back":
         data_3d = np.rot90(data_3d, k=2, axes=(2, 1))
 
     if view_type == "top":
-        data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
+        data_3d = np.rot90(data_3d, k=1, axes=(1, 0))
 
     if view_type == "bottom":
-        data_3d = np.rot90(data_3d, k=2, axes=(1, 0))
-        data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
+        data_3d = np.rot90(data_3d, k=1, axes=(0, 1))
 
     if view_type == "right":
-        data_3d = np.flip(data_3d, axis=1)
+        data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
 
     if view_type == "left":
-        data_3d = np.rot90(data_3d, k=2, axes=(2, 1))
-        data_3d = np.flip(data_3d, axis=1)
+        data_3d = np.rot90(data_3d, k=2, axes=(1, 2))
 
     # Reverse the initial rotations
     if source_data_filepath is None:
         pass
+    # TODO: check how to use the angles correctly
     elif str(source_data_filepath).endswith(".nii.gz") is True:
-        # TODO: check how to use the angles correctly
-        data_3d = np.flip(data_3d, axis=1)
-        data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
         data_3d = np.rot90(data_3d, k=1, axes=(2, 0))
     else:
-        data_3d = np.flip(data_3d, axis=2)
         data_3d = np.rot90(data_3d, k=1, axes=(1, 0))
+        data_3d = np.rot90(data_3d, k=1, axes=(2, 0))
 
     return data_3d
 
