@@ -597,34 +597,36 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                         label=np.where(pred_image > 0, pred_components, 0)
                     ) * 255
 
-                    # Calculate the connected components for the fixed preds
-                    old_pred_fixed_image = pred_fixed_image.copy()  # DEBUG
-                    binary_label = np.where(label_image > 0, 1, 0)
-                    binary_pred_fixed = np.where(pred_fixed_image > 0, 1, 0)
-                    binary_delta = ((binary_label - binary_pred_fixed) > 0.5).astype(np.uint8)
+                    apply_advance_fix = True
+                    if apply_advance_fix:
+                        # Calculate the connected components for the fixed preds
+                        old_pred_fixed_image = pred_fixed_image.copy()  # DEBUG
+                        binary_label = np.where(label_image > 0, 1, 0)
+                        binary_pred_fixed = np.where(pred_fixed_image > 0, 1, 0)
+                        binary_delta = ((binary_label - binary_pred_fixed) > 0.5).astype(np.uint8)
 
-                    # Identify connected components in binary_delta
-                    labeled_delta, num_delta_components = connected_components_2d(binary_delta)
+                        # Identify connected components in binary_delta
+                        labeled_delta, num_delta_components = connected_components_2d(binary_delta)
 
-                    # Iterate through connected components in binary_delta
-                    for component_label in range(1, num_delta_components + 1):
-                        # Create a mask for the current connected component
-                        component_mask = np.equal(labeled_delta, component_label).astype(np.uint8)
+                        # Iterate through connected components in binary_delta
+                        for component_label in range(1, num_delta_components + 1):
+                            # Create a mask for the current connected component
+                            component_mask = np.equal(labeled_delta, component_label).astype(np.uint8)
 
-                        # Check the number of connected components before adding the mask
-                        original_components = connected_components_2d(binary_pred_fixed)[1]
+                            # Check the number of connected components before adding the mask
+                            original_components = connected_components_2d(binary_pred_fixed)[1]
 
-                        # Create a temporary image with the component added
-                        temp_pred_fixed = np.logical_or(binary_pred_fixed, component_mask)
-                        new_components = connected_components_2d(temp_pred_fixed)[1]
+                            # Create a temporary image with the component added
+                            temp_pred_fixed = np.logical_or(binary_pred_fixed, component_mask)
+                            new_components = connected_components_2d(temp_pred_fixed)[1]
 
-                        # Add the component only if it does not decrease the number of connected components
-                        if new_components >= original_components:
-                            binary_pred_fixed = temp_pred_fixed
+                            # Add the component only if it does not decrease the number of connected components
+                            if new_components >= original_components:
+                                binary_pred_fixed = temp_pred_fixed
 
-                    # Update the pred_fixed_image
-                    pred_fixed_image = np.where(binary_pred_fixed > 0, label_image, pred_fixed_image)
-                    pred_fixed_projections[f"{image_view}_image"] = pred_fixed_image
+                        # Update the pred_fixed_image
+                        pred_fixed_image = np.where(binary_pred_fixed > 0, label_image, pred_fixed_image)
+                        pred_fixed_projections[f"{image_view}_image"] = pred_fixed_image
 
                     # Calculate the connected components for the fixed preds
                     pred_fixed_components = pred_fixed_projections[f"{image_view}_components"]
