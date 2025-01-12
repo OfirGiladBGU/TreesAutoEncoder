@@ -650,7 +650,7 @@ def reverse_rotations(numpy_image: np.ndarray,
         data_3d = np.rot90(data_3d, k=1, axes=(2, 1))
 
     if view_type == "left":
-        data_3d = np.rot90(data_3d, k=2, axes=(1, 2))
+        data_3d = np.rot90(data_3d, k=1, axes=(1, 2))
 
     # Reverse the initial rotations
     if source_data_filepath is None:
