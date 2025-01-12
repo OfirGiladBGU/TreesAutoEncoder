@@ -84,8 +84,6 @@ def interactive_plot_3d(data_3d: np.ndarray, version: int = 1, set_aspect_ratios
         # Display the plot
         plt.title('3d plot')
         plt.show()
-        plt.close('all')
-
     else:
         raise ValueError("Invalid version number. Please use either 1 or 2.")
 

@@ -615,13 +615,23 @@ def reverse_rotations(numpy_image: np.ndarray,
                 rescale_gray_value = int(numpy_image.shape[0] * (1 - (gray_value / 255)))
 
                 if axis == 0:
-                    data_3d[rescale_gray_value, i, j] = 1
+                    data_3d[i, j, rescale_gray_value] = 1
                 elif axis == 1:
                     data_3d[i, rescale_gray_value, j] = 1
                 elif axis == 2:
-                    data_3d[i, j, rescale_gray_value] = 1
+                    data_3d[rescale_gray_value, i, j] = 1
                 else:
-                    raise ValueError("Invalid axis")
+                    raise ValueError("Invalid view type")
+
+                # # TODO: Fix reverse rotations
+                # if view_type in ["front", "back"]:
+                #     data_3d[i, j, rescale_gray_value] = 1
+                # elif view_type in ["top", "bottom"]:
+                #     data_3d[rescale_gray_value, i, j] = 1
+                # elif view_type in ["right", "left"]:
+                #     data_3d[i, rescale_gray_value, j] = 1
+                # else:
+                #     raise ValueError("Invalid view type")
 
     # Reverse the rotations
     if view_type == "front":

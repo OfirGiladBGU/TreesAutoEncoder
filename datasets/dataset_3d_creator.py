@@ -275,12 +275,12 @@ def test_2d_to_3d_and_back(data_3d_filepath, cropped_data_path):
 
 
 def main():
-    create_3d_reconstructions()
-    create_3d_fusions()
+    # create_3d_reconstructions()
+    # create_3d_fusions()
 
     # TODO: DEBUG
-    data_3d_filepath = os.path.join(DATA_PATH, "parse2022", "labels", "PA000005_11899.nii.gz")
-    cropped_data_path = os.path.join(DATA_PATH, "parse2022", "labels_2d_v6")
+    data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6", "PA000005_11899.nii.gz")
+    cropped_data_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
     test_2d_to_3d_and_back(data_3d_filepath=data_3d_filepath, cropped_data_path=cropped_data_path)
 
 
