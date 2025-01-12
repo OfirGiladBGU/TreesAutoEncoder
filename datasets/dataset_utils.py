@@ -603,7 +603,6 @@ def project_3d_to_2d(data_3d: np.ndarray,
 def reverse_rotations(numpy_image: np.ndarray,
                       view_type: str,
                       source_data_filepath=None) -> np.ndarray:
-    # TODO: Validate correct Axis
     axis = 1  # Default axis for the 2D images
 
     # Convert to 3D
@@ -622,16 +621,6 @@ def reverse_rotations(numpy_image: np.ndarray,
                     data_3d[rescale_gray_value, i, j] = 1
                 else:
                     raise ValueError("Invalid view type")
-
-                # # TODO: Fix reverse rotations
-                # if view_type in ["front", "back"]:
-                #     data_3d[i, j, rescale_gray_value] = 1
-                # elif view_type in ["top", "bottom"]:
-                #     data_3d[rescale_gray_value, i, j] = 1
-                # elif view_type in ["right", "left"]:
-                #     data_3d[i, rescale_gray_value, j] = 1
-                # else:
-                #     raise ValueError("Invalid view type")
 
     # Reverse the rotations
     if view_type == "front":
