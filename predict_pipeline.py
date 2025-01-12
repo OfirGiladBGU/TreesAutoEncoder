@@ -12,7 +12,7 @@ from scipy.ndimage import convolve
 
 from datasets.dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                                     reverse_rotations, apply_threshold, IMAGES_6_VIEWS)
-from datasets.dataset_list import DATASET_PATH, CROPPED_PATH, PREDICT_PIPELINE_RESULTS_PATH, MERGE_PIPELINE_RESULTS_PATH
+from datasets.dataset_list import DATASET_PATH, TRAIN_CROPPED_PATH, PREDICT_PIPELINE_RESULTS_PATH, MERGE_PIPELINE_RESULTS_PATH
 from models.model_list import init_model
 
 
@@ -24,14 +24,14 @@ def preprocess_2d(data_3d_filepath, apply_batch_merge: bool = False):
     data_2d_basename = f"{data_3d_basename}_<VIEW>"
 
     # Get relative path parts
-    relative_filepath = data_3d_filepath.relative_to(CROPPED_PATH)
+    relative_filepath = data_3d_filepath.relative_to(TRAIN_CROPPED_PATH)
     relative_filepath_parts = list(relative_filepath.parts)
 
     # Update relative path parts to the relevant 2D images path
     relative_filepath_parts[0] = relative_filepath_parts[0].replace("3d", "2d")
     relative_filepath_parts[-1] = f"{data_2d_basename}.png"
     format_of_2d_images_relative_filepath = pathlib.Path(*relative_filepath_parts)
-    format_of_2d_images = os.path.join(CROPPED_PATH, format_of_2d_images_relative_filepath)
+    format_of_2d_images = os.path.join(TRAIN_CROPPED_PATH, format_of_2d_images_relative_filepath)
 
     # Projections 2D
     data_2d_list = list()
@@ -293,12 +293,12 @@ def single_predict(data_3d_filepath: pathlib.Path):
 
 
 def test_single_predict():
-    data_3d_filepath = os.path.join(CROPPED_PATH, "preds_3d_v6", "PA000005_11899.nii.gz")
+    data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6", "PA000005_11899.nii.gz")
     single_predict(data_3d_filepath=pathlib.Path(data_3d_filepath))
 
 
 def full_predict():
-    input_folder = os.path.join(CROPPED_PATH, "preds_3d_v6")
+    input_folder = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6")
     # input_folder = os.path.join(CROPPED_PATH, "preds_fixed_3d_v6")
     input_format = "PA000005"
 
@@ -318,7 +318,7 @@ def calculate_dice_scores():
     output_folder = PREDICT_PIPELINE_RESULTS_PATH
     output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}_*_output.*")
 
-    target_folder = os.path.join(CROPPED_PATH, "labels_3d_v6")
+    target_folder = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
     target_filepaths = pathlib.Path(target_folder).rglob(f"{data_3d_basename}_*.*")
 
     output_filepaths = sorted(output_filepaths)
@@ -362,7 +362,7 @@ def full_merge():
 
     # Log file
     # TODO: create csv log per 3D object to improve search
-    log_path = os.path.join(CROPPED_PATH, "log.csv")
+    log_path = os.path.join(TRAIN_CROPPED_PATH, "log.csv")
 
     # Pipeline Predicts
     predict_folder = PREDICT_PIPELINE_RESULTS_PATH
