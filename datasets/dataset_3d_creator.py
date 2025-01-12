@@ -107,7 +107,7 @@ def create_3d_reconstructions():
 
         # 3D Folders - labels
         save_filename = label_image_output_filepath.replace("_<VIEW>.png", "")
-        label_3d_path = source_folders["labels_3d"]
+        label_3d_path = pathlib.Path(source_folders["labels_3d"])
         label_3d_relative = str(label_image_relative).replace("_<VIEW>.png", "*")
         source_label_3d_data_filepath = list(label_3d_path.rglob(label_3d_relative))[0]
 
@@ -123,7 +123,7 @@ def create_3d_reconstructions():
 
         # 3D Folders - preds
         save_filename = pred_image_output_filepath.replace("_<VIEW>.png", "")
-        pred_3d_path = source_folders["preds_3d"]
+        pred_3d_path = pathlib.Path(source_folders["preds_3d"])
         pred_3d_relative = str(pred_image_relative).replace("_<VIEW>.png", "*")
         source_pred_3d_data_filepath = list(pred_3d_path.rglob(pred_3d_relative))[0]
 
@@ -139,7 +139,7 @@ def create_3d_reconstructions():
 
         # 3D Folders - preds fixed
         save_filename = pred_fixed_image_output_filepath.replace("_<VIEW>.png", "")
-        pred_fixed_3d_path = source_folders["preds_fixed"]
+        pred_fixed_3d_path = pathlib.Path(source_folders["preds_fixed_3d"])
         pred_fixed_3d_relative = str(pred_fixed_image_relative).replace("_<VIEW>.png", "*")
         source_pred_fixed_3d_data_filepath = list(pred_fixed_3d_path.rglob(pred_fixed_3d_relative))[0]
 
@@ -275,13 +275,13 @@ def test_2d_to_3d_and_back(data_3d_filepath, cropped_data_path):
 
 
 def main():
-    # create_3d_reconstructions()
+    create_3d_reconstructions()
     # create_3d_fusions()
 
     # TODO: DEBUG
-    data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6", "PA000005_11899.nii.gz")
-    cropped_data_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
-    test_2d_to_3d_and_back(data_3d_filepath=data_3d_filepath, cropped_data_path=cropped_data_path)
+    # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6", "PA000005_11899.nii.gz")
+    # cropped_data_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
+    # test_2d_to_3d_and_back(data_3d_filepath=data_3d_filepath, cropped_data_path=cropped_data_path)
 
 
 if __name__ == "__main__":
