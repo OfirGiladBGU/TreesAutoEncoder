@@ -74,10 +74,16 @@ class Trainer(object):
         :param input_data: the original input data for the model
         :return:
         """
+        # Handle additional_tasks
+        if "confidence map" in getattr(self.model, "additional_tasks", list()):
+            output_data, output_confidence_data = output_data
+
 
         if self.args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
-            out = loss_functions.reshape_inputs(input_data=output_data, input_size=(28 * 28,))
-            target = loss_functions.reshape_inputs(input_data=target_data, input_size=(28 * 28,))
+            # out = loss_functions.reshape_inputs(input_data=output_data, input_size=(28 * 28,))
+            # target = loss_functions.reshape_inputs(input_data=target_data, input_size=(28 * 28,))
+            out = loss_functions.reshape_inputs(input_data=output_data, input_size=(32 * 32,))
+            target = loss_functions.reshape_inputs(input_data=target_data, input_size=(32 * 32,))
             LOSS = loss_functions.bce_loss(out=out, target=target, reduction='sum')
 
         elif self.args.dataset == 'CIFAR10':
@@ -123,94 +129,93 @@ class Trainer(object):
             #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]) +
             #         0.2 * black_penalty.sum())
 
-            if "confidence map" in getattr(self.model, "additional_tasks", list()):
-                output_data, output_confidence_data = output_data
 
-                # Test 4
-                #
-                # # Existing masks for holes and black areas
-                # holes_mask = ((target_data - input_data) != 0)
-                # black_mask = (target_data == 0)
-                #
-                # # Base L1 Loss
-                # # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
-                # #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
-                #
-                # # Add Total Variation Loss
-                # # tv_loss = self.total_variation_loss(output_data)
-                # # LOSS += 0.1 * tv_loss
-                #
-                # # Add Perceptual Loss
-                # p_loss = self.perceptual_loss(output_data, target_data)
-                # # LOSS += 0.5 * p_loss
-                #
-                # # Add Multi-Scale Loss
-                # # output_low = self.downsample(output_data, scale=2)
-                # # target_low = self.downsample(target_data, scale=2)
-                # # multi_scale_loss = F.l1_loss(output_low, target_low)
-                # # LOSS += 0.1 * multi_scale_loss
-                #
-                # LOSS = (0.5 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
-                #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]) +
-                #         0.5 * p_loss)
-                #
-                # # Confidence loss
-                # target_confidence_data = (target_data != 0).float()
-                # LOSS += F.binary_cross_entropy(output_confidence_data, target_confidence_data)
 
-                # Test 5
-                holes_mask = ((target_data - input_data) > 0)  # area that should be filled
-                black_mask = (target_data == 0)  # area that should stay black
+            # Test 4
+            #
+            # # Existing masks for holes and black areas
+            # holes_mask = ((target_data - input_data) != 0)
+            # black_mask = (target_data == 0)
+            #
+            # # Base L1 Loss
+            # # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+            # #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
+            #
+            # # Add Total Variation Loss
+            # # tv_loss = self.total_variation_loss(output_data)
+            # # LOSS += 0.1 * tv_loss
+            #
+            # # Add Perceptual Loss
+            # p_loss = self.perceptual_loss(output_data, target_data)
+            # # LOSS += 0.5 * p_loss
+            #
+            # # Add Multi-Scale Loss
+            # # output_low = self.downsample(output_data, scale=2)
+            # # target_low = self.downsample(target_data, scale=2)
+            # # multi_scale_loss = F.l1_loss(output_low, target_low)
+            # # LOSS += 0.1 * multi_scale_loss
+            #
+            # LOSS = (0.5 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+            #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]) +
+            #         0.5 * p_loss)
+            #
+            # # Confidence loss
+            # target_confidence_data = (target_data != 0).float()
+            # LOSS += F.binary_cross_entropy(output_confidence_data, target_confidence_data)
 
-                LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
-                        0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
+            # Test 5
+            holes_mask = ((target_data - input_data) > 0)  # area that should be filled
+            black_mask = (target_data == 0)  # area that should stay black
 
-                # Confidence loss V2
-                # target_confidence_data = (target_data != 0).float()
-                # LOSS += F.binary_cross_entropy(output_confidence_data, target_confidence_data)
+            LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+                    0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
 
-                # Confidence loss V3
-                target_holes_confidence_data = (target_data[holes_mask] > 0).float()
-                target_black_confidence_data = target_data[black_mask]
+            # Confidence loss V2
+            # target_confidence_data = (target_data != 0).float()
+            # LOSS += F.binary_cross_entropy(output_confidence_data, target_confidence_data)
 
-                LOSS += (0.2 * F.binary_cross_entropy(output_confidence_data[holes_mask], target_holes_confidence_data) +
-                         0.8 * F.binary_cross_entropy(output_confidence_data[black_mask], target_black_confidence_data))
+            # Confidence loss V3
+            target_holes_confidence_data = (target_data[holes_mask] > 0).float()
+            target_black_confidence_data = target_data[black_mask]
 
-                # Summary
-                # TODO: Replace mask usage to multiple and check differentiation
-                # TODO: Make sure crop include lines that needs to be connected (that the completion is not to a line out of image)
-                # TODO: Output - input (in the network itself)
-                # TODO: change the rotations of the pipes planes
-                # TODO: remove use of PCDs
+            LOSS += (0.2 * F.binary_cross_entropy(output_confidence_data[holes_mask], target_holes_confidence_data) +
+                     0.8 * F.binary_cross_entropy(output_confidence_data[black_mask], target_black_confidence_data))
 
-            else:
-                # Test 4
+            # Summary
+            # TODO: Replace mask usage to multiple and check differentiation
+            # TODO: Make sure crop include lines that needs to be connected (that the completion is not to a line out of image)
+            # TODO: Output - input (in the network itself)
+            # TODO: change the rotations of the pipes planes
+            # TODO: remove use of PCDs
 
-                # Existing masks for holes and black areas
-                holes_mask = ((target_data - input_data) != 0)
-                black_mask = (target_data == 0)
 
-                # Base L1 Loss
-                # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
-                #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
-
-                # Add Total Variation Loss
-                # tv_loss = self.total_variation_loss(output_data)
-                # LOSS += 0.1 * tv_loss
-
-                # Add Perceptual Loss
-                p_loss = self.perceptual_loss(output_data, target_data)
-                # LOSS += 0.5 * p_loss
-
-                # Add Multi-Scale Loss
-                # output_low = self.downsample(output_data, scale=2)
-                # target_low = self.downsample(target_data, scale=2)
-                # multi_scale_loss = F.l1_loss(output_low, target_low)
-                # LOSS += 0.1 * multi_scale_loss
-
-                LOSS = (0.5 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
-                        0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]) +
-                        0.5 * p_loss)
+            # # Test 4
+            #
+            # # Existing masks for holes and black areas
+            # holes_mask = ((target_data - input_data) != 0)
+            # black_mask = (target_data == 0)
+            #
+            # # Base L1 Loss
+            # # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+            # #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
+            #
+            # # Add Total Variation Loss
+            # # tv_loss = self.total_variation_loss(output_data)
+            # # LOSS += 0.1 * tv_loss
+            #
+            # # Add Perceptual Loss
+            # p_loss = self.perceptual_loss(output_data, target_data)
+            # # LOSS += 0.5 * p_loss
+            #
+            # # Add Multi-Scale Loss
+            # # output_low = self.downsample(output_data, scale=2)
+            # # target_low = self.downsample(target_data, scale=2)
+            # # multi_scale_loss = F.l1_loss(output_low, target_low)
+            # # LOSS += 0.1 * multi_scale_loss
+            #
+            # LOSS = (0.5 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+            #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]) +
+            #         0.5 * p_loss)
 
             # gap_cnn / ae_2d_to_2d
             # LOSS = loss_functions.mse_loss(out, target)
