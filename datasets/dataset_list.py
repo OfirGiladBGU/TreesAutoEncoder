@@ -9,6 +9,10 @@ from datasets.custom_datasets_2d import TreesCustomDataloader2D
 from datasets.custom_datasets_3d import TreesCustomDataloader3D
 
 
+# Configurations
+DATA_2D_SIZE = (32, 32)
+DATA_3D_SIZE = (32, 32, 32)
+
 # Define dataset folder
 DATASET_FOLDER = "parse2022" # TODO: Read from config file
 
@@ -28,18 +32,22 @@ VISUALIZATION_RESULTS_PATH = os.path.join(RESULTS_PATH, "visualization")
 
 class MNIST(object):
     def __init__(self, args):
-        self.input_size = (1, 28, 28)
+        self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize(self.input_size[1])
+        ])
         kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
         root = os.path.join(DATA_PATH, "mnist")
         self.train_loader = DataLoader(
-            dataset=datasets.MNIST(root=root, train=True, download=True, transform=transforms.ToTensor()),
+            dataset=datasets.MNIST(root=root, train=True, download=True, transform=transform),
             batch_size=args.batch_size,
             shuffle=False,
             **kwargs
         )
         self.test_loader = DataLoader(
-            dataset=datasets.MNIST(root=root, train=False, transform=transforms.ToTensor()),
+            dataset=datasets.MNIST(root=root, train=False, transform=transform),
             batch_size=args.batch_size,
             shuffle=False,
             **kwargs
@@ -48,18 +56,22 @@ class MNIST(object):
 
 class EMNIST(object):
     def __init__(self, args):
-        self.input_size = (1, 28, 28)
+        self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize(self.input_size[1])
+        ])
         kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
         root = os.path.join(DATA_PATH, "emnist")
         self.train_loader = DataLoader(
-            dataset=datasets.EMNIST(root=root, train=True, download=True, split='byclass', transform=transforms.ToTensor()),
+            dataset=datasets.EMNIST(root=root, train=True, download=True, split='byclass', transform=transform),
             batch_size=args.batch_size,
             shuffle=False,
             **kwargs
         )
         self.test_loader = DataLoader(
-            dataset=datasets.EMNIST(root=root, train=False, split='byclass', transform=transforms.ToTensor()),
+            dataset=datasets.EMNIST(root=root, train=False, split='byclass', transform=transform),
             batch_size=args.batch_size,
             shuffle=False,
             **kwargs
@@ -68,18 +80,22 @@ class EMNIST(object):
 
 class FashionMNIST(object):
     def __init__(self, args):
-        self.input_size = (1, 28, 28)
+        self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize(self.input_size[1])
+        ])
         kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
         root = os.path.join(DATA_PATH, "fmnist")
         self.train_loader = DataLoader(
-            dataset=datasets.FashionMNIST(root=root, train=True, download=True, transform=transforms.ToTensor()),
+            dataset=datasets.FashionMNIST(root=root, train=True, download=True, transform=transform),
             batch_size=args.batch_size,
             shuffle=False,
             **kwargs
         )
         self.test_loader = DataLoader(
-            dataset=datasets.FashionMNIST(root=root, train=False, transform=transforms.ToTensor()),
+            dataset=datasets.FashionMNIST(root=root, train=False, transform=transform),
             batch_size=args.batch_size,
             shuffle=False,
             **kwargs
@@ -88,10 +104,11 @@ class FashionMNIST(object):
 
 class CIFAR10(object):
     def __init__(self, args):
-        self.input_size = (1, 32, 32)
+        self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         transform = transforms.Compose([
             transforms.ToTensor(),
+            transforms.Resize(self.input_size[1]),
             transforms.Grayscale(num_output_channels=1)
         ])
         kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
@@ -113,7 +130,7 @@ class CIFAR10(object):
 # Train with 2D labels (with random holes) to predict 2D labels
 class TreesDataset2DV1S(object):
     def __init__(self, args):
-        self.input_size = (1, 32, 32)
+        self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         src_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
 
@@ -125,7 +142,7 @@ class TreesDataset2DV1S(object):
 # Train with 2D preds fixed to predict 2D labels
 class TreesDataset2DV1(object):
     def __init__(self, args):
-        self.input_size = (1, 32, 32)
+        self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
         dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
@@ -138,7 +155,7 @@ class TreesDataset2DV1(object):
 # Train with 6 2D preds fixed to predict 6 2D labels
 class TreesDataset2DV2(object):
     def __init__(self, args):
-        self.input_size = (6, 32, 32)
+        self.input_size = (6, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
         dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
@@ -151,7 +168,7 @@ class TreesDataset2DV2(object):
 # Train with 6 2D preds fixed to predict 6 2D labels (with regression)
 class TreesDataset2DV2M(object):
     def __init__(self, args):
-        self.input_size = (6, 32, 32)
+        self.input_size = (6, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
         dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
@@ -165,7 +182,7 @@ class TreesDataset2DV2M(object):
 # Train with 6 2D labels to predict 3D labels
 class TreesDataset3DV1(object):
     def __init__(self, args):
-        self.input_size = (6, 1, 32, 32)
+        self.input_size = (6, 1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         src_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
         dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
@@ -178,7 +195,7 @@ class TreesDataset3DV1(object):
 # Train with 3D reconstructed labels to predict 3D labels
 class TreesDataset3DV2(object):
     def __init__(self, args):
-        self.input_size = (1, 32, 32, 32)
+        self.input_size = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
         src_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_reconstruct_v6")
         dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
@@ -191,7 +208,7 @@ class TreesDataset3DV2(object):
 # Train with 3D reconstructed labels to predict 3D labels (with regression)
 class TreesDataset3DV2M(object):
     def __init__(self, args):
-        self.input_size = (1, 32, 32, 32)
+        self.input_size = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
         src_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_reconstruct_v6")
         dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
@@ -205,7 +222,7 @@ class TreesDataset3DV2M(object):
 # Train with 3D preds fixed fusion to predict 3D labels
 class TreesDataset3DV3(object):
     def __init__(self, args):
-        self.input_size = (1, 32, 32, 32)
+        self.input_size = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
         src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_fusion_v6")
         dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
@@ -218,7 +235,7 @@ class TreesDataset3DV3(object):
 # Train with 3D preds fixed to predict 3D labels (Direct Repair)
 class TreesDataset3DV4(object):
     def __init__(self, args):
-        self.input_size = (1, 32, 32, 32)
+        self.input_size = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
         src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6")
         dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
