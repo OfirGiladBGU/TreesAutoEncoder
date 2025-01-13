@@ -552,8 +552,8 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
 
             condition1 = True
             condition2 = True
-            condition3 = True
-            for image_view in IMAGES_6_VIEWS:
+            condition3_list = [True] * len(IMAGES_6_VIEWS)
+            for idx, image_view in enumerate(IMAGES_6_VIEWS):
                 pred_image = pred_projections[f"{image_view}_image"]
                 label_image = label_projections[f"{image_view}_image"]
 
@@ -589,7 +589,6 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 # TODO: repair pred fix to include connectable components
                 if task_type == TaskType.CONNECT_COMPONENTS:
                     # TODO: check if local components num is similar between label and pred
-                    condition3 = True
 
                     # Calculate the connected components for the preds
                     pred_components = pred_projections[f"{image_view}_components"]
@@ -628,6 +627,9 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                         pred_fixed_image = np.where(binary_pred_fixed > 0, label_image, pred_fixed_image)
                         pred_fixed_projections[f"{image_view}_image"] = pred_fixed_image
 
+                        if np.equal(pred_fixed_image, label_image):
+                            condition3_list[idx] = False
+
                     # Calculate the connected components for the fixed preds
                     pred_fixed_components = pred_fixed_projections[f"{image_view}_components"]
                     pred_fixed_projections[f"{image_view}_components"] = color.label2rgb(
@@ -643,6 +645,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             #     print("Debug")
 
             # Validate the conditions
+            condition3 = any(condition3_list)
             conditions = [condition1, condition2, condition3]
             if not all(conditions):
                 continue

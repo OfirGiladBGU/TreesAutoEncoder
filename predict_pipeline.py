@@ -19,19 +19,21 @@ from models.model_list import init_model
 #########
 # Utils #
 #########
-def preprocess_2d(data_3d_filepath, apply_batch_merge: bool = False):
+def preprocess_2d(data_3d_filepath, data_2d_folder, apply_batch_merge: bool = False):
     data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
     data_2d_basename = f"{data_3d_basename}_<VIEW>"
 
-    # Get relative path parts
-    relative_filepath = data_3d_filepath.relative_to(TRAIN_CROPPED_PATH)
-    relative_filepath_parts = list(relative_filepath.parts)
+    # # Get relative path parts
+    # relative_filepath = data_3d_filepath.relative_to(TRAIN_CROPPED_PATH)
+    # relative_filepath_parts = list(relative_filepath.parts)
+    #
+    # # Update relative path parts to the relevant 2D images path
+    # relative_filepath_parts[0] = relative_filepath_parts[0].replace("3d", "2d")
+    # relative_filepath_parts[-1] = f"{data_2d_basename}.png"
+    # format_of_2d_images_relative_filepath = pathlib.Path(*relative_filepath_parts)
+    # format_of_2d_images = os.path.join(TRAIN_CROPPED_PATH, format_of_2d_images_relative_filepath)
 
-    # Update relative path parts to the relevant 2D images path
-    relative_filepath_parts[0] = relative_filepath_parts[0].replace("3d", "2d")
-    relative_filepath_parts[-1] = f"{data_2d_basename}.png"
-    format_of_2d_images_relative_filepath = pathlib.Path(*relative_filepath_parts)
-    format_of_2d_images = os.path.join(TRAIN_CROPPED_PATH, format_of_2d_images_relative_filepath)
+    format_of_2d_images = os.path.join(data_2d_folder, data_2d_basename + ".png")
 
     # Projections 2D
     data_2d_list = list()
@@ -232,7 +234,11 @@ def init_pipeline_models():
     model_3d.to(args.device)
     args.model_3d_class = model_3d
 
-def single_predict(data_3d_filepath: pathlib.Path):
+
+def single_predict(data_3d_filepath, data_2d_folder):
+    data_3d_filepath = str(data_3d_filepath)
+    data_2d_folder = str(data_2d_folder)
+
     os.makedirs(PREDICT_PIPELINE_RESULTS_PATH, exist_ok=True)
 
     if args.input_size_model_2d[0] == 6 and len(args.input_size_model_2d) == 3:
@@ -246,6 +252,7 @@ def single_predict(data_3d_filepath: pathlib.Path):
         ##############
         data_2d_input = preprocess_2d(
             data_3d_filepath=data_3d_filepath,
+            data_2d_folder=data_2d_folder,
             apply_batch_merge=apply_batch_merge
         )
 
@@ -294,19 +301,28 @@ def single_predict(data_3d_filepath: pathlib.Path):
 
 def test_single_predict():
     data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6", "PA000005_11899.nii.gz")
-    single_predict(data_3d_filepath=pathlib.Path(data_3d_filepath))
+    data_2d_folder = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
+    single_predict(
+        data_3d_filepath=data_3d_filepath,
+        data_2d_folder=data_2d_folder
+    )
 
 
 def full_predict():
     input_folder = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6")
-    # input_folder = os.path.join(CROPPED_PATH, "preds_fixed_3d_v6")
-    input_format = "PA000005"
+    data_2d_folder = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
 
+    # input_folder = os.path.join(CROPPED_PATH, "preds_fixed_3d_v6")
+
+    input_format = "PA000005"
     data_3d_filepaths = pathlib.Path(input_folder).rglob(f"{input_format}_*.*")
     data_3d_filepaths = sorted(data_3d_filepaths)
 
     for data_3d_filepath in tqdm(data_3d_filepaths):
-        single_predict(data_3d_filepath=data_3d_filepath)
+        single_predict(
+            data_3d_filepath=data_3d_filepath,
+            data_2d_folder=data_2d_folder
+        )
 
 
 def calculate_dice_scores():
@@ -415,7 +431,7 @@ def main():
     # init_pipeline_models()
 
     # test_single_predict()
-    # full_predict()
+    full_predict()
     # calculate_dice_scores()
     full_merge()
 
