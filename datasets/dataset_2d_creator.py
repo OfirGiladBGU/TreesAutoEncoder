@@ -627,7 +627,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                         pred_fixed_image = np.where(binary_pred_fixed > 0, label_image, pred_fixed_image)
                         pred_fixed_projections[f"{image_view}_image"] = pred_fixed_image
 
-                        if np.equal(pred_fixed_image, label_image):
+                        if np.array_equal(pred_fixed_image, label_image):
                             condition3_list[idx] = False
 
                     # Calculate the connected components for the fixed preds
@@ -977,7 +977,7 @@ def main():
     # create_dataset_depth_2d_projections(data_options=data_options)
 
     # TODO: Required for: TaskType.CONNECT_COMPONENTS
-    create_data_components(data_options=data_options)
+    # create_data_components(data_options=data_options)
 
     task_type = TaskType.CONNECT_COMPONENTS
     # task_type = TaskType.PATCH_HOLES
