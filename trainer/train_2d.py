@@ -177,12 +177,12 @@ class Trainer(object):
             # LOSS += F.binary_cross_entropy(output_confidence_data, target_confidence_data)
 
             # Confidence loss V3
-            if output_confidence_data is not None:
-                target_holes_confidence_data = (target_data[holes_mask] > 0).float()
-                target_black_confidence_data = target_data[black_mask]
-
-                LOSS += (0.2 * F.binary_cross_entropy(output_confidence_data[holes_mask], target_holes_confidence_data) +
-                         0.8 * F.binary_cross_entropy(output_confidence_data[black_mask], target_black_confidence_data))
+            # if output_confidence_data is not None:
+            #     target_holes_confidence_data = (target_data[holes_mask] > 0).float()
+            #     target_black_confidence_data = target_data[black_mask]
+            #
+            #     LOSS += (0.2 * F.binary_cross_entropy(output_confidence_data[holes_mask], target_holes_confidence_data) +
+            #              0.8 * F.binary_cross_entropy(output_confidence_data[black_mask], target_black_confidence_data))
 
             # Summary
             # TODO: Replace mask usage to multiple and check differentiation
@@ -268,6 +268,18 @@ class Trainer(object):
                     0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
         else:
             raise NotImplementedError
+
+
+        # Confidence loss V3
+        if output_confidence_data is not None:
+            holes_mask = ((target_data - input_data) > 0)  # area that should be filled
+            black_mask = (target_data == 0)  # area that should stay black
+
+            target_holes_confidence_data = (target_data[holes_mask] > 0).float()
+            target_black_confidence_data = target_data[black_mask]
+
+            LOSS += (0.2 * F.binary_cross_entropy(output_confidence_data[holes_mask], target_holes_confidence_data) +
+                     0.8 * F.binary_cross_entropy(output_confidence_data[black_mask], target_black_confidence_data))
 
         return LOSS
 
