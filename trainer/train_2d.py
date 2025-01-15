@@ -82,11 +82,27 @@ class Trainer(object):
 
 
         if self.args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
-            # out = loss_functions.reshape_inputs(input_data=output_data, input_size=(28 * 28,))
-            # target = loss_functions.reshape_inputs(input_data=target_data, input_size=(28 * 28,))
-            out = loss_functions.reshape_inputs(input_data=output_data, input_size=(32 * 32,))
-            target = loss_functions.reshape_inputs(input_data=target_data, input_size=(32 * 32,))
-            LOSS = loss_functions.bce_loss(out=out, target=target, reduction='sum')
+            # Test 1
+            # LOSS = loss_functions.bce_loss(out=out, target=target, reduction='sum')
+
+            # Test 2
+            # holes_mask = ((target_data > 0) & (input_data == 0)).float()  # Convert to float for multiplication
+            # black_mask = (target_data == 0)  # area that should stay black
+            #
+            # diff = torch.abs(output_data - target_data)
+            # masked_diff = diff * (holes_mask + black_mask)
+            #
+            # # Normalize by the number of pixels in the mask
+            # LOSS = masked_diff.sum() / holes_mask.sum()
+            # LOSS += loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
+            # LOSS += loss_functions.bce_dice_loss(out=output_data, target=target_data)
+
+            # Test 3
+            holes_mask = ((target_data - input_data) > 0)  # area that should be filled
+            black_mask = (target_data == 0)  # area that should stay black
+
+            LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+                    0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
 
         elif self.args.dataset == 'CIFAR10':
             LOSS = loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
@@ -109,11 +125,13 @@ class Trainer(object):
             #     10 * loss_functions.unfilled_holes_loss(out, target, original)
             # )
 
+
             # Test 1
             # LOSS = (
             #     20 * loss_functions.unfilled_holes_loss(out=out, target=target, original=original) +
             #     10 * loss_functions.weighted_pixels_diff_loss(out=out, target=target, original=original)
             # )
+
 
             # Test 2
             # holes_mask = ((target_data - input_data) != 0)
@@ -121,6 +139,7 @@ class Trainer(object):
             #
             # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
             #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
+
 
             # Test 3
             # holes_mask = ((target_data - input_data) > 0)
@@ -130,7 +149,6 @@ class Trainer(object):
             # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
             #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]) +
             #         0.2 * black_penalty.sum())
-
 
 
             # Test 4
@@ -161,9 +179,7 @@ class Trainer(object):
             #         0.2 * F.l1_loss(output_data[black_mask], target_data[black_mask]) +
             #         0.5 * p_loss)
             #
-            # # Confidence loss
-            # target_confidence_data = (target_data != 0).float()
-            # LOSS += F.binary_cross_entropy(output_confidence_data, target_confidence_data)
+
 
             # Test 5
             holes_mask = ((target_data - input_data) > 0)  # area that should be filled
@@ -172,17 +188,18 @@ class Trainer(object):
             LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
                     0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
 
-            # Confidence loss V2
-            # target_confidence_data = (target_data != 0).float()
-            # LOSS += F.binary_cross_entropy(output_confidence_data, target_confidence_data)
 
-            # Confidence loss V3
-            # if output_confidence_data is not None:
-            #     target_holes_confidence_data = (target_data[holes_mask] > 0).float()
-            #     target_black_confidence_data = target_data[black_mask]
+            # Test 6
+            # holes_mask = ((target_data > 0) & (input_data == 0)).float()  # Convert to float for multiplication
+            # black_mask = (target_data == 0)  # area that should stay black
             #
-            #     LOSS += (0.2 * F.binary_cross_entropy(output_confidence_data[holes_mask], target_holes_confidence_data) +
-            #              0.8 * F.binary_cross_entropy(output_confidence_data[black_mask], target_black_confidence_data))
+            # diff = torch.abs(output_data - target_data)
+            # masked_diff = diff * (holes_mask + black_mask)
+            #
+            # # Normalize by the number of pixels in the mask
+            # LOSS = masked_diff.sum() / holes_mask.sum()
+            # LOSS += loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
+            # LOSS += loss_functions.bce_dice_loss(out=output_data, target=target_data)
 
             # Summary
             # TODO: Replace mask usage to multiple and check differentiation
@@ -270,16 +287,48 @@ class Trainer(object):
             raise NotImplementedError
 
 
-        # Confidence loss V3
         if output_confidence_data is not None:
-            holes_mask = ((target_data - input_data) > 0)  # area that should be filled
+            # Confidence loss V1
+            # target_confidence_data = (target_data != 0).float()
+            # LOSS += F.binary_cross_entropy(output_confidence_data, target_confidence_data)
+
+
+            # Confidence loss V2
+            # target_confidence_data = (target_data != 0).float()
+            # LOSS += F.binary_cross_entropy(output_confidence_data, target_confidence_data)
+
+
+            # Confidence loss V3
+            # target_holes_confidence_data = (target_data[holes_mask] > 0).float()
+            # target_black_confidence_data = target_data[black_mask]
+            #
+            # LOSS += (0.2 * F.binary_cross_entropy(output_confidence_data[holes_mask], target_holes_confidence_data) +
+            #          0.8 * F.binary_cross_entropy(output_confidence_data[black_mask], target_black_confidence_data))
+
+
+            # Confidence loss V4
+            # holes_mask = ((target_data - input_data) > 0)  # area that should be filled
+            # black_mask = (target_data == 0)  # area that should stay black
+            #
+            # target_holes_confidence_data = (target_data[holes_mask] > 0).float()
+            # target_black_confidence_data = target_data[black_mask]
+            #
+            # LOSS += (0.2 * F.binary_cross_entropy(output_confidence_data[holes_mask], target_holes_confidence_data) +
+            #          0.8 * F.binary_cross_entropy(output_confidence_data[black_mask], target_black_confidence_data))
+
+
+            # Confidence loss V5
+            holes_mask = ((target_data > 0) & (input_data == 0)).float()  # Convert to float for multiplication
             black_mask = (target_data == 0)  # area that should stay black
+            target_confidence_data = (target_data > 0).float()
 
-            target_holes_confidence_data = (target_data[holes_mask] > 0).float()
-            target_black_confidence_data = target_data[black_mask]
+            diff = torch.abs(output_confidence_data - target_confidence_data)
+            masked_diff = diff * (holes_mask + black_mask)
 
-            LOSS += (0.2 * F.binary_cross_entropy(output_confidence_data[holes_mask], target_holes_confidence_data) +
-                     0.8 * F.binary_cross_entropy(output_confidence_data[black_mask], target_black_confidence_data))
+            # Normalize by the number of pixels in the mask
+            LOSS += masked_diff.sum() / holes_mask.sum()
+            LOSS += loss_functions.perceptual_loss(out=output_confidence_data, target=target_confidence_data, channels=1, device=self.args.device)
+            LOSS += loss_functions.bce_dice_loss(out=output_confidence_data, target=target_confidence_data)
 
         return LOSS
 
@@ -442,13 +491,16 @@ class Trainer(object):
 
                 if "confidence map" in getattr(self.model, "additional_tasks", list()):
                     output_data, output_confidence_data = output_data
-                    output_data = torch.where(output_confidence_data > 0.5, output_data, 0)
+                    output_confidence_data = torch.where(output_confidence_data > 0.5, output_data, 0)
+
 
                 # TODO: Threshold
                 # apply_threshold(output_images, 0.5)
 
-                fusion_data = input_data + torch.where(input_data == 0, output_data, 0)
-                # fusion_data = torch.where(input_data == 0, output_data, 0)
+                if output_confidence_data is None:
+                    fusion_data = input_data + torch.where(input_data == 0, output_data, 0)
+                else:
+                    fusion_data = input_data + torch.where(input_data == 0, output_confidence_data, 0)
 
                 # Detach the images from the cuda and move them to CPU
                 if self.args.cuda is True:
@@ -456,6 +508,9 @@ class Trainer(object):
                     target_data = target_data.cpu()
                     output_data = output_data.cpu()
                     fusion_data = fusion_data.cpu()
+
+                    if output_confidence_data is not None:
+                        output_confidence_data = output_confidence_data.cpu()
 
                 # Convert (b, 6, w, h) to (6*b, 1, w, h) - Trees2DV2
                 if input_data.shape[1] == 6:
@@ -465,12 +520,20 @@ class Trainer(object):
                     output_data = output_data.view(-1, 1, x, y)
                     fusion_data = fusion_data.view(-1, 1, x, y)
 
+                    if output_confidence_data is not None:
+                        output_confidence_data = output_confidence_data.view(-1, 1, x, y)
+
                 #################
                 # Visualization #
                 #################
 
+                # Handle additional_tasks
+                if "confidence map" in getattr(self.model, "additional_tasks", list()):
+                    columns = 5
+                else:
+                    columns = 4
+
                 # Create a grid of images
-                columns = 4
                 rows = input_data.shape[0]
                 fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
                 ax = []
@@ -501,10 +564,20 @@ class Trainer(object):
                     numpy_image = fusion_data[i].numpy()
                     plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
 
+                    if "confidence map" in getattr(self.model, "additional_tasks", list()):
+                        # Confidence
+                        j += 1
+                        ax.append(fig.add_subplot(rows, columns, i * columns + j))
+                        numpy_image = output_confidence_data[i].numpy()
+                        plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
+
                 ax[0].set_title("Input:")
                 ax[1].set_title("Target:")
                 ax[2].set_title("Output:")
                 ax[3].set_title("Fusion:")
+                if "confidence map" in getattr(self.model, "additional_tasks", list()):
+                    ax[4].set_title("Confidence:")
+
                 fig.tight_layout()
                 save_filename = os.path.join(self.args.results_path, f"{self.args.dataset}_{batch_num}.png")
                 plt.savefig(save_filename)
