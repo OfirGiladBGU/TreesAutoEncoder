@@ -83,7 +83,7 @@ class Trainer(object):
 
         if self.args.dataset in ['MNIST', 'EMNIST', 'FashionMNIST']:
             # Test 1
-            # LOSS = loss_functions.bce_loss(out=out, target=target, reduction='sum')
+            # LOSS = loss_functions.bce_loss(out=output_data, target=target_data, reduction='sum')
 
             # Test 2
             # holes_mask = ((target_data > 0) & (input_data == 0)).float()  # Convert to float for multiplication
@@ -182,11 +182,11 @@ class Trainer(object):
 
 
             # Test 5
-            holes_mask = ((target_data - input_data) > 0)  # area that should be filled
-            black_mask = (target_data == 0)  # area that should stay black
-
-            LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
-                    0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
+            # holes_mask = ((target_data - input_data) > 0)  # area that should be filled
+            # black_mask = (target_data == 0)  # area that should stay black
+            #
+            # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+            #         0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
 
 
             # Test 6
@@ -200,6 +200,30 @@ class Trainer(object):
             # LOSS = masked_diff.sum() / holes_mask.sum()
             # LOSS += loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
             # LOSS += loss_functions.bce_dice_loss(out=output_data, target=target_data)
+
+            keep_mask1 = (input_data > 0).float()  # Area that should stay unchanged
+            black_mask1 = (target_data == 0).float()  # Area that should stay black
+            fill_mask1 = 1.0 - (keep_mask1 + black_mask1)  # Area that should be filled
+
+            # fill_weight = (black_mask1.sum() + keep_mask1.sum()) / np.ones(shape=black_mask1.shape).sum() * 100
+            # black_weight = fill_mask1.sum() / np.ones(shape=keep_mask1.shape).sum() * 100
+            # keep_weight = 100 - (fill_weight + black_weight)
+            # weighted_mask = fill_weight * fill_mask1 + black_weight * black_mask1 + keep_weight * keep_mask1
+
+            weighted_mask1 = 0.80 * fill_mask1 + 0.15 * keep_mask1 + 0.05 * black_mask1
+
+            abs_diff1 = torch.abs(output_data - target_data)
+            masked_abs_diff1 = abs_diff1 * weighted_mask1
+            # output_data_1 = output_data * weighted_mask1
+            # target_data_1 = target_data * weighted_mask1
+
+            # Normalize by the number of pixels in the mask
+            LOSS = masked_abs_diff1.sum()
+            LOSS += loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
+            LOSS += loss_functions.bce_dice_loss(out=output_data, target=target_data)
+
+            # LOSS += loss_functions.perceptual_loss(out=output_data_1, target=target_data_1, channels=1,device=self.args.device)
+            # LOSS += loss_functions.bce_dice_loss(out=output_data_1, target=target_data_1)
 
             # Summary
             # TODO: Replace mask usage to multiple and check differentiation
@@ -318,17 +342,33 @@ class Trainer(object):
 
 
             # Confidence loss V5
-            holes_mask = ((target_data > 0) & (input_data == 0)).float()  # Convert to float for multiplication
-            black_mask = (target_data == 0)  # area that should stay black
-            target_confidence_data = (target_data > 0).float()
+            # holes_mask = ((target_data > 0) & (input_data == 0)).float()  # Convert to float for multiplication
+            # black_mask = (target_data == 0)  # area that should stay black
+            # target_confidence_data = (target_data > 0).float()
+            #
+            # diff = torch.abs(output_confidence_data - target_confidence_data)
+            # masked_diff = diff * (holes_mask + black_mask)
+            #
+            # # Normalize by the number of pixels in the mask
+            # LOSS += masked_diff.sum() / holes_mask.sum()
+            # LOSS += loss_functions.perceptual_loss(out=output_confidence_data, target=target_confidence_data, channels=1, device=self.args.device)
+            # LOSS += loss_functions.bce_dice_loss(out=output_confidence_data, target=target_confidence_data)
 
-            diff = torch.abs(output_confidence_data - target_confidence_data)
-            masked_diff = diff * (holes_mask + black_mask)
+            # Confidence loss V6
+            keep_mask = (input_data > 0).float()  # Area that should stay unchanged
+            black_mask = (target_data == 0).float()  # Area that should stay black
+            fill_mask = 1.0 - (keep_mask + black_mask)  # Area that should be filled
+
+            weighted_mask = 85 * fill_mask + 10 * black_mask + 5 * keep_mask
+
+            target_confidence_data = (target_data > 0).float()
+            abs_diff = torch.abs(output_confidence_data - target_confidence_data)
+            masked_abs_diff = abs_diff * weighted_mask
 
             # Normalize by the number of pixels in the mask
-            LOSS += masked_diff.sum() / holes_mask.sum()
-            LOSS += loss_functions.perceptual_loss(out=output_confidence_data, target=target_confidence_data, channels=1, device=self.args.device)
-            LOSS += loss_functions.bce_dice_loss(out=output_confidence_data, target=target_confidence_data)
+            LOSS += masked_abs_diff.sum()
+            # LOSS += loss_functions.perceptual_loss(out=output_confidence_data, target=target_confidence_data, channels=1, device=self.args.device)
+            # LOSS += loss_functions.bce_dice_loss(out=output_confidence_data, target=target_confidence_data)
 
         return LOSS
 
@@ -491,16 +531,15 @@ class Trainer(object):
 
                 if "confidence map" in getattr(self.model, "additional_tasks", list()):
                     output_data, output_confidence_data = output_data
-                    output_confidence_data = torch.where(output_confidence_data > 0.5, output_data, 0)
-
+                    merged_data = torch.where(output_confidence_data > 0.5, output_data, 0)
+                else:
+                    output_confidence_data = None
+                    merged_data = output_data
 
                 # TODO: Threshold
                 # apply_threshold(output_images, 0.5)
 
-                if output_confidence_data is None:
-                    fusion_data = input_data + torch.where(input_data == 0, output_data, 0)
-                else:
-                    fusion_data = input_data + torch.where(input_data == 0, output_confidence_data, 0)
+                fusion_data = input_data + torch.where(input_data == 0, merged_data, 0)
 
                 # Detach the images from the cuda and move them to CPU
                 if self.args.cuda is True:
@@ -511,6 +550,7 @@ class Trainer(object):
 
                     if output_confidence_data is not None:
                         output_confidence_data = output_confidence_data.cpu()
+                        merged_data = merged_data.cpu()
 
                 # Convert (b, 6, w, h) to (6*b, 1, w, h) - Trees2DV2
                 if input_data.shape[1] == 6:
@@ -522,61 +562,44 @@ class Trainer(object):
 
                     if output_confidence_data is not None:
                         output_confidence_data = output_confidence_data.view(-1, 1, x, y)
+                        merged_data = merged_data.view(-1, 1, x, y)
 
                 #################
                 # Visualization #
                 #################
 
+                plotting_data_list = [
+                    {"Title": "Input", "Data": input_data},
+                    {"Title": "Target", "Data": target_data},
+                    {"Title": "Output", "Data": output_data},
+                    {"Title": "Fusion", "Data": fusion_data}
+                ]
+
                 # Handle additional_tasks
                 if "confidence map" in getattr(self.model, "additional_tasks", list()):
-                    columns = 5
-                else:
-                    columns = 4
+                    additional_plotting_data_list = [
+                        {"Title": "Confidence", "Data": output_confidence_data},
+                        {"Title": "Merged", "Data": merged_data}
+                    ]
+                    plotting_data_list += additional_plotting_data_list
 
                 # Create a grid of images
-                rows = input_data.shape[0]
+                columns = len(plotting_data_list)
+                rows = self.args.batch_size
                 fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
                 ax = []
                 for i in range(rows):
                     j = 0
-
-                    # Input
-                    j += 1
-                    ax.append(fig.add_subplot(rows, columns, i * columns + j))
-                    numpy_image = input_data[i].numpy()
-                    plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
-
-                    # Target
-                    j += 1
-                    ax.append(fig.add_subplot(rows, columns, i * columns + j))
-                    numpy_image = target_data[i].numpy()
-                    plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
-
-                    # Output
-                    j += 1
-                    ax.append(fig.add_subplot(rows, columns, i * columns + j))
-                    numpy_image = output_data[i].numpy()
-                    plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
-
-                    # Fusion
-                    j += 1
-                    ax.append(fig.add_subplot(rows, columns, i * columns + j))
-                    numpy_image = fusion_data[i].numpy()
-                    plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
-
-                    if "confidence map" in getattr(self.model, "additional_tasks", list()):
-                        # Confidence
+                    for plotting_data in plotting_data_list:
+                        data = plotting_data["Data"]
                         j += 1
                         ax.append(fig.add_subplot(rows, columns, i * columns + j))
-                        numpy_image = output_confidence_data[i].numpy()
+                        numpy_image = data[i].numpy()
                         plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
 
-                ax[0].set_title("Input:")
-                ax[1].set_title("Target:")
-                ax[2].set_title("Output:")
-                ax[3].set_title("Fusion:")
-                if "confidence map" in getattr(self.model, "additional_tasks", list()):
-                    ax[4].set_title("Confidence:")
+                for j in range(columns):
+                    title = plotting_data_list[j]["Title"]
+                    ax[j].set_title(f"{title}:")
 
                 fig.tight_layout()
                 save_filename = os.path.join(self.args.results_path, f"{self.args.dataset}_{batch_num}.png")
