@@ -203,24 +203,95 @@ class Trainer(object):
 
             keep_mask1 = (input_data > 0).float()  # Area that should stay unchanged
             black_mask1 = (target_data == 0).float()  # Area that should stay black
-            fill_mask1 = 1.0 - (keep_mask1 + black_mask1)  # Area that should be filled
+            fill_mask1 = ((target_data > 0) & (input_data == 0)).float()   # Area that should be filled
 
-            # fill_weight = (black_mask1.sum() + keep_mask1.sum()) / np.ones(shape=black_mask1.shape).sum() * 100
+            # fill_weight = black_mask1.sum() / np.ones(shape=black_mask1.shape).sum() * 100
             # black_weight = fill_mask1.sum() / np.ones(shape=keep_mask1.shape).sum() * 100
             # keep_weight = 100 - (fill_weight + black_weight)
-            # weighted_mask = fill_weight * fill_mask1 + black_weight * black_mask1 + keep_weight * keep_mask1
+            # weighted_mask1 = fill_weight * fill_mask1 + black_weight * black_mask1 + keep_weight * keep_mask1
 
-            weighted_mask1 = 0.80 * fill_mask1 + 0.15 * keep_mask1 + 0.05 * black_mask1
+            # weighted_mask1 = 0.80 * fill_mask1 + 0.15 * keep_mask1 + 0.05 * black_mask1
 
-            abs_diff1 = torch.abs(output_data - target_data)
-            masked_abs_diff1 = abs_diff1 * weighted_mask1
-            # output_data_1 = output_data * weighted_mask1
-            # target_data_1 = target_data * weighted_mask1
+            weighted_mask1 = 80.0 * fill_mask1 + 15.0 * keep_mask1 + 5.0 * black_mask1
+
+            # abs_diff1 = torch.abs(output_data - target_data)
+            # masked_abs_diff1 = abs_diff1 * fill_mask1
+            # diff2 = torch.abs(output_data) * black_mask1 + torch.abs(output_data) * keep_mask1
+
+            output_data_1 = output_data * weighted_mask1
+            target_data_1 = target_data * weighted_mask1
 
             # Normalize by the number of pixels in the mask
-            LOSS = masked_abs_diff1.sum()
+            LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
+            # LOSS = masked_abs_diff1.sum()
+            # LOSS += loss_functions.bce_loss(out=output_data, target=target_data, reduction='sum')
             LOSS += loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
+            # LOSS = loss_functions.l1_loss(out=output_data, target=target_data, reduction='sum')
             LOSS += loss_functions.bce_dice_loss(out=output_data, target=target_data)
+
+            # def weighted_mask_loss(predicted, target, mask, hole_weight=2.0):
+            #     """
+            #     Compute weighted binary cross-entropy loss focusing on holes.
+            #     :param predicted: Predicted image (B, C, H, W)
+            #     :param target: Ground truth image (B, C, H, W)
+            #     :param mask: Binary mask (1 for holes, 0 for non-holes)
+            #     :param hole_weight: Weight for the hole regions
+            #     :return: Scalar loss
+            #     """
+            #     # Separate loss contributions
+            #     hole_loss = F.binary_cross_entropy(predicted * mask, target * mask, reduction='sum')
+            #     non_hole_loss = F.binary_cross_entropy(predicted * (1 - mask), target * (1 - mask), reduction='sum')
+            #
+            #     # Normalize by the number of pixels
+            #     hole_loss /= mask.sum() + 1e-8  # Avoid division by zero
+            #     non_hole_loss /= (1 - mask).sum() + 1e-8
+            #
+            #     # Weighted combination
+            #     total_loss = hole_weight * hole_loss + non_hole_loss
+            #     return total_loss
+            #
+            # def adaptive_weighted_loss(predicted, target, mask, base_weight=2.0):
+            #     """
+            #     Adaptive weighting for holes based on their size.
+            #     :param predicted: Predicted image (B, C, H, W)
+            #     :param target: Ground truth image (B, C, H, W)
+            #     :param mask: Binary mask (1 for holes, 0 for non-holes)
+            #     :param base_weight: Base weight for hole loss
+            #     :return: Scalar loss
+            #     """
+            #     hole_area = mask.sum()
+            #     adaptive_weight = base_weight * (1.0 + 1.0 / (hole_area + 1e-8))  # Larger weight for smaller holes
+            #
+            #     hole_loss = F.binary_cross_entropy(predicted * mask, target * mask, reduction='sum')
+            #     non_hole_loss = F.binary_cross_entropy(predicted * (1 - mask), target * (1 - mask), reduction='sum')
+            #
+            #     hole_loss /= hole_area + 1e-8
+            #     non_hole_loss /= (1 - mask).sum() + 1e-8
+            #
+            #     total_loss = adaptive_weight * hole_loss + non_hole_loss
+            #     return total_loss
+            #
+            # def total_variation_loss(image):
+            #     """
+            #     Total variation loss for smoothness.
+            #     :param image: Predicted image (B, C, H, W)
+            #     :return: Scalar loss
+            #     """
+            #     loss = torch.sum(torch.abs(image[:, :, :-1, :] - image[:, :, 1:, :])) + \
+            #            torch.sum(torch.abs(image[:, :, :, :-1] - image[:, :, :, 1:]))
+            #     return loss
+            #
+            # keep_mask1 = (input_data > 0).float()  # Area that should stay unchanged
+            # black_mask1 = (target_data == 0).float()  # Area that should stay black
+            # fill_mask1 = 1.0 - (keep_mask1 + black_mask1)  # Area that should be filled
+            #
+            # # weighted_mask1 = 0.80 * fill_mask1 + 0.15 * keep_mask1 + 0.05 * black_mask1
+            #
+            # # Normalize by the number of pixels in the mask
+            # LOSS = adaptive_weighted_loss(predicted=output_data, target=target_data, mask=fill_mask1)
+            # # LOSS += total_variation_loss(image=output_data)
+            # LOSS += loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
+            # LOSS += loss_functions.bce_dice_loss(out=output_data, target=target_data)
 
             # LOSS += loss_functions.perceptual_loss(out=output_data_1, target=target_data_1, channels=1,device=self.args.device)
             # LOSS += loss_functions.bce_dice_loss(out=output_data_1, target=target_data_1)
@@ -491,7 +562,7 @@ class Trainer(object):
         torch.save(model_parameters, self.args.weights_filepath)
 
     # TODO: Handle V1 and V2 cases
-    def predict(self, max_batches_to_plot=4):
+    def predict(self, max_batches_to_plot=2):
         print(f"[Model: '{self.model.model_name}'] Predicting...")
         os.makedirs(name=self.args.results_path, exist_ok=True)
 
@@ -539,7 +610,7 @@ class Trainer(object):
                 # TODO: Threshold
                 # apply_threshold(output_images, 0.5)
 
-                fusion_data = input_data + torch.where(input_data == 0, merged_data, 0)
+                fusion_data = torch.where(input_data > 0, input_data, merged_data)
 
                 # Detach the images from the cuda and move them to CPU
                 if self.args.cuda is True:
