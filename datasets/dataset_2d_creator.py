@@ -1,5 +1,4 @@
 import numpy as np
-import cv2
 import os
 import pathlib
 
@@ -288,7 +287,12 @@ def create_dataset_depth_2d_projections(data_options: dict):
                 output_2d_format = f"{output_idx}_{image_view}"
 
                 data_image = data_projections[f"{image_view}_image"]
-                cv2.imwrite(os.path.join(output_folders[f"{key}_2d"], f"{output_2d_format}.png"), data_image)
+                save_filename = os.path.join(output_folders[f"{key}_2d"], f"{output_2d_format}.png")
+                convert_numpy_to_data_file(
+                    numpy_data=data_image,
+                    source_data_filepath="dumpy.png",
+                    save_filename=save_filename
+                )
 
 
 #################
@@ -657,11 +661,21 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
 
                 # 2D Folders - labels
                 label_2d = label_projections[f"{image_view}_image"]
-                cv2.imwrite(os.path.join(output_folders["labels_2d"], f"{output_2d_format}.png"), label_2d)
+                save_filename = os.path.join(output_folders["labels_2d"], output_2d_format)
+                convert_numpy_to_data_file(
+                    numpy_data=label_2d,
+                    source_data_filepath="dumpy.png",
+                    save_filename=save_filename
+                )
 
                 # 2D Folder - preds
                 pred_2d = pred_projections[f"{image_view}_image"]
-                cv2.imwrite(os.path.join(output_folders["preds_2d"], f"{output_2d_format}.png"), pred_2d)
+                save_filename = os.path.join(output_folders["preds_2d"], output_2d_format)
+                convert_numpy_to_data_file(
+                    numpy_data=pred_2d,
+                    source_data_filepath="dumpy.png",
+                    save_filename=save_filename
+                )
 
                 # # 2D Folders - preds components
                 # pred_components_2d = pred_projections[f"{image_view}_components"]
@@ -670,7 +684,12 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
 
                 # 2D Folder - preds fixed
                 pred_fixed_2d = pred_fixed_projections[f"{image_view}_image"]
-                cv2.imwrite(os.path.join(output_folders["preds_fixed_2d"], f"{output_2d_format}.png"), pred_fixed_2d)
+                save_filename = os.path.join(output_folders["preds_fixed_2d"], output_2d_format)
+                convert_numpy_to_data_file(
+                    numpy_data=pred_fixed_2d,
+                    source_data_filepath="dumpy.png",
+                    save_filename=save_filename
+                )
 
                 # # 2D Folders - preds fixed components
                 # pred_fixed_components_2d = pred_fixed_projections[f"{image_view}_components"]
@@ -679,11 +698,21 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 if task_type == TaskType.CONNECT_COMPONENTS:
                     # 2D Folders - preds components
                     pred_components_2d = pred_projections[f"{image_view}_components"]
-                    cv2.imwrite(os.path.join(output_folders["preds_components_2d"], f"{output_2d_format}.png"), pred_components_2d)
+                    save_filename = os.path.join(output_folders["preds_components_2d"], output_2d_format)
+                    convert_numpy_to_data_file(
+                        numpy_data=pred_components_2d,
+                        source_data_filepath="dumpy.png",
+                        save_filename=save_filename
+                    )
 
                     # 2D Folders - preds fixed components
                     pred_fixed_components_2d = pred_fixed_projections[f"{image_view}_components"]
-                    cv2.imwrite(os.path.join(output_folders["preds_fixed_components_2d"], f"{output_2d_format}.png"), pred_fixed_components_2d)
+                    save_filename = os.path.join(output_folders["preds_fixed_components_2d"], output_2d_format)
+                    convert_numpy_to_data_file(
+                        numpy_data=pred_fixed_components_2d,
+                        source_data_filepath="dumpy.png",
+                        save_filename=save_filename
+                    )
                 elif task_type == TaskType.PATCH_HOLES:
                     pass
                 else:
@@ -925,12 +954,22 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
 
                 # 2D Folders - evals
                 eval_2d = eval_projections[f"{image_view}_image"]
-                cv2.imwrite(os.path.join(output_folders["evals_2d"], f"{output_2d_format}.png"), eval_2d)
+                save_filename = os.path.join(output_folders["evals_2d"], output_2d_format)
+                convert_numpy_to_data_file(
+                    numpy_data=eval_2d,
+                    source_data_filepath="dumpy.png",
+                    save_filename=save_filename
+                )
 
                 if task_type == TaskType.CONNECT_COMPONENTS:
                     # 2D Folders - evals components
                     eval_components_2d = eval_projections[f"{image_view}_components"]
-                    cv2.imwrite(os.path.join(output_folders["evals_components_2d"], f"{output_2d_format}.png"), eval_components_2d)
+                    save_filename = os.path.join(output_folders["evals_components_2d"], output_2d_format)
+                    convert_numpy_to_data_file(
+                        numpy_data=eval_components_2d,
+                        source_data_filepath="dumpy.png",
+                        save_filename=save_filename
+                    )
                 elif task_type == TaskType.PATCH_HOLES:
                     pass
                 else:

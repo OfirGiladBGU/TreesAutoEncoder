@@ -276,7 +276,7 @@ def test_2d_to_3d_and_back(data_3d_filepath, cropped_data_path):
 
 def main():
     create_3d_reconstructions()
-    # create_3d_fusions()
+    create_3d_fusions()
 
     # TODO: DEBUG
     # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6", "PA000005_11899.nii.gz")

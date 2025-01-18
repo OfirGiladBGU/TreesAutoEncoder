@@ -2,9 +2,10 @@ import argparse
 import torch
 from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision import transforms
-import cv2
 import pathlib
 import pandas as pd
+
+from datasets.dataset_utils import convert_data_file_to_numpy, validate_data_paths
 
 
 V1_2D_DATASETS = ['Trees2DV1', 'Trees2DV1S']
@@ -50,8 +51,7 @@ class TreesCustomDatasetV1(Dataset):
 
         # current_count > 0:
         data_file1 = str(self.data_files1[idx])
-        numpy_2d_data1 = cv2.imread(data_file1)
-        numpy_2d_data1 = cv2.cvtColor(numpy_2d_data1, cv2.COLOR_BGR2GRAY)
+        numpy_2d_data1 = convert_data_file_to_numpy(data_filepath=data_file1)
 
         numpy_2d_data1 = self.to_tensor(numpy_2d_data1)
         if self.transform is not None:
@@ -60,8 +60,7 @@ class TreesCustomDatasetV1(Dataset):
 
         if current_count > 0:
             data_file2 = str(self.data_files2[idx])
-            numpy_2d_data2 = cv2.imread(data_file2)
-            numpy_2d_data2 = cv2.cvtColor(numpy_2d_data2, cv2.COLOR_BGR2GRAY)
+            numpy_2d_data2 = convert_data_file_to_numpy(data_filepath=data_file2)
 
             numpy_2d_data2 = self.to_tensor(numpy_2d_data2)
             if self.transform is not None:
@@ -124,8 +123,7 @@ class TreesCustomDatasetV2(Dataset):
 
             # current_count > 0:
             data_file1 = str(self.data_files1[data_idx + i])
-            numpy_2d_data1 = cv2.imread(data_file1)
-            numpy_2d_data1 = cv2.cvtColor(numpy_2d_data1, cv2.COLOR_BGR2GRAY)
+            numpy_2d_data1 =convert_data_file_to_numpy(data_filepath=data_file1)
 
             numpy_2d_data1 = self.to_tensor(numpy_2d_data1)
             if self.transform is not None:
@@ -136,8 +134,7 @@ class TreesCustomDatasetV2(Dataset):
 
             if current_count > 0:
                 data_file2 = str(self.data_files2[data_idx + i])
-                numpy_2d_data2 = cv2.imread(data_file2)
-                numpy_2d_data2 = cv2.cvtColor(numpy_2d_data2, cv2.COLOR_BGR2GRAY)
+                numpy_2d_data2 = convert_data_file_to_numpy(data_filepath=data_file2)
 
                 numpy_2d_data2 = self.to_tensor(numpy_2d_data2)
                 if self.transform is not None:
@@ -162,6 +159,7 @@ class TreesCustomDatasetV2(Dataset):
 
 class TreesCustomDataloader2D:
     def __init__(self, args: argparse.Namespace, data_paths, log_path=None, transform=None):
+        validate_data_paths(data_paths=data_paths)
         self.args = args
         self.data_paths = data_paths
         self.log_path = log_path

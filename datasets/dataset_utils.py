@@ -1,3 +1,4 @@
+import os
 import pathlib
 import numpy as np
 import torch
@@ -20,6 +21,16 @@ class TaskType(Enum):
     PATCH_HOLES = 2
 
 
+def validate_data_paths(data_paths: list[str]):
+    for data_path in data_paths:
+        if not pathlib.Path(data_path).exists():
+            raise ValueError(f"Invalid data path: {data_path}")
+        elif len(os.listdir(data_path)) == 0:
+            raise ValueError(f"Empty data path: {data_path}")
+        else:
+            pass
+
+
 # TODO: Support for relative stem from the dataset folder (to support sub folders)
 def get_data_file_stem(data_filepath) -> str:
     data_filepath = str(data_filepath)
@@ -34,6 +45,9 @@ def get_data_file_stem(data_filepath) -> str:
 
 def convert_data_file_to_numpy(data_filepath) -> np.ndarray:
     extension_map = {
+        # 2D
+        ".png": _convert_png_to_numpy,
+        # 3D
         ".nii.gz": _convert_nii_gz_to_numpy,
         ".ply": _convert_ply_to_numpy,
         ".obj": _convert_obj_to_numpy,
@@ -55,6 +69,9 @@ def convert_data_file_to_numpy(data_filepath) -> np.ndarray:
 
 def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, save_filename=None):
     extension_map = {
+        # 2D
+        ".png": _convert_numpy_to_png,
+        # 3D
         ".nii.gz": _convert_numpy_to_nii_gz,
         ".ply": _convert_numpy_to_ply,
         ".obj": _convert_numpy_to_obj,
@@ -76,6 +93,24 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
     else:
         raise ValueError("Invalid data format")
 
+
+#################################
+# png to numpy and numpy to png #
+#################################
+def _convert_png_to_numpy(data_filepath: str) -> np.ndarray:
+    numpy_2d_data = cv2.imread(data_filepath)
+    numpy_2d_data = cv2.cvtColor(numpy_2d_data, cv2.COLOR_BGR2GRAY)
+    return numpy_2d_data
+
+
+def _convert_numpy_to_png(numpy_2d_data: np.ndarray, source_data_filepath=None, save_filename=None):
+    if save_filename is not None and len(save_filename) > 0:
+        save_filename = str(save_filename)
+        if not save_filename.endswith(".png"):
+            save_filename = f"{save_filename}.png"
+        cv2.imwrite(save_filename, numpy_2d_data)  # Save to PNG
+
+    return numpy_2d_data
 
 #######################################
 # nii.gz to numpy and numpy to nii.gz #
@@ -661,7 +696,8 @@ def get_images_6_views(format_of_2d_images: str,
     data_list = list()
     for image_view in IMAGES_6_VIEWS:
         image_path = format_of_2d_images.replace("<VIEW>", image_view)
-        numpy_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        numpy_image = convert_data_file_to_numpy(data_filepath=image_path)
+        # numpy_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
         if convert_to_3d is True:
             data_3d = reverse_rotations(
                 numpy_image=numpy_image,

@@ -19,7 +19,7 @@ from models.model_list import init_model
 #########
 # Utils #
 #########
-def preprocess_2d(data_3d_filepath, data_2d_folder, apply_batch_merge: bool = False):
+def preprocess_2d(data_3d_filepath, data_2d_folder, apply_batch_merge: bool = False) -> torch.Tensor:
     data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
     data_2d_basename = f"{data_3d_basename}_<VIEW>"
 
@@ -215,24 +215,26 @@ def init_pipeline_models():
     filepath, ext = os.path.splitext(args.weights_filepath)
 
     # Load 2D model
-    args.input_size = args.input_size_model_2d
-    args.model = args.model_2d
-    model_2d = init_model(args=args)
-    model_2d_weights_filepath = f"{filepath}_{model_2d.model_name}{ext}"
-    model_2d.load_state_dict(torch.load(model_2d_weights_filepath))
-    model_2d.eval()
-    model_2d.to(args.device)
-    args.model_2d_class = model_2d
+    if len(args.model_2d) > 0:
+        args.input_size = args.input_size_model_2d
+        args.model = args.model_2d
+        model_2d = init_model(args=args)
+        model_2d_weights_filepath = f"{filepath}_{model_2d.model_name}{ext}"
+        model_2d.load_state_dict(torch.load(model_2d_weights_filepath))
+        model_2d.eval()
+        model_2d.to(args.device)
+        args.model_2d_class = model_2d
 
     # Load 3D model
-    args.input_size = args.input_size_model_3d
-    args.model = args.model_3d
-    model_3d = init_model(args=args)
-    model_3d_weights_filepath = f"{filepath}_{model_3d.model_name}{ext}"
-    model_3d.load_state_dict(torch.load(model_3d_weights_filepath))
-    model_3d.eval()
-    model_3d.to(args.device)
-    args.model_3d_class = model_3d
+    if len(args.model_3d) > 0:
+        args.input_size = args.input_size_model_3d
+        args.model = args.model_3d
+        model_3d = init_model(args=args)
+        model_3d_weights_filepath = f"{filepath}_{model_3d.model_name}{ext}"
+        model_3d.load_state_dict(torch.load(model_3d_weights_filepath))
+        model_3d.eval()
+        model_3d.to(args.device)
+        args.model_3d_class = model_3d
 
 
 def single_predict(data_3d_filepath, data_2d_folder):
@@ -257,13 +259,15 @@ def single_predict(data_3d_filepath, data_2d_folder):
         )
 
         # Predict 2D
-        data_2d_output = args.model_2d_class(data_2d_input)
+        if len(args.model_2d) > 0:
+            data_2d_output = args.model_2d_class(data_2d_input)
+        else:
+            data_2d_output = data_2d_input.clone()
 
         # Parse 2D model output
         if "confidence map" in getattr(args.model_2d_class, "additional_tasks", list()):
             data_2d_output, data_2d_output_confidence = data_2d_output
             data_2d_output = torch.where(data_2d_output_confidence > 0.5, data_2d_output, 0)
-
 
         (data_2d_input, data_2d_output) = postprocess_2d(
             data_2d_input=data_2d_input,
@@ -285,7 +289,10 @@ def single_predict(data_3d_filepath, data_2d_folder):
         )
 
         # Predict 3D
-        data_3d_output = args.model_3d_class(data_3d_input)
+        if len(args.model_3d) > 0:
+            data_3d_output = args.model_3d_class(data_3d_input)
+        else:
+            data_3d_output = data_3d_input.clone()
 
         (data_3d_input, data_3d_output) = postprocess_3d(
             data_3d_input=data_3d_input,
@@ -428,10 +435,12 @@ def main():
     # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
     # 7. Perform cleanup on the final result (delete small connected components)
 
-    # init_pipeline_models()
+    init_pipeline_models()
 
+    # TODO: Requires Model Init
     # test_single_predict()
     full_predict()
+
     # calculate_dice_scores()
     full_merge()
 
@@ -471,11 +480,11 @@ if __name__ == "__main__":
                         help='random seed (default: 1)')
     parser.add_argument('--weights-filepath', type=str, default='./weights/Network.pth', metavar='N',
                         help='Which dataset to use')
-    parser.add_argument('--model-2d', type=str, default='ae_2d_to_2d', metavar='N',
+    parser.add_argument('--model-2d', type=str, default="", metavar='N',
                         help='Which 2D model to use')
     parser.add_argument('--input-size-model-2d', type=tuple, default=(1, 32, 32), metavar='N',
                         help='Which input size the 2D model should to use')
-    parser.add_argument('--model-3d', type=str, default='ae_3d_to_3d', metavar='N',
+    parser.add_argument('--model-3d', type=str, default="", metavar='N',
                         help='Which 3D model to use')
     parser.add_argument('--input-size-model-3d', type=tuple, default=(1, 32, 32, 32), metavar='N',
                         help='Which input size the 3D model should to use')
