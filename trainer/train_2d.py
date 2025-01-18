@@ -98,11 +98,25 @@ class Trainer(object):
             # LOSS += loss_functions.bce_dice_loss(out=output_data, target=target_data)
 
             # Test 3
-            holes_mask = ((target_data - input_data) > 0)  # area that should be filled
-            black_mask = (target_data == 0)  # area that should stay black
+            # holes_mask = ((target_data - input_data) > 0)  # area that should be filled
+            # black_mask = (target_data == 0)  # area that should stay black
+            #
+            # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+            #         0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
 
-            LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
-                    0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
+            # Test 4
+            keep_mask1 = (input_data > 0).float()  # Area that should stay unchanged
+            black_mask1 = (target_data == 0).float()  # Area that should stay black
+            fill_mask1 = ((target_data > 0) & (input_data == 0)).float()  # Area that should be filled
+            weighted_mask1 = 80.0 * fill_mask1 + 15.0 * keep_mask1 + 5.0 * black_mask1
+
+            output_data_1 = output_data * weighted_mask1
+            target_data_1 = target_data * weighted_mask1
+
+            # Normalize by the number of pixels in the mask
+            LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
+            LOSS += loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
+            LOSS += loss_functions.bce_dice_loss(out=output_data, target=target_data)
 
         elif self.args.dataset == 'CIFAR10':
             LOSS = loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
@@ -653,6 +667,11 @@ class Trainer(object):
                         {"Title": "Merged", "Data": merged_data}
                     ]
                     plotting_data_list += additional_plotting_data_list
+
+                apply_cleanup = True
+                if apply_cleanup is True:
+                    # TODO: Remove noise created by the model that doesn't connect components (add to predict pipleine if works)
+                    pass
 
                 # Create a grid of images
                 columns = len(plotting_data_list)
