@@ -261,13 +261,13 @@ def single_predict(data_3d_filepath, data_2d_folder):
         # Predict 2D
         if len(args.model_2d) > 0:
             data_2d_output = args.model_2d_class(data_2d_input)
+
+            # Parse 2D model output
+            if "confidence map" in getattr(args.model_2d_class, "additional_tasks", list()):
+                data_2d_output, data_2d_output_confidence = data_2d_output
+                data_2d_output = torch.where(data_2d_output_confidence > 0.5, data_2d_output, 0)
         else:
             data_2d_output = data_2d_input.clone()
-
-        # Parse 2D model output
-        if "confidence map" in getattr(args.model_2d_class, "additional_tasks", list()):
-            data_2d_output, data_2d_output_confidence = data_2d_output
-            data_2d_output = torch.where(data_2d_output_confidence > 0.5, data_2d_output, 0)
 
         (data_2d_input, data_2d_output) = postprocess_2d(
             data_2d_input=data_2d_input,
