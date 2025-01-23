@@ -98,19 +98,19 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
 # png to numpy and numpy to png #
 #################################
 def _convert_png_to_numpy(data_filepath: str) -> np.ndarray:
-    numpy_2d_data = cv2.imread(data_filepath)
-    numpy_2d_data = cv2.cvtColor(numpy_2d_data, cv2.COLOR_BGR2GRAY)
-    return numpy_2d_data
+    numpy_data = cv2.imread(data_filepath)
+    numpy_data = cv2.cvtColor(numpy_data, cv2.COLOR_BGR2GRAY)
+    return numpy_data
 
 
-def _convert_numpy_to_png(numpy_2d_data: np.ndarray, source_data_filepath=None, save_filename=None):
+def _convert_numpy_to_png(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None):
     if save_filename is not None and len(save_filename) > 0:
         save_filename = str(save_filename)
         if not save_filename.endswith(".png"):
             save_filename = f"{save_filename}.png"
-        cv2.imwrite(save_filename, numpy_2d_data)  # Save to PNG
+        cv2.imwrite(save_filename, numpy_data)  # Save to PNG
 
-    return numpy_2d_data
+    return numpy_data
 
 #######################################
 # nii.gz to numpy and numpy to nii.gz #
@@ -248,6 +248,7 @@ def _convert_obj_to_numpy(data_filepath) -> np.ndarray:
     voxel_size = 2.0  # Define voxel size (the size of each grid cell)
 
     mesh = trimesh.load(data_filepath)
+    mesh = mesh.apply_scale(0.5)
     voxelized = mesh.voxelized(pitch=voxel_size)  # Pitch = voxel size
 
     numpy_data = voxelized.matrix.astype(np.uint8)
