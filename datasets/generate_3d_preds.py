@@ -4,6 +4,7 @@ from tqdm import tqdm
 import numpy as np
 import random
 from scipy.ndimage import convolve
+from scipy.ndimage import label
 
 from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file
 from datasets.dataset_list import DATA_PATH
@@ -146,6 +147,54 @@ def generate_plane_holes(numpy_data: np.ndarray):
             numpy_data[:, :, z] = 0  # Set all points on the plane parallel to XY to black
 
 
+def generate_box_holes(numpy_data: np.ndarray):
+    """
+    Generate random box-shaped holes in the data to disconnect some pipe parts entirely.
+
+    Args:
+        numpy_data (np.ndarray): 3D numpy array representing the pipe structure, where values > 0.5 indicate pipe presence.
+    """
+    num_of_centers = 5
+    white_points = np.argwhere(numpy_data > 0.5)  # Identify pipe parts
+
+    if len(white_points) > 0:
+        for _ in range(num_of_centers):
+            disconnected = False
+
+            while not disconnected:
+                # Randomly select one of the non-zero points
+                random_point = random.choice(white_points)
+                x, y, z = random_point
+
+                # Randomly select box size to ensure meaningful disconnection
+                size_x = random.randint(5, 6)  # Size along X-axis
+                size_y = random.randint(5, 6)  # Size along Y-axis
+                size_z = random.randint(5, 6)  # Size along Z-axis
+
+                # Define box boundaries, ensuring they stay within array bounds
+                x_min = max(0, x - size_x // 2)
+                x_max = min(numpy_data.shape[0], x + size_x // 2 + 1)
+                y_min = max(0, y - size_y // 2)
+                y_max = min(numpy_data.shape[1], y + size_y // 2 + 1)
+                z_min = max(0, z - size_z // 2)
+                z_max = min(numpy_data.shape[2], z + size_z // 2 + 1)
+
+                # Create a copy of the data to test the disconnection
+                test_data = numpy_data.copy()
+                test_data[x_min:x_max, y_min:y_max, z_min:z_max] = 0.0
+
+                # Check if the number of connected components increases
+                labeled, num_components = label(test_data > 0.5)
+                original_components = label(numpy_data > 0.5)[1]
+
+                if num_components > original_components:
+                    # Apply the disconnection if it creates new components
+                    numpy_data[x_min:x_max, y_min:y_max, z_min:z_max] = 0.0
+                    disconnected = True
+
+    return numpy_data
+
+
 # Create new 'preds' folder with holes in numpy data
 def convert_labels_data_to_preds_data(save_as_npy: bool = False):
     """
@@ -168,7 +217,8 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
         # Generate holes:
         # TODO: implement (Use different method)
         # generate_circular_holes(numpy_data=numpy_data)
-        generate_plane_holes(numpy_data=numpy_data)
+        # generate_plane_holes(numpy_data=numpy_data)
+        numpy_data = generate_box_holes(numpy_data=numpy_data)
 
         # Save data:
         save_filename = os.path.join(output_folder, data_filepath.stem)
