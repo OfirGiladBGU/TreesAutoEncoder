@@ -319,9 +319,13 @@ def main():
     # data_3d_filepath = os.path.join(RESULTS_PATH, "predict_pipeline", "output_3d", "PA000005_05352_input.nii.gz")
     # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6", "PA000005_05352.nii.gz")
     # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6", "PA000005_05352.nii.gz")
-    data_3d_filepath = os.path.join(DATA_PATH, "Pipes3DGenerator", "labels", "01.npy")
+    # data_3d_filepath = os.path.join(DATA_PATH, "Pipes3DGeneratorTree", "labels", "01.npy")
 
-    single_plot_3d(data_3d_filepath=data_3d_filepath, interactive_mode=True, interactive_version=1)
+    # Example 3D data
+    data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6", "PA000078_11978.nii.gz")
+    # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6", "PA000078_11978.nii.gz")
+    # data_3d_filepath = r"C:\Users\ofirg\PycharmProjects\TreesAutoEncoder\results\PA000078_11978_output.nii.gz"
+    single_plot_3d(data_3d_filepath=data_3d_filepath, interactive_mode=False, interactive_version=1)
 
 
     # Multiple Tests #
