@@ -10,7 +10,7 @@ import wandb
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
 
-from datasets.dataset_utils import apply_threshold, IMAGES_6_VIEWS
+from datasets.dataset_utils import apply_threshold, IMAGES_6_VIEWS, convert_numpy_to_data_file
 from datasets.custom_datasets_3d import V1_3D_DATASETS, V2_3D_DATASETS
 from trainer import loss_functions
 from trainer import train_utils
@@ -40,15 +40,34 @@ class Trainer(object):
         :param input_data: the original input data for the model
         :return:
         """
-
+        # Test 1
         # LOSS = F.mse_loss(out, target, reduction='sum')
         # LOSS = loss_functions.bce_dice_loss(out, target)
         # LOSS = loss_functions.weighted_bce_dice_loss(output_data, target_data)
 
-        holes_mask = ((target_data - input_data) > 0)  # area that should be filled
-        black_mask = (target_data == 0)  # area that should stay black
-        LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
-                0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
+        # Test 2
+        # holes_mask = ((target_data - input_data) > 0)  # area that should be filled
+        # black_mask = (target_data == 0)  # area that should stay black
+        # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+        #         0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
+
+        # Test 3
+        # keep_mask1 = (input_data > 0).float()  # Area that should stay unchanged
+        # black_mask1 = (target_data == 0).float()  # Area that should stay black
+        # fill_mask1 = ((target_data > 0) & (input_data == 0)).float()  # Area that should be filled
+        #
+        # weighted_mask1 = 0.8 * fill_mask1 + 0.15 * keep_mask1 + 0.05 * black_mask1
+
+        # abs_diff1 = torch.abs(output_data - target_data)
+        # masked_abs_diff1 = abs_diff1 * fill_mask1
+        # diff2 = torch.abs(output_data) * black_mask1 + torch.abs(output_data) * keep_mask1
+
+        # output_data_1 = output_data * weighted_mask1
+        # target_data_1 = target_data * weighted_mask1
+
+        # Normalize by the number of pixels in the mask
+        # LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
+        LOSS = loss_functions.bce_dice_loss(out=output_data, target=target_data)
 
         return LOSS
 
@@ -152,15 +171,19 @@ class Trainer(object):
                 output_data = self.model(input_data)
 
                 # TODO: Threshold
-                apply_threshold(tensor=output_data, threshold=0.1)
+                threshold_data = output_data.clone()
+                apply_threshold(tensor=threshold_data, threshold=0.1)
 
-                fusion_data = input_data + torch.where(input_data == 0, output_data, 0)
+                occluded_data = ((threshold_data - input_data) > 0.5).float()
+                fusion_data = torch.where(input_data > 0, input_data, threshold_data)
 
                 # Detach the images from the cuda and move them to CPU
                 if self.args.cuda:
                     input_data = input_data.cpu()
                     target_data = target_data.cpu()
                     output_data = output_data.cpu()
+                    threshold_data = threshold_data.cpu()
+                    occluded_data = occluded_data.cpu()
                     fusion_data = fusion_data.cpu()
 
                 #################
@@ -180,11 +203,12 @@ class Trainer(object):
                     target_data_idx = target_data[idx].squeeze().numpy()
                     save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_target")
                     save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_target")
-                    np.save(file=save_filename_3d, arr=target_data_idx)
-                    # convert_numpy_to_nii_gz(
-                    #     numpy_data=target_data_idx,
-                    #     save_filename=save_filename_3d
-                    # )
+                    # np.save(file=save_filename_3d, arr=target_data_idx)
+                    convert_numpy_to_data_file(
+                        numpy_data=target_data_idx,
+                        source_data_filepath="dummy.npy",
+                        save_filename=save_filename_3d
+                    )
                     train_utils.data_3d_to_2d_plot(data_3d=target_data_idx, save_filename=save_filename_2d)
                     images_info_idx["target"] = save_filename_2d
 
@@ -192,23 +216,51 @@ class Trainer(object):
                     output_data_idx = output_data[idx].squeeze().numpy()
                     save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_output")
                     save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_output")
-                    np.save(file=save_filename_3d, arr=output_data_idx)
-                    # convert_numpy_to_nii_gz(
-                    #     numpy_data=output_data_idx,
-                    #     save_filename=save_filename_3d
-                    # )
+                    # np.save(file=save_filename_3d, arr=output_data_idx)
+                    convert_numpy_to_data_file(
+                        numpy_data=output_data_idx,
+                        source_data_filepath="dummy.npy",
+                        save_filename=save_filename_3d
+                    )
                     train_utils.data_3d_to_2d_plot(data_3d=output_data_idx, save_filename=save_filename_2d)
                     images_info_idx["output"] = save_filename_2d
+
+                    # Threshold
+                    threshold_data_idx = threshold_data[idx].squeeze().numpy()
+                    save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_threshold")
+                    save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_threshold")
+                    # np.save(file=save_filename_3d, arr=threshold_data_idx)
+                    convert_numpy_to_data_file(
+                        numpy_data=threshold_data_idx,
+                        source_data_filepath="dummy.npy",
+                        save_filename=save_filename_3d
+                    )
+                    train_utils.data_3d_to_2d_plot(data_3d=threshold_data_idx, save_filename=save_filename_2d)
+                    images_info_idx["threshold"] = save_filename_2d
+
+                    # Occluded
+                    occluded_data_idx = occluded_data[idx].squeeze().numpy()
+                    save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_occluded")
+                    save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_occluded")
+                    # np.save(file=save_filename_3d, arr=occluded_data_idx)
+                    convert_numpy_to_data_file(
+                        numpy_data=occluded_data_idx,
+                        source_data_filepath="dummy.npy",
+                        save_filename=save_filename_3d
+                    )
+                    train_utils.data_3d_to_2d_plot(data_3d=occluded_data_idx, save_filename=save_filename_2d)
+                    images_info_idx["occluded"] = save_filename_2d
 
                     # Fusion
                     fusion_data_idx = fusion_data[idx].squeeze().numpy()
                     save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_fusion")
                     save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_fusion")
-                    np.save(file=save_filename_3d, arr=fusion_data_idx)
-                    # convert_numpy_to_nii_gz(
-                    #     numpy_data=fusion_data_idx,
-                    #     save_filename=save_filename_3d
-                    # )
+                    # np.save(file=save_filename_3d, arr=fusion_data_idx)
+                    convert_numpy_to_data_file(
+                        numpy_data=fusion_data_idx,
+                        source_data_filepath="dummy.npy",
+                        save_filename=save_filename_3d
+                    )
                     train_utils.data_3d_to_2d_plot(data_3d=fusion_data_idx, save_filename=save_filename_2d)
                     images_info_idx["fusion"] = save_filename_2d
 
@@ -232,11 +284,12 @@ class Trainer(object):
 
                     elif self.args.dataset in V2_3D_DATASETS:
                         input_data_idx = input_data[idx].squeeze().numpy()
-                        np.save(file=save_filename_3d, arr=input_data_idx)
-                        # convert_numpy_to_nii_gz(
-                        #     numpy_data=input_data_idx,
-                        #     save_filename=save_filename_3d
-                        # )
+                        # np.save(file=save_filename_3d, arr=input_data_idx)
+                        convert_numpy_to_data_file(
+                            numpy_data=input_data_idx,
+                            source_data_filepath="dummy.npy",
+                            save_filename=save_filename_3d
+                        )
                         train_utils.data_3d_to_2d_plot(data_3d=input_data_idx, save_filename=save_filename_2d)
 
                     else:
@@ -248,7 +301,7 @@ class Trainer(object):
                 # Create a grid of images
                 img_width = 0
                 img_height = 0
-                image_types = ["input", "target", "output", "fusion"]
+                image_types = ["input", "target", "output", "threshold", "occluded", "fusion"]
                 for image_type in image_types:
                     image_sample = Image.open(fp=f"{images_info[0][image_type]}.png")
                     img_width = max(img_width, image_sample.size[0])
@@ -314,6 +367,16 @@ class Trainer(object):
                     j += 1
                     output_image = Image.open(fp=f"{images_info[i]['output']}.png")
                     grid_img.paste(output_image, (j * img_width, header_height + i * img_height))
+
+                    # Load Threshold image and paste into grid
+                    j += 1
+                    threshold_image = Image.open(fp=f"{images_info[i]['threshold']}.png")
+                    grid_img.paste(threshold_image, (j * img_width, header_height + i * img_height))
+
+                    # Load Occluded image and paste into grid
+                    j += 1
+                    occluded_image = Image.open(fp=f"{images_info[i]['occluded']}.png")
+                    grid_img.paste(occluded_image, (j * img_width, header_height + i * img_height))
 
                     # Load Fusion image and paste into grid
                     j += 1
