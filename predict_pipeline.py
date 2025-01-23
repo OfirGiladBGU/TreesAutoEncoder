@@ -8,13 +8,14 @@ import matplotlib.pyplot as plt
 import pathlib
 from tqdm import tqdm
 import pandas as pd
-from scipy.ndimage import convolve
+from scipy.ndimage import convolve, label
+from typing import Tuple
 
 from datasets.dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                                     reverse_rotations, apply_threshold, IMAGES_6_VIEWS)
 from datasets.dataset_list import DATASET_PATH, TRAIN_CROPPED_PATH, PREDICT_PIPELINE_RESULTS_PATH, MERGE_PIPELINE_RESULTS_PATH
 from models.model_list import init_model
-
+from datasets.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
 #########
 # Utils #
@@ -114,25 +115,70 @@ def debug_2d(data_3d_filepath, data_2d_input: torch.Tensor, data_2d_output: torc
     plt.close(fig)
 
 
-def noise_filter(data_3d_input: np.ndarray):
-    # Define a 3x3x3 kernel that will be used to check 6 neighbors (left, right, up, down, front, back)
-    kernel = np.zeros((3, 3, 3), dtype=int)
+def noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
+    # V1
 
-    # Set only the 6-connectivity neighbors in the kernel
-    kernel[1, 0, 1] = 1  # Left
-    kernel[1, 2, 1] = 1  # Right
-    kernel[0, 1, 1] = 1  # Up
-    kernel[2, 1, 1] = 1  # Down
-    kernel[1, 1, 0] = 1  # Front
-    kernel[1, 1, 2] = 1  # Back
+    # # Define a 3x3x3 kernel that will be used to check 6 neighbors (left, right, up, down, front, back)
+    # kernel = np.zeros((3, 3, 3), dtype=int)
+    #
+    # # Set only the 6-connectivity neighbors in the kernel
+    # kernel[1, 0, 1] = 1  # Left
+    # kernel[1, 2, 1] = 1  # Right
+    # kernel[0, 1, 1] = 1  # Up
+    # kernel[2, 1, 1] = 1  # Down
+    # kernel[1, 1, 0] = 1  # Front
+    # kernel[1, 1, 2] = 1  # Back
+    #
+    # # Convolve the binary array with the kernel to count neighbors
+    # neighbors_count = convolve(data_3d_input, kernel, mode='constant', cval=0)
+    #
+    # # Filter out voxels that have no neighboring voxels (i.e., neighbors_count == 0)
+    # filtered_data_3d_input = np.where((data_3d_input == 1) & (neighbors_count > 0), 1, 0)
+    #
+    # return filtered_data_3d_input
 
-    # Convolve the binary array with the kernel to count neighbors
-    neighbors_count = convolve(data_3d_input, kernel, mode='constant', cval=0)
+    def connected_components_3d(data_3d: np.ndarray) -> Tuple[np.ndarray, int]:
+        # structure = np.ones((3, 3, 3), dtype=np.int8)  # 26-connectivity
+        # 6-connectivity
+        structure = np.zeros((3, 3, 3), dtype=np.int8)
+        active_points = [
+            (0, 1, 1), (2, 1, 1),  # Points along the X-axis
+            (1, 0, 1), (1, 2, 1),  # Points along the Y-axis
+            (1, 1, 0), (1, 1, 2),  # Points along the Z-axis
+            (1, 1, 1)  # Center point
+        ]
+        for x, y, z in active_points:
+            structure[x, y, z] = 1
 
-    # Filter out voxels that have no neighboring voxels (i.e., neighbors_count == 0)
-    filtered_data_3d_input = np.where((data_3d_input == 1) & (neighbors_count > 0), 1, 0)
+        labeled_array, num_features = label(data_3d, structure=structure)
+        return labeled_array, num_features
 
-    return filtered_data_3d_input
+    # V2
+    filtered_data_3d = data_3d_original.copy().astype(np.uint8)
+    data_delta = (data_3d_input - data_3d_original > 0.5).astype(np.uint8)
+
+    # Identify connected components in binary_delta
+    labeled_delta, num_delta_components = connected_components_3d(data_delta)
+
+    # Iterate through connected components in binary_delta
+    for component_label in range(1, num_delta_components + 1):
+        # Create a mask for the current connected component
+        component_mask = np.equal(labeled_delta, component_label).astype(np.uint8)
+
+        # Check the number of connected components before adding the mask
+        original_components = connected_components_3d(filtered_data_3d)[1]
+
+        # Create a temporary data with the component added
+        temp_fixed = np.logical_or(filtered_data_3d, component_mask)
+        new_components = connected_components_3d(temp_fixed)[1]
+
+        # Add the component only if it does decrease the number of connected components
+        if new_components < original_components:
+            filtered_data_3d = temp_fixed
+
+    filtered_data_3d = filtered_data_3d.astype(np.float32)
+    return filtered_data_3d
+
 
 
 def preprocess_3d(data_3d_filepath,
@@ -163,7 +209,7 @@ def preprocess_3d(data_3d_filepath,
         data_3d_input = data_3d_reconstruct
 
     if apply_noise_filter is True:
-        data_3d_input = noise_filter(data_3d_input=data_3d_input)
+        data_3d_input = noise_filter(data_3d_original=pred_3d, data_3d_input=data_3d_input)
 
     data_3d_input = torch.Tensor(data_3d_input).unsqueeze(0).unsqueeze(0)
     return data_3d_input
@@ -307,7 +353,8 @@ def single_predict(data_3d_filepath, data_2d_folder):
 
 
 def test_single_predict():
-    data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6", "PA000005_11899.nii.gz")
+    # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6", "PA000005_11899.nii.gz")
+    data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6", "PA000078_11978.nii.gz")
     data_2d_folder = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
     single_predict(
         data_3d_filepath=data_3d_filepath,
@@ -438,11 +485,12 @@ def main():
     init_pipeline_models()
 
     # TODO: Requires Model Init
-    # test_single_predict()
-    full_predict()
+    test_single_predict()
+
+    # full_predict()
+    # full_merge()
 
     # calculate_dice_scores()
-    full_merge()
 
 
 if __name__ == "__main__":
@@ -503,7 +551,8 @@ if __name__ == "__main__":
     args.model_2d = "ae_2d_to_2d"
     args.input_size_model_2d = (1, 32, 32)
 
-    args.model_3d = "ae_3d_to_3d"
+    # args.model_3d = "ae_3d_to_3d"
+    args.model_3d = ""
     args.input_size_model_3d = (1, 32, 32, 32)
 
     main()
