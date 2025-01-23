@@ -1019,7 +1019,10 @@ def main():
     # create_data_components(data_options=data_options)
 
     task_type = TaskType.CONNECT_COMPONENTS
+
+    # TODO: for this mode add classifier model to find cubes with holes - model 2D to 1D
     # task_type = TaskType.PATCH_HOLES
+
     create_2d_projections_and_3d_cubes_for_training(task_type=task_type)
     # create_2d_projections_and_3d_cubes_for_evaluation(task_type=task_type)
 
