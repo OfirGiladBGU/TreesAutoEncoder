@@ -17,12 +17,12 @@ from datasets.dataset_list import (DATA_PATH, TRAIN_CROPPED_PATH, VISUALIZATION_
 ####################
 
 # Interactive Plot 3D
-def interactive_plot_3d(data_3d: np.ndarray, version: int = 1, set_aspect_ratios: bool = False):
+def interactive_plot_3d(data_3d: np.ndarray, version: int = 1, **kwargs):
     """
     Interactive 3D plot using Plotly or Matplotlib
     :param data_3d:
     :param version:
-    :param set_aspect_ratios:
+    :param kwargs: set_aspect_ratios, downsample_factor
     :return:
     """
     if version == 1:
@@ -58,7 +58,7 @@ def interactive_plot_3d(data_3d: np.ndarray, version: int = 1, set_aspect_ratios
 
     elif version == 2:
         # Downsample the images
-        downsample_factor = 1
+        downsample_factor = kwargs.get('downsample_factor', 1)
         data_downsampled = data_3d[::downsample_factor, ::downsample_factor, ::downsample_factor]
 
         # Get the indices of non-zero values in the downsampled array
@@ -85,7 +85,7 @@ def interactive_plot_3d(data_3d: np.ndarray, version: int = 1, set_aspect_ratios
                 nonzero_indices[1],
                 nonzero_indices[2]
             ]
-            color_value = color.label2rgb(color_value)
+            color_value = color.label2rgb(label=color_value)
             ax.bar3d(*array_value, 1, 1, 1, color=color_value)
         else:
             ax.bar3d(*array_value, 1, 1, 1, color='b')
@@ -98,7 +98,8 @@ def interactive_plot_3d(data_3d: np.ndarray, version: int = 1, set_aspect_ratios
         ax.set_zlabel('Z')
 
         # Set aspect ratios
-        if set_aspect_ratios:
+        set_aspect_ratios = kwargs.get('set_aspect_ratios', False)
+        if set_aspect_ratios is True:
             aspect_ratios = np.array(
                 [data_3d.shape[0], data_3d.shape[1], data_3d.shape[2]])  # Use the actual shape of the volume
             ax.set_box_aspect(aspect_ratios)
@@ -147,7 +148,7 @@ def matplotlib_plot_3d(data_3d: np.ndarray, save_filename, set_aspect_ratios=Fal
                 nonzero_indices[1],
                 nonzero_indices[2]
             ]
-            color_value = color.label2rgb(color_value)
+            color_value = color.label2rgb(label=color_value)
             ax.bar3d(*array_value, 1, 1, 1, color=color_value)
         else:
             ax.bar3d(*array_value, 1, 1, 1, color='b')
@@ -290,13 +291,22 @@ def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
 ####################
 
 # Interactive Plot 2D
-def interactive_plot_2d(data_2d: np.ndarray):
+def interactive_plot_2d(data_2d: np.ndarray, apply_label2rgb: bool = False):
     """
     Interactive 2D plot using Matplotlib
     :param data_2d:
+    :param apply_label2rgb:
     :return:
     """
-    plt.imshow(data_2d, cmap='gray')
+    if apply_label2rgb:
+        colored_data = color.label2rgb(label=data_2d)
+    else:
+        colored_data = data_2d
+
+    if colored_data.shape == 3:
+        plt.imshow(colored_data)
+    else:
+        plt.imshow(colored_data, cmap='gray')
     plt.show()
 
 
