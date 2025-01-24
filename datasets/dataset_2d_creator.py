@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import pathlib
+import math
 
 from typing import Tuple, List
 from tqdm import tqdm
@@ -8,7 +9,7 @@ import pandas as pd
 from scipy.ndimage import label
 from skimage import color
 
-from dataset_list import DATASET_PATH, TRAIN_CROPPED_PATH, EVAL_CROPPED_PATH
+from dataset_list import DATASET_PATH, TRAIN_CROPPED_PATH, EVAL_CROPPED_PATH, DATA_3D_STRIDE, DATA_3D_SIZE
 from dataset_utils import (IMAGES_6_VIEWS, TaskType,
                            get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                            save_nii_gz_in_identity_affine, project_3d_to_2d)
@@ -401,10 +402,10 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
     log_data = dict()
 
     # Config
-    cube_dim = (32, 32, 32)  # TODO: TEST: (48, 48, 48)
-    stride_dim = (16, 16, 16)
-    white_points_upper_threshold = cube_dim[0] * cube_dim[0] * 0.9  # TODO: Support dynamic calculation
-    white_points_lower_threshold = cube_dim[0] * cube_dim[0] * 0.1  # TODO: Support dynamic calculation
+    stride_dim = DATA_3D_STRIDE
+    cube_dim = DATA_3D_SIZE
+    white_points_upper_threshold = math.pow(cube_dim[0], 2) * 0.9  # TODO: Support dynamic calculation
+    white_points_lower_threshold = math.pow(cube_dim[0], 2) * 0.1  # TODO: Support dynamic calculation
 
     # Create Output Folders
     for output_folder in output_folders.values():
@@ -1016,7 +1017,7 @@ def main():
     # create_dataset_depth_2d_projections(data_options=data_options)
 
     # TODO: Required for: TaskType.CONNECT_COMPONENTS
-    # create_data_components(data_options=data_options)
+    create_data_components(data_options=data_options)
 
     task_type = TaskType.CONNECT_COMPONENTS
 

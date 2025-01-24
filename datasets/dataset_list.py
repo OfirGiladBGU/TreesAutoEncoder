@@ -10,8 +10,17 @@ from datasets.custom_datasets_3d import TreesCustomDataloader3D
 
 
 # Configurations
-DATA_2D_SIZE = (32, 32)
-DATA_3D_SIZE = (32, 32, 32)
+# DATA_CROP_STRIDE = 16
+# DATA_CROP_SIZE = 32
+
+# TODO: TEST: 48
+DATA_CROP_STRIDE = 24
+DATA_CROP_SIZE = 48
+
+# Setups
+DATA_3D_STRIDE = (DATA_CROP_SIZE, DATA_CROP_SIZE)
+DATA_3D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE, DATA_CROP_SIZE)
+DATA_2D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE)
 
 # Define dataset folder
 DATASET_FOLDER = "parse2022" # TODO: Read from config file
