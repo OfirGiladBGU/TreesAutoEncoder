@@ -311,8 +311,7 @@ def matplotlib_plot_2d(save_filepath, data_2d_list):
     for j in range(columns):
         ax.append(fig.add_subplot(rows, columns, 0 * columns + j + 1))
         numpy_image = data_2d_list[j]
-        numpy_image = numpy_image
-        plt.imshow(numpy_image, cmap='gray')
+        plt.imshow(numpy_image)
         ax[j].set_title(f"View {IMAGES_6_VIEWS[j]}:")
 
     fig.tight_layout()
@@ -332,12 +331,18 @@ def single_plot_2d(data_2d_filepath, interactive_mode: bool = False):
         interactive_plot_2d(data_2d=numpy_2d_data)
 
 
-def full_plot_2d(data_3d_basename: str):
+def full_plot_2d(data_3d_basename: str, plot_components: bool = False):
     folder_paths = {
         "labels_2d": os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6"),
         "preds_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_2d_v6"),
-        "preds_fixed_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
+        "preds_fixed_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6"),
     }
+
+    if plot_components is True:
+        folder_paths.update({
+            "preds_components_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_components_2d_v6"),
+            "preds_fixed_components_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_components_2d_v6")
+        })
 
     for key, value in folder_paths.items():
         format_of_2d_images = os.path.join(value, f"{data_3d_basename}_<VIEW>.png")
@@ -345,7 +350,7 @@ def full_plot_2d(data_3d_basename: str):
         data_2d_list = list()
         for image_view in IMAGES_6_VIEWS:
             image_path = format_of_2d_images.replace("<VIEW>", image_view)
-            image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+            image = cv2.imread(image_path)
             data_2d_list.append(image)
 
         save_path = os.path.join(VISUALIZATION_RESULTS_PATH, key)
@@ -374,10 +379,11 @@ def main():
     # data_3d_basename = "PA000005_11899"
     # data_3d_basename = "PA000005_09039"
     # data_3d_basename = "PA000005_10017"
+    # data_3d_basename = "PA000078_2020"
 
     # full_plot_3d(data_3d_basename=data_3d_basename)
     # full_plot_3d(data_3d_basename=data_3d_basename, include_pipeline_results=True)
-    # full_plot_2d(data_3d_basename=data_3d_basename)
+    # full_plot_2d(data_3d_basename=data_3d_basename, plot_components=False)
 
 
 if __name__ == "__main__":
