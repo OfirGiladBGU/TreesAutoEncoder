@@ -836,8 +836,8 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
     log_data = dict()
 
     # Config
-    cube_dim = (32, 32, 32)  # TODO: TEST: (48, 48, 48)
-    stride_dim = (16, 16, 16)
+    cube_dim = DATA_3D_SIZE
+    stride_dim = DATA_3D_STRIDE
     white_points_upper_threshold = cube_dim[0] * cube_dim[0] * 0.9  # TODO: Support dynamic calculation
     white_points_lower_threshold = cube_dim[0] * cube_dim[0] * 0.1  # TODO: Support dynamic calculation
 
