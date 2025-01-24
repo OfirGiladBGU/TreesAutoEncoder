@@ -5,6 +5,7 @@ import itertools
 import cv2
 from PIL import Image, ImageDraw, ImageFont
 import plotly.graph_objects as go
+from skimage import color
 
 from datasets.dataset_utils import convert_data_file_to_numpy, IMAGES_6_VIEWS
 from datasets.dataset_list import (DATA_PATH, TRAIN_CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESULTS_PATH,
@@ -68,7 +69,28 @@ def interactive_plot_3d(data_3d: np.ndarray, version: int = 1, set_aspect_ratios
         ax = fig.add_subplot(111, projection='3d')
 
         # Get the permutation
-        ax.bar3d(nonzero_indices[0], nonzero_indices[1], nonzero_indices[2], 1, 1, 1, color='b')
+        if data_3d.max() > 1:
+            color_mode = True
+        else:
+            color_mode = False
+
+        array_value = [
+            nonzero_indices[0],
+            nonzero_indices[1],
+            nonzero_indices[2]
+        ]
+        if color_mode is True:
+            color_value = data_downsampled[
+                nonzero_indices[0],
+                nonzero_indices[1],
+                nonzero_indices[2]
+            ]
+            color_value = color.label2rgb(color_value)
+            ax.bar3d(*array_value, 1, 1, 1, color=color_value)
+        else:
+            ax.bar3d(*array_value, 1, 1, 1, color='b')
+
+        # ax.bar3d(nonzero_indices[0], nonzero_indices[1], nonzero_indices[2], 1, 1, 1, color='b')
 
         # Set labels
         ax.set_xlabel('X')
@@ -101,6 +123,11 @@ def matplotlib_plot_3d(data_3d: np.ndarray, save_filename, set_aspect_ratios=Fal
     # Get the indices of non-zero values in the downsampled array
     nonzero_indices = np.where(data_downsampled != 0)
 
+    if data_3d.max() > 1:
+        color_mode = True
+    else:
+        color_mode = False
+
     # Plot the cubes based on the non-zero indices
     for permutation in list(itertools.permutations(iterable=[0, 1, 2], r=3)):
         # Create a figure and a 3D axis
@@ -109,7 +136,21 @@ def matplotlib_plot_3d(data_3d: np.ndarray, save_filename, set_aspect_ratios=Fal
 
         # Get the permutation
         i, j, k = permutation
-        ax.bar3d(nonzero_indices[i], nonzero_indices[j], nonzero_indices[k], 1, 1, 1, color='b')
+        array_value = [
+            nonzero_indices[i],
+            nonzero_indices[j],
+            nonzero_indices[k]
+        ]
+        if color_mode is True:
+            color_value = data_downsampled[
+                nonzero_indices[0],
+                nonzero_indices[1],
+                nonzero_indices[2]
+            ]
+            color_value = color.label2rgb(color_value)
+            ax.bar3d(*array_value, 1, 1, 1, color=color_value)
+        else:
+            ax.bar3d(*array_value, 1, 1, 1, color='b')
 
         # Set labels
         ax.set_xlabel('X')
@@ -194,7 +235,7 @@ def single_plot_3d(data_3d_filepath, interactive_mode: bool = False, interactive
     if interactive_mode is False:
         save_path = os.path.join(RESULTS_PATH, "single_predict")
         os.makedirs(name=save_path, exist_ok=True)
-        save_name = os.path.join(save_path, "pred_og")
+        save_name = os.path.join(save_path, "result")
 
         matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_name)
     else:
@@ -322,9 +363,9 @@ def main():
     # data_3d_filepath = os.path.join(DATA_PATH, "Pipes3DGeneratorTree", "labels", "01.npy")
 
     # Example 3D data
-    data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6", "PA000078_11978.nii.gz")
+    # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6", "PA000078_11978.nii.gz")
     # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6", "PA000078_11978.nii.gz")
-    # data_3d_filepath = r"C:\Users\ofirg\PycharmProjects\TreesAutoEncoder\results\PA000078_11978_output.nii.gz"
+    data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_components_3d_v6", "PA000078_2020.nii.gz")
     single_plot_3d(data_3d_filepath=data_3d_filepath, interactive_mode=False, interactive_version=1)
 
 
