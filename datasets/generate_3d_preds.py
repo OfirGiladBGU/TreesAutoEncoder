@@ -212,6 +212,93 @@ def generate_plane_holes_v2(numpy_data: np.ndarray):
     return numpy_data
 
 
+def generate_plane_holes_v3(numpy_data: np.ndarray):
+    num_of_centers = 5
+    white_points = np.argwhere(numpy_data > 0.5)  # Find all white points
+
+    def connected_components(data):
+        structure = np.ones((3, 3, 3), dtype=int)  # Define connectivity
+        labeled, num_components = label(data, structure=structure)
+        return num_components
+
+    if len(white_points) > 0:
+        for _ in range(num_of_centers):
+            success = False
+            attempts = 0
+
+            while not success and attempts < 10:  # Retry up to 10 times
+                attempts += 1
+
+                # Randomly select one of the non-zero points
+                random_point = random.choice(white_points)
+                x, y, z = random_point[0], random_point[1], random_point[2]
+
+                # Define a random cube size
+                size = random.randint(1, 5)  # Random size for the cube
+
+                # Define cube boundaries
+                x_min = max(0, x - size)
+                x_max = min(numpy_data.shape[0], x + size + 1)
+                y_min = max(0, y - size)
+                y_max = min(numpy_data.shape[1], y + size + 1)
+                z_min = max(0, z - size)
+                z_max = min(numpy_data.shape[2], z + size + 1)
+
+                # Select a random plane axis and angle
+                plane_axis = random.choice(["XY", "YZ", "XZ"])
+                angle = random.choice([45, 90])
+
+                # Create a cube area
+                cube = numpy_data[x_min:x_max, y_min:y_max, z_min:z_max]
+
+                # Copy the original data for testing
+                test_data = numpy_data.copy()
+
+                # Apply a plane crop inside the cube
+                for i in range(cube.shape[0]):
+                    for j in range(cube.shape[1]):
+                        for k in range(cube.shape[2]):
+                            # Translate local cube coordinates to global coordinates
+                            global_x = x_min + i
+                            global_y = y_min + j
+                            global_z = z_min + k
+
+                            # Check if the point lies on the plane
+                            if plane_axis == "XY":
+                                if angle == 90:
+                                    if global_x == x or global_y == y:
+                                        test_data[global_x, global_y, global_z] = 0
+                                elif angle == 45:
+                                    if math.isclose(global_x - x, global_y - y, abs_tol=1):
+                                        test_data[global_x, global_y, global_z] = 0
+
+                            elif plane_axis == "YZ":
+                                if angle == 90:
+                                    if global_y == y or global_z == z:
+                                        test_data[global_x, global_y, global_z] = 0
+                                elif angle == 45:
+                                    if math.isclose(global_y - y, global_z - z, abs_tol=1):
+                                        test_data[global_x, global_y, global_z] = 0
+
+                            elif plane_axis == "XZ":
+                                if angle == 90:
+                                    if global_x == x or global_z == z:
+                                        test_data[global_x, global_y, global_z] = 0
+                                elif angle == 45:
+                                    if math.isclose(global_x - x, global_z - z, abs_tol=1):
+                                        test_data[global_x, global_y, global_z] = 0
+
+                # Check if the crop created new connected components
+                original_components = connected_components(numpy_data)
+                new_components = connected_components(test_data)
+
+                if new_components > original_components:
+                    numpy_data = test_data  # Apply the crop
+                    success = True
+
+    return numpy_data
+
+
 def generate_box_holes(numpy_data: np.ndarray):
     """
     Generate random box-shaped holes in the data to disconnect some pipe parts entirely.
@@ -287,7 +374,8 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
         # TODO: implement (Use different method)
         # generate_circular_holes(numpy_data=numpy_data)
         # generate_plane_holes(numpy_data=numpy_data)
-        numpy_data = generate_plane_holes_v2(numpy_data=numpy_data)
+        # numpy_data = generate_plane_holes_v2(numpy_data=numpy_data)
+        numpy_data = generate_plane_holes_v3(numpy_data=numpy_data)
         # numpy_data = generate_box_holes(numpy_data=numpy_data)
 
         # Save data:
