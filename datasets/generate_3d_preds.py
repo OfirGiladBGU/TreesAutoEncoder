@@ -80,7 +80,11 @@ def convert_originals_data_to_labels_data(save_as_npy: bool = False, increase_de
     for filepath_idx in tqdm(range(filepaths_count)):
         # Get index data:
         data_filepath = data_filepaths[filepath_idx]
-        numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
+
+        voxel_size = 2.0
+        voxel_scale = 0.5
+        numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath,
+                                                voxel_size=voxel_size, voxel_scale=voxel_scale)
 
         if increase_density is True:
             numpy_data = expand_connected_neighbors(array=numpy_data)
@@ -365,10 +369,7 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
         # Get index data:
         data_filepath = data_filepaths[filepath_idx]
 
-        voxel_size = 2.0
-        voxel_scale = 0.5
-        numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath,
-                                                voxel_size=voxel_size, voxel_scale=voxel_scale)
+        numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
 
         # Generate holes:
         # TODO: implement (Use different method)
@@ -388,7 +389,7 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
 
 
 def main():
-    # convert_originals_data_to_labels_data(save_as_npy=True, increase_density=False)
+    convert_originals_data_to_labels_data(save_as_npy=True, increase_density=False)
     convert_labels_data_to_preds_data(save_as_npy=True)
 
 
