@@ -322,7 +322,7 @@ class Trainer(object):
 
                 # Number of columns and rows for the grid
                 columns = len(headers)
-                rows = input_data.shape[0]
+                rows = input_data.size(0)
 
                 # Create a blank image for the grid, add extra space at the top for the headers
                 header_height = font_size + 10  # Extra space for the header

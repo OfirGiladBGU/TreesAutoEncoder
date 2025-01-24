@@ -675,7 +675,7 @@ class Trainer(object):
 
                 # Create a grid of images
                 columns = len(plotting_data_list)
-                rows = self.args.batch_size
+                rows = input_data.size(0)
                 fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
                 ax = []
                 for i in range(rows):
