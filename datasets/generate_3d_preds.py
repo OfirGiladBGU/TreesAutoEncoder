@@ -212,7 +212,11 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
     for filepath_idx in tqdm(range(filepaths_count)):
         # Get index data:
         data_filepath = data_filepaths[filepath_idx]
-        numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
+
+        voxel_size = 2.0
+        voxel_scale = 0.5
+        numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath,
+                                                voxel_size=voxel_size, voxel_scale=voxel_scale)
 
         # Generate holes:
         # TODO: implement (Use different method)

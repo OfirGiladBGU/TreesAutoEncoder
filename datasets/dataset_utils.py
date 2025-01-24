@@ -43,7 +43,7 @@ def get_data_file_stem(data_filepath) -> str:
     return data_filepath_stem
 
 
-def convert_data_file_to_numpy(data_filepath) -> np.ndarray:
+def convert_data_file_to_numpy(data_filepath, **kwargs) -> np.ndarray:
     extension_map = {
         # 2D
         ".png": _convert_png_to_numpy,
@@ -61,7 +61,7 @@ def convert_data_file_to_numpy(data_filepath) -> np.ndarray:
         data_extension = pathlib.Path(data_filepath).suffix
 
     if data_extension in extension_map.keys():
-        numpy_data = extension_map[data_extension](data_filepath=data_filepath)
+        numpy_data = extension_map[data_extension](data_filepath=data_filepath, **kwargs)
         return numpy_data
     else:
         raise ValueError("Invalid data format")
@@ -117,7 +117,7 @@ def _convert_numpy_to_png(numpy_data: np.ndarray, source_data_filepath=None, sav
 #######################################
 
 # TODO: return or apply the affine transformation to the numpy data for the save later
-def _convert_nii_gz_to_numpy(data_filepath: str) -> np.ndarray:
+def _convert_nii_gz_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
     nifti_data = nib.load(data_filepath)
     numpy_data = nifti_data.get_fdata()
     return numpy_data
@@ -165,7 +165,7 @@ def save_nii_gz_in_identity_affine(numpy_data=None, data_filepath=None, save_fil
 
 # TODO: Check how to make Abstract converter from supported file formats
 
-def _convert_ply_to_numpy(data_filepath) -> np.ndarray:
+def _convert_ply_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
     voxel_size = 0.05  # Define voxel size (the size of each grid cell)
 
     # Mesh PLY
@@ -244,11 +244,13 @@ def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, sav
 #################################
 # obj to numpy and numpy to obj #
 #################################
-def _convert_obj_to_numpy(data_filepath) -> np.ndarray:
-    voxel_size = 2.0  # Define voxel size (the size of each grid cell)
+def _convert_obj_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
+    voxel_size = kwargs.get("voxel_size", 0.05)  # Define voxel size (the size of each grid cell)
+    voxel_scale = kwargs.get("voxel_scale", 1.0)  # Define voxel scale
 
     mesh = trimesh.load(data_filepath)
-    mesh = mesh.apply_scale(0.5)
+    if voxel_scale != 1.0:
+        mesh = mesh.apply_scale(voxel_scale)
     voxelized = mesh.voxelized(pitch=voxel_size)  # Pitch = voxel size
 
     numpy_data = voxelized.matrix.astype(np.uint8)
@@ -285,7 +287,7 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
 #################################
 # pcd to numpy and numpy to pcd #
 #################################
-def _convert_pcd_to_numpy(data_filepath) -> np.ndarray:
+def _convert_pcd_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
     # V1 - Using Open3D VoxelGrid
     # voxel_size = 2.0  # Define voxel size (the size of each grid cell)
     #
@@ -359,7 +361,7 @@ def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, sav
 #################################
 # npy to numpy and numpy to npy #
 #################################
-def _convert_npy_to_numpy(data_filepath) -> np.ndarray:
+def _convert_npy_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
     numpy_data = np.load(file=data_filepath)
     return numpy_data
 
