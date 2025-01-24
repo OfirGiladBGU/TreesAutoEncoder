@@ -70,6 +70,9 @@ def postprocess_2d(data_2d_input: torch.Tensor, data_2d_output: torch.Tensor, ap
     else:
         raise ValueError("Invalid shape")
 
+    # TODO: Threshold
+    apply_threshold(tensor=data_2d_output, threshold=0.2, keep_values=True)
+
     if apply_input_fusion is True:
         data_2d_output = data_2d_input + torch.where(data_2d_input == 0, data_2d_output, 0)
 
@@ -220,7 +223,7 @@ def postprocess_3d(data_3d_input: torch.Tensor, data_3d_output: torch.Tensor, ap
     data_3d_output = data_3d_output.squeeze().squeeze()
 
     # TODO: Threshold
-    apply_threshold(tensor=data_3d_output, threshold=0.5)
+    apply_threshold(tensor=data_3d_output, threshold=0.5, keep_values=False)
 
     if apply_input_fusion is True:
         data_3d_output = data_3d_input + torch.where(data_3d_input == 0, data_3d_output, 0)
@@ -354,7 +357,7 @@ def single_predict(data_3d_filepath, data_2d_folder):
 
 def test_single_predict():
     # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6", "PA000005_11899.nii.gz")
-    data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6", "PA000078_11978.nii.gz")
+    data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6", "PA000078_11996.nii.gz")
     data_2d_folder = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
     single_predict(
         data_3d_filepath=data_3d_filepath,

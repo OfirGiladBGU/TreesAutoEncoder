@@ -376,8 +376,9 @@ def _convert_numpy_to_npy(numpy_data: np.ndarray, source_data_filepath=None, sav
 ################
 # Thresholding #
 ################
-def apply_threshold(tensor: torch.Tensor, threshold: float):
-    tensor[tensor >= threshold] = 1.0
+def apply_threshold(tensor: torch.Tensor, threshold: float, keep_values: bool = False):
+    if keep_values is False:
+        tensor[tensor >= threshold] = 1.0
     tensor[tensor < threshold] = 0.0
 
 
