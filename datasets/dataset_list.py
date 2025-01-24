@@ -31,7 +31,7 @@ DATA_PATH = os.path.join(ROOT_PATH, "data")
 DATASET_PATH = os.path.join(DATA_PATH, DATASET_FOLDER)
 TRAIN_CROPPED_PATH = os.path.join(DATA_PATH, "train_cropped_data", DATASET_FOLDER)
 EVAL_CROPPED_PATH = os.path.join(DATA_PATH, "eval_cropped_data", DATASET_FOLDER)
-RESULTS_PATH = os.path.join(ROOT_PATH, "results", DATASET_FOLDER)
+RESULTS_PATH = os.path.join(ROOT_PATH, "data_results", DATASET_FOLDER)
 
 MODEL_RESULTS_PATH = os.path.join(RESULTS_PATH, "models")
 PREDICT_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "predict_pipeline")
