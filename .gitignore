@@ -1,6 +1,6 @@
 venv
 .env
 data
-results
+data_results
 wandb
 weights
