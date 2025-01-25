@@ -140,6 +140,9 @@ def noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
     #
     # return filtered_data_3d_input
 
+
+    # V2
+
     def connected_components_3d(data_3d: np.ndarray) -> Tuple[np.ndarray, int]:
         # structure = np.ones((3, 3, 3), dtype=np.int8)  # 26-connectivity
         # 6-connectivity
@@ -156,12 +159,54 @@ def noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
         labeled_array, num_features = label(data_3d, structure=structure)
         return labeled_array, num_features
 
-    # V2
     filtered_data_3d = data_3d_original.copy().astype(np.uint8)
     data_delta = (data_3d_input - data_3d_original > 0.5).astype(np.uint8)
 
-    # Identify connected components in binary_delta
+    # Identify connected components in data_delta
     labeled_delta, num_delta_components = connected_components_3d(data_delta)
+
+    # Iterate through connected components in data_delta
+    for component_label in range(1, num_delta_components + 1):
+        # Create a mask for the current connected component
+        component_mask = np.equal(labeled_delta, component_label).astype(np.uint8)
+
+        # Check the number of connected components before adding the mask
+        original_components = connected_components_3d(filtered_data_3d)[1]
+
+        # Create a temporary data with the component added
+        temp_fixed = np.logical_or(filtered_data_3d, component_mask)
+        new_components = connected_components_3d(temp_fixed)[1]
+
+        # Add the component only if it does decrease the number of connected components
+        if new_components < original_components:
+            filtered_data_3d = temp_fixed
+
+    filtered_data_3d = filtered_data_3d.astype(np.float32)
+    return filtered_data_3d
+
+
+def components_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
+    def connected_components_3d(data_3d: np.ndarray) -> Tuple[np.ndarray, int]:
+        # structure = np.ones((3, 3, 3), dtype=np.int8)  # 26-connectivity
+        # 6-connectivity
+        structure = np.zeros((3, 3, 3), dtype=np.int8)
+        active_points = [
+            (0, 1, 1), (2, 1, 1),  # Points along the X-axis
+            (1, 0, 1), (1, 2, 1),  # Points along the Y-axis
+            (1, 1, 0), (1, 1, 2),  # Points along the Z-axis
+            (1, 1, 1)  # Center point
+        ]
+        for x, y, z in active_points:
+            structure[x, y, z] = 1
+
+        labeled_array, num_features = label(data_3d, structure=structure)
+        return labeled_array, num_features
+
+    filtered_data_3d = data_3d_original.copy().astype(np.uint8)
+    # data_delta = (data_3d_input - data_3d_original > 0.5).astype(np.uint8)
+
+    # Identify connected components in
+    labeled_delta, num_delta_components = connected_components_3d(data_3d_input)
 
     # Iterate through connected components in binary_delta
     for component_label in range(1, num_delta_components + 1):
@@ -181,7 +226,6 @@ def noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
 
     filtered_data_3d = filtered_data_3d.astype(np.float32)
     return filtered_data_3d
-
 
 
 def preprocess_3d(data_3d_filepath,
@@ -212,7 +256,11 @@ def preprocess_3d(data_3d_filepath,
         data_3d_input = data_3d_reconstruct
 
     if apply_noise_filter is True:
-        data_3d_input = noise_filter(data_3d_original=pred_3d, data_3d_input=data_3d_input)
+        # Parse2022
+        # data_3d_input = noise_filter(data_3d_original=pred_3d, data_3d_input=data_3d_input)
+
+        # Pipes3D
+        data_3d_input = components_noise_filter(data_3d_original=pred_3d, data_3d_input=data_3d_input)
 
     data_3d_input = torch.Tensor(data_3d_input).unsqueeze(0).unsqueeze(0)
     return data_3d_input
@@ -357,7 +405,8 @@ def single_predict(data_3d_filepath, data_2d_folder):
 
 def test_single_predict():
     # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6", "PA000005_11899.nii.gz")
-    data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6", "PA000078_11996.nii.gz")
+    # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6", "PA000078_11996.nii.gz")
+    data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6", "20_303.npy")
     data_2d_folder = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
     single_predict(
         data_3d_filepath=data_3d_filepath,
@@ -497,6 +546,9 @@ def main():
 
 
 if __name__ == "__main__":
+    # 0:
+    # TODO: try to find the best noise filters
+
     # 1
     # TODO: validate that after the 2d projection reconstruct, applying again 2d projection give the same results (artificial tests) - DONE
     # TODO: add plots of 3d data in matplotlib - DONE
