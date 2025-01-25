@@ -500,10 +500,9 @@ def project_3d_to_2d(data_3d: np.ndarray,
     else:
         rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 2))  # For OpenCV compatibility
         rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 1))
-
         if component_3d is not None:
-            rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 2))
-            rotated_data_3d = np.rot90(rotated_data_3d, k=1, axes=(0, 1))
+            rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(0, 2))
+            rotated_component_3d = np.rot90(rotated_component_3d, k=1, axes=(0, 1))
 
     # Front projection (XZ plane)
     if projection_options.get("front", False) is True:
