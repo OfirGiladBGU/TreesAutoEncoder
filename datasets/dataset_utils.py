@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import cv2
 from enum import Enum
+from typing import Union, Dict
 
 # For .nii.gz
 import nibabel as nib
@@ -480,7 +481,7 @@ def _calculate_depth_projection(data_3d: np.ndarray, component_3d: np.ndarray = 
 def project_3d_to_2d(data_3d: np.ndarray,
                      projection_options: dict[str, bool],
                      source_data_filepath=None,
-                     component_3d: np.ndarray = None) -> dict[str, np.ndarray]:
+                     component_3d: np.ndarray = None) -> Union[Dict, Dict[str, np.ndarray]]:
     projections = dict()
 
     rotated_data_3d = data_3d
@@ -600,7 +601,7 @@ def project_3d_to_2d(data_3d: np.ndarray,
         # Option 2
         flipped_component_3d = rotated_component_3d
         if flipped_component_3d is not None:
-            flipped_data_3d = np.rot90(flipped_component_3d, k=1, axes=(1, 2))
+            flipped_component_3d = np.rot90(flipped_component_3d, k=1, axes=(1, 2))
 
         depth_projections = _calculate_depth_projection(
             data_3d=flipped_data_3d,
