@@ -10,7 +10,7 @@ from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_
 from datasets.dataset_list import DATA_PATH
 
 
-DATASET_PATH = os.path.join(DATA_PATH, "Pipes3DGeneratorTree")
+DATASET_PATH = os.path.join(DATA_PATH, "Pipes3DGeneratorTreeV3")
 
 
 ###################
@@ -217,7 +217,7 @@ def generate_plane_holes_v2(numpy_data: np.ndarray):
 
 
 def generate_plane_holes_v3(numpy_data: np.ndarray):
-    num_of_centers = 5
+    num_of_centers = 10
     white_points = np.argwhere(numpy_data > 0.5)  # Find all white points
 
     def connected_components(data):
@@ -238,7 +238,7 @@ def generate_plane_holes_v3(numpy_data: np.ndarray):
                 x, y, z = random_point[0], random_point[1], random_point[2]
 
                 # Define a random cube size
-                size = random.randint(1, 5)  # Random size for the cube
+                size = random.randint(5, 10)  # Random size for the cube
 
                 # Define cube boundaries
                 x_min = max(0, x - size)
