@@ -10,12 +10,12 @@ from datasets.custom_datasets_3d import TreesCustomDataloader3D
 
 
 # Configurations
-DATA_CROP_STRIDE = 16
-DATA_CROP_SIZE = 32
+# DATA_CROP_STRIDE = 16
+# DATA_CROP_SIZE = 32
 
 # TODO: TEST: 48
-# DATA_CROP_STRIDE = 24
-# DATA_CROP_SIZE = 48
+DATA_CROP_STRIDE = 24
+DATA_CROP_SIZE = 48
 
 # Setups
 DATA_3D_STRIDE = (DATA_CROP_STRIDE, DATA_CROP_STRIDE, DATA_CROP_STRIDE)
@@ -23,7 +23,7 @@ DATA_3D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE, DATA_CROP_SIZE)
 DATA_2D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE)
 
 # Define dataset folder
-DATASET_FOLDER = "parse2022" # TODO: Read from config file
+DATASET_FOLDER = "Pipes3DGeneratorTreeV3" # TODO: Read from config file
 
 # Define paths
 ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
