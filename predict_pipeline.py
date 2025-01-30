@@ -222,7 +222,10 @@ def components_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndar
         new_components = connected_components_3d(temp_fixed)[1]
 
         # Add the component only if it does decrease the number of connected components
-        if new_components < original_components:
+        # if new_components < original_components:
+        #     filtered_data_3d = temp_fixed
+
+        if new_components <= original_components:
             filtered_data_3d = temp_fixed
 
     filtered_data_3d = filtered_data_3d.astype(np.float32)

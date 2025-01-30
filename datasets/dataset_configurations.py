@@ -32,6 +32,7 @@ MERGE_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "merge_pipeline")
 VISUALIZATION_RESULTS_PATH = os.path.join(RESULTS_PATH, "visualization")
 
 # Dataset 2D
+APPLY_CONTINUITY_FIX = True
 V1_2D_DATASETS = ['Trees2DV1', 'Trees2DV1S']
 V2_2D_DATASETS = ['Trees2DV2', 'Trees2DV2M']
 

@@ -10,7 +10,7 @@ from scipy.ndimage import label
 from skimage import color
 
 from datasets.dataset_configurations import (DATASET_PATH, TRAIN_CROPPED_PATH, EVAL_CROPPED_PATH,
-                                             DATA_3D_STRIDE, DATA_3D_SIZE, IMAGES_6_VIEWS)
+                                             DATA_3D_STRIDE, DATA_3D_SIZE, IMAGES_6_VIEWS, APPLY_CONTINUITY_FIX)
 from dataset_utils import (TaskType,
                            get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                            save_nii_gz_in_identity_affine, project_3d_to_2d)
@@ -374,6 +374,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
         input_folders.update({
             "preds_components": os.path.join(DATASET_PATH, "preds_components")
         })
+
     # Outputs
     output_folders = {
         # Labels
@@ -426,6 +427,10 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
     print("Cropping Mini Cubes...")
     filepaths_count = len(input_filepaths["labels"])
     for filepath_idx in range(filepaths_count):
+        #############
+        # Load Data #
+        #############
+
         # Get index data:
         label_filepath = input_filepaths["labels"][filepath_idx]
         pred_filepath = input_filepaths["preds"][filepath_idx]
@@ -443,10 +448,14 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
         # if (pred_numpy_data - pred_fixed_numpy_data).sum() != 0:
         #     raise ValueError("Outlier Removal Failed")
 
-        # Crop Mini Cubes
         output_idx = get_data_file_stem(data_filepath=label_filepath)
         print(f"[File: {output_idx}, Index: {filepath_idx + 1}/{filepaths_count}]")
 
+        #############
+        # Crop Data #
+        #############
+
+        # Crop Mini Cubes
         label_cubes, other_cubes_list, cubes_data = crop_mini_cubes(
             data_3d=label_numpy_data,
             other_data_3d_list=[pred_numpy_data, pred_fixed_numpy_data],
@@ -474,15 +483,20 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 stride_dim=stride_dim
             )
             pred_fixed_components_cubes = other_cubes_list[0]
-        elif task_type == TaskType.PATCH_HOLES:
-            pred_component_filepath = None
 
+        elif task_type in [TaskType.LOCAL_CONNECT, TaskType.PATCH_HOLES]:
+            pred_component_filepath = None
             pred_components_cubes = None
             pred_fixed_components_cubes = None
+
         else:
             raise ValueError("Invalid Task Type")
 
         print(f"Total Mini Cubes: {len(label_cubes)}\n")
+
+        ################
+        # Filter Crops #
+        ################
 
         cubes_count = len(label_cubes)
         cubes_count_digits_count = len(str(cubes_count))
@@ -499,10 +513,9 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             if task_type == TaskType.SINGLE_COMPONENT:
                 # Get index data:
                 pred_components_cube = pred_components_cubes[cube_idx]
-
                 pred_fixed_components_cube = pred_fixed_components_cubes[cube_idx]
 
-                # check that there are 2 or more components to connect
+                # TASK CONDITION: The region has 2 or more different global components
                 global_components_3d_indices = list(np.unique(pred_components_cube))
                 global_components_3d_indices.remove(0)
                 global_components_3d_count = len(global_components_3d_indices)
@@ -514,12 +527,18 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                     # "name": output_3d_format,
                     "pred_global_components": global_components_3d_count,
                 })
-            elif task_type == TaskType.PATCH_HOLES:
-                pred_components_cube = None
 
+            elif task_type == TaskType.LOCAL_CONNECT:
+                pred_components_cube = None
                 pred_fixed_components_cube = None
 
-                # TODO: Check if (label - pred_fixed) > 0.5
+                # TASK CONDITION: NONE
+
+            elif task_type == TaskType.PATCH_HOLES:
+                pred_components_cube = None
+                pred_fixed_components_cube = None
+
+                # TASK CONDITION: The region has holes
                 delta = np.abs(label_cube - pred_fixed_cube) > 0.5
                 delta_count = np.count_nonzero(delta)
                 if delta_count == 0:
@@ -556,10 +575,8 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 source_data_filepath=pred_filepath
             )
 
-            condition1 = True
-            condition2 = True
-            condition3_list = [True] * len(IMAGES_6_VIEWS)
-            for idx, image_view in enumerate(IMAGES_6_VIEWS):
+            condition_list = [True] * len(IMAGES_6_VIEWS)
+            for view_idx, image_view in enumerate(IMAGES_6_VIEWS):
                 pred_image = pred_projections[f"{image_view}_image"]
                 label_image = label_projections[f"{image_view}_image"]
 
@@ -582,15 +599,23 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 # )
                 # repaired_label_image = label_projections[f"{image_6_view}_repaired_image"]
 
-                # Check Condition 1 (If condition fails, skip the current mini cube):
-                if not (upper_threshold > np.count_nonzero(pred_fixed_image) > lower_threshold):
-                    condition1 = False
-                    break
+                # Check Condition (If condition fails, mark the view as invalid):
+                condition = [
+                    not (upper_threshold > np.count_nonzero(pred_fixed_image) > lower_threshold),
+                    not (upper_threshold > np.count_nonzero(label_image) > lower_threshold)
+                ]
 
-                # Check Condition 2 (If condition fails, skip the current mini cube):
-                if not (upper_threshold > np.count_nonzero(label_image) > lower_threshold):
-                    condition2 = False
-                    break
+                # Check Condition (If condition fails, skip the current view):
+                if any(condition):
+                    condition_list[view_idx] = False
+
+                    cubes_data[cube_idx].update({
+                        f"{image_view}_valid": False
+                    })
+                else:
+                    cubes_data[cube_idx].update({
+                        f"{image_view}_valid": True
+                    })
 
                 # TODO: repair pred fix to include connectable components
                 if task_type == TaskType.SINGLE_COMPONENT:
@@ -602,12 +627,11 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                         label=np.where(pred_image > 0, pred_components, 0)
                     ) * 255
 
-                    apply_advance_fix = True
-                    if apply_advance_fix:
+                    if APPLY_CONTINUITY_FIX is True:
                         # Calculate the connected components for the fixed preds
                         old_pred_fixed_image = pred_fixed_image.copy()  # DEBUG
-                        binary_label = np.where(label_image > 0, 1, 0)
-                        binary_pred_fixed = np.where(pred_fixed_image > 0, 1, 0)
+                        binary_label = (label_image > 0).astype(np.uint8)
+                        binary_pred_fixed = (pred_fixed_image > 0).astype(np.uint8)
                         binary_delta = ((binary_label - binary_pred_fixed) > 0.5).astype(np.uint8)
 
                         # Identify connected components in binary_delta
@@ -635,13 +659,59 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                         pred_fixed_projections[f"{image_view}_image"] = pred_fixed_image
 
                         if np.array_equal(pred_fixed_image, label_image):
-                            condition3_list[idx] = False
+                            pass  # TODO: Decide if mark needed
 
                     # Calculate the connected components for the fixed preds
                     pred_fixed_components = pred_fixed_projections[f"{image_view}_components"]
                     pred_fixed_projections[f"{image_view}_components"] = color.label2rgb(
                         label=np.where(pred_fixed_image > 0, pred_fixed_components, 0)
                     ) * 255
+
+                elif task_type == TaskType.SINGLE_COMPONENT:
+                    if APPLY_CONTINUITY_FIX is True:
+                        # Calculate the connected components for the fixed preds
+                        old_pred_fixed_image = pred_fixed_image.copy()  # DEBUG
+                        binary_label = (label_image > 0).astype(np.uint8)
+                        binary_pred_fixed = (pred_fixed_image > 0).astype(np.uint8)
+                        binary_delta = ((binary_label - binary_pred_fixed) > 0.5).astype(np.uint8)
+
+                        # Identify connected components in binary_delta
+                        labeled_delta, num_delta_components = connected_components_2d(binary_delta)
+
+                        # Iterate through connected components in binary_delta
+                        for component_label in range(1, num_delta_components + 1):
+                            # Create a mask for the current connected component
+                            component_mask = np.equal(labeled_delta, component_label).astype(np.uint8)
+
+                            # Find ROI
+                            # roi_pred_fixed_image = # binary_pred_fixed cropped between the component mask: min - 1, max + 1 on x and y
+                            min_x = max(0, component_mask.min(axis=0)[0] - 1)
+                            max_x = min(component_mask.max(axis=0)[0] + 1, binary_pred_fixed.shape[0])
+                            min_y = max(0, component_mask.min(axis=0)[1] - 1)
+                            max_y = min(component_mask.max(axis=0)[1] + 1, binary_pred_fixed.shape[1])
+
+                            # Check the number of connected components before adding the mask
+                            roi_pred_fixed_image = binary_pred_fixed[min_x:max_x, min_y:max_y]
+                            original_components = connected_components_2d(roi_pred_fixed_image)[1]
+
+                            # Create a temporary image with the component added
+                            temp_pred_fixed = np.logical_or(binary_pred_fixed, component_mask)
+                            roi_temp_pred_fixed = binary_pred_fixed[min_x:max_x, min_y:max_y]
+
+                            new_components = connected_components_2d(roi_temp_pred_fixed)[1]
+
+                            # Add the component only if it does not decrease the number of connected components
+                            if new_components >= original_components:
+                                binary_pred_fixed = temp_pred_fixed
+
+                        # Update the pred_fixed_image
+                        # pred_fixed_image = np.where(binary_pred_fixed > 0, label_image, pred_fixed_image)
+                        pred_fixed_image = np.where(binary_pred_fixed > 0, label_image, 0)
+                        pred_fixed_projections[f"{image_view}_image"] = pred_fixed_image
+
+                        if np.array_equal(pred_fixed_image, label_image):
+                            pass  # TODO: Decide if mark needed
+
                 elif task_type == TaskType.PATCH_HOLES:
                     pass
                 else:
@@ -651,10 +721,8 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             # if cube_idx == 3253:
             #     print("Debug")
 
-            # Validate the conditions
-            condition3 = any(condition3_list)
-            conditions = [condition1, condition2, condition3]
-            if not all(conditions):
+            # Validate that at least 1 condition is met
+            if not any(condition_list):
                 continue
 
             cube_idx_str = str(cube_idx).zfill(cubes_count_digits_count)
@@ -1022,7 +1090,9 @@ def main():
     # TODO: Required for: TaskType.SINGLE_COMPONENT
     create_data_components(data_options=data_options)
 
-    task_type = TaskType.SINGLE_COMPONENT
+    # task_type = TaskType.SINGLE_COMPONENT
+
+    task_type = TaskType.LOCAL_CONNECT
 
     # TODO: for this mode add classifier model to find cubes with holes - model 2D to 1D
     # task_type = TaskType.PATCH_HOLES
