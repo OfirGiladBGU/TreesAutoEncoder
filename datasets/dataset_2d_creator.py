@@ -673,7 +673,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                         label=np.where(pred_fixed_image > 0, pred_fixed_components, 0)
                     ) * 255
 
-                elif task_type == TaskType.SINGLE_COMPONENT:
+                elif task_type == TaskType.LOCAL_CONNECT:
                     if APPLY_CONTINUITY_FIX is True:
                         # Calculate the connected components for the fixed preds
                         old_pred_fixed_image = pred_fixed_image.copy()  # DEBUG
