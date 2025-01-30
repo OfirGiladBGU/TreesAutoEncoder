@@ -734,7 +734,6 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
 
             # Validate that at least 1 condition is met (if not, pop cube data)
             if not any(condition_list):
-                cubes_data.pop(cube_idx)
                 continue
 
             cube_idx_str = str(cube_idx).zfill(cubes_count_digits_count)
