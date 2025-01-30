@@ -796,7 +796,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                         source_data_filepath="dumpy.png",
                         save_filename=save_filename
                     )
-                elif task_type == [TaskType.LOCAL_CONNECT, TaskType.PATCH_HOLES]:
+                elif task_type in [TaskType.LOCAL_CONNECT, TaskType.PATCH_HOLES]:
                     pass
                 else:
                     raise ValueError("Invalid Task Type")
