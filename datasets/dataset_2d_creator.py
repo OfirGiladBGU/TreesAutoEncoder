@@ -617,6 +617,19 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                         f"{image_view}_valid": True
                     })
 
+            # Validate that at least 1 condition is met (if not, pop cube data)
+            if not any(condition_list):
+                continue
+
+            # if cube_idx == 787:
+            #     print("Debug")
+
+            # Repair data
+            for view_idx, image_view in enumerate(IMAGES_6_VIEWS):
+                pred_image = pred_projections[f"{image_view}_image"]
+                label_image = label_projections[f"{image_view}_image"]
+                pred_fixed_image = pred_fixed_projections[f"{image_view}_image"]
+
                 # TODO: repair pred fix to include connectable components
                 if task_type == TaskType.SINGLE_COMPONENT:
                     # TODO: check if local components num is similar between label and pred
@@ -689,20 +702,27 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                             # Create a mask for the current connected component
                             component_mask = np.equal(labeled_delta, component_label).astype(np.uint8)
 
-                            # ROI - cropped area between the component mask: min-1, max+1 on x and y
-                            min_x = max(0, component_mask.min(axis=0)[0] - 1)
-                            max_x = min(component_mask.max(axis=0)[0] + 1, binary_pred_fixed.shape[0])
-                            min_y = max(0, component_mask.min(axis=0)[1] - 1)
-                            max_y = min(component_mask.max(axis=0)[1] + 1, binary_pred_fixed.shape[1])
+                            # ROI - cropped area between the component mask: top, bottom, left, right
+                            coords = np.argwhere(component_mask > 0)
+
+                            # Get bounding box
+                            left = np.min(coords[:, 1])  # Minimum column index
+                            right = np.max(coords[:, 1])  # Maximum column index
+                            top = np.min(coords[:, 0])  # Minimum row index
+                            bottom = np.max(coords[:, 0])  # Maximum row index
+
+                            min_x = max(0, left - 1)
+                            max_x = min(right + 2, binary_pred_fixed.shape[1])
+                            min_y = max(0, top - 1)
+                            max_y = min(bottom + 2, binary_pred_fixed.shape[0])
 
                             # Check the number of connected components before adding the mask
-                            roi_pred_fixed_image = binary_pred_fixed[min_x:max_x, min_y:max_y]
+                            roi_pred_fixed_image = binary_pred_fixed[min_y:max_y, min_x:max_x]
                             original_components = connected_components_2d(roi_pred_fixed_image)[1]
 
                             # Create a temporary image with the component added
                             temp_pred_fixed = np.logical_or(binary_pred_fixed, component_mask)
-                            roi_temp_pred_fixed = binary_pred_fixed[min_x:max_x, min_y:max_y]
-
+                            roi_temp_pred_fixed = temp_pred_fixed[min_y:max_y, min_x:max_x]
                             new_components = connected_components_2d(roi_temp_pred_fixed)[1]
 
                             # Add the component only if it does not decrease the number of connected components
