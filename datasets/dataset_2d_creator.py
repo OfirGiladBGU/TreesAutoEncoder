@@ -650,7 +650,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                             new_components = connected_components_2d(temp_pred_fixed)[1]
 
                             # Add the component only if it does not decrease the number of connected components
-                            if new_components >= original_components:
+                            if not (original_components > new_components):
                                 binary_pred_fixed = temp_pred_fixed
 
                         # Update the pred_fixed_image
@@ -706,7 +706,8 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                             new_components = connected_components_2d(roi_temp_pred_fixed)[1]
 
                             # Add the component only if it does not decrease the number of connected components
-                            if new_components >= original_components:
+                            # (on the local scope)
+                            if not (original_components > new_components):
                                 binary_pred_fixed = temp_pred_fixed
 
                         # Update the pred_fixed_image
