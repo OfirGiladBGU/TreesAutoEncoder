@@ -6,11 +6,8 @@ from torchvision import transforms
 import pathlib
 import pandas as pd
 
+from datasets.dataset_configurations import V1_3D_DATASETS, V2_3D_DATASETS
 from datasets.dataset_utils import convert_data_file_to_numpy, validate_data_paths
-
-
-V1_3D_DATASETS = ['Trees3DV1']
-V2_3D_DATASETS = ['Trees3DV2', 'Trees3DV2M', 'Trees3DV3', 'Trees3DV4']
 
 
 # 6 2D inputs + 1 3D target

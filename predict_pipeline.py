@@ -11,9 +11,10 @@ import pandas as pd
 from scipy.ndimage import convolve, label
 from typing import Tuple
 
+from datasets.dataset_configurations import (DATASET_PATH, TRAIN_CROPPED_PATH, PREDICT_PIPELINE_RESULTS_PATH,
+                                             MERGE_PIPELINE_RESULTS_PATH, IMAGES_6_VIEWS)
 from datasets.dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
-                                    reverse_rotations, apply_threshold, IMAGES_6_VIEWS)
-from datasets.dataset_list import DATASET_PATH, TRAIN_CROPPED_PATH, PREDICT_PIPELINE_RESULTS_PATH, MERGE_PIPELINE_RESULTS_PATH
+                                    reverse_rotations, apply_threshold)
 from models.model_list import init_model
 from datasets.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
@@ -406,7 +407,7 @@ def single_predict(data_3d_filepath, data_2d_folder):
 def test_single_predict():
     # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6", "PA000005_11899.nii.gz")
     # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6", "PA000078_11996.nii.gz")
-    data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6", "20_303.npy")
+    data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6", "47_52.npy")
     data_2d_folder = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
     single_predict(
         data_3d_filepath=data_3d_filepath,

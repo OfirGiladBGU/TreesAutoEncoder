@@ -13,13 +13,13 @@ import nibabel as nib
 import trimesh
 import open3d as o3d
 
+from datasets.dataset_configurations import IMAGES_6_VIEWS
 
-IMAGES_6_VIEWS = ["top", "bottom", "front", "back", "left", "right"]
-PROJECTION_MODE = "visualization"  # "visualization" or "training"
 
 class TaskType(Enum):
-    CONNECT_COMPONENTS = 1
-    PATCH_HOLES = 2
+    SINGLE_COMPONENT = 1  # Assumption: Need to achieve a single component
+    LOCAL_CONNECT = 2  # Assumption: Need to connect components on focused scope
+    PATCH_HOLES = 3  # Assumption: Need to fix any type of holes
 
 
 def validate_data_paths(data_paths: list[str]):

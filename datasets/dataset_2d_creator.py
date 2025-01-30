@@ -9,8 +9,9 @@ import pandas as pd
 from scipy.ndimage import label
 from skimage import color
 
-from dataset_list import DATASET_PATH, TRAIN_CROPPED_PATH, EVAL_CROPPED_PATH, DATA_3D_STRIDE, DATA_3D_SIZE
-from dataset_utils import (IMAGES_6_VIEWS, TaskType,
+from datasets.dataset_configurations import (DATASET_PATH, TRAIN_CROPPED_PATH, EVAL_CROPPED_PATH,
+                                             DATA_3D_STRIDE, DATA_3D_SIZE, IMAGES_6_VIEWS)
+from dataset_utils import (TaskType,
                            get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                            save_nii_gz_in_identity_affine, project_3d_to_2d)
 # TODO: Debug Tools
@@ -367,9 +368,9 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
     # Inputs
     input_folders = {
         "labels": os.path.join(DATASET_PATH, "labels"),
-        "preds": os.path.join(DATASET_PATH, "preds"),
+        "preds": os.path.join(DATASET_PATH, "preds")
     }
-    if task_type == TaskType.CONNECT_COMPONENTS:
+    if task_type == TaskType.SINGLE_COMPONENT:
         input_folders.update({
             "preds_components": os.path.join(DATASET_PATH, "preds_components")
         })
@@ -384,15 +385,15 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
 
         # Preds Fixed
         "preds_fixed_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6"),
-        "preds_fixed_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6"),
+        "preds_fixed_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6")
     }
-    if task_type == TaskType.CONNECT_COMPONENTS:
+    if task_type == TaskType.SINGLE_COMPONENT:
         output_folders.update({
             # Preds Components
             "preds_components_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_components_2d_v6"),
             "preds_components_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_components_3d_v6"),
 
-            # Preds Fixed Components (Used in: CONNECT_COMPONENTS)
+            # Preds Fixed Components
             "preds_fixed_components_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_components_2d_v6"),
             "preds_fixed_components_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_components_3d_v6")
         })
@@ -404,8 +405,8 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
     # Config
     stride_dim = DATA_3D_STRIDE
     cube_dim = DATA_3D_SIZE
-    white_points_upper_threshold = math.pow(cube_dim[0], 2) * 0.9  # TODO: Support dynamic calculation
-    white_points_lower_threshold = math.pow(cube_dim[0], 2) * 0.1  # TODO: Support dynamic calculation
+    upper_threshold = math.pow(cube_dim[0], 2) * 0.9  # TODO: Support dynamic calculation
+    lower_threshold = math.pow(cube_dim[0], 2) * 0.1  # TODO: Support dynamic calculation
 
     # Create Output Folders
     for output_folder in output_folders.values():
@@ -456,7 +457,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
         pred_cubes = other_cubes_list[0]
         pred_fixed_cubes = other_cubes_list[1]
 
-        if task_type == TaskType.CONNECT_COMPONENTS:
+        if task_type == TaskType.SINGLE_COMPONENT:
             # Get index data:
             pred_component_filepath = input_filepaths["preds_components"][filepath_idx]
 
@@ -495,7 +496,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             # pred_fixed_components_cube = pred_fixed_components_cubes[cube_idx]
 
             # TODO: enable 2 modes
-            if task_type == TaskType.CONNECT_COMPONENTS:
+            if task_type == TaskType.SINGLE_COMPONENT:
                 # Get index data:
                 pred_components_cube = pred_components_cubes[cube_idx]
 
@@ -582,17 +583,17 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 # repaired_label_image = label_projections[f"{image_6_view}_repaired_image"]
 
                 # Check Condition 1 (If condition fails, skip the current mini cube):
-                if not (white_points_upper_threshold > np.count_nonzero(pred_fixed_image) > white_points_lower_threshold):
+                if not (upper_threshold > np.count_nonzero(pred_fixed_image) > lower_threshold):
                     condition1 = False
                     break
 
                 # Check Condition 2 (If condition fails, skip the current mini cube):
-                if not (white_points_upper_threshold > np.count_nonzero(label_image) > white_points_lower_threshold):
+                if not (upper_threshold > np.count_nonzero(label_image) > lower_threshold):
                     condition2 = False
                     break
 
                 # TODO: repair pred fix to include connectable components
-                if task_type == TaskType.CONNECT_COMPONENTS:
+                if task_type == TaskType.SINGLE_COMPONENT:
                     # TODO: check if local components num is similar between label and pred
 
                     # Calculate the connected components for the preds
@@ -697,7 +698,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 # pred_fixed_components_2d = pred_fixed_projections[f"{image_view}_components"]
                 # cv2.imwrite(os.path.join(output_folders["preds_fixed_components_2d"], f"{output_2d_format}.png"), pred_fixed_components_2d)
 
-                if task_type == TaskType.CONNECT_COMPONENTS:
+                if task_type == TaskType.SINGLE_COMPONENT:
                     # 2D Folders - preds components
                     pred_components_2d = pred_projections[f"{image_view}_components"]
                     save_filename = os.path.join(output_folders["preds_components_2d"], output_2d_format)
@@ -757,7 +758,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             # convert_numpy_to_data_file(numpy_data=pred_fixed_components_cube, source_data_filepath=pred_component_filepath,
             #                            save_filename=save_filename)
 
-            if task_type == TaskType.CONNECT_COMPONENTS:
+            if task_type == TaskType.SINGLE_COMPONENT:
                 # 3D Folders - preds components
                 save_filename = os.path.join(output_folders["preds_components_3d"], output_3d_format)
                 convert_numpy_to_data_file(
@@ -815,17 +816,18 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
     input_folders = {
         "evals": os.path.join(DATASET_PATH, "evals"),
     }
-    if task_type == TaskType.CONNECT_COMPONENTS:
+    if task_type == TaskType.SINGLE_COMPONENT:
         input_folders.update({
             "evals_components": os.path.join(DATASET_PATH, "evals_components")
         })
+
     # Outputs
     output_folders = {
         # Evals
         "evals_2d": os.path.join(EVAL_CROPPED_PATH, "evals_2d_v6"),
         "evals_3d": os.path.join(EVAL_CROPPED_PATH, "evals_3d_v6"),
     }
-    if task_type == TaskType.CONNECT_COMPONENTS:
+    if task_type == TaskType.SINGLE_COMPONENT:
         output_folders.update({
             # Evals Components
             "evals_components_2d": os.path.join(EVAL_CROPPED_PATH, "evals_components_2d_v6"),
@@ -878,7 +880,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
             cubes_data=True
         )
 
-        if task_type == TaskType.CONNECT_COMPONENTS:
+        if task_type == TaskType.SINGLE_COMPONENT:
             # Get index data:
             eval_component_filepath = input_filepaths["evals_components"][filepath_idx]
 
@@ -907,7 +909,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
             eval_cube = eval_cubes[cube_idx]
 
             # TODO: enable 2 modes
-            if task_type == TaskType.CONNECT_COMPONENTS:
+            if task_type == TaskType.SINGLE_COMPONENT:
                 # Get index data:
                 eval_components_cube = eval_components_cubes[cube_idx]
 
@@ -963,7 +965,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
                     save_filename=save_filename
                 )
 
-                if task_type == TaskType.CONNECT_COMPONENTS:
+                if task_type == TaskType.SINGLE_COMPONENT:
                     # 2D Folders - evals components
                     eval_components_2d = eval_projections[f"{image_view}_components"]
                     save_filename = os.path.join(output_folders["evals_components_2d"], output_2d_format)
@@ -987,7 +989,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
                 save_filename=save_filename
             )
 
-            if task_type == TaskType.CONNECT_COMPONENTS:
+            if task_type == TaskType.SINGLE_COMPONENT:
                 # 3D Folders - evals components
                 save_filename = os.path.join(output_folders["evals_components_3d"], output_3d_format)
                 convert_numpy_to_data_file(
@@ -1017,10 +1019,10 @@ def main():
     }
     # create_dataset_depth_2d_projections(data_options=data_options)
 
-    # TODO: Required for: TaskType.CONNECT_COMPONENTS
+    # TODO: Required for: TaskType.SINGLE_COMPONENT
     create_data_components(data_options=data_options)
 
-    task_type = TaskType.CONNECT_COMPONENTS
+    task_type = TaskType.SINGLE_COMPONENT
 
     # TODO: for this mode add classifier model to find cubes with holes - model 2D to 1D
     # task_type = TaskType.PATCH_HOLES

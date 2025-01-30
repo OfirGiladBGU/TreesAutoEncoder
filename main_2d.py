@@ -4,7 +4,8 @@ import torch
 import datetime
 import wandb
 
-from datasets.dataset_list import init_dataset, MODEL_RESULTS_PATH
+from datasets.dataset_configurations import MODEL_RESULTS_PATH
+from datasets.dataset_list import init_dataset
 from trainer.train_2d import Trainer
 from models.model_list import init_model
 

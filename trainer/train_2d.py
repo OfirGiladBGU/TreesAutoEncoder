@@ -9,8 +9,8 @@ import numpy as np
 import wandb
 from tqdm import tqdm
 
+from datasets.dataset_configurations import V1_2D_DATASETS, V2_2D_DATASETS
 from datasets.dataset_utils import apply_threshold
-from datasets.custom_datasets_2d import V1_2D_DATASETS, V2_2D_DATASETS
 from trainer import loss_functions
 from trainer import train_utils
 
@@ -215,9 +215,13 @@ class Trainer(object):
             # LOSS += loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
             # LOSS += loss_functions.bce_dice_loss(out=output_data, target=target_data)
 
-            keep_mask1 = (input_data > 0).float()  # Area that should stay unchanged
+            # keep_mask1 = (input_data > 0).float()  # Area that should stay unchanged
+            # black_mask1 = (target_data == 0).float()  # Area that should stay black
+            # fill_mask1 = ((target_data > 0) & (input_data == 0)).float()   # Area that should be filled
+
+            fill_mask1 = (torch.abs(target_data - input_data) > 0).float()  # Area that should be filled
             black_mask1 = (target_data == 0).float()  # Area that should stay black
-            fill_mask1 = ((target_data > 0) & (input_data == 0)).float()   # Area that should be filled
+            keep_mask1 = torch.ones_like(fill_mask1) - (fill_mask1 + black_mask1)  # Area that should stay unchanged
 
             # fill_weight = black_mask1.sum() / np.ones(shape=black_mask1.shape).sum() * 100
             # black_weight = fill_mask1.sum() / np.ones(shape=keep_mask1.shape).sum() * 100

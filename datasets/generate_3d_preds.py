@@ -7,7 +7,7 @@ from scipy.ndimage import convolve, label, rotate
 import math
 
 from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file
-from datasets.dataset_list import DATA_PATH
+from datasets.dataset_configurations import DATA_PATH
 
 
 DATASET_PATH = os.path.join(DATA_PATH, "Pipes3DGeneratorTreeV5")

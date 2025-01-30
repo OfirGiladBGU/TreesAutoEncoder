@@ -4,9 +4,8 @@ import pathlib
 import pandas as pd
 from tqdm import tqdm
 
-from dataset_list import DATA_PATH, TRAIN_CROPPED_PATH
-from dataset_utils import (IMAGES_6_VIEWS,
-                           get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
+from datasets.dataset_configurations import TRAIN_CROPPED_PATH, EVAL_CROPPED_PATH, IMAGES_6_VIEWS
+from dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                            project_3d_to_2d, get_images_6_views, reconstruct_3d_from_2d)
 # TODO: Debug Tools
 from dataset_visulalization import interactive_plot_2d, interactive_plot_3d

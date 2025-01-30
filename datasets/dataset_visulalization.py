@@ -7,9 +7,9 @@ from PIL import Image, ImageDraw, ImageFont
 import plotly.graph_objects as go
 from skimage import color
 
-from datasets.dataset_utils import convert_data_file_to_numpy, IMAGES_6_VIEWS
-from datasets.dataset_list import (DATA_PATH, TRAIN_CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESULTS_PATH,
-                                   PREDICT_PIPELINE_RESULTS_PATH)
+from datasets.dataset_utils import convert_data_file_to_numpy
+from datasets.dataset_configurations import (DATA_PATH, TRAIN_CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESULTS_PATH,
+                                             PREDICT_PIPELINE_RESULTS_PATH, IMAGES_6_VIEWS)
 
 
 ####################
