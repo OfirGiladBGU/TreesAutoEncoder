@@ -659,7 +659,13 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                         pred_fixed_projections[f"{image_view}_image"] = pred_fixed_image
 
                         if np.array_equal(pred_fixed_image, label_image):
-                            pass  # TODO: Decide if mark needed
+                            cubes_data[cube_idx].update({
+                                f"{image_view}_advance_valid": False
+                            })
+                        else:
+                            cubes_data[cube_idx].update({
+                                f"{image_view}_advance_valid": True
+                            })
 
                     # Calculate the connected components for the fixed preds
                     pred_fixed_components = pred_fixed_projections[f"{image_view}_components"]
@@ -683,8 +689,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                             # Create a mask for the current connected component
                             component_mask = np.equal(labeled_delta, component_label).astype(np.uint8)
 
-                            # Find ROI
-                            # roi_pred_fixed_image = # binary_pred_fixed cropped between the component mask: min - 1, max + 1 on x and y
+                            # ROI - cropped area between the component mask: min-1, max+1 on x and y
                             min_x = max(0, component_mask.min(axis=0)[0] - 1)
                             max_x = min(component_mask.max(axis=0)[0] + 1, binary_pred_fixed.shape[0])
                             min_y = max(0, component_mask.min(axis=0)[1] - 1)
@@ -710,7 +715,13 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                         pred_fixed_projections[f"{image_view}_image"] = pred_fixed_image
 
                         if np.array_equal(pred_fixed_image, label_image):
-                            pass  # TODO: Decide if mark needed
+                            cubes_data[cube_idx].update({
+                                f"{image_view}_advance_valid": False
+                            })
+                        else:
+                            cubes_data[cube_idx].update({
+                                f"{image_view}_advance_valid": True
+                            })
 
                 elif task_type == TaskType.PATCH_HOLES:
                     pass
@@ -721,8 +732,9 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             # if cube_idx == 3253:
             #     print("Debug")
 
-            # Validate that at least 1 condition is met
+            # Validate that at least 1 condition is met (if not, pop cube data)
             if not any(condition_list):
+                cubes_data.pop(cube_idx)
                 continue
 
             cube_idx_str = str(cube_idx).zfill(cubes_count_digits_count)
@@ -1088,13 +1100,12 @@ def main():
     # create_dataset_depth_2d_projections(data_options=data_options)
 
     # TODO: Required for: TaskType.SINGLE_COMPONENT
-    create_data_components(data_options=data_options)
+    # create_data_components(data_options=data_options)
+
+    # TODO: Add classifier model to find cubes with holes better - model 2D to 1D
 
     # task_type = TaskType.SINGLE_COMPONENT
-
     task_type = TaskType.LOCAL_CONNECT
-
-    # TODO: for this mode add classifier model to find cubes with holes - model 2D to 1D
     # task_type = TaskType.PATCH_HOLES
 
     create_2d_projections_and_3d_cubes_for_training(task_type=task_type)
