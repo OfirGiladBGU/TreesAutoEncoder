@@ -865,8 +865,10 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 cubes_data[cube_idx].update({
                     "label_local_components": local_components_3d_count
                 })
-            elif task_type == TaskType.PATCH_HOLES:
+
+            elif task_type in [TaskType.LOCAL_CONNECT, TaskType.PATCH_HOLES]:
                 pass
+
             else:
                 raise ValueError("Invalid Task Type")
 
