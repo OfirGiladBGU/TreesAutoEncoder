@@ -34,7 +34,7 @@ def create_2d_holes(input_data: torch.Tensor):
 ##################
 # Train 3D Utils #
 ##################
-def data_3d_to_2d_plot(data_3d: np.ndarray, save_filename):
+def data_3d_to_2d_plot(data_3d: np.ndarray, save_filename, title: str = None):
     # Downsample the images
     downsample_factor = 1
     data_downsampled = data_3d[::downsample_factor, ::downsample_factor, ::downsample_factor]
@@ -59,6 +59,7 @@ def data_3d_to_2d_plot(data_3d: np.ndarray, save_filename):
     ax.set_zlabel('Z')
 
     # Display the plot
-    plt.title('3d plot')
+    if title is not None:
+        plt.title(title)
     plt.savefig(save_filename)
     plt.close('all')

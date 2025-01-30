@@ -583,10 +583,13 @@ class Trainer(object):
         # Load model weights
         if os.path.exists(self.args.weights_filepath):
             self.model.load_state_dict(torch.load(self.args.weights_filepath))
+        self.model.eval()
 
         with torch.no_grad():
             batches_to_plot = min(len(self.test_loader), max_batches_to_plot)
-            for batch_idx in tqdm(range(batches_to_plot)):
+            for batch_idx in range(batches_to_plot):
+                print(f"Batch {batch_idx + 1}/{batches_to_plot}")
+
                 # Get the images from the test loader
                 batch_num = batch_idx + 1
                 data = iter(self.test_loader)
@@ -610,32 +613,30 @@ class Trainer(object):
 
                 input_data = input_data.to(self.device)
                 target_data = target_data.to(self.device)
-
-                self.model.eval()
                 output_data = self.model(input_data)
 
                 if "confidence map" in getattr(self.model, "additional_tasks", list()):
                     output_data, output_confidence_data = output_data
-                    merged_data = torch.where(output_confidence_data > 0.5, output_data, 0)
+                    map_merge_data = torch.where(output_confidence_data > 0.5, output_data, 0)
                 else:
                     output_confidence_data = None
-                    merged_data = output_data
+                    map_merge_data = output_data
 
                 # TODO: Threshold
                 # apply_threshold(output_images, 0.5)
 
-                fusion_data = torch.where(input_data > 0, input_data, merged_data)
+                merge_data = torch.where(input_data > 0, input_data, map_merge_data)
 
                 # Detach the images from the cuda and move them to CPU
                 if self.args.cuda is True:
                     input_data = input_data.cpu()
                     target_data = target_data.cpu()
                     output_data = output_data.cpu()
-                    fusion_data = fusion_data.cpu()
+                    merge_data = merge_data.cpu()
 
                     if output_confidence_data is not None:
                         output_confidence_data = output_confidence_data.cpu()
-                        merged_data = merged_data.cpu()
+                        map_merge_data = map_merge_data.cpu()
 
                 # Convert (b, 6, w, h) to (6*b, 1, w, h) - Trees2DV2
                 if input_data.shape[1] == 6:
@@ -656,21 +657,22 @@ class Trainer(object):
                 plotting_data_list = [
                     {"Title": "Input", "Data": input_data},
                     {"Title": "Target", "Data": target_data},
-                    {"Title": "Output", "Data": output_data},
-                    {"Title": "Fusion", "Data": fusion_data}
+                    {"Title": "Output", "Data": output_data}
                 ]
 
                 # Handle additional_tasks
                 if "confidence map" in getattr(self.model, "additional_tasks", list()):
                     additional_plotting_data_list = [
                         {"Title": "Confidence", "Data": output_confidence_data},
-                        {"Title": "Merged", "Data": merged_data}
+                        {"Title": "Map Merge", "Data": map_merge_data}
                     ]
                     plotting_data_list += additional_plotting_data_list
 
+                plotting_data_list.append({"Title": "Merge", "Data": merge_data})
+
                 apply_cleanup = True
                 if apply_cleanup is True:
-                    # TODO: Remove noise created by the model that doesn't connect components (add to predict pipleine if works)
+                    # TODO: Remove noise created by the model that doesn't connect components (add to predict pipeline if works)
                     pass
 
                 # Create a grid of images
@@ -678,18 +680,16 @@ class Trainer(object):
                 rows = input_data.size(0)
                 fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
                 ax = []
-                for i in range(rows):
-                    j = 0
-                    for plotting_data in plotting_data_list:
-                        data = plotting_data["Data"]
-                        j += 1
-                        ax.append(fig.add_subplot(rows, columns, i * columns + j))
-                        numpy_image = data[i].numpy()
+                for row_idx in tqdm(range(rows)):
+                    for col_idx in range(columns):
+                        data: torch.Tensor = plotting_data_list[col_idx]["Data"]
+                        ax.append(fig.add_subplot(rows, columns, row_idx * columns + col_idx + 1))
+                        numpy_image = data[row_idx].numpy()
                         plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
 
-                for j in range(columns):
-                    title = plotting_data_list[j]["Title"]
-                    ax[j].set_title(f"{title}:")
+                for col_idx in range(columns):
+                    title: str = plotting_data_list[col_idx]["Title"]
+                    ax[col_idx].set_title(f"{title}:")
 
                 fig.tight_layout()
                 save_filename = os.path.join(self.args.results_path, f"{self.args.dataset}_{batch_num}.png")

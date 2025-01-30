@@ -147,17 +147,20 @@ class Trainer(object):
         model_parameters = copy.deepcopy(self.model.state_dict())
         torch.save(model_parameters, self.args.weights_filepath)
 
-    def predict(self, max_batches_to_plot=4):
+    def predict(self, max_batches_to_plot=2):
         print(f"[Model: '{self.model.model_name}'] Predicting...")
         os.makedirs(name=self.args.results_path, exist_ok=True)
 
         # Load model weights
         if os.path.exists(self.args.weights_filepath):
             self.model.load_state_dict(torch.load(self.args.weights_filepath))
+        self.model.eval()
 
         with torch.no_grad():
             batches_to_plot = min(len(self.test_loader), max_batches_to_plot)
-            for batch_idx in tqdm(range(batches_to_plot)):
+            for batch_idx in range(batches_to_plot):
+                print(f"Batch {batch_idx + 1}/{batches_to_plot}")
+
                 # Get the images from the test loader
                 batch_num = batch_idx + 1
                 data = iter(self.test_loader)
@@ -166,8 +169,6 @@ class Trainer(object):
 
                 input_data = input_data.to(self.device)
                 target_data = target_data.to(self.device)
-
-                self.model.eval()
                 output_data = self.model(input_data)
 
                 # TODO: Threshold
@@ -175,7 +176,7 @@ class Trainer(object):
                 apply_threshold(tensor=threshold_data, threshold=0.1)
 
                 occluded_data = ((threshold_data - input_data) > 0.5).float()
-                fusion_data = torch.where(input_data > 0, input_data, threshold_data)
+                merge_data = torch.where(input_data > 0, input_data, threshold_data)
 
                 # Detach the images from the cuda and move them to CPU
                 if self.args.cuda:
@@ -184,11 +185,20 @@ class Trainer(object):
                     output_data = output_data.cpu()
                     threshold_data = threshold_data.cpu()
                     occluded_data = occluded_data.cpu()
-                    fusion_data = fusion_data.cpu()
+                    merge_data = merge_data.cpu()
 
                 #################
                 # Visualization #
                 #################
+
+                plotting_data_list = [
+                    {"Title": "Input", "Data": input_data},
+                    {"Title": "Target", "Data": target_data},
+                    {"Title": "Output", "Data": output_data},
+                    {"Title": "Threshold", "Data": threshold_data},
+                    {"Title": "Occluded", "Data": occluded_data},
+                    {"Title": "Merge", "Data": merge_data}
+                ]
 
                 # Save 3d results and 2d results that will be used for the grid output
                 images_info = list()
@@ -196,133 +206,71 @@ class Trainer(object):
                 data_2d_path = os.path.join(self.args.results_path, "data_2d")
                 os.makedirs(name=data_3d_path, exist_ok=True)
                 os.makedirs(name=data_2d_path, exist_ok=True)
-                for idx in range(input_data.size(0)):
+
+                columns = len(plotting_data_list)
+                rows = input_data.size(0)
+                for row_idx in tqdm(range(rows)):
                     images_info_idx = dict()
 
-                    # Target
-                    target_data_idx = target_data[idx].squeeze().numpy()
-                    save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_target")
-                    save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_target")
-                    # np.save(file=save_filename_3d, arr=target_data_idx)
-                    convert_numpy_to_data_file(
-                        numpy_data=target_data_idx,
-                        source_data_filepath="dummy.npy",
-                        save_filename=save_filename_3d
-                    )
-                    train_utils.data_3d_to_2d_plot(data_3d=target_data_idx, save_filename=save_filename_2d)
-                    images_info_idx["target"] = save_filename_2d
+                    for col_idx in range(columns):
+                        data: torch.Tensor = plotting_data_list[col_idx]["Data"]
+                        title: str = plotting_data_list[col_idx]["Title"]
 
-                    # Output
-                    output_data_idx = output_data[idx].squeeze().numpy()
-                    save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_output")
-                    save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_output")
-                    # np.save(file=save_filename_3d, arr=output_data_idx)
-                    convert_numpy_to_data_file(
-                        numpy_data=output_data_idx,
-                        source_data_filepath="dummy.npy",
-                        save_filename=save_filename_3d
-                    )
-                    train_utils.data_3d_to_2d_plot(data_3d=output_data_idx, save_filename=save_filename_2d)
-                    images_info_idx["output"] = save_filename_2d
+                        save_name = f"{self.args.dataset}_{batch_num}_{row_idx}_{title.lower()}"
+                        save_filename_3d = os.path.join(data_3d_path, save_name)
+                        save_filename_2d = os.path.join(data_2d_path, save_name)
 
-                    # Threshold
-                    threshold_data_idx = threshold_data[idx].squeeze().numpy()
-                    save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_threshold")
-                    save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_threshold")
-                    # np.save(file=save_filename_3d, arr=threshold_data_idx)
-                    convert_numpy_to_data_file(
-                        numpy_data=threshold_data_idx,
-                        source_data_filepath="dummy.npy",
-                        save_filename=save_filename_3d
-                    )
-                    train_utils.data_3d_to_2d_plot(data_3d=threshold_data_idx, save_filename=save_filename_2d)
-                    images_info_idx["threshold"] = save_filename_2d
+                        # Handle Input
+                        if title.lower() == "input" and self.args.dataset in V1_3D_DATASETS:
+                            # Create a grid of images
+                            input_columns = len(IMAGES_6_VIEWS)
+                            input_rows = 1
+                            fig = plt.figure(figsize=(input_columns + 0.5, input_rows + 0.5))
+                            ax = []
+                            for view_idx, view_name in enumerate(IMAGES_6_VIEWS):
+                                ax.append(fig.add_subplot(input_rows, input_columns, view_idx + 1))
+                                numpy_image = data[row_idx][view_idx].numpy()
+                                plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
+                                ax[view_idx].set_title(f"{view_name} view:")
 
-                    # Occluded
-                    occluded_data_idx = occluded_data[idx].squeeze().numpy()
-                    save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_occluded")
-                    save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_occluded")
-                    # np.save(file=save_filename_3d, arr=occluded_data_idx)
-                    convert_numpy_to_data_file(
-                        numpy_data=occluded_data_idx,
-                        source_data_filepath="dummy.npy",
-                        save_filename=save_filename_3d
-                    )
-                    train_utils.data_3d_to_2d_plot(data_3d=occluded_data_idx, save_filename=save_filename_2d)
-                    images_info_idx["occluded"] = save_filename_2d
+                            fig.tight_layout()
+                            plt.savefig(save_filename_2d)
+                        else:
+                            data_idx = data[row_idx].squeeze().numpy()
+                            # np.save(file=save_filename_3d, arr=data_idx)
+                            convert_numpy_to_data_file(
+                                numpy_data=data_idx,
+                                source_data_filepath="dummy.npy",
+                                save_filename=save_filename_3d
+                            )
+                            train_utils.data_3d_to_2d_plot(data_3d=data_idx, save_filename=save_filename_2d)
 
-                    # Fusion
-                    fusion_data_idx = fusion_data[idx].squeeze().numpy()
-                    save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_fusion")
-                    save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_fusion")
-                    # np.save(file=save_filename_3d, arr=fusion_data_idx)
-                    convert_numpy_to_data_file(
-                        numpy_data=fusion_data_idx,
-                        source_data_filepath="dummy.npy",
-                        save_filename=save_filename_3d
-                    )
-                    train_utils.data_3d_to_2d_plot(data_3d=fusion_data_idx, save_filename=save_filename_2d)
-                    images_info_idx["fusion"] = save_filename_2d
+                        images_info_idx[title.lower()] = save_filename_2d
 
-                    # Input
-                    save_filename_3d = os.path.join(data_3d_path, f"{self.args.dataset}_{batch_num}_{idx}_input")
-                    save_filename_2d = os.path.join(data_2d_path, f"{self.args.dataset}_{batch_num}_{idx}_input")
-                    if self.args.dataset in V1_3D_DATASETS:
-                        # Create a grid of images
-                        columns = 6
-                        rows = 1
-                        fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
-                        ax = []
-                        for view_idx, view_name in enumerate(IMAGES_6_VIEWS):
-                            ax.append(fig.add_subplot(rows, columns, view_idx + 1))
-                            numpy_image = input_data[idx][view_idx].numpy()
-                            plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
-                            ax[view_idx].set_title(f"{view_name} view:")
-
-                        fig.tight_layout()
-                        plt.savefig(save_filename_2d)
-
-                    elif self.args.dataset in V2_3D_DATASETS:
-                        input_data_idx = input_data[idx].squeeze().numpy()
-                        # np.save(file=save_filename_3d, arr=input_data_idx)
-                        convert_numpy_to_data_file(
-                            numpy_data=input_data_idx,
-                            source_data_filepath="dummy.npy",
-                            save_filename=save_filename_3d
-                        )
-                        train_utils.data_3d_to_2d_plot(data_3d=input_data_idx, save_filename=save_filename_2d)
-
-                    else:
-                        raise ValueError("Invalid dataset")
-
-                    images_info_idx["input"] = save_filename_2d
                     images_info.append(images_info_idx)
 
-                # Create a grid of images
+                ###########################
+                # Create a grid of images #
+                ###########################
+
                 img_width = 0
                 img_height = 0
-                image_types = ["input", "target", "output", "threshold", "occluded", "fusion"]
-                for image_type in image_types:
-                    image_sample = Image.open(fp=f"{images_info[0][image_type]}.png")
+                font_size = 20  # Define a font size (can adjust based on preferences)
+                headers = []  # Define the text for each column header
+
+                for col_idx in range(columns):
+                    title: str = plotting_data_list[col_idx]["Title"]
+                    image_sample = Image.open(fp=f"{images_info[0][title.lower()]}.png")
                     img_width = max(img_width, image_sample.size[0])
                     img_height = max(img_height, image_sample.size[1])
                     image_sample.close()
-
-                # Define a font size (can adjust based on preferences)
-                font_size = 20
-
-                # Define the text for each column header
-                headers = [f"{image_type}:".title() for image_type in image_types]
+                    headers.append(f"{title}:")
 
                 # Create a font object (You may need to specify the path to a TTF font on your system)
                 try:
                     font = ImageFont.truetype("arial.ttf", font_size)
                 except IOError:
                     font = ImageFont.load_default()
-
-                # Number of columns and rows for the grid
-                columns = len(headers)
-                rows = input_data.size(0)
 
                 # Create a blank image for the grid, add extra space at the top for the headers
                 header_height = font_size + 10  # Extra space for the header
@@ -338,53 +286,28 @@ class Trainer(object):
                 draw = ImageDraw.Draw(grid_img)
 
                 # Add the headers
-                for col in range(columns):
-                    header_text = headers[col]
+                for col_idx in range(columns):
+                    header_text = headers[col_idx]
 
                     # Calculate the bounding box of the text using textbbox
                     text_bbox = draw.textbbox((0, 0), header_text, font=font)
                     text_width = text_bbox[2] - text_bbox[0]
 
                     # Center text in the column
-                    x_position = col * img_width + (img_width - text_width) // 2
+                    x_position = col_idx * img_width + (img_width - text_width) // 2
                     draw.text((x_position, 5), header_text, font=font, fill="black")  # 5px padding from the top
 
                 # Paste images into the grid (below the header)
-                for i in range(rows):
-                    j = -1
-
-                    # Load Input image and paste into grid
-                    j += 1
-                    input_image = Image.open(fp=f"{images_info[i]['input']}.png")
-                    grid_img.paste(input_image, (j * img_width, header_height + i * img_height))
-
-                    # Load Target image and paste into grid
-                    j += 1
-                    target_image = Image.open(fp=f"{images_info[i]['target']}.png")
-                    grid_img.paste(target_image, (j * img_width, header_height + i * img_height))
-
-                    # Load Output image and paste into grid
-                    j += 1
-                    output_image = Image.open(fp=f"{images_info[i]['output']}.png")
-                    grid_img.paste(output_image, (j * img_width, header_height + i * img_height))
-
-                    # Load Threshold image and paste into grid
-                    j += 1
-                    threshold_image = Image.open(fp=f"{images_info[i]['threshold']}.png")
-                    grid_img.paste(threshold_image, (j * img_width, header_height + i * img_height))
-
-                    # Load Occluded image and paste into grid
-                    j += 1
-                    occluded_image = Image.open(fp=f"{images_info[i]['occluded']}.png")
-                    grid_img.paste(occluded_image, (j * img_width, header_height + i * img_height))
-
-                    # Load Fusion image and paste into grid
-                    j += 1
-                    fusion_image = Image.open(fp=f"{images_info[i]['fusion']}.png")
-                    grid_img.paste(fusion_image, (j * img_width, header_height + i * img_height))
+                for row_idx in tqdm(range(rows)):
+                    for col_idx in range(columns):
+                        # Load image and paste into grid
+                        title: str = plotting_data_list[col_idx]["Title"]
+                        data_image = Image.open(fp=f"{images_info[row_idx][title.lower()]}.png")
+                        grid_img.paste(data_image, (col_idx * img_width, header_height + row_idx * img_height))
 
                 # Save the combined image
-                save_filename = os.path.join(self.args.results_path, f"{self.args.dataset}_{batch_num}.png")
+                save_name = f"{self.args.dataset}_{batch_num}"
+                save_filename = os.path.join(self.args.results_path, f"{save_name}.png")
                 grid_img.save(save_filename)
 
                 # Log the image to wandb
