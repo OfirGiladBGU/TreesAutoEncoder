@@ -9,8 +9,8 @@ from datasets.dataset_list import init_dataset
 from trainer.train_3d import Trainer
 from models.model_list import init_model
 
-API_Key = os.environ.get("WANDB_API_KEY")
-wandb.login(key=API_Key)
+API_KEY = os.environ.get("WANDB_API_KEY")
+wandb.login(key=API_KEY)
 
 
 def train_model(dataset, model, use_weights: bool):

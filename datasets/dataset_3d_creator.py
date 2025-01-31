@@ -4,7 +4,7 @@ import pathlib
 import pandas as pd
 from tqdm import tqdm
 
-from datasets.dataset_configurations import TRAIN_CROPPED_PATH, EVAL_CROPPED_PATH, IMAGES_6_VIEWS
+from datasets.dataset_configurations import *
 from dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                            project_3d_to_2d, get_images_6_views, reconstruct_3d_from_2d)
 # TODO: Debug Tools
@@ -40,23 +40,23 @@ from dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 def create_3d_reconstructions():
     # Sources
     source_folders = {
-        "labels_3d": os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6"),
-        "preds_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6"),
-        "preds_fixed_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6")
+        "labels_3d": LABELS_3D,
+        "preds_3d": PREDS_3D,
+        "preds_fixed_3d": PREDS_FIXED_3D
     }
 
     # Inputs
     input_folders = {
-        "labels_2d": os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6"),
-        "preds_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_2d_v6"),
-        "preds_fixed_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
+        "labels_2d": LABELS_2D,
+        "preds_2d": PREDS_2D,
+        "preds_fixed_2d": PREDS_FIXED_2D
     }
 
     # Outputs
     output_folders = {
-        "labels_3d_reconstruct": os.path.join(TRAIN_CROPPED_PATH, "labels_3d_reconstruct_v6"),
-        "preds_3d_reconstruct": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_reconstruct_v6"),
-        "preds_fixed_3d_reconstruct": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_reconstruct_v6")
+        "labels_3d_reconstruct": LABELS_3D_RECONSTRUCT,
+        "preds_3d_reconstruct": PREDS_3D_RECONSTRUCT,
+        "preds_fixed_3d_reconstruct": PREDS_FIXED_3D_RECONSTRUCT
     }
 
     # Create Output Folders
@@ -163,15 +163,15 @@ def create_3d_reconstructions():
 def create_3d_fusions():
     # Inputs
     input_folders = {
-        "labels_3d_reconstruct": os.path.join(TRAIN_CROPPED_PATH, "labels_3d_reconstruct_v6"),
-        "preds_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6"),
-        "preds_fixed_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6")
+        "labels_3d_reconstruct": LABELS_3D_RECONSTRUCT,
+        "preds_3d": PREDS_3D,
+        "preds_fixed_3d": PREDS_FIXED_3D
     }
 
     # Outputs
     output_folders = {
-        "preds_3d_fusion": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_fusion_v6"),
-        "preds_fixed_3d_fusion": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_fusion_v6")
+        "preds_3d_fusion": PREDS_3D_FUSION,
+        "preds_fixed_3d_fusion": PREDS_FIXED_3D_FUSION
     }
 
     # Create Output Folders

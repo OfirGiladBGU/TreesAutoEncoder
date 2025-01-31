@@ -1,10 +1,10 @@
 import argparse
+import os
 import torch
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-import os
 
-from datasets.dataset_configurations import DATA_2D_SIZE, DATA_3D_SIZE, DATA_PATH, TRAIN_CROPPED_PATH, TRAIN_LOG_PATH
+from datasets.dataset_configurations import *
 from datasets.custom_datasets_2d import TreesCustomDataloader2D
 from datasets.custom_datasets_3d import TreesCustomDataloader3D
 
@@ -111,7 +111,7 @@ class TreesDataset2DV1S(object):
     def __init__(self, args):
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
-        src_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
+        src_path = LABELS_2D
 
         data_paths = [src_path]
         trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args)
@@ -123,8 +123,8 @@ class TreesDataset2DV1(object):
     def __init__(self, args):
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
-        src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
-        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
+        src_path = PREDS_FIXED_2D
+        dst_path = LABELS_2D
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args)
@@ -136,8 +136,8 @@ class TreesDataset2DV2(object):
     def __init__(self, args):
         self.input_size = (6, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
-        src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
-        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
+        src_path = PREDS_FIXED_2D
+        dst_path = LABELS_2D
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args)
@@ -149,8 +149,8 @@ class TreesDataset2DV2M(object):
     def __init__(self, args):
         self.input_size = (6, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
-        src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
-        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
+        src_path = PREDS_FIXED_2D
+        dst_path = LABELS_2D
         log_path = TRAIN_LOG_PATH
 
         data_paths = [src_path, dst_path]
@@ -163,8 +163,8 @@ class TreesDataset3DV1(object):
     def __init__(self, args):
         self.input_size = (6, 1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
-        src_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
-        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
+        src_path = LABELS_2D
+        dst_path = LABELS_3D
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
@@ -176,8 +176,8 @@ class TreesDataset3DV2(object):
     def __init__(self, args):
         self.input_size = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
-        src_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_reconstruct_v6")
-        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
+        src_path = LABELS_3D_RECONSTRUCT
+        dst_path = LABELS_3D
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
@@ -189,8 +189,8 @@ class TreesDataset3DV2M(object):
     def __init__(self, args):
         self.input_size = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
-        src_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_reconstruct_v6")
-        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
+        src_path = LABELS_3D_RECONSTRUCT
+        dst_path = LABELS_3D
         log_path = TRAIN_LOG_PATH
 
         data_paths = [src_path, dst_path]
@@ -203,8 +203,8 @@ class TreesDataset3DV3(object):
     def __init__(self, args):
         self.input_size = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
-        src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_fusion_v6")
-        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
+        src_path = PREDS_FIXED_3D_FUSION
+        dst_path = LABELS_3D
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
@@ -216,8 +216,8 @@ class TreesDataset3DV4(object):
     def __init__(self, args):
         self.input_size = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
-        src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6")
-        dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
+        src_path = PREDS_FIXED_3D
+        dst_path = LABELS_3D
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)

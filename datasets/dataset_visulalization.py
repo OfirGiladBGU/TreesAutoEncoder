@@ -7,9 +7,8 @@ from PIL import Image, ImageDraw, ImageFont
 import plotly.graph_objects as go
 from skimage import color
 
+from datasets.dataset_configurations import *
 from datasets.dataset_utils import convert_data_file_to_numpy
-from datasets.dataset_configurations import (DATA_PATH, TRAIN_CROPPED_PATH, VISUALIZATION_RESULTS_PATH, RESULTS_PATH,
-                                             PREDICT_PIPELINE_RESULTS_PATH, IMAGES_6_VIEWS)
 
 
 ####################
@@ -246,16 +245,16 @@ def single_plot_3d(data_3d_filepath, interactive_mode: bool = False, interactive
 # TODO: support for any 3D data
 def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
     folder_paths = {
-        "labels_3d": os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6"),
-        "labels_3d_reconstruct": os.path.join(TRAIN_CROPPED_PATH, "labels_3d_reconstruct_v6"),
+        "labels_3d": LABELS_3D,
+        "labels_3d_reconstruct": LABELS_3D_RECONSTRUCT,
 
-        "preds_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6"),
-        "preds_3d_reconstruct": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_reconstruct_v6"),
-        "preds_3d_fusion": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_fusion_v6"),
+        "preds_3d": PREDS_3D,
+        "preds_3d_reconstruct": PREDS_3D_RECONSTRUCT,
+        "preds_3d_fusion": PREDS_3D_FUSION,
 
-        "preds_fixed_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6"),
-        "preds_fixed_3d_reconstruct": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_reconstruct_v6"),
-        "preds_fixed_3d_fusion": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_fusion_v6")
+        "preds_fixed_3d": PREDS_FIXED_3D,
+        "preds_fixed_3d_reconstruct": PREDS_FIXED_3D_RECONSTRUCT,
+        "preds_fixed_3d_fusion": PREDS_FIXED_3D_FUSION
     }
 
     for key, value in folder_paths.items():
@@ -343,15 +342,15 @@ def single_plot_2d(data_2d_filepath, interactive_mode: bool = False):
 
 def full_plot_2d(data_3d_basename: str, plot_components: bool = False):
     folder_paths = {
-        "labels_2d": os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6"),
-        "preds_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_2d_v6"),
-        "preds_fixed_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6"),
+        "labels_2d": LABELS_2D,
+        "preds_2d": PREDS_2D,
+        "preds_fixed_2d": PREDS_FIXED_2D,
     }
 
     if plot_components is True:
         folder_paths.update({
-            "preds_components_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_components_2d_v6"),
-            "preds_fixed_components_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_components_2d_v6")
+            "preds_components_2d": PREDS_COMPONENTS_2D,
+            "preds_fixed_components_2d": PREDS_FIXED_COMPONENTS_2D
         })
 
     for key, value in folder_paths.items():

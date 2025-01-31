@@ -9,9 +9,7 @@ import pandas as pd
 from scipy.ndimage import label
 from skimage import color
 
-from datasets.dataset_configurations import (DATASET_PATH, TRAIN_CROPPED_PATH, EVAL_CROPPED_PATH,
-                                             DATA_3D_STRIDE, DATA_3D_SIZE, IMAGES_6_VIEWS, APPLY_CONTINUITY_FIX,
-                                             TRAIN_LOG_PATH, EVAL_LOG_PATH)
+from datasets.dataset_configurations import *
 from dataset_utils import (TaskType,
                            get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                            save_nii_gz_in_identity_affine, project_3d_to_2d)
@@ -238,15 +236,15 @@ def create_dataset_depth_2d_projections(data_options: dict):
     output_folders = {}
 
     if data_options.get("labels", False) is True:
-        input_folders["labels"] = os.path.join(DATASET_PATH, "labels")
+        input_folders["labels"] = LABELS
         output_folders["labels_2d"] = os.path.join(DATASET_PATH, "labels_2d")
 
     if data_options.get("preds", False) is True:
-        input_folders["preds"] = os.path.join(DATASET_PATH, "preds")
+        input_folders["preds"] = PREDS
         output_folders["preds_2d"] = os.path.join(DATASET_PATH, "preds_2d")
 
     if data_options.get("evals", False) is True:
-        input_folders["evals"] = os.path.join(DATASET_PATH, "evals")
+        input_folders["evals"] = EVALS
         output_folders["evals_2d"] = os.path.join(DATASET_PATH, "evals_2d")
 
     # Create Output Folders
@@ -309,12 +307,12 @@ def create_data_components(data_options):
     output_folders = {}
 
     if data_options.get("preds", False) is True:
-        input_folders["preds"] = os.path.join(DATASET_PATH, "preds")
-        output_folders["preds_components"] = os.path.join(DATASET_PATH, "preds_components")
+        input_folders["preds"] = PREDS
+        output_folders["preds_components"] = PREDS_COMPONENTS
 
     if data_options.get("evals", False) is True:
-        input_folders["evals"] = os.path.join(DATASET_PATH, "evals")
-        output_folders["evals_components"] = os.path.join(DATASET_PATH, "evals_components")
+        input_folders["evals"] = EVALS
+        output_folders["evals_components"] = EVALS_COMPONENTS
 
     # Create Output Folders
     for output_folder in output_folders.values():
@@ -368,36 +366,36 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
 
     # Inputs
     input_folders = {
-        "labels": os.path.join(DATASET_PATH, "labels"),
-        "preds": os.path.join(DATASET_PATH, "preds")
+        "labels": LABELS,
+        "preds": PREDS
     }
     if task_type == TaskType.SINGLE_COMPONENT:
         input_folders.update({
-            "preds_components": os.path.join(DATASET_PATH, "preds_components")
+            "preds_components": PREDS_COMPONENTS
         })
 
     # Outputs
     output_folders = {
         # Labels
-        "labels_2d": os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6"),
-        "labels_3d": os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6"),
+        "labels_2d": LABELS_2D,
+        "labels_3d": LABELS_3D,
         # Preds
-        "preds_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_2d_v6"),
-        "preds_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6"),
+        "preds_2d": PREDS_2D,
+        "preds_3d": PREDS_3D,
 
         # Preds Fixed
-        "preds_fixed_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6"),
-        "preds_fixed_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6")
+        "preds_fixed_2d": PREDS_FIXED_2D,
+        "preds_fixed_3d": PREDS_FIXED_3D
     }
     if task_type == TaskType.SINGLE_COMPONENT:
         output_folders.update({
             # Preds Components
-            "preds_components_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_components_2d_v6"),
-            "preds_components_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_components_3d_v6"),
+            "preds_components_2d": PREDS_COMPONENTS_2D,
+            "preds_components_3d": PREDS_COMPONENTS_3D,
 
             # Preds Fixed Components
-            "preds_fixed_components_2d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_components_2d_v6"),
-            "preds_fixed_components_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_components_3d_v6")
+            "preds_fixed_components_2d": PREDS_FIXED_COMPONENTS_2D,
+            "preds_fixed_components_3d": PREDS_FIXED_COMPONENTS_3D
         })
 
     # Log Data
@@ -915,24 +913,24 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
 
     # Inputs
     input_folders = {
-        "evals": os.path.join(DATASET_PATH, "evals"),
+        "evals": EVALS,
     }
     if task_type == TaskType.SINGLE_COMPONENT:
         input_folders.update({
-            "evals_components": os.path.join(DATASET_PATH, "evals_components")
+            "evals_components": EVALS_COMPONENTS
         })
 
     # Outputs
     output_folders = {
         # Evals
-        "evals_2d": os.path.join(EVAL_CROPPED_PATH, "evals_2d_v6"),
-        "evals_3d": os.path.join(EVAL_CROPPED_PATH, "evals_3d_v6"),
+        "evals_2d": EVALS_2D,
+        "evals_3d": EVALS_3D,
     }
     if task_type == TaskType.SINGLE_COMPONENT:
         output_folders.update({
             # Evals Components
-            "evals_components_2d": os.path.join(EVAL_CROPPED_PATH, "evals_components_2d_v6"),
-            "evals_components_3d": os.path.join(EVAL_CROPPED_PATH, "evals_components_3d_v6"),
+            "evals_components_2d": EVALS_COMPONENTS_2D,
+            "evals_components_3d": EVALS_COMPONENTS_3D,
         })
 
     # Log Data
