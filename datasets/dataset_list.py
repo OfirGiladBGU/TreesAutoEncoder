@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 import os
 
-from datasets.dataset_configurations import DATA_2D_SIZE, DATA_3D_SIZE, DATA_PATH, TRAIN_CROPPED_PATH
+from datasets.dataset_configurations import DATA_2D_SIZE, DATA_3D_SIZE, DATA_PATH, TRAIN_CROPPED_PATH, TRAIN_LOG_PATH
 from datasets.custom_datasets_2d import TreesCustomDataloader2D
 from datasets.custom_datasets_3d import TreesCustomDataloader3D
 
@@ -151,10 +151,10 @@ class TreesDataset2DV2M(object):
 
         src_path = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
         dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
-        log_path = os.path.join(TRAIN_CROPPED_PATH, "log.csv")
+        log_path = TRAIN_LOG_PATH
 
-        data_paths = [src_path, dst_path, log_path]
-        trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args)
+        data_paths = [src_path, dst_path]
+        trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args, log_path=log_path)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
@@ -191,10 +191,10 @@ class TreesDataset3DV2M(object):
 
         src_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_reconstruct_v6")
         dst_path = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
-        log_path = os.path.join(TRAIN_CROPPED_PATH, "log.csv")
+        log_path = TRAIN_LOG_PATH
 
-        data_paths = [src_path, dst_path, log_path]
-        trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
+        data_paths = [src_path, dst_path]
+        trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args, log_path=log_path)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
