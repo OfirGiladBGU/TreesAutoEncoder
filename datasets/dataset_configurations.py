@@ -16,7 +16,7 @@ DATA_3D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE, DATA_CROP_SIZE)
 DATA_2D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE)
 
 # Define dataset folder
-DATASET_FOLDER = "parse2022"  # TODO: Read from config file
+DATASET_FOLDER = "Pipes3DGeneratorCycles"  # TODO: Read from config file
 
 # Define paths
 ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
@@ -42,3 +42,7 @@ V2_3D_DATASETS = ['Trees3DV2', 'Trees3DV2M', 'Trees3DV3', 'Trees3DV4']
 
 IMAGES_6_VIEWS = ["top", "bottom", "front", "back", "left", "right"]
 PROJECTION_MODE = "visualization"  # "visualization" or "training"
+
+# Logs
+TRAIN_LOG_PATH = os.path.join(TRAIN_CROPPED_PATH, "log.csv")
+EVAL_LOG_PATH = os.path.join(EVAL_CROPPED_PATH, "log.csv")

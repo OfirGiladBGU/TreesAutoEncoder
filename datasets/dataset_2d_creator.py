@@ -10,7 +10,8 @@ from scipy.ndimage import label
 from skimage import color
 
 from datasets.dataset_configurations import (DATASET_PATH, TRAIN_CROPPED_PATH, EVAL_CROPPED_PATH,
-                                             DATA_3D_STRIDE, DATA_3D_SIZE, IMAGES_6_VIEWS, APPLY_CONTINUITY_FIX)
+                                             DATA_3D_STRIDE, DATA_3D_SIZE, IMAGES_6_VIEWS, APPLY_CONTINUITY_FIX,
+                                             TRAIN_LOG_PATH, EVAL_LOG_PATH)
 from dataset_utils import (TaskType,
                            get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                            save_nii_gz_in_identity_affine, project_3d_to_2d)
@@ -399,8 +400,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             "preds_fixed_components_3d": os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_components_3d_v6")
         })
 
-    # Log
-    log_filepath = os.path.join(TRAIN_CROPPED_PATH, "log.csv")
+    # Log Data
     log_data = dict()
 
     # Config
@@ -579,7 +579,6 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             for view_idx, image_view in enumerate(IMAGES_6_VIEWS):
                 pred_image = pred_projections[f"{image_view}_image"]
                 label_image = label_projections[f"{image_view}_image"]
-
                 pred_fixed_image = pred_fixed_projections[f"{image_view}_image"]
 
                 # pred_components = pred_projections[f"{image_view}_components"]
@@ -898,10 +897,10 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             # _convert_numpy_to_nii_gz(label_cube, save_name="1")
             # _convert_numpy_to_nii_gz(pred_cube, save_name="2")
 
-        if filepath_idx == 19:
+        if filepath_idx == STOP_INDEX:
             break
 
-    pd.DataFrame(log_data).T.to_csv(log_filepath)
+    pd.DataFrame(log_data).T.to_csv(TRAIN_LOG_PATH)
 
 
 def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
@@ -936,15 +935,14 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
             "evals_components_3d": os.path.join(EVAL_CROPPED_PATH, "evals_components_3d_v6"),
         })
 
-    # Log
-    log_filepath = os.path.join(EVAL_CROPPED_PATH, "log.csv")
+    # Log Data
     log_data = dict()
 
     # Config
-    cube_dim = DATA_3D_SIZE
     stride_dim = DATA_3D_STRIDE
-    white_points_upper_threshold = cube_dim[0] * cube_dim[0] * 0.9  # TODO: Support dynamic calculation
-    white_points_lower_threshold = cube_dim[0] * cube_dim[0] * 0.1  # TODO: Support dynamic calculation
+    cube_dim = DATA_3D_SIZE
+    upper_threshold = math.pow(cube_dim[0], 2) * 0.9  # TODO: Support dynamic calculation
+    lower_threshold = math.pow(cube_dim[0], 2) * 0.1  # TODO: Support dynamic calculation
 
     # Create Output Folders
     for output_folder in output_folders.values():
@@ -995,10 +993,11 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
                 cube_dim=cube_dim,
                 stride_dim=stride_dim
             )
-        elif task_type == TaskType.PATCH_HOLES:
-            eval_component_filepath = None
 
+        elif task_type in [TaskType.LOCAL_CONNECT, TaskType.PATCH_HOLES]:
+            eval_component_filepath = None
             eval_components_cubes = None
+
         else:
             raise ValueError("Invalid Task Type")
 
@@ -1015,7 +1014,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
                 # Get index data:
                 eval_components_cube = eval_components_cubes[cube_idx]
 
-                # check that there are 2 or more components to connect
+                # TASK CONDITION: The region has 2 or more different global components
                 global_components_3d_indices = list(np.unique(eval_components_cube))
                 global_components_3d_indices.remove(0)
                 global_components_3d_count = len(global_components_3d_indices)
@@ -1027,8 +1026,18 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
                     # "name": output_3d_format,
                     "eval_global_components": global_components_3d_count,
                 })
+
+            elif task_type == TaskType.LOCAL_CONNECT:
+                eval_components_cube = None
+
+                # TASK CONDITION: NONE
+
             elif task_type == TaskType.PATCH_HOLES:
                 eval_components_cube = None
+
+                # TASK CONDITION: The region has holes
+                # TODO: Implement
+
             else:
                 raise ValueError("Invalid Task Type")
 
@@ -1040,17 +1049,28 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
                 component_3d=eval_components_cube
             )
 
-            condition = True
-            for image_view in IMAGES_6_VIEWS:
+            condition_list = [True] * len(IMAGES_6_VIEWS)
+            for view_idx, image_view in enumerate(IMAGES_6_VIEWS):
                 eval_image = eval_projections[f"{image_view}_image"]
 
-                # Check Condition (If condition fails, skip the current mini cube):
-                if not (white_points_upper_threshold > np.count_nonzero(eval_image) > white_points_lower_threshold):
-                    condition = False
-                    break
+                condition = [
+                    not (upper_threshold > np.count_nonzero(eval_image) > lower_threshold)
+                ]
 
-            # Validate the condition
-            if not condition:
+                # Check Condition (If condition fails, skip the current view):
+                if any(condition):
+                    condition_list[view_idx] = False
+
+                    cubes_data[cube_idx].update({
+                        f"{image_view}_valid": False
+                    })
+                else:
+                    cubes_data[cube_idx].update({
+                        f"{image_view}_valid": True
+                    })
+
+            # Validate that at least 1 condition is met (if not, pop cube data)
+            if not any(condition_list):
                 continue
 
             cube_idx_str = str(cube_idx).zfill(cubes_count_digits_count)
@@ -1076,8 +1096,10 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
                         source_data_filepath="dumpy.png",
                         save_filename=save_filename
                     )
-                elif task_type == TaskType.PATCH_HOLES:
+
+                elif task_type in [TaskType.LOCAL_CONNECT, TaskType.PATCH_HOLES]:
                     pass
+
                 else:
                     raise ValueError("Invalid Task Type")
 
@@ -1099,17 +1121,19 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
                     source_data_filepath=eval_component_filepath,
                     save_filename=save_filename
                 )
-            elif task_type == TaskType.PATCH_HOLES:
+
+            elif task_type == [TaskType.LOCAL_CONNECT, TaskType.PATCH_HOLES]:
                 pass
+
             else:
                 raise ValueError("Invalid Task Type")
 
             log_data[output_3d_format] = cubes_data[cube_idx]
 
-        if filepath_idx == 19:
+        if filepath_idx == STOP_INDEX:
             break
 
-    pd.DataFrame(log_data).T.to_csv(log_filepath)
+    pd.DataFrame(log_data).T.to_csv(EVAL_LOG_PATH)
 
 
 def main():
@@ -1135,6 +1159,8 @@ def main():
 
 
 if __name__ == "__main__":
+    STOP_INDEX = 19
+
     # TODO:
     # 1. Make sure DATASET_FOLDER folder is present in the root directory
     main()
