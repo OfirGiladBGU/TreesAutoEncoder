@@ -9,6 +9,9 @@ import math
 from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file
 from datasets.dataset_configurations import DATA_PATH
 
+# TODO: Debug Tools
+from datasets.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
+
 
 DATASET_PATH = os.path.join(DATA_PATH, "Pipes3DGeneratorCycles")
 
@@ -425,10 +428,10 @@ def generate_plane_holes_v5(numpy_data: np.ndarray):
             plane_thickness = random.randint(1, 2)
 
             success = False
-            attempts = 0
+            # attempts = 0
 
-            while not success and attempts < 10:  # Retry up to 10 times
-                attempts += 1
+            while not success: # and attempts < 10:  # Retry up to 10 times
+                # attempts += 1
 
                 # Randomly select one of the non-zero points
                 random_point = random.choice(white_points)
