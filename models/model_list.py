@@ -1,5 +1,8 @@
 import argparse
 
+# 1D models
+from models.model_1d.vit_2d_to_1d import DynamicViT as VIT_2D_TO_1D
+
 # 2D models
 from models.model_2d.ae import Network2D as AE
 from models.model_2d.ae_2d_to_2d import Network2D as AE_2D_TO_2D
@@ -15,6 +18,9 @@ from models.model_3d.ae_3d_to_3d import Network3D as AE_3D_TO_3D
 def init_model(args: argparse.Namespace):
     print(f"[Model: '{args.model}'] Initializing...")
     model_map = {
+        # 1D models
+        "vit_2d_to_1d": VIT_2D_TO_1D,
+
         # 2D models
         "ae": AE,
         "ae_2d_to_2d": AE_2D_TO_2D,
