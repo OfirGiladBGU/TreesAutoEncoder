@@ -52,7 +52,7 @@ def main():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Main function to run 2D models')
+    parser = argparse.ArgumentParser(description='Main function to run 1D models')
     parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                         help='input batch size for training (default: 128)')
     parser.add_argument('--epochs', type=int, default=10, metavar='N',
@@ -65,7 +65,7 @@ if __name__ == "__main__":
                         help='how many batches to wait before logging training status')
     parser.add_argument('--embedding-size', type=int, default=32, metavar='N',
                         help='embedding size for the model')
-    parser.add_argument('--dataset', type=str, default='MNIST', metavar='N',
+    parser.add_argument('--dataset', type=str, default='Trees1DV1', metavar='N',
                         help='Which dataset to use')
     parser.add_argument('--weights-filepath', type=str, default='./weights/Network.pth', metavar='N',
                         help='Which dataset to use')

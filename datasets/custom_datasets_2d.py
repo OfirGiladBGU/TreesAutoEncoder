@@ -45,30 +45,30 @@ class TreesCustomDatasetV1(Dataset):
             # Find invalid data
             non_valid_filenames = []
             non_advance_valid_filenames = []
-            for idx, row in self.log_data.iterrows():
+            for _, row in self.log_data.iterrows():
                 data_basename = row.iloc[0]
                 for image_view in IMAGES_6_VIEWS:
                     if row[f"{image_view}_valid"] is False:
-                        non_valid_filenames.append(f"{data_basename}_{image_view}.png")
+                        non_valid_filenames.append(f"{data_basename}_{image_view}")
                     if row[f"{image_view}_advance_valid"] is False:
-                        non_advance_valid_filenames.append(f"{data_basename}_{image_view}.png")
+                        non_advance_valid_filenames.append(f"{data_basename}_{image_view}")
 
             # Filter invalid data paths
             filepaths_count = len(self.data_files1)
             filtered_data_files1 = []
             filtered_data_files2 = []
             for filepath_idx in range(filepaths_count):
-                data_file1 = str(self.data_files1[idx])
+                data_file1 = str(self.data_files1[filepath_idx])
                 data_file1_filename = get_data_file_stem(data_filepath=data_file1)
                 file1_conditions = [
-                    not data_file1_filename in non_valid_filenames,
-                    # not data_file1_filename in non_advance_valid_filenames  # TODO (Optional)
+                    data_file1_filename not in non_valid_filenames,
+                    # data_file1_filename not in non_advance_valid_filenames  # TODO (Optional)
                 ]
                 if all(file1_conditions):
                     filtered_data_files1.append(data_file1)
 
                 if self.data_files2 is not None:
-                    data_file2 = str(self.data_files2[idx])
+                    data_file2 = str(self.data_files2[filepath_idx])
                     data_file2_filename = get_data_file_stem(data_filepath=data_file2)
                     file2_conditions = [
                         not data_file2_filename in non_valid_filenames,

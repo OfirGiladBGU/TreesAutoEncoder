@@ -589,6 +589,7 @@ class Trainer(object):
             self.model.load_state_dict(torch.load(self.args.weights_filepath))
         self.model.eval()
 
+        iter_data = iter(self.test_loader)
         with torch.no_grad():
             batches_to_plot = min(len(self.test_loader), max_batches_to_plot)
             for batch_idx in range(batches_to_plot):
@@ -596,9 +597,7 @@ class Trainer(object):
 
                 # Get the images from the test loader
                 batch_num = batch_idx + 1
-                data = iter(self.test_loader)
-                for _ in range(batch_num):
-                    input_data, target_data = next(data)
+                input_data, target_data = next(iter_data)
 
                 if self.args.dataset in self.datasets_for_holes:
                     target_data = input_data.clone()
