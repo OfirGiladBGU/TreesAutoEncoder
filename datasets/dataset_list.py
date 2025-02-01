@@ -9,25 +9,28 @@ from datasets.custom_datasets_2d import TreesCustomDataloader2D
 from datasets.custom_datasets_3d import TreesCustomDataloader3D
 
 
+###################
+# Public Datasets #
+###################
+
 class MNIST(object):
     def __init__(self, args):
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
+        root = os.path.join(DATA_PATH, "mnist")
         transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Resize(self.input_size[1])
         ])
         kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
-        root = os.path.join(DATA_PATH, "mnist")
+        kwargs['batch_size'] = args.batch_size
         self.train_loader = DataLoader(
             dataset=datasets.MNIST(root=root, train=True, download=True, transform=transform),
-            batch_size=args.batch_size,
             shuffle=False,
             **kwargs
         )
         self.test_loader = DataLoader(
             dataset=datasets.MNIST(root=root, train=False, transform=transform),
-            batch_size=args.batch_size,
             shuffle=False,
             **kwargs
         )
@@ -37,21 +40,20 @@ class EMNIST(object):
     def __init__(self, args):
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
+        root = os.path.join(DATA_PATH, "emnist")
         transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Resize(self.input_size[1])
         ])
         kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
-        root = os.path.join(DATA_PATH, "emnist")
+        kwargs['batch_size'] = args.batch_size
         self.train_loader = DataLoader(
             dataset=datasets.EMNIST(root=root, train=True, download=True, split='byclass', transform=transform),
-            batch_size=args.batch_size,
             shuffle=False,
             **kwargs
         )
         self.test_loader = DataLoader(
             dataset=datasets.EMNIST(root=root, train=False, split='byclass', transform=transform),
-            batch_size=args.batch_size,
             shuffle=False,
             **kwargs
         )
@@ -61,21 +63,20 @@ class FashionMNIST(object):
     def __init__(self, args):
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
+        root = os.path.join(DATA_PATH, "fmnist")
         transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Resize(self.input_size[1])
         ])
         kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
-        root = os.path.join(DATA_PATH, "fmnist")
+        kwargs['batch_size'] = args.batch_size
         self.train_loader = DataLoader(
             dataset=datasets.FashionMNIST(root=root, train=True, download=True, transform=transform),
-            batch_size=args.batch_size,
             shuffle=False,
             **kwargs
         )
         self.test_loader = DataLoader(
             dataset=datasets.FashionMNIST(root=root, train=False, transform=transform),
-            batch_size=args.batch_size,
             shuffle=False,
             **kwargs
         )
@@ -85,26 +86,29 @@ class CIFAR10(object):
     def __init__(self, args):
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
+        root = os.path.join(DATA_PATH, "cifar10")
         transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Resize(self.input_size[1]),
             transforms.Grayscale(num_output_channels=1)
         ])
         kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
-        root = os.path.join(DATA_PATH, "cifar10")
+        kwargs['batch_size'] = args.batch_size
         self.train_loader = DataLoader(
             dataset=datasets.CIFAR10(root=root, download=True, transform=transform),
-            batch_size=args.batch_size,
             shuffle=False,
             **kwargs
         )
         self.test_loader = DataLoader(
             dataset=datasets.CIFAR10(root=root, train=False, transform=transform),
-            batch_size=args.batch_size,
             shuffle=False,
             **kwargs
         )
 
+
+##################
+# Local Datasets #
+##################
 
 # Train with 2D labels (with random holes) to predict 2D labels
 class TreesDataset2DV1S(object):
@@ -114,7 +118,7 @@ class TreesDataset2DV1S(object):
         src_path = LABELS_2D
 
         data_paths = [src_path]
-        trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args)
+        trees_dataloader = TreesCustomDataloader2D(args=args, data_paths=data_paths)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
@@ -127,7 +131,7 @@ class TreesDataset2DV1(object):
         dst_path = LABELS_2D
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args)
+        trees_dataloader = TreesCustomDataloader2D(args=args, data_paths=data_paths)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
@@ -140,7 +144,7 @@ class TreesDataset2DV2(object):
         dst_path = LABELS_2D
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args)
+        trees_dataloader = TreesCustomDataloader2D(args=args, data_paths=data_paths)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
@@ -151,10 +155,10 @@ class TreesDataset2DV2M(object):
 
         src_path = PREDS_FIXED_2D
         dst_path = LABELS_2D
-        log_path = TRAIN_LOG_PATH
+        args.include_regression = True
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader2D(data_paths=data_paths, args=args, log_path=log_path)
+        trees_dataloader = TreesCustomDataloader2D(args=args, data_paths=data_paths)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
@@ -167,7 +171,7 @@ class TreesDataset3DV1(object):
         dst_path = LABELS_3D
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
+        trees_dataloader = TreesCustomDataloader3D(args=args, data_paths=data_paths)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
@@ -180,7 +184,7 @@ class TreesDataset3DV2(object):
         dst_path = LABELS_3D
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
+        trees_dataloader = TreesCustomDataloader3D(args=args, data_paths=data_paths)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
@@ -191,10 +195,10 @@ class TreesDataset3DV2M(object):
 
         src_path = LABELS_3D_RECONSTRUCT
         dst_path = LABELS_3D
-        log_path = TRAIN_LOG_PATH
+        args.include_regression = True
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args, log_path=log_path)
+        trees_dataloader = TreesCustomDataloader3D(args=args, data_paths=data_paths)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
@@ -207,7 +211,7 @@ class TreesDataset3DV3(object):
         dst_path = LABELS_3D
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
+        trees_dataloader = TreesCustomDataloader3D(args=args, data_paths=data_paths)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 
@@ -220,7 +224,7 @@ class TreesDataset3DV4(object):
         dst_path = LABELS_3D
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader3D(data_paths=data_paths, args=args)
+        trees_dataloader = TreesCustomDataloader3D(args=args, data_paths=data_paths)
         self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
 
 

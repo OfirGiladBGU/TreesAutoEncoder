@@ -1,19 +1,19 @@
 import argparse
+import pathlib
 import torch
 from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision import transforms
-import pathlib
 import pandas as pd
 
-from datasets.dataset_configurations import V1_2D_DATASETS, V2_2D_DATASETS
+from datasets.dataset_configurations import TRAIN_LOG_PATH, V1_2D_DATASETS, V2_2D_DATASETS
 from datasets.dataset_utils import convert_data_file_to_numpy, validate_data_paths
 
 
 # 1 2D input + 1 2D target
 class TreesCustomDatasetV1(Dataset):
-    def __init__(self, data_paths: list, log_path=None, transform=None):
+    def __init__(self, args: argparse.Namespace, data_paths: list, transform=None):
+        self.args = args
         self.data_paths = data_paths
-        self.log_path = log_path
         self.transform = transform
         self.to_tensor = transforms.ToTensor()
 
@@ -32,8 +32,8 @@ class TreesCustomDatasetV1(Dataset):
             self.data_files2 = sorted(self.data_files2)
             current_count -= 1
 
-        if self.log_path is not None:
-            self.log_data = pd.read_csv(self.log_path)
+        if self.args.include_regression is True:  # TODO
+            self.log_data = pd.read_csv(TRAIN_LOG_PATH)
 
         self.dataset_count = len(self.data_files1)
 
@@ -69,7 +69,7 @@ class TreesCustomDatasetV1(Dataset):
         elif self.paths_count == 2:
             item += (numpy_2d_data1, numpy_2d_data2)
 
-        if self.log_path is not None:
+        if self.args.include_regression is True:  # TODO
             label_local_components = self.log_data["label_local_components"][idx]
             item += (label_local_components,)
 
@@ -78,9 +78,9 @@ class TreesCustomDatasetV1(Dataset):
 
 # 6 2D inputs + 6 2D targets
 class TreesCustomDatasetV2(Dataset):
-    def __init__(self, data_paths: list, log_path=None, transform=None):
+    def __init__(self, args: argparse.Namespace, data_paths: list, transform=None):
+        self.args = args
         self.data_paths = data_paths
-        self.log_path = log_path
         self.transform = transform
         self.to_tensor = transforms.ToTensor()
 
@@ -100,8 +100,8 @@ class TreesCustomDatasetV2(Dataset):
             self.data_files2 = sorted(self.data_files2)
             current_count -= 1
 
-        if self.log_path is not None:
-            self.log_data = pd.read_csv(self.log_path)
+        if self.args.include_regression is True:  # TODO
+            self.log_data = pd.read_csv(TRAIN_LOG_PATH)
 
         self.dataset_count = int(len(self.data_files1) / 6)
 
@@ -147,7 +147,7 @@ class TreesCustomDatasetV2(Dataset):
             batch2 = torch.stack(batch2)
             item += (batch1, batch2)
 
-        if self.log_path is not None:
+        if self.args.include_regression is True:  # TODO
             label_local_components = self.log_data["label_local_components"][idx]
             item += (label_local_components,)
 
@@ -155,11 +155,10 @@ class TreesCustomDatasetV2(Dataset):
 
 
 class TreesCustomDataloader2D:
-    def __init__(self, args: argparse.Namespace, data_paths, log_path=None, transform=None):
+    def __init__(self, args: argparse.Namespace, data_paths, transform=None):
         validate_data_paths(data_paths=data_paths)
         self.args = args
         self.data_paths = data_paths
-        self.log_path = log_path
         self.transform = transform
         self._init_dataloader()
 
@@ -173,14 +172,14 @@ class TreesCustomDataloader2D:
         """
         if self.args.dataset in V1_2D_DATASETS:
             tree_dataset = TreesCustomDatasetV1(
+                args=self.args,
                 data_paths=self.data_paths,
-                log_path=self.log_path,
                 transform=self.transform
             )
         elif self.args.dataset in V2_2D_DATASETS:
             tree_dataset = TreesCustomDatasetV2(
+                args=self.args,
                 data_paths=self.data_paths,
-                log_path=self.log_path,
                 transform=self.transform
             )
         else:

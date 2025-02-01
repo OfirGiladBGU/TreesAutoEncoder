@@ -1,20 +1,20 @@
 import argparse
-import numpy as np
+import pathlib
 import torch
 from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision import transforms
-import pathlib
 import pandas as pd
+import numpy as np
 
-from datasets.dataset_configurations import V1_3D_DATASETS, V2_3D_DATASETS
+from datasets.dataset_configurations import TRAIN_LOG_PATH, V1_3D_DATASETS, V2_3D_DATASETS
 from datasets.dataset_utils import convert_data_file_to_numpy, validate_data_paths
 
 
 # 6 2D inputs + 1 3D target
 class TreesCustomDataset3DV1(Dataset):
-    def __init__(self, data_paths: list, log_path=None, transform2d=None, transform3d=None):
+    def __init__(self, args: argparse.Namespace, data_paths: list, transform2d=None, transform3d=None):
+        self.args = args
         self.data_paths = data_paths
-        self.log_path = log_path
         self.transform2d = transform2d
         self.transform3d = transform3d
         self.to_tensor = transforms.ToTensor()
@@ -34,8 +34,8 @@ class TreesCustomDataset3DV1(Dataset):
             self.data_files2 = sorted(self.data_files2)
             current_count -= 1
 
-        if self.log_path is not None:
-            self.log_data = pd.read_csv(self.log_path)
+        if self.args.include_regression is True:  # TODO
+            self.log_data = pd.read_csv(TRAIN_LOG_PATH)
 
         self.scans_count = len(self.data_files2)
 
@@ -79,7 +79,7 @@ class TreesCustomDataset3DV1(Dataset):
         elif self.paths_count == 2:
             item += (batch, target)
 
-        if self.log_path is not None:
+        if self.args.include_regression is True:
             label_local_components = self.log_data["label_local_components"][idx]
             item += (label_local_components,)
 
@@ -88,9 +88,9 @@ class TreesCustomDataset3DV1(Dataset):
 
 # 1 3D input + 1 3D target
 class TreesCustomDataset3DV2(Dataset):
-    def __init__(self, data_paths: list, log_path=None, transform3d=None):
+    def __init__(self, args: argparse.Namespace, data_paths: list, transform3d=None):
+        self.args = args
         self.data_paths = data_paths
-        self.log_path = log_path
         self.transform3d = transform3d
 
         self.paths_count = len(data_paths)
@@ -108,8 +108,8 @@ class TreesCustomDataset3DV2(Dataset):
             self.data_files2 = sorted(self.data_files2)
             current_count -= 1
 
-        if self.log_path is not None:
-            self.log_data = pd.read_csv(self.log_path)
+        if self.args.include_regression is True:  # TODO
+            self.log_data = pd.read_csv(TRAIN_LOG_PATH)
 
         self.scans_count = len(self.data_files2)
 
@@ -150,7 +150,7 @@ class TreesCustomDataset3DV2(Dataset):
         elif self.paths_count == 2:
             item += (numpy_3d_data1, numpy_3d_data2)
 
-        if self.log_path is not None:
+        if self.args.include_regression is True:
             label_local_components = self.log_data["label_local_components"][idx]
             item += (label_local_components,)
 
@@ -158,11 +158,10 @@ class TreesCustomDataset3DV2(Dataset):
 
 
 class TreesCustomDataloader3D:
-    def __init__(self, args: argparse.Namespace, data_paths, log_path=None, transform2d=None, transform3d=None):
+    def __init__(self, args: argparse.Namespace, data_paths, transform2d=None, transform3d=None):
         validate_data_paths(data_paths=data_paths)
         self.args = args
         self.data_paths = data_paths
-        self.log_path = log_path
         self.transform2d = transform2d
         self.transform3d = transform3d
         self._init_dataloader()
@@ -177,15 +176,15 @@ class TreesCustomDataloader3D:
         """
         if self.args.dataset in V1_3D_DATASETS:
             tree_dataset = TreesCustomDataset3DV1(
+                args=self.args,
                 data_paths=self.data_paths,
-                log_path=self.log_path,
                 transform2d=self.transform2d,
                 transform3d=self.transform3d
             )
         elif self.args.dataset in V2_3D_DATASETS:
             tree_dataset = TreesCustomDataset3DV2(
+                args=self.args,
                 data_paths=self.data_paths,
-                log_path=self.log_path,
                 transform3d=self.transform3d
             )
         else:

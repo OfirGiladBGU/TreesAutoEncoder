@@ -1,11 +1,10 @@
 import numpy as np
 import os
 import pathlib
-import math
-
-from typing import Tuple, List
-from tqdm import tqdm
 import pandas as pd
+from tqdm import tqdm
+import math
+from typing import Tuple, List
 from scipy.ndimage import label
 from skimage import color
 

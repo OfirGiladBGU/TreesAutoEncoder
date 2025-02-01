@@ -1,11 +1,11 @@
 import argparse
 import os
+import pathlib
 import torch
 import cv2
 import numpy as np
 from torchvision import transforms
 import matplotlib.pyplot as plt
-import pathlib
 from tqdm import tqdm
 import pandas as pd
 from scipy.ndimage import convolve, label
