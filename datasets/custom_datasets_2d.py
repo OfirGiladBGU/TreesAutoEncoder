@@ -71,8 +71,8 @@ class TreesCustomDatasetV1(Dataset):
                     data_file2 = str(self.data_files2[filepath_idx])
                     data_file2_filename = get_data_file_stem(data_filepath=data_file2)
                     file2_conditions = [
-                        not data_file2_filename in non_valid_filenames,
-                        # not data_file2_filename in non_advance_valid_filenames  # TODO (Optional)
+                        data_file2_filename not in non_valid_filenames,
+                        # data_file2_filename not in non_advance_valid_filenames  # TODO (Optional)
                     ]
                     if all(file2_conditions):
                         filtered_data_files2.append(data_file2)
