@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
 from datasets.dataset_configurations import *
+from datasets.custom_datasets_1d import TreesCustomDataloader1D
 from datasets.custom_datasets_2d import TreesCustomDataloader2D
 from datasets.custom_datasets_3d import TreesCustomDataloader3D
 
@@ -109,6 +110,16 @@ class CIFAR10(object):
 ##################
 # Local Datasets #
 ##################
+class TreesDataset1DV1(object):
+    def __init__(self, args):
+        self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
+
+        src_path = PREDS_FIXED_2D
+
+        data_paths = [src_path]
+        trees_dataloader = TreesCustomDataloader1D(args=args, data_paths=data_paths)
+        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+
 
 # Train with 2D labels (with random holes) to predict 2D labels
 class TreesDataset2DV1S(object):
@@ -232,10 +243,13 @@ class TreesDataset3DV4(object):
 def init_dataset(args: argparse.Namespace):
     print(f"[Dataset: '{args.dataset}'] Initializing...")
     dataset_map = {
+        # Public Datasets
         "MNIST": MNIST,
         "EMNIST": EMNIST,
         "FashionMNIST": FashionMNIST,
         "CIFAR10": CIFAR10,
+        # 1D Datasets
+        "Trees1DV1": TreesDataset1DV1,
         # 2D Datasets
         "Trees2DV1S": TreesDataset2DV1S,
         "Trees2DV1": TreesDataset2DV1,

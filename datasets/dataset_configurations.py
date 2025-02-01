@@ -3,8 +3,6 @@ import pathlib
 
 
 # Configurations
-APPLY_LOG_FILTER = True
-
 # DATA_CROP_STRIDE = 16
 # DATA_CROP_SIZE = 32
 
@@ -34,7 +32,11 @@ PREDICT_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "predict_pipeline")
 MERGE_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "merge_pipeline")
 VISUALIZATION_RESULTS_PATH = os.path.join(RESULTS_PATH, "visualization")
 
+# Dataset 1D
+V1_1D_DATASETS = ['Trees1DV1']
+
 # Dataset 2D
+APPLY_LOG_FILTER = True
 APPLY_CONTINUITY_FIX = True
 V1_2D_DATASETS = ['Trees2DV1', 'Trees2DV1S']
 V2_2D_DATASETS = ['Trees2DV2', 'Trees2DV2M']
