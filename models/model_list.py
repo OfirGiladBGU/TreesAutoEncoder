@@ -13,6 +13,7 @@ from models.model_3d.ae_3d_to_3d import Network3D as AE_3D_TO_3D
 
 
 def init_model(args: argparse.Namespace):
+    print(f"[Model: '{args.model}'] Initializing...")
     model_map = {
         # 2D models
         "ae": AE,

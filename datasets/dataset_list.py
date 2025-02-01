@@ -230,6 +230,7 @@ class TreesDataset3DV4(object):
 
 # Init Method
 def init_dataset(args: argparse.Namespace):
+    print(f"[Dataset: '{args.dataset}'] Initializing...")
     dataset_map = {
         "MNIST": MNIST,
         "EMNIST": EMNIST,

@@ -1,12 +1,14 @@
 import argparse
+import os
 import pathlib
 import torch
 from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision import transforms
 import pandas as pd
 
-from datasets.dataset_configurations import TRAIN_LOG_PATH, V1_2D_DATASETS, V2_2D_DATASETS
-from datasets.dataset_utils import convert_data_file_to_numpy, validate_data_paths
+from datasets.dataset_configurations import (APPLY_LOG_FILTER, TRAIN_LOG_PATH, V1_2D_DATASETS, V2_2D_DATASETS,
+                                             IMAGES_6_VIEWS)
+from datasets.dataset_utils import get_data_file_stem, convert_data_file_to_numpy, validate_data_paths
 
 
 # 1 2D input + 1 2D target
@@ -16,6 +18,11 @@ class TreesCustomDatasetV1(Dataset):
         self.data_paths = data_paths
         self.transform = transform
         self.to_tensor = transforms.ToTensor()
+
+        if not os.path.exists(TRAIN_LOG_PATH):
+            raise FileNotFoundError(f"File not found: {TRAIN_LOG_PATH}")
+        else:
+            self.log_data = pd.read_csv(TRAIN_LOG_PATH)  # Used for regression + filter invalid data
 
         self.paths_count = len(data_paths)
         if not (1 <= self.paths_count <= 2):
@@ -31,9 +38,49 @@ class TreesCustomDatasetV1(Dataset):
             self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.png")
             self.data_files2 = sorted(self.data_files2)
             current_count -= 1
+        else:
+            self.data_files2 = None
 
-        if self.args.include_regression is True:  # TODO
-            self.log_data = pd.read_csv(TRAIN_LOG_PATH)
+        if APPLY_LOG_FILTER is True:
+            # Find invalid data
+            non_valid_filenames = []
+            non_advance_valid_filenames = []
+            for idx, row in self.log_data.iterrows():
+                data_basename = row.iloc[0]
+                for image_view in IMAGES_6_VIEWS:
+                    if row[f"{image_view}_valid"] is False:
+                        non_valid_filenames.append(f"{data_basename}_{image_view}.png")
+                    if row[f"{image_view}_advance_valid"] is False:
+                        non_advance_valid_filenames.append(f"{data_basename}_{image_view}.png")
+
+            # Filter invalid data paths
+            filepaths_count = len(self.data_files1)
+            filtered_data_files1 = []
+            filtered_data_files2 = []
+            for filepath_idx in range(filepaths_count):
+                data_file1 = str(self.data_files1[idx])
+                data_file1_filename = get_data_file_stem(data_filepath=data_file1)
+                file1_conditions = [
+                    not data_file1_filename in non_valid_filenames,
+                    # not data_file1_filename in non_advance_valid_filenames  # TODO (Optional)
+                ]
+                if all(file1_conditions):
+                    filtered_data_files1.append(data_file1)
+
+                if self.data_files2 is not None:
+                    data_file2 = str(self.data_files2[idx])
+                    data_file2_filename = get_data_file_stem(data_filepath=data_file2)
+                    file2_conditions = [
+                        not data_file2_filename in non_valid_filenames,
+                        # not data_file2_filename in non_advance_valid_filenames  # TODO (Optional)
+                    ]
+                    if all(file2_conditions):
+                        filtered_data_files2.append(data_file2)
+
+            # Update data files
+            self.data_files1 = filtered_data_files1
+            if self.data_files2 is not None:
+                self.data_files2 = filtered_data_files2
 
         self.dataset_count = len(self.data_files1)
 
@@ -44,30 +91,28 @@ class TreesCustomDatasetV1(Dataset):
         item = tuple()
 
         numpy_2d_data2 = None
-        current_count = self.paths_count
 
-        # current_count > 0:
         data_file1 = str(self.data_files1[idx])
         numpy_2d_data1 = convert_data_file_to_numpy(data_filepath=data_file1)
 
         numpy_2d_data1 = self.to_tensor(numpy_2d_data1)
         if self.transform is not None:
             numpy_2d_data1 = self.transform(numpy_2d_data1)
-        current_count -= 1
 
-        if current_count > 0:
+        if self.data_files2 is not None:
             data_file2 = str(self.data_files2[idx])
             numpy_2d_data2 = convert_data_file_to_numpy(data_filepath=data_file2)
 
             numpy_2d_data2 = self.to_tensor(numpy_2d_data2)
             if self.transform is not None:
                 numpy_2d_data2 = self.transform(numpy_2d_data2)
-            current_count -= 1
 
         if self.paths_count == 1:
             item += (numpy_2d_data1, -1)
         elif self.paths_count == 2:
             item += (numpy_2d_data1, numpy_2d_data2)
+        else:
+            pass
 
         if self.args.include_regression is True:  # TODO
             label_local_components = self.log_data["label_local_components"][idx]
@@ -84,10 +129,16 @@ class TreesCustomDatasetV2(Dataset):
         self.transform = transform
         self.to_tensor = transforms.ToTensor()
 
+        if not os.path.exists(TRAIN_LOG_PATH):
+            raise FileNotFoundError(f"File not found: {TRAIN_LOG_PATH}")
+        elif self.args.include_regression is True:
+            self.log_data = pd.read_csv(TRAIN_LOG_PATH)
+        else:
+            self.log_data = None
+
         self.paths_count = len(data_paths)
         if not (1 <= self.paths_count <= 2):
             raise ValueError("Invalid number of data paths")
-
         current_count = self.paths_count
 
         # current_count > 0:
@@ -99,9 +150,8 @@ class TreesCustomDatasetV2(Dataset):
             self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.png")
             self.data_files2 = sorted(self.data_files2)
             current_count -= 1
-
-        if self.args.include_regression is True:  # TODO
-            self.log_data = pd.read_csv(TRAIN_LOG_PATH)
+        else:
+            self.data_files2 = None
 
         self.dataset_count = int(len(self.data_files1) / 6)
 
@@ -116,9 +166,6 @@ class TreesCustomDatasetV2(Dataset):
 
         data_idx = idx * 6
         for i in range(6):
-            current_count = self.paths_count
-
-            # current_count > 0:
             data_file1 = str(self.data_files1[data_idx + i])
             numpy_2d_data1 =convert_data_file_to_numpy(data_filepath=data_file1)
 
@@ -127,9 +174,8 @@ class TreesCustomDatasetV2(Dataset):
                 numpy_2d_data1 = self.transform(numpy_2d_data1)
             numpy_2d_data1 = numpy_2d_data1.squeeze(0)
             batch1.append(numpy_2d_data1)
-            current_count -= 1
 
-            if current_count > 0:
+            if self.data_files2 is not None:
                 data_file2 = str(self.data_files2[data_idx + i])
                 numpy_2d_data2 = convert_data_file_to_numpy(data_filepath=data_file2)
 
@@ -138,7 +184,6 @@ class TreesCustomDatasetV2(Dataset):
                     numpy_2d_data2 = self.transform(numpy_2d_data2)
                 numpy_2d_data2 = numpy_2d_data2.squeeze(0)
                 batch2.append(numpy_2d_data2)
-                current_count -= 1
 
         batch1 = torch.stack(batch1)
         if self.paths_count == 1:
@@ -146,8 +191,10 @@ class TreesCustomDatasetV2(Dataset):
         elif self.paths_count == 2:
             batch2 = torch.stack(batch2)
             item += (batch1, batch2)
+        else:
+            pass
 
-        if self.args.include_regression is True:  # TODO
+        if self.args.include_regression is True:
             label_local_components = self.log_data["label_local_components"][idx]
             item += (label_local_components,)
 
@@ -196,21 +243,21 @@ class TreesCustomDataloader2D:
         test_data = Subset(tree_dataset, indices=range(train_size, train_size + val_size))
 
         # Create dataloaders
-        kwargs = dict()
-        batch_size = 1
         if self.args is not None:
             kwargs = {'num_workers': 1, 'pin_memory': True} if self.args.cuda else dict()
             batch_size = self.args.batch_size
+        else:
+            kwargs = dict()
+            batch_size = 1
+        kwargs["batch_size"] = batch_size
 
         self.train_dataloader = DataLoader(
             dataset=train_data,
-            batch_size=batch_size,
             shuffle=True,
             **kwargs
         )
         self.test_dataloader = DataLoader(
             dataset=test_data,
-            batch_size=batch_size,
             shuffle=False,
             **kwargs
         )

@@ -33,6 +33,8 @@ class TreesCustomDataset3DV1(Dataset):
             self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.*")
             self.data_files2 = sorted(self.data_files2)
             current_count -= 1
+        else:
+            self.data_files2 = None
 
         if self.args.include_regression is True:  # TODO
             self.log_data = pd.read_csv(TRAIN_LOG_PATH)
@@ -45,9 +47,6 @@ class TreesCustomDataset3DV1(Dataset):
     def __getitem__(self, idx):
         item = tuple()
 
-        current_count = self.paths_count
-
-        # current_count > 0:
         batch = list()
         target = None
 
@@ -61,10 +60,9 @@ class TreesCustomDataset3DV1(Dataset):
                 numpy_2d_data1 = self.transform2d(numpy_2d_data1)
             batch.append(numpy_2d_data1)
         batch = torch.stack(batch)
-        current_count -= 1
 
         # 6 images + 1 3D data
-        if current_count > 0:
+        if self.data_files2 is not None:
             data_file2 =  str(self.data_files2[idx])
             numpy_3d_data2 = convert_data_file_to_numpy(data_filepath=data_file2)
             numpy_3d_data2 = numpy_3d_data2.astype(np.float32)
@@ -78,6 +76,8 @@ class TreesCustomDataset3DV1(Dataset):
             item += (batch, -1)
         elif self.paths_count == 2:
             item += (batch, target)
+        else:
+            pass
 
         if self.args.include_regression is True:
             label_local_components = self.log_data["label_local_components"][idx]
@@ -107,6 +107,8 @@ class TreesCustomDataset3DV2(Dataset):
             self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.*")
             self.data_files2 = sorted(self.data_files2)
             current_count -= 1
+        else:
+            self.data_files2 = None
 
         if self.args.include_regression is True:  # TODO
             self.log_data = pd.read_csv(TRAIN_LOG_PATH)
@@ -119,9 +121,6 @@ class TreesCustomDataset3DV2(Dataset):
     def __getitem__(self, idx):
         item = tuple()
 
-        current_count = self.paths_count
-
-        # current_count > 0:
         numpy_3d_data2 = None
 
         data_file1 = str(self.data_files1[idx])
@@ -132,10 +131,9 @@ class TreesCustomDataset3DV2(Dataset):
         if self.transform3d is not None:
             numpy_3d_data1 = self.transform3d(numpy_3d_data1)
         numpy_3d_data1 = numpy_3d_data1.unsqueeze(0)
-        current_count -= 1
 
         # 1 3D input + 1 3D target
-        if current_count > 0:
+        if self.data_files2 is not None:
             data_file2 = str(self.data_files2[idx])
             numpy_3d_data2 = convert_data_file_to_numpy(data_filepath=data_file2)
             numpy_3d_data2 = numpy_3d_data2.astype(np.float32)
@@ -149,6 +147,8 @@ class TreesCustomDataset3DV2(Dataset):
             item += (numpy_3d_data1, -1)
         elif self.paths_count == 2:
             item += (numpy_3d_data1, numpy_3d_data2)
+        else:
+            pass
 
         if self.args.include_regression is True:
             label_local_components = self.log_data["label_local_components"][idx]
@@ -201,21 +201,21 @@ class TreesCustomDataloader3D:
         test_data = Subset(tree_dataset, indices=range(train_size, train_size + val_size))
 
         # Create dataloaders
-        kwargs = dict()
-        batch_size = 1
         if self.args is not None:
             kwargs = {'num_workers': 1, 'pin_memory': True} if self.args.cuda else dict()
             batch_size = self.args.batch_size
+        else:
+            kwargs = dict()
+            batch_size = 1
+        kwargs["batch_size"] = batch_size
 
         self.train_dataloader = DataLoader(
             dataset=train_data,
-            batch_size=batch_size,
             shuffle=True,
             **kwargs
         )
         self.test_dataloader = DataLoader(
             dataset=test_data,
-            batch_size=batch_size,
             shuffle=False,
             **kwargs
         )

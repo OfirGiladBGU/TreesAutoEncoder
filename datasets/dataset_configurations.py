@@ -3,12 +3,14 @@ import pathlib
 
 
 # Configurations
+APPLY_LOG_FILTER = True
+
 # DATA_CROP_STRIDE = 16
 # DATA_CROP_SIZE = 32
 
 # TODO: TEST: 48
-DATA_CROP_STRIDE = 24
-DATA_CROP_SIZE = 48
+DATA_CROP_STRIDE = 24  # TODO: Read from config file
+DATA_CROP_SIZE = 48  # TODO: Read from config file
 
 # Setups
 DATA_3D_STRIDE = (DATA_CROP_STRIDE, DATA_CROP_STRIDE, DATA_CROP_STRIDE)
