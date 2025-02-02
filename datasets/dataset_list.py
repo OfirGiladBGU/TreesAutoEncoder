@@ -115,6 +115,7 @@ class TreesDataset1DV1(object):
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         src_path = PREDS_FIXED_2D
+        args.include_regression = False
 
         data_paths = [src_path]
         trees_dataloader = TreesCustomDataloader1D(args=args, data_paths=data_paths)
@@ -127,6 +128,7 @@ class TreesDataset2DV1S(object):
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         src_path = LABELS_2D
+        args.include_regression = False
 
         data_paths = [src_path]
         trees_dataloader = TreesCustomDataloader2D(args=args, data_paths=data_paths)
@@ -140,6 +142,7 @@ class TreesDataset2DV1(object):
 
         src_path = PREDS_FIXED_2D
         dst_path = LABELS_2D
+        args.include_regression = False
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader2D(args=args, data_paths=data_paths)
@@ -153,6 +156,7 @@ class TreesDataset2DV2(object):
 
         src_path = PREDS_FIXED_2D
         dst_path = LABELS_2D
+        args.include_regression = False
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader2D(args=args, data_paths=data_paths)
@@ -180,6 +184,7 @@ class TreesDataset3DV1(object):
 
         src_path = LABELS_2D
         dst_path = LABELS_3D
+        args.include_regression = False
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader3D(args=args, data_paths=data_paths)
@@ -193,6 +198,7 @@ class TreesDataset3DV2(object):
 
         src_path = LABELS_3D_RECONSTRUCT
         dst_path = LABELS_3D
+        args.include_regression = False
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader3D(args=args, data_paths=data_paths)
@@ -220,6 +226,7 @@ class TreesDataset3DV3(object):
 
         src_path = PREDS_FIXED_3D_FUSION
         dst_path = LABELS_3D
+        args.include_regression = False
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader3D(args=args, data_paths=data_paths)
@@ -233,6 +240,7 @@ class TreesDataset3DV4(object):
 
         src_path = PREDS_FIXED_3D
         dst_path = LABELS_3D
+        args.include_regression = False
 
         data_paths = [src_path, dst_path]
         trees_dataloader = TreesCustomDataloader3D(args=args, data_paths=data_paths)
