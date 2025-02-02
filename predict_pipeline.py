@@ -449,6 +449,7 @@ def test_single_predict():
 
     data_3d_folder = PREDS_FIXED_3D
     data_2d_folder = PREDS_FIXED_2D
+    # data_2d_folder = PREDS_ADVANCED_FIXED_2D
 
 
     data_3d_filepath = os.path.join(data_3d_folder, input_filename)
@@ -463,11 +464,12 @@ def full_predict():
     input_basename = "PA000005"
     log_data = pd.read_csv(TRAIN_LOG_PATH)
 
-    data_3d_folder = PREDS_3D
-    data_2d_folder = PREDS_2D
+    # data_3d_folder = PREDS_3D
+    # data_2d_folder = PREDS_2D
 
-    # data_3d_folder = PREDS_FIXED_3D
-    # data_2d_folder = PREDS_FIXED_2D
+    data_3d_folder = PREDS_FIXED_3D
+    data_2d_folder = PREDS_FIXED_2D
+    # data_2d_folder = PREDS_ADVANCED_FIXED_2D
 
     data_3d_filepaths = pathlib.Path(data_3d_folder).rglob(f"{input_basename}_*.*")
     data_3d_filepaths = sorted(data_3d_filepaths)

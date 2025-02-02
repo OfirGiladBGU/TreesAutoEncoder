@@ -114,7 +114,8 @@ class TreesDataset1DV1(object):
     def __init__(self, args):
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
-        src_path = PREDS_FIXED_2D
+        # src_path = PREDS_FIXED_2D
+        src_path = PREDS_ADVANCED_FIXED_2D
         args.include_regression = False
 
         data_paths = [src_path]
@@ -140,7 +141,8 @@ class TreesDataset2DV1(object):
     def __init__(self, args):
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
-        src_path = PREDS_FIXED_2D
+        # src_path = PREDS_FIXED_2D
+        src_path = PREDS_ADVANCED_FIXED_2D
         dst_path = LABELS_2D
         args.include_regression = False
 
@@ -154,7 +156,8 @@ class TreesDataset2DV2(object):
     def __init__(self, args):
         self.input_size = (6, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
-        src_path = PREDS_FIXED_2D
+        # src_path = PREDS_FIXED_2D
+        src_path = PREDS_ADVANCED_FIXED_2D
         dst_path = LABELS_2D
         args.include_regression = False
 
@@ -168,7 +171,8 @@ class TreesDataset2DV2M(object):
     def __init__(self, args):
         self.input_size = (6, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
-        src_path = PREDS_FIXED_2D
+        # src_path = PREDS_FIXED_2D
+        src_path = PREDS_ADVANCED_FIXED_2D
         dst_path = LABELS_2D
         args.include_regression = True
 

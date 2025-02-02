@@ -46,12 +46,12 @@ V1_3D_DATASETS = ['Trees3DV1']
 V2_3D_DATASETS = ['Trees3DV2', 'Trees3DV2M', 'Trees3DV3', 'Trees3DV4']
 
 # Data - Paths
-LABELS = os.path.join(DATASET_PATH, "labels")
+LABELS = os.path.join(DATASET_PATH, "labels")  # TARGET
 
-PREDS = os.path.join(DATASET_PATH, "preds")
+PREDS = os.path.join(DATASET_PATH, "preds")  # INPUT
 PREDS_COMPONENTS = os.path.join(DATASET_PATH, "preds_components")
 
-PREDS_FIXED = os.path.join(DATASET_PATH, "preds_fixed")
+PREDS_FIXED = os.path.join(DATASET_PATH, "preds_fixed")  # INPUT (Outliers removed)
 PREDS_FIXED_COMPONENTS = os.path.join(DATASET_PATH, "preds_fixed_components")
 
 EVALS = os.path.join(DATASET_PATH, "evals")
@@ -59,31 +59,46 @@ EVALS_COMPONENTS = os.path.join(DATASET_PATH, "evals_components")
 
 
 # Data 2D - Paths
-LABELS_2D = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")
-PREDS_2D = os.path.join(TRAIN_CROPPED_PATH, "preds_2d_v6")
-PREDS_FIXED_2D = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")
+
+# TRAINING
+LABELS_2D = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")  # TARGET
+
+PREDS_2D = os.path.join(TRAIN_CROPPED_PATH, "preds_2d_v6")  # INPUT
 PREDS_COMPONENTS_2D = os.path.join(TRAIN_CROPPED_PATH, "preds_components_2d_v6")
+
+PREDS_FIXED_2D = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_2d_v6")  # INPUT (Outliers removed)
 PREDS_FIXED_COMPONENTS_2D = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_components_2d_v6")
 
+PREDS_ADVANCED_FIXED_2D = os.path.join(TRAIN_CROPPED_PATH, "preds_advanced_fixed_2d_v6")  # INPUT (Continuity fixed)
+PREDS_ADVANCED_FIXED_COMPONENTS_2D = os.path.join(TRAIN_CROPPED_PATH, "preds_advanced_fixed_components_2d_v6")
+
+# EVALUATION
 EVALS_2D = os.path.join(EVAL_CROPPED_PATH, "evals_2d_v6")
 EVALS_COMPONENTS_2D = os.path.join(EVAL_CROPPED_PATH, "evals_components_2d_v6")
 
+
 # Data 3D - Paths
-LABELS_3D = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")
-PREDS_3D = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6")
-PREDS_FIXED_3D = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6")
+
+# TRAINING
+LABELS_3D = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6")  # TARGET
+
+PREDS_3D = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6")  # INPUT
 PREDS_COMPONENTS_3D = os.path.join(TRAIN_CROPPED_PATH, "preds_components_3d_v6")
+
+PREDS_FIXED_3D = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6")  # INPUT (Outliers removed)
 PREDS_FIXED_COMPONENTS_3D = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_components_3d_v6")
 
+LABELS_3D_RECONSTRUCT = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_reconstruct_v6")  # INPUT (Direct repair)
+PREDS_3D_RECONSTRUCT = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_reconstruct_v6")  # INPUT (Direct repair)
+PREDS_FIXED_3D_RECONSTRUCT = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_reconstruct_v6")  # INPUT (Direct repair)
+
+PREDS_3D_FUSION = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_fusion_v6")  # INPUT (Fusion data)
+PREDS_FIXED_3D_FUSION = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_fusion_v6")  # INPUT (Fusion data)
+
+# EVALUATION
 EVALS_3D = os.path.join(EVAL_CROPPED_PATH, "evals_3d_v6")
 EVALS_COMPONENTS_3D = os.path.join(EVAL_CROPPED_PATH, "evals_components_3d_v6")
 
-LABELS_3D_RECONSTRUCT = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_reconstruct_v6")
-PREDS_3D_RECONSTRUCT = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_reconstruct_v6")
-PREDS_FIXED_3D_RECONSTRUCT = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_reconstruct_v6")
-
-PREDS_3D_FUSION = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_fusion_v6")
-PREDS_FIXED_3D_FUSION = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_fusion_v6")
 
 # Views Configurations
 IMAGES_6_VIEWS = ["top", "bottom", "front", "back", "left", "right"]
