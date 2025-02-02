@@ -616,7 +616,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             condition_list = [True] * len(IMAGES_6_VIEWS)
             for view_idx, image_view in enumerate(IMAGES_6_VIEWS):
                 label_image = label_projections[f"{image_view}_image"]
-                pred_image = pred_projections[f"{image_view}_image"]
+                # pred_image = pred_projections[f"{image_view}_image"]
                 pred_fixed_image = pred_fixed_projections[f"{image_view}_image"]
 
                 # Repair the labels - TODO: Check how to do smartly
@@ -753,19 +753,19 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                         if not (original_components > new_components):
                             binary_pred_fixed = temp_pred_fixed
 
-                        # Update the pred_advanced_fixed_image
-                        # pred_advanced_fixed_image = np.where(binary_pred_fixed > 0, label_image, pred_fixed_image)
-                        pred_advanced_fixed_image = np.where(binary_pred_fixed > 0, label_image, 0)
-                        pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
+                    # Update the pred_advanced_fixed_image
+                    # pred_advanced_fixed_image = np.where(binary_pred_fixed > 0, label_image, pred_fixed_image)
+                    pred_advanced_fixed_image = np.where(binary_pred_fixed > 0, label_image, 0)
+                    pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
 
-                        if np.array_equal(pred_advanced_fixed_image, label_image):
-                            cubes_data[cube_idx].update({
-                                f"{image_view}_advance_valid": False
-                            })
-                        else:
-                            cubes_data[cube_idx].update({
-                                f"{image_view}_advance_valid": True
-                            })
+                    if np.array_equal(pred_advanced_fixed_image, label_image):
+                        cubes_data[cube_idx].update({
+                            f"{image_view}_advance_valid": False
+                        })
+                    else:
+                        cubes_data[cube_idx].update({
+                            f"{image_view}_advance_valid": True
+                        })
 
                 elif task_type == TaskType.PATCH_HOLES:
                     pred_advanced_fixed_projections[f"{image_view}_image"] = pred_fixed_image
