@@ -438,14 +438,20 @@ def single_predict(data_3d_filepath, data_2d_folder, log_data=None):
 
 
 def test_single_predict():
-    # data_3d_filepath = os.path.join(PREDS_3D, "PA000005_11899.nii.gz")
-
-    # data_3d_filepath = os.path.join(PREDS_FIXED_3D, "PA000078_11996.nii.gz")
-    # data_3d_filepath = os.path.join(PREDS_FIXED_3D, "47_52.npy")
-    data_3d_filepath = os.path.join(PREDS_FIXED_3D, "PA000005_0650.nii.gz")
-    data_2d_folder = PREDS_FIXED_2D
+    # input_filename = "PA000005_11899.nii.gz"
+    # input_filename = "PA000078_11996.nii.gz"
+    # input_filename = "47_52.npy"
+    input_filename = "PA000005_0650.nii.gz"
     log_data = pd.read_csv(TRAIN_LOG_PATH)
 
+    # data_3d_folder = PREDS_3D
+    # data_2d_folder = PREDS_2D
+
+    data_3d_folder = PREDS_FIXED_3D
+    data_2d_folder = PREDS_FIXED_2D
+
+
+    data_3d_filepath = os.path.join(data_3d_folder, input_filename)
     single_predict(
         data_3d_filepath=data_3d_filepath,
         data_2d_folder=data_2d_folder,
@@ -454,15 +460,16 @@ def test_single_predict():
 
 
 def full_predict():
-    # input_folder = PREDS_3D
-    # data_2d_folder = PREDS_2D
-
-    input_folder = PREDS_FIXED_3D
-    data_2d_folder = PREDS_FIXED_2D
+    input_basename = "PA000005"
     log_data = pd.read_csv(TRAIN_LOG_PATH)
 
-    input_format = "PA000005"
-    data_3d_filepaths = pathlib.Path(input_folder).rglob(f"{input_format}_*.*")
+    data_3d_folder = PREDS_3D
+    data_2d_folder = PREDS_2D
+
+    # data_3d_folder = PREDS_FIXED_3D
+    # data_2d_folder = PREDS_FIXED_2D
+
+    data_3d_filepaths = pathlib.Path(data_3d_folder).rglob(f"{input_basename}_*.*")
     data_3d_filepaths = sorted(data_3d_filepaths)
 
     for data_3d_filepath in tqdm(data_3d_filepaths):
@@ -517,12 +524,12 @@ def full_merge():
     data_3d_basename = "PA000005"
 
     # Input 3D object
-    input_folder = PREDS
-    input_filepath = list(pathlib.Path(input_folder).rglob(f"{data_3d_basename}*"))
-    if len(input_filepath) == 1:
-        input_filepath = input_filepath[0]
+    data_3d_folder = PREDS_FIXED
+    data_3d_filepath = list(pathlib.Path(data_3d_folder).rglob(f"{data_3d_basename}*"))
+    if len(data_3d_filepath) == 1:
+        input_filepath = data_3d_filepath[0]
     else:
-        raise ValueError(f"Expected 1 input files for '{data_3d_basename}' but got '{len(input_filepath)}'.")
+        raise ValueError(f"Expected 1 input files for '{data_3d_basename}' but got '{len(data_3d_filepath)}'.")
 
     # Log file
     # TODO: create csv log per 3D object to improve search
@@ -646,10 +653,10 @@ if __name__ == "__main__":
     # args.input_size_model_2d = (6, 32, 32)
 
     args.model_2d = "ae_2d_to_2d"
-    args.input_size_model_2d = (1, 32, 32)
+    args.input_size_model_2d = (1, 48, 48)
 
     # args.model_3d = "ae_3d_to_3d"
     args.model_3d = ""
-    args.input_size_model_3d = (1, 32, 32, 32)
+    args.input_size_model_3d = (1, 48, 48, 48)
 
     main()

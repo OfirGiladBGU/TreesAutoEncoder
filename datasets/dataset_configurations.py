@@ -16,7 +16,7 @@ DATA_3D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE, DATA_CROP_SIZE)
 DATA_2D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE)
 
 # Define dataset folder
-DATASET_FOLDER = "Pipes3DGeneratorCycles"  # TODO: Read from config file
+DATASET_FOLDER = "parse2022"  # TODO: Read from config file
 
 # Data Folder Paths
 ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
@@ -47,10 +47,16 @@ V2_3D_DATASETS = ['Trees3DV2', 'Trees3DV2M', 'Trees3DV3', 'Trees3DV4']
 
 # Data - Paths
 LABELS = os.path.join(DATASET_PATH, "labels")
+
 PREDS = os.path.join(DATASET_PATH, "preds")
 PREDS_COMPONENTS = os.path.join(DATASET_PATH, "preds_components")
+
+PREDS_FIXED = os.path.join(DATASET_PATH, "preds_fixed")
+PREDS_FIXED_COMPONENTS = os.path.join(DATASET_PATH, "preds_fixed_components")
+
 EVALS = os.path.join(DATASET_PATH, "evals")
 EVALS_COMPONENTS = os.path.join(DATASET_PATH, "evals_components")
+
 
 # Data 2D - Paths
 LABELS_2D = os.path.join(TRAIN_CROPPED_PATH, "labels_2d_v6")

@@ -218,6 +218,50 @@ def outlier_removal(pred_data: np.ndarray, label_data: np.ndarray):
 #     repaired_label = label - pred_missing_components
 #     return repaired_label
 
+#####################
+# Create Pred Fixed #
+#####################
+def create_dataset_with_outliers_removed():
+    # Inputs
+    input_folders = {
+        "labels": LABELS,
+        "preds": PREDS
+    }
+
+    # Outputs
+    output_folders = {
+        "preds_fixed": PREDS_FIXED
+    }
+
+    # Create Output Folders
+    for output_folder in output_folders.values():
+        os.makedirs(output_folder, exist_ok=True)
+
+    # Get the filepaths
+    filepaths_counts = []
+    input_filepaths = dict()
+    for key, value in input_folders.items():
+        input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.*"))
+        filepaths_counts.append(len(input_filepaths[key]))
+
+    filepaths_count = max(filepaths_counts)
+    for filepath_idx in tqdm(range(filepaths_count)):
+        # Get index data:
+        label_filepath = input_filepaths["labels"][filepath_idx]
+        pred_filepath = input_filepaths["preds"][filepath_idx]
+
+        # Original data
+        label_numpy_data = convert_data_file_to_numpy(data_filepath=label_filepath)
+        pred_numpy_data = convert_data_file_to_numpy(data_filepath=pred_filepath)
+
+        pred_fixed_numpy_data = outlier_removal(pred_data=pred_numpy_data, label_data=label_numpy_data)
+        save_filename = os.path.join(output_folders["preds_fixed"], get_data_file_stem(data_filepath=pred_filepath))
+        convert_numpy_to_data_file(
+            numpy_data=pred_fixed_numpy_data,
+            source_data_filepath=pred_filepath,
+            save_filename=save_filename
+        )
+
 
 ##################
 # 2D Projections #
@@ -234,17 +278,11 @@ def create_dataset_depth_2d_projections(data_options: dict):
     # Outputs
     output_folders = {}
 
-    if data_options.get("labels", False) is True:
-        input_folders["labels"] = LABELS
-        output_folders["labels_2d"] = os.path.join(DATASET_PATH, "labels_2d")
-
-    if data_options.get("preds", False) is True:
-        input_folders["preds"] = PREDS
-        output_folders["preds_2d"] = os.path.join(DATASET_PATH, "preds_2d")
-
-    if data_options.get("evals", False) is True:
-        input_folders["evals"] = EVALS
-        output_folders["evals_2d"] = os.path.join(DATASET_PATH, "evals_2d")
+    for key, value in data_options.items():
+        if value is True:
+            folder_name = os.path.basename(key)
+            input_folders[folder_name] = key
+            output_folders[f"{folder_name}_2d"] = os.path.join(DATASET_PATH, f"{folder_name}_2d")
 
     # Create Output Folders
     for output_folder in output_folders.values():
@@ -1134,18 +1172,19 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
 
 
 def main():
-    # TODO: DEBUG
-    data_options = {
-        "labels": True,
-        "preds": True,
-        "evals": False
-    }
-    # create_dataset_depth_2d_projections(data_options=data_options)
-
-    # TODO: Required for: TaskType.SINGLE_COMPONENT
+    # TODO: Required for training with all modes
+    # create_dataset_with_outliers_removed()
+    # TODO: Required for training with TaskType.SINGLE_COMPONENT
     # create_data_components(data_options=data_options)
 
-    # TODO: Add classifier model to find cubes with holes better - model 2D to 1D
+    # TODO: DEBUG
+    # data_options = {
+    #     LABELS: True,
+    #     PREDS: True,
+    #     PREDS_FIXED: True,
+    #     EVALS: False
+    # }
+    # create_dataset_depth_2d_projections(data_options=data_options)
 
     # task_type = TaskType.SINGLE_COMPONENT
     task_type = TaskType.LOCAL_CONNECT
@@ -1157,6 +1196,8 @@ def main():
 
 if __name__ == "__main__":
     STOP_INDEX = 19
+
+    # TODO: Add classifier model to find cubes with holes better - model 2D to 1D
 
     # TODO:
     # 1. Make sure DATASET_FOLDER folder is present in the root directory
