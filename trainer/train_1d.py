@@ -30,7 +30,8 @@ class Trainer(object):
         self.train_loader = self.dataset.train_loader
         self.test_loader = self.dataset.test_loader
 
-        self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
+        # self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=3e-4)
 
     def loss_function(self, output_data, target_data, input_data=None):
         """
