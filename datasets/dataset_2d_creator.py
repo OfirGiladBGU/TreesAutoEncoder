@@ -629,7 +629,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 # Check Condition (If condition fails, mark the view as invalid):
                 condition = [
                     not (upper_threshold > np.count_nonzero(label_image) > lower_threshold),
-                    not (upper_threshold > np.count_nonzero(pred_image) > lower_threshold),  # Optional
+                    # not (upper_threshold > np.count_nonzero(pred_image) > lower_threshold),  # Optional
                     not (upper_threshold > np.count_nonzero(pred_fixed_image) > lower_threshold),
                 ]
 
