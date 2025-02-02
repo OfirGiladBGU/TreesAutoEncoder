@@ -91,22 +91,21 @@ class Trainer(object):
             train_loss += loss.item()
             self.optimizer.step()
             if batch_idx % self.args.log_interval == 0:
-                print('[Train] Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {}'.format(
-                    epoch,
-                    batch_idx * len(input_data),
-                    len(self.train_loader.dataset),
-                    100. * batch_idx / len(self.train_loader),
-                    loss.item() / len(input_data)
-                ))
+                print(
+                    '[Train] Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {}'.format(
+                        epoch,
+                        batch_idx * len(input_data),
+                        len(self.train_loader.dataset),
+                        100. * batch_idx / len(self.train_loader),
+                        loss.item() / len(input_data)
+                    )
+                )
 
         train_avg_loss = train_loss / len(self.train_loader.dataset)
-        print('> [Train] Epoch: {}, Average Loss: {}'.format(
-            epoch,
-            train_avg_loss
-        ))
+        print('> [Train] Epoch: {}, Average Loss: {}'.format(epoch, train_avg_loss))
         return train_avg_loss
 
-    def _test(self):
+    def _test(self, epoch):
         self.model.eval()
         test_loss = 0
         with torch.no_grad():
@@ -123,7 +122,7 @@ class Trainer(object):
                 ).item()
 
         test_avg_loss = test_loss / len(self.test_loader.dataset)
-        print('> [Test] Average Loss: {}'.format(test_avg_loss))
+        print('> [Test] Epoch: {}, Average Loss: {}'.format(epoch, test_avg_loss))
         return test_avg_loss
 
     def train(self, use_weights=False):
@@ -135,7 +134,7 @@ class Trainer(object):
         try:
             for epoch in range(1, self.args.epochs + 1):
                 train_avg_loss = self._train(epoch=epoch)
-                test_avg_loss = self._test()
+                test_avg_loss = self._test(epoch=epoch)
                 wandb.log(
                     data={"Train Loss": train_avg_loss, "Test Loss": test_avg_loss},
                     step=epoch

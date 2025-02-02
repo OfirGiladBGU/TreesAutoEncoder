@@ -47,6 +47,7 @@ class Trainer(object):
     def _train(self, epoch):
         self.model.train()
         train_loss = 0
+        correct = 0
         for batch_idx, batch_data in enumerate(self.train_loader):
             (input_data, target_data) = batch_data
             input_data = input_data.to(self.device)
@@ -61,27 +62,39 @@ class Trainer(object):
             )
             loss.backward()
 
+            predicted = (output_data > 0.5).float()  # Convert logits to binary (0 or 1)
+            correct += (predicted == target_data).sum().item()
+
             train_loss += loss.item()
             self.optimizer.step()
             if batch_idx % self.args.log_interval == 0:
-                print('[Train] Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {}'.format(
-                    epoch,
-                    batch_idx * len(input_data),
-                    len(self.train_loader.dataset),
-                    100. * batch_idx / len(self.train_loader),
-                    loss.item() / len(input_data)
-                ))
+                print(
+                    '[Train] Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {}'.format(
+                        epoch,
+                        batch_idx * len(input_data),
+                        len(self.train_loader.dataset),
+                        100. * batch_idx / len(self.train_loader),
+                        loss.item() / len(input_data)
+                    )
+                )
 
         train_avg_loss = train_loss / len(self.train_loader.dataset)
-        print('> [Train] Epoch: {}, Average Loss: {}'.format(
-            epoch,
-            train_avg_loss
-        ))
-        return train_avg_loss
+        train_accuracy = 100. * correct / len(self.train_loader.dataset)
+        print(
+            '> [Train] Epoch: {}, Average Loss: {}\n'.format(epoch, train_avg_loss) +
+            '> [Train] Epoch: {}, Accuracy: {}/{} ({:.0f}%)'.format(
+                epoch,
+                correct,
+                len(self.train_loader.dataset),
+                train_accuracy
+            )
+        )
+        return train_avg_loss, train_accuracy
 
-    def _test(self):
+    def _test(self, epoch):
         self.model.eval()
         test_loss = 0
+        correct = 0
         with torch.no_grad():
             for batch_idx, batch_data in enumerate(self.test_loader):
                 (input_data, target_data) = batch_data
@@ -95,9 +108,21 @@ class Trainer(object):
                     input_data=input_data
                 ).item()
 
+                predicted = (output_data > 0.5).float()  # Convert logits to binary (0 or 1)
+                correct += (predicted == target_data).sum().item()
+
         test_avg_loss = test_loss / len(self.test_loader.dataset)
-        print('> [Test] Average Loss: {}'.format(test_avg_loss))
-        return test_avg_loss
+        test_accuracy = 100. * correct / len(self.test_loader.dataset)
+        print(
+            '> [Test] Epoch: {}, Average Loss: {}\n'.format(epoch, test_avg_loss) +
+            '> [Test] Epoch: {}, Accuracy: {}/{} ({:.0f}%)'.format(
+                epoch,
+                correct,
+                len(self.test_loader.dataset),
+                test_accuracy
+            )
+        )
+        return test_avg_loss, test_accuracy
 
     def train(self, use_weights=False):
         if use_weights is True:
@@ -107,10 +132,13 @@ class Trainer(object):
         print(f"[Model: '{self.model.model_name}'] Training...")
         try:
             for epoch in range(1, self.args.epochs + 1):
-                train_avg_loss = self._train(epoch=epoch)
-                test_avg_loss = self._test()
+                train_avg_loss, train_accuracy = self._train(epoch=epoch)
+                test_avg_loss, test_accuracy = self._test(epoch=epoch)
                 wandb.log(
-                    data={"Train Loss": train_avg_loss, "Test Loss": test_avg_loss},
+                    data={
+                        "Train Loss": train_avg_loss, "Test Loss": test_avg_loss,
+                        "Train Accuracy": train_accuracy, "Test Accuracy": test_accuracy
+                    },
                     step=epoch
                 )
         except (KeyboardInterrupt, SystemExit):

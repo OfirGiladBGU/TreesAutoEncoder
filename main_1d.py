@@ -80,7 +80,8 @@ if __name__ == "__main__":
 
     # Custom Edit:
 
-    args.model = 'vit_2d_to_1d'
+    # args.model = 'vit_2d_to_1d'
+    args.model = 'cnn_2d_to_1d'
     args.dataset = 'Trees1DV1'
 
     args.epochs = 10
