@@ -1,4 +1,5 @@
 import argparse
+import os
 import pathlib
 import torch
 from torch.utils.data import Dataset, DataLoader, Subset
@@ -19,6 +20,13 @@ class TreesCustomDataset3DV1(Dataset):
         self.transform3d = transform3d
         self.to_tensor = transforms.ToTensor()
 
+        if not os.path.exists(TRAIN_LOG_PATH):
+            raise FileNotFoundError(f"File not found: {TRAIN_LOG_PATH}")
+        elif self.args.include_regression is True:
+            self.log_data = pd.read_csv(TRAIN_LOG_PATH)
+        else:
+            self.log_data = None
+
         self.paths_count = len(data_paths)
         if not (1 <= self.paths_count <= 2):
             raise ValueError("Invalid number of data paths")
@@ -35,9 +43,6 @@ class TreesCustomDataset3DV1(Dataset):
             current_count -= 1
         else:
             self.data_files2 = None
-
-        if self.args.include_regression is True:  # TODO
-            self.log_data = pd.read_csv(TRAIN_LOG_PATH)
 
         self.scans_count = len(self.data_files2)
 
@@ -93,6 +98,13 @@ class TreesCustomDataset3DV2(Dataset):
         self.data_paths = data_paths
         self.transform3d = transform3d
 
+        if not os.path.exists(TRAIN_LOG_PATH):
+            raise FileNotFoundError(f"File not found: {TRAIN_LOG_PATH}")
+        elif self.args.include_regression is True:
+            self.log_data = pd.read_csv(TRAIN_LOG_PATH)
+        else:
+            self.log_data = None
+
         self.paths_count = len(data_paths)
         if not (1 <= self.paths_count <= 2):
             raise ValueError("Invalid number of data paths")
@@ -109,9 +121,6 @@ class TreesCustomDataset3DV2(Dataset):
             current_count -= 1
         else:
             self.data_files2 = None
-
-        if self.args.include_regression is True:  # TODO
-            self.log_data = pd.read_csv(TRAIN_LOG_PATH)
 
         self.scans_count = len(self.data_files2)
 

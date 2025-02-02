@@ -21,8 +21,10 @@ class TreesCustomDatasetV1(Dataset):
 
         if not os.path.exists(TRAIN_LOG_PATH):
             raise FileNotFoundError(f"File not found: {TRAIN_LOG_PATH}")
+        elif self.args.include_regression is True or APPLY_LOG_FILTER is True:
+            self.log_data = pd.read_csv(TRAIN_LOG_PATH)
         else:
-            self.log_data = pd.read_csv(TRAIN_LOG_PATH)  # Used for regression + filter invalid data
+            self.log_data = None
 
         self.paths_count = len(data_paths)
         if not (1 <= self.paths_count <= 2):
@@ -114,7 +116,7 @@ class TreesCustomDatasetV1(Dataset):
         else:
             pass
 
-        if self.args.include_regression is True:  # TODO
+        if self.args.include_regression is True:
             label_local_components = self.log_data["label_local_components"][idx]
             item += (label_local_components,)
 

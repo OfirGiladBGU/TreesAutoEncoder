@@ -20,7 +20,9 @@ from datasets.dataset_visulalization import interactive_plot_2d, interactive_plo
 #########
 # Utils #
 #########
-def preprocess_2d(data_3d_filepath, data_2d_folder, apply_batch_merge: bool = False) -> torch.Tensor:
+def preprocess_2d(data_3d_filepath: str,
+                  data_2d_folder: str,
+                  apply_batch_merge: bool = False) -> torch.Tensor:
     data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
     data_2d_basename = f"{data_3d_basename}_<VIEW>"
 
@@ -40,8 +42,8 @@ def preprocess_2d(data_3d_filepath, data_2d_folder, apply_batch_merge: bool = Fa
     data_2d_list = list()
     for image_view in IMAGES_6_VIEWS:
         image_path = format_of_2d_images.replace("<VIEW>", image_view)
-        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        torch_image = transforms.ToTensor()(image)
+        image_data = convert_data_file_to_numpy(data_filepath=image_path)
+        torch_image = transforms.ToTensor()(image_data)
         if apply_batch_merge is True:
             torch_image = torch_image.squeeze(0)
         data_2d_list.append(torch_image)
@@ -55,7 +57,13 @@ def preprocess_2d(data_3d_filepath, data_2d_folder, apply_batch_merge: bool = Fa
     return data_2d_input
 
 
-def postprocess_2d(data_2d_input: torch.Tensor, data_2d_output: torch.Tensor, apply_input_fusion: bool = False):
+def postprocess_2d(data_3d_filepath: str,
+                   data_2d_input: torch.Tensor,
+                   data_2d_output: torch.Tensor,
+                   apply_input_merge: bool = False,
+                   log_data: pd.DataFrame = None) -> Tuple[torch.Tensor, torch.Tensor]:
+    data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
+
     # Convert (1, 6, w, h) to (6, w, h)
     if data_2d_input.shape[0] == 1 and data_2d_input.shape[1] == 6:
         data_2d_input = data_2d_input.squeeze(0)
@@ -73,13 +81,28 @@ def postprocess_2d(data_2d_input: torch.Tensor, data_2d_output: torch.Tensor, ap
     # TODO: Threshold
     apply_threshold(tensor=data_2d_output, threshold=0.2, keep_values=True)
 
-    if apply_input_fusion is True:
+    if log_data is not None:
+        for idx, image_view in enumerate(IMAGES_6_VIEWS):
+            view_advance_valid = f"{image_view}_advance_valid"
+            if view_advance_valid in log_data.columns:
+                data_2d_matching_rows = log_data[log_data[log_data.columns[0]] == data_3d_basename]
+                data_2d_row = list(data_2d_matching_rows.iterrows())[0][1]
+                if data_2d_row[view_advance_valid] is False:
+                    data_2d_output[idx] = data_2d_input[idx].clone()
+                else:
+                    pass
+            else:
+                print(f"No '{view_advance_valid}' column in 'log.csv' data")
+    else:  # TODO: use classifier results
+        pass
+
+    if apply_input_merge is True:
         data_2d_output = data_2d_input + torch.where(data_2d_input == 0, data_2d_output, 0)
 
     return data_2d_input, data_2d_output
 
 
-def debug_2d(data_3d_filepath, data_2d_input: torch.Tensor, data_2d_output: torch.Tensor):
+def debug_2d(data_3d_filepath: str, data_2d_input: torch.Tensor, data_2d_output: torch.Tensor):
     data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
 
     data_2d_input_copy = data_2d_input.clone().numpy()
@@ -231,10 +254,10 @@ def components_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndar
     return filtered_data_3d
 
 
-def preprocess_3d(data_3d_filepath,
+def preprocess_3d(data_3d_filepath: str,
                   data_2d_output: torch.Tensor,
                   apply_fusion: bool = False,
-                  apply_noise_filter: bool = False):
+                  apply_noise_filter: bool = False) -> torch.Tensor:
     pred_3d = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
     data_2d_output = data_2d_output.numpy()
 
@@ -269,14 +292,16 @@ def preprocess_3d(data_3d_filepath,
     return data_3d_input
 
 
-def postprocess_3d(data_3d_input: torch.Tensor, data_3d_output: torch.Tensor, apply_input_fusion: bool = False):
+def postprocess_3d(data_3d_input: torch.Tensor,
+                   data_3d_output: torch.Tensor,
+                   apply_input_merge: bool = False) -> Tuple[torch.Tensor, torch.Tensor]:
     data_3d_input = data_3d_input.squeeze().squeeze()
     data_3d_output = data_3d_output.squeeze().squeeze()
 
     # TODO: Threshold
     apply_threshold(tensor=data_3d_output, threshold=0.5, keep_values=False)
 
-    if apply_input_fusion is True:
+    if apply_input_merge is True:
         data_3d_output = data_3d_input + torch.where(data_3d_input == 0, data_3d_output, 0)
 
     return data_3d_input, data_3d_output
@@ -324,6 +349,8 @@ def init_pipeline_models():
         model_2d.eval()
         model_2d.to(args.device)
         args.model_2d_class = model_2d
+    else:
+        pass
 
     # Load 3D model
     if len(args.model_3d) > 0:
@@ -335,9 +362,11 @@ def init_pipeline_models():
         model_3d.eval()
         model_3d.to(args.device)
         args.model_3d_class = model_3d
+    else:
+        pass
 
 
-def single_predict(data_3d_filepath, data_2d_folder):
+def single_predict(data_3d_filepath, data_2d_folder, log_data=None):
     data_3d_filepath = str(data_3d_filepath)
     data_2d_folder = str(data_2d_folder)
 
@@ -370,9 +399,11 @@ def single_predict(data_3d_filepath, data_2d_folder):
             data_2d_output = data_2d_input.clone()
 
         (data_2d_input, data_2d_output) = postprocess_2d(
+            data_3d_filepath=data_3d_filepath,
             data_2d_input=data_2d_input,
             data_2d_output=data_2d_output,
-            apply_input_fusion=True
+            apply_input_merge=True,
+            log_data=log_data
         )
 
         # DEBUG
@@ -397,7 +428,7 @@ def single_predict(data_3d_filepath, data_2d_folder):
         (data_3d_input, data_3d_output) = postprocess_3d(
             data_3d_input=data_3d_input,
             data_3d_output=data_3d_output,
-            apply_input_fusion=True
+            apply_input_merge=True
         )
 
         # DEBUG
@@ -410,11 +441,15 @@ def test_single_predict():
     # data_3d_filepath = os.path.join(PREDS_3D, "PA000005_11899.nii.gz")
 
     # data_3d_filepath = os.path.join(PREDS_FIXED_3D, "PA000078_11996.nii.gz")
-    data_3d_filepath = os.path.join(PREDS_FIXED_3D, "47_52.npy")
+    # data_3d_filepath = os.path.join(PREDS_FIXED_3D, "47_52.npy")
+    data_3d_filepath = os.path.join(PREDS_FIXED_3D, "PA000005_0650.nii.gz")
     data_2d_folder = PREDS_FIXED_2D
+    log_data = pd.read_csv(TRAIN_LOG_PATH)
+
     single_predict(
         data_3d_filepath=data_3d_filepath,
-        data_2d_folder=data_2d_folder
+        data_2d_folder=data_2d_folder,
+        log_data=log_data
     )
 
 
@@ -424,6 +459,7 @@ def full_predict():
 
     input_folder = PREDS_FIXED_3D
     data_2d_folder = PREDS_FIXED_2D
+    log_data = pd.read_csv(TRAIN_LOG_PATH)
 
     input_format = "PA000005"
     data_3d_filepaths = pathlib.Path(input_folder).rglob(f"{input_format}_*.*")
@@ -432,7 +468,8 @@ def full_predict():
     for data_3d_filepath in tqdm(data_3d_filepaths):
         single_predict(
             data_3d_filepath=data_3d_filepath,
-            data_2d_folder=data_2d_folder
+            data_2d_folder=data_2d_folder,
+            log_data=log_data
         )
 
 
