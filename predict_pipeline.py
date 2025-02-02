@@ -485,14 +485,41 @@ def full_predict():
 def calculate_dice_scores():
     data_3d_basename = "PA000005"
 
-    # output_folder = os.path.join(CROPPED_PATH, "preds_fixed_3d_v6")
+    #################
+    # CROPS COMPARE #
+    #################
+
+    # Baseline
+    # output_folder = PREDS_3D
     # output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}_*.*")
 
-    output_folder = PREDICT_PIPELINE_RESULTS_PATH
-    output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}_*_output.*")
+    # Output
+    # output_folder = PREDICT_PIPELINE_RESULTS_PATH
+    # output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}_*_output.*")
 
-    target_folder = LABELS_3D
-    target_filepaths = pathlib.Path(target_folder).rglob(f"{data_3d_basename}_*.*")
+    # Ground Truth
+    # target_folder = LABELS_3D
+    # target_filepaths = pathlib.Path(target_folder).rglob(f"{data_3d_basename}_*.*")
+
+    #####################
+    # FULL DATA COMPARE #
+    #####################
+
+    # Baseline
+    # output_folder = PREDS
+    # output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}*.*")
+
+    # Output
+    output_folder = MERGE_PIPELINE_RESULTS_PATH
+    output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}*.*")
+
+    # Ground Truth
+    target_folder = LABELS
+    target_filepaths = pathlib.Path(target_folder).rglob(f"{data_3d_basename}*.*")
+
+    #########################
+    # Calculate Dice Scores #
+    #########################
 
     output_filepaths = sorted(output_filepaths)
     target_filepaths = sorted(target_filepaths)
@@ -525,8 +552,11 @@ def calculate_dice_scores():
 def full_merge():
     data_3d_basename = "PA000005"
 
-    # Input 3D object
+    # data_3d_folder = PREDS
+
     data_3d_folder = PREDS_FIXED
+
+    # Input 3D object
     data_3d_filepath = list(pathlib.Path(data_3d_folder).rglob(f"{data_3d_basename}*"))
     if len(data_3d_filepath) == 1:
         input_filepath = data_3d_filepath[0]
@@ -588,10 +618,10 @@ def main():
     init_pipeline_models()
 
     # TODO: Requires Model Init
-    test_single_predict()
+    # test_single_predict()
 
-    # full_predict()
-    # full_merge()
+    full_predict()
+    full_merge()
 
     # calculate_dice_scores()
 
