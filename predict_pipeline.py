@@ -344,7 +344,7 @@ def init_pipeline_models():
         args.input_size = args.input_size_model_2d
         args.model = args.model_2d
         model_2d = init_model(args=args)
-        model_2d_weights_filepath = f"{filepath}_{model_2d.model_name}{ext}"
+        model_2d_weights_filepath = f"{filepath}_{DATASET_FOLDER}_{model_2d.model_name}{ext}"
         model_2d.load_state_dict(torch.load(model_2d_weights_filepath))
         model_2d.eval()
         model_2d.to(args.device)
@@ -357,7 +357,7 @@ def init_pipeline_models():
         args.input_size = args.input_size_model_3d
         args.model = args.model_3d
         model_3d = init_model(args=args)
-        model_3d_weights_filepath = f"{filepath}_{model_3d.model_name}{ext}"
+        model_3d_weights_filepath = f"{filepath}_{DATASET_FOLDER}_{model_3d.model_name}{ext}"
         model_3d.load_state_dict(torch.load(model_3d_weights_filepath))
         model_3d.eval()
         model_3d.to(args.device)
