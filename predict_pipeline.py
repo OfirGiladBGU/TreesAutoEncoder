@@ -461,7 +461,7 @@ def test_single_predict():
 
 
 def full_predict():
-    input_basename = "PA000005"
+    input_basename = "PA000078"
     log_data = pd.read_csv(TRAIN_LOG_PATH)
 
     # data_3d_folder = PREDS_3D
@@ -483,7 +483,7 @@ def full_predict():
 
 
 def calculate_dice_scores():
-    data_3d_basename = "PA000005"
+    data_3d_basename = "PA000078"
 
     #################
     # CROPS COMPARE #
@@ -550,7 +550,7 @@ def calculate_dice_scores():
 
 
 def full_merge():
-    data_3d_basename = "PA000005"
+    data_3d_basename = "PA000078"
 
     # data_3d_folder = PREDS
 
@@ -584,8 +584,8 @@ def full_merge():
     matching_rows = log_data[log_data[first_column].str.contains(regex_pattern, regex=True, na=False)]
 
     # Process the matching rows
-    for idx, row in matching_rows.iterrows():
-        predict_filepath = predict_filepaths[idx]
+    for row_idx, (_, row) in enumerate(matching_rows.iterrows()):
+        predict_filepath = predict_filepaths[row_idx]
         predict_data = convert_data_file_to_numpy(data_filepath=predict_filepath)
 
         start_x, end_x, start_y, end_y, start_z, end_z = (
