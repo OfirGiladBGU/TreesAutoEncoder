@@ -244,9 +244,13 @@ class Trainer(object):
 
             # LOSS = masked_abs_diff1.sum()
             # LOSS += loss_functions.bce_loss(out=output_data, target=target_data, reduction='sum')
+
             # LOSS += loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
+            # LOSS += self.perceptual_loss(output=output_data, target=target_data)
+
             # LOSS = loss_functions.l1_loss(out=output_data, target=target_data, reduction='sum')
-            LOSS += 100 * loss_functions.dice_loss(out=output_data, target=target_data)
+
+            # LOSS += 100 * loss_functions.dice_loss(out=output_data, target=target_data)
 
             # def weighted_mask_loss(predicted, target, mask, hole_weight=2.0):
             #     """
