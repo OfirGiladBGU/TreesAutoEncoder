@@ -221,7 +221,7 @@ class Trainer(object):
 
             fill_mask1 = (torch.abs(target_data - input_data) > 0).float()  # Area that should be filled
             black_mask1 = (target_data == 0).float()  # Area that should stay black
-            keep_mask1 = torch.ones_like(fill_mask1) - (fill_mask1 + black_mask1)  # Area that should stay unchanged
+            keep_mask1 = 1.0 - (fill_mask1 + black_mask1)  # Area that should stay unchanged
 
             # fill_weight = black_mask1.sum() / np.ones(shape=black_mask1.shape).sum() * 100
             # black_weight = fill_mask1.sum() / np.ones(shape=keep_mask1.shape).sum() * 100
@@ -241,11 +241,12 @@ class Trainer(object):
 
             # Normalize by the number of pixels in the mask
             LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
+
             # LOSS = masked_abs_diff1.sum()
             # LOSS += loss_functions.bce_loss(out=output_data, target=target_data, reduction='sum')
-            LOSS += loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
+            # LOSS += loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
             # LOSS = loss_functions.l1_loss(out=output_data, target=target_data, reduction='sum')
-            LOSS += loss_functions.bce_dice_loss(out=output_data, target=target_data)
+            LOSS += 100 * loss_functions.dice_loss(out=output_data, target=target_data)
 
             # def weighted_mask_loss(predicted, target, mask, hole_weight=2.0):
             #     """

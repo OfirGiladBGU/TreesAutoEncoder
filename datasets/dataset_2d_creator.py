@@ -447,8 +447,8 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
     # Config
     stride_dim = DATA_3D_STRIDE
     cube_dim = DATA_3D_SIZE
-    upper_threshold = math.pow(cube_dim[0], 2) * 0.9  # TODO: Support dynamic calculation
-    lower_threshold = math.pow(cube_dim[0], 2) * 0.1  # TODO: Support dynamic calculation
+    upper_threshold = math.pow(cube_dim[0], 2) * 0.95  # TODO: Support dynamic calculation
+    lower_threshold = math.pow(cube_dim[0], 2) * 0.05  # TODO: Support dynamic calculation
 
     # Create Output Folders
     for output_folder in output_folders.values():
@@ -922,7 +922,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             # _convert_numpy_to_nii_gz(label_cube, save_name="1")
             # _convert_numpy_to_nii_gz(pred_cube, save_name="2")
 
-        if filepath_idx == STOP_INDEX:
+        if (filepath_idx + 1) == STOP_INDEX:
             break
 
     pd.DataFrame(log_data).T.to_csv(TRAIN_LOG_PATH)
@@ -966,8 +966,8 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
     # Config
     stride_dim = DATA_3D_STRIDE
     cube_dim = DATA_3D_SIZE
-    upper_threshold = math.pow(cube_dim[0], 2) * 0.99  # TODO: Support dynamic calculation
-    lower_threshold = math.pow(cube_dim[0], 2) * 0.01  # TODO: Support dynamic calculation
+    upper_threshold = math.pow(cube_dim[0], 2) * 0.95  # TODO: Support dynamic calculation
+    lower_threshold = math.pow(cube_dim[0], 2) * 0.05  # TODO: Support dynamic calculation
 
     # Create Output Folders
     for output_folder in output_folders.values():
@@ -1155,7 +1155,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
 
             log_data[output_3d_format] = cubes_data[cube_idx]
 
-        if filepath_idx == STOP_INDEX:
+        if (filepath_idx + 1) == STOP_INDEX:
             break
 
     pd.DataFrame(log_data).T.to_csv(EVAL_LOG_PATH)
@@ -1187,7 +1187,7 @@ def main():
 
 
 if __name__ == "__main__":
-    STOP_INDEX = 19
+    STOP_INDEX = 15
 
     # TODO: Add classifier model to find cubes with holes better - model 2D to 1D
 
