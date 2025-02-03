@@ -361,6 +361,70 @@ class SelfAttention(nn.Module):
 #         return recon
 
 
+##########
+# Test 6 #
+##########
+
+# class Network2D(nn.Module):
+#     def __init__(self, args: argparse.Namespace):
+#         super(Network2D, self).__init__()
+#
+#         self.model_name = 'ae_2d_to_2d'
+#         self.input_size = args.input_size
+#
+#         # Encoder with larger kernels
+#         self.encoder1 = nn.Sequential(
+#             nn.Conv2d(1, 64, kernel_size=5, stride=2, padding=2),  # (batch_size, 64, H/2, W/2)
+#             nn.ReLU(True)
+#         )
+#         self.encoder2 = nn.Sequential(
+#             nn.Conv2d(64, 128, kernel_size=5, stride=2, padding=2),  # (batch_size, 128, H/4, W/4)
+#             nn.ReLU(True)
+#         )
+#         self.encoder3 = nn.Sequential(
+#             nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),  # (batch_size, 256, H/8, W/8)
+#             nn.ReLU(True)
+#         )
+#
+#         # Self-Attention after the encoder
+#         self.attention = SelfAttention(256)
+#
+#         # Decoder for reconstruction
+#         self.decoder1 = nn.Sequential(
+#             nn.ConvTranspose2d(256, 128, kernel_size=3, stride=1, padding=1, output_padding=0),
+#             nn.ReLU(True)
+#         )
+#         self.decoder2 = nn.Sequential(
+#             nn.ConvTranspose2d(128, 64, kernel_size=5, stride=2, padding=2, output_padding=1),
+#             nn.ReLU(True)
+#         )
+#         self.decoder3 = nn.Sequential(
+#             nn.ConvTranspose2d(64, 1, kernel_size=5, stride=2, padding=2, output_padding=1),
+#             nn.Sigmoid()  # Normalize output to [0, 1]
+#         )
+#
+#     def forward(self, x):
+#         # Encoding
+#         x1 = self.encoder1(x)
+#         x2 = self.encoder2(x1)
+#         x3 = self.encoder3(x2)
+#
+#         # Attention block
+#         x3 = self.attention(x3)
+#
+#         # Decoding for reconstruction with skip connections
+#         recon = self.decoder1(x3)
+#         recon = self.decoder2(recon + x2)  # Skip connection
+#         recon = self.decoder3(recon + x1)  # Skip connection
+#         return recon
+
+
+##########
+# Test 7 #
+##########
+
+# Creates Large Noise around thin connections
+
 class Network2D(nn.Module):
     def __init__(self, args: argparse.Namespace):
         super(Network2D, self).__init__()
