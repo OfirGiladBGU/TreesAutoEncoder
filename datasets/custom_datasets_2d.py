@@ -52,8 +52,8 @@ class TreesCustomDatasetV1(Dataset):
                 for image_view in IMAGES_6_VIEWS:
                     if row[f"{image_view}_valid"] is False:
                         non_valid_filenames.append(f"{data_basename}_{image_view}")
-                    if row[f"{image_view}_advance_valid"] is False:
-                        non_advance_valid_filenames.append(f"{data_basename}_{image_view}")
+                    # if row[f"{image_view}_advance_valid"] is False:
+                    #     non_advance_valid_filenames.append(f"{data_basename}_{image_view}")
 
             # Filter invalid data paths
             filepaths_count = len(self.data_files1)

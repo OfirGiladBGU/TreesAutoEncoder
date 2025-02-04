@@ -852,6 +852,8 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 source_data_filepath=source_data_filepath
             )
 
+            # TODO: Add checks if the advanced fixed preds are valid (equal to 2d projections)
+
             # DEBUG
             # if cube_idx == 3253:
             #     print("Debug")
@@ -1233,7 +1235,7 @@ def main():
 
 
 if __name__ == "__main__":
-    STOP_INDEX = 10
+    STOP_INDEX = 20
 
     # TODO: Add classifier model to find cubes with holes better - model 2D to 1D
 
