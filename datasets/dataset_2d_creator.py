@@ -5,13 +5,11 @@ import pandas as pd
 from tqdm import tqdm
 import math
 from typing import Tuple, List
-from scipy.ndimage import label
-from skimage import color
 
 from datasets.dataset_configurations import *
 from dataset_utils import (TaskType,
                            get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
-                           save_nii_gz_in_identity_affine, project_3d_to_2d)
+                           save_nii_gz_in_identity_affine, project_3d_to_2d, connected_components_3d)
 # TODO: Debug Tools
 from dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
@@ -19,30 +17,6 @@ from dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 #########
 # Utils #
 #########
-def connected_components_3d(data_3d: np.ndarray) -> Tuple[np.ndarray, int]:
-    # Define the structure for connectivity
-    # Here, we use a structure that connects each voxel to its immediate neighbors
-    structure = np.ones((3, 3, 3), dtype=np.int8)  # 26-connectivity
-
-    # Label connected components
-    labeled_array, num_features = label(data_3d, structure=structure)
-
-    # print("Labeled Array:", labeled_array)
-    # print("Number of Features:", num_features)
-
-    return labeled_array, num_features
-
-
-# def connected_components_2d(data_2d: np.ndarray) -> Tuple[np.ndarray, int]:
-#     # Label connected components
-#     labeled_array, num_features = label(data_2d)
-#
-#     # print("Labeled Array:", labeled_array)
-#     # print("Number of Features:", num_features)
-#
-#     return labeled_array, num_features
-
-
 def crop_mini_cubes(data_3d: np.ndarray,
                     other_data_3d_list: List[np.ndarray] = None,
                     cube_dim: Tuple[int, int, int] = (28, 28, 28),
@@ -884,72 +858,40 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
 
             cube_idx_str = str(cube_idx).zfill(cubes_count_digits_count)
 
+            folder_2d_map = {
+                "labels_2d": label_projections,
+                "preds_2d": pred_projections,
+                "preds_fixed_2d": pred_fixed_projections,
+                "preds_advanced_fixed_2d": pred_advanced_fixed_projections
+            }
+
+            folder_2d_components_map = {
+                "preds_components_2d": pred_projections,
+                "preds_fixed_components_2d": pred_fixed_projections,
+                "preds_advanced_fixed_components_2d": pred_advanced_fixed_projections
+            }
+
             for image_view in IMAGES_6_VIEWS:
                 output_2d_format = f"{output_idx}_{cube_idx_str}_{image_view}"
 
-                # 2D Folders - labels
-                label_2d = label_projections[f"{image_view}_image"]
-                save_filename = os.path.join(output_folders["labels_2d"], output_2d_format)
-                convert_numpy_to_data_file(
-                    numpy_data=label_2d,
-                    source_data_filepath="dumpy.png",
-                    save_filename=save_filename
-                )
-
-                # 2D Folder - preds
-                pred_2d = pred_projections[f"{image_view}_image"]
-                save_filename = os.path.join(output_folders["preds_2d"], output_2d_format)
-                convert_numpy_to_data_file(
-                    numpy_data=pred_2d,
-                    source_data_filepath="dumpy.png",
-                    save_filename=save_filename
-                )
-
-                # 2D Folder - preds fixed
-                pred_fixed_2d = pred_fixed_projections[f"{image_view}_image"]
-                save_filename = os.path.join(output_folders["preds_fixed_2d"], output_2d_format)
-                convert_numpy_to_data_file(
-                    numpy_data=pred_fixed_2d,
-                    source_data_filepath="dumpy.png",
-                    save_filename=save_filename
-                )
-
-                # 2D Folder - preds advanced fixed
-                pred_advanced_fixed_2d = pred_advanced_fixed_projections[f"{image_view}_image"]
-                save_filename = os.path.join(output_folders["preds_advanced_fixed_2d"], output_2d_format)
-                convert_numpy_to_data_file(
-                    numpy_data=pred_advanced_fixed_2d,
-                    source_data_filepath="dumpy.png",
-                    save_filename=save_filename
-                )
+                for key, value in folder_2d_map.items():
+                    data_2d = value[f"{image_view}_image"]
+                    save_filename = os.path.join(output_folders[key], output_2d_format)
+                    convert_numpy_to_data_file(
+                        numpy_data=data_2d,
+                        source_data_filepath="dumpy.png",
+                        save_filename=save_filename
+                    )
 
                 if task_type == TaskType.SINGLE_COMPONENT:
-                    # 2D Folders - preds components
-                    pred_components_2d = pred_projections[f"{image_view}_components"]
-                    save_filename = os.path.join(output_folders["preds_components_2d"], output_2d_format)
-                    convert_numpy_to_data_file(
-                        numpy_data=pred_components_2d,
-                        source_data_filepath="dumpy.png",
-                        save_filename=save_filename
-                    )
-
-                    # 2D Folders - preds fixed components
-                    pred_fixed_components_2d = pred_fixed_projections[f"{image_view}_components"]
-                    save_filename = os.path.join(output_folders["preds_fixed_components_2d"], output_2d_format)
-                    convert_numpy_to_data_file(
-                        numpy_data=pred_fixed_components_2d,
-                        source_data_filepath="dumpy.png",
-                        save_filename=save_filename
-                    )
-
-                    # 2D Folder - preds advanced fixed components
-                    pred_advanced_fixed_components_2d = pred_advanced_fixed_projections[f"{image_view}_components"]
-                    save_filename = os.path.join(output_folders["preds_advanced_fixed_components_2d"], output_2d_format)
-                    convert_numpy_to_data_file(
-                        numpy_data=pred_advanced_fixed_components_2d,
-                        source_data_filepath="dumpy.png",
-                        save_filename=save_filename
-                    )
+                    for key, value in folder_2d_components_map.items():
+                        data_2d = value[f"{image_view}_components"]
+                        save_filename = os.path.join(output_folders[key], output_2d_format)
+                        convert_numpy_to_data_file(
+                            numpy_data=data_2d,
+                            source_data_filepath="dumpy.png",
+                            save_filename=save_filename
+                        )
 
                 elif task_type in [TaskType.LOCAL_CONNECT, TaskType.PATCH_HOLES]:
                     pass
@@ -959,54 +901,35 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
 
             output_3d_format = f"{output_idx}_{cube_idx_str}"
 
-            # 3D Folders - labels
-            save_filename = os.path.join(output_folders["labels_3d"], output_3d_format)
-            convert_numpy_to_data_file(
-                numpy_data=label_cube,
-                source_data_filepath=label_filepath,
-                save_filename=save_filename
-            )
+            folder_3d_map = {
+                "labels_3d": label_cube,
+                "preds_3d": pred_cube,
+                "preds_fixed_3d": pred_fixed_cube,
+                "preds_advanced_fixed_3d": pred_advanced_fixed_cube
+            }
 
-            # 3D Folders - preds
-            save_filename = os.path.join(output_folders["preds_3d"], output_3d_format)
-            convert_numpy_to_data_file(
-                numpy_data=pred_cube,
-                source_data_filepath=pred_filepath,
-                save_filename=save_filename
-            )
+            folder_3d_components_map = {
+                "preds_components_3d": pred_components_cube,
+                "preds_fixed_components_3d": pred_fixed_components_cube,
+                "preds_advanced_fixed_components_3d": pred_advanced_fixed_components_cube
+            }
 
-            # 3D Folders - preds fixed
-            save_filename = os.path.join(output_folders["preds_fixed_3d"], output_3d_format)
-            convert_numpy_to_data_file(
-                numpy_data=pred_fixed_cube,
-                source_data_filepath=pred_filepath,
-                save_filename=save_filename
-            )
+            for key, value in folder_3d_map:
+                save_filename = os.path.join(output_folders[key], output_3d_format)
+                convert_numpy_to_data_file(
+                    numpy_data=value,
+                    source_data_filepath=label_filepath,
+                    save_filename=save_filename
+                )
 
             if task_type == TaskType.SINGLE_COMPONENT:
-                # 3D Folders - preds components
-                save_filename = os.path.join(output_folders["preds_components_3d"], output_3d_format)
-                convert_numpy_to_data_file(
-                    numpy_data=pred_components_cube,
-                    source_data_filepath=pred_component_filepath,
-                    save_filename=save_filename
-                )
-
-                # 3D Folders - preds fixed components
-                save_filename = os.path.join(output_folders["preds_fixed_components_3d"], output_3d_format)
-                convert_numpy_to_data_file(
-                    numpy_data=pred_fixed_components_cube,
-                    source_data_filepath=pred_fixed_component_filepath,
-                    save_filename=save_filename
-                )
-
-                # 3D Folders - preds advanced fixed components
-                save_filename = os.path.join(output_folders["preds_advanced_fixed_components_3d"], output_3d_format)
-                convert_numpy_to_data_file(
-                    numpy_data=pred_advanced_fixed_components_cube,
-                    source_data_filepath=pred_fixed_component_filepath,
-                    save_filename=save_filename
-                )
+                for key, value in folder_3d_components_map:
+                    save_filename = os.path.join(output_folders[key], output_3d_format)
+                    convert_numpy_to_data_file(
+                        numpy_data=value,
+                        source_data_filepath=label_filepath,
+                        save_filename=save_filename
+                    )
 
                 label_components_cube = connected_components_3d(data_3d=label_cube)[0]
 

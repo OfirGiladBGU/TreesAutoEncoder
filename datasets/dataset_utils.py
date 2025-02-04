@@ -4,7 +4,9 @@ import numpy as np
 import torch
 import cv2
 from enum import Enum
-from typing import Union, Dict
+from typing import Union, Dict, Tuple
+from scipy.ndimage import label
+# from skimage import color
 
 # For .nii.gz
 import nibabel as nib
@@ -383,6 +385,48 @@ def apply_threshold(tensor: torch.Tensor, threshold: float, keep_values: bool = 
     if keep_values is False:
         tensor[tensor >= threshold] = 1.0
     tensor[tensor < threshold] = 0.0
+
+
+########################
+# Connected Components #
+########################
+def connected_components_3d(data_3d: np.ndarray, connectivity_type: int = 26) -> Tuple[np.ndarray, int]:
+    # Define the structure for connectivity
+    # Here, we use a structure that connects each voxel to its immediate neighbors
+    if connectivity_type == 26:
+        structure = np.ones((3, 3, 3), dtype=np.int8)  # 26-connectivity
+
+    elif connectivity_type == 6:
+        structure = np.zeros((3, 3, 3), dtype=np.int8)
+        active_points = [
+            (0, 1, 1), (2, 1, 1),  # Points along the X-axis
+            (1, 0, 1), (1, 2, 1),  # Points along the Y-axis
+            (1, 1, 0), (1, 1, 2),  # Points along the Z-axis
+            (1, 1, 1)  # Center point
+        ]
+        for x, y, z in active_points:
+            structure[x, y, z] = 1
+
+    else:
+        raise ValueError("Invalid connectivity type")
+
+    # Label connected components
+    labeled_array, num_features = label(data_3d, structure=structure)
+
+    # print("Labeled Array:", labeled_array)
+    # print("Number of Features:", num_features)
+
+    return labeled_array, num_features
+
+
+def connected_components_2d(data_2d: np.ndarray) -> Tuple[np.ndarray, int]:
+    # Label connected components
+    labeled_array, num_features = label(data_2d)
+
+    # print("Labeled Array:", labeled_array)
+    # print("Number of Features:", num_features)
+
+    return labeled_array, num_features
 
 
 #################

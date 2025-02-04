@@ -8,8 +8,7 @@ import plotly.graph_objects as go
 from skimage import color
 
 from datasets.dataset_configurations import *
-from datasets.dataset_utils import convert_data_file_to_numpy
-
+from datasets.dataset_utils import convert_data_file_to_numpy, connected_components_3d
 
 ####################
 # 3D visualization #
@@ -229,8 +228,11 @@ def merging_images(save_filename):
 #####################
 # 3D Core functions #
 #####################
-def single_plot_3d(data_3d_filepath, interactive_mode: bool = False, interactive_version: int = 1):
+def single_plot_3d(data_3d_filepath, interactive_mode: bool = False, interactive_version: int = 1,
+                   connected_components_mode: bool = False):
     numpy_3d_data = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
+    if connected_components_mode is True:
+        numpy_3d_data = connected_components_3d(data_3d=numpy_3d_data)[0]
 
     if interactive_mode is False:
         save_path = os.path.join(RESULTS_PATH, "single_predict")
@@ -372,15 +374,15 @@ def main():
     # Single Test #
 
     # data_3d_filepath = os.path.join(RESULTS_PATH, "predict_pipeline", "output_3d", "PA000005_05352_input.nii.gz")
-    # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6", "PA000005_05352.nii.gz")
-    # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_3d_v6", "PA000005_05352.nii.gz")
+    # data_3d_filepath = os.path.join(LABELS_3D, "PA000005_05352.nii.gz")
+    # data_3d_filepath = os.path.join(PREDS_3D, "PA000005_05352.nii.gz")
     # data_3d_filepath = os.path.join(DATA_PATH, "Pipes3DGeneratorTree", "labels", "01.npy")
 
     # Example 3D data
-    # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "labels_3d_v6", "PA000078_11978.nii.gz")
-    # data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_fixed_3d_v6", "PA000078_11978.nii.gz")
-    data_3d_filepath = os.path.join(TRAIN_CROPPED_PATH, "preds_components_3d_v6", "PA000078_2020.nii.gz")
-    single_plot_3d(data_3d_filepath=data_3d_filepath, interactive_mode=False, interactive_version=1)
+    # data_3d_filepath = os.path.join(LABELS_3D, "PA000078_11978.nii.gz")
+    # data_3d_filepath = os.path.join(PREDS_FIXED_3D, "PA000078_11978.nii.gz")
+    data_3d_filepath = r"E:\AllProjects\PycharmProjects\TreesAutoEncoder\data_results\46_label.npy"
+    single_plot_3d(data_3d_filepath=data_3d_filepath, interactive_mode=True, interactive_version=2)
 
 
     # Multiple Tests #

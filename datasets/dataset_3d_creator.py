@@ -42,21 +42,24 @@ def create_3d_reconstructions():
     source_folders = {
         "labels_3d": LABELS_3D,
         "preds_3d": PREDS_3D,
-        "preds_fixed_3d": PREDS_FIXED_3D
+        "preds_fixed_3d": PREDS_FIXED_3D,
+        "preds_advanced_fixed_3d": PREDS_ADVANCED_FIXED_3D
     }
 
     # Inputs
     input_folders = {
         "labels_2d": LABELS_2D,
         "preds_2d": PREDS_2D,
-        "preds_fixed_2d": PREDS_FIXED_2D
+        "preds_fixed_2d": PREDS_FIXED_2D,
+        "preds_advanced_fixed_2d": PREDS_ADVANCED_FIXED_2D
     }
 
     # Outputs
     output_folders = {
         "labels_3d_reconstruct": LABELS_3D_RECONSTRUCT,
         "preds_3d_reconstruct": PREDS_3D_RECONSTRUCT,
-        "preds_fixed_3d_reconstruct": PREDS_FIXED_3D_RECONSTRUCT
+        "preds_fixed_3d_reconstruct": PREDS_FIXED_3D_RECONSTRUCT,
+        "preds_advanced_fixed_3d_reconstruct": PREDS_ADVANCED_FIXED_3D_RECONSTRUCT
     }
 
     # Create Output Folders
@@ -74,16 +77,19 @@ def create_3d_reconstructions():
     labels_image_format_list = list()
     preds_image_format_list = list()
     preds_fixed_image_format_list = list()
+    preds_advanced_fixed_image_format_list = list()
 
     # Using iloc to select the first column
     for data_basename in tqdm(log_data.iloc[:, 0]):
         labels_image_format = os.path.join(input_folders["labels_2d"], f"{data_basename}_<VIEW>.png")
         pred_image_format = os.path.join(input_folders["preds_2d"], f"{data_basename}_<VIEW>.png")
         pred_fixed_image_format = os.path.join(input_folders["preds_fixed_2d"], f"{data_basename}_<VIEW>.png")
+        pred_advanced_image_format = os.path.join(input_folders["preds_advanced_fixed_2d"], f"{data_basename}_<VIEW>.png")
 
         labels_image_format_list.append(labels_image_format)
         preds_image_format_list.append(pred_image_format)
         preds_fixed_image_format_list.append(pred_fixed_image_format)
+        preds_advanced_fixed_image_format_list.append(pred_advanced_image_format)
 
     filepaths_count = len(labels_image_format_list)
     for filepath_idx in tqdm(range(filepaths_count)):
@@ -91,6 +97,7 @@ def create_3d_reconstructions():
         label_image_format = labels_image_format_list[filepath_idx]
         pred_image_format = preds_image_format_list[filepath_idx]
         pred_fixed_image_format = preds_fixed_image_format_list[filepath_idx]
+        pred_advanced_image_format = preds_advanced_fixed_image_format_list[filepath_idx]
 
         # Label
         label_image_relative = pathlib.Path(label_image_format).relative_to(input_folders["labels_2d"])
@@ -103,6 +110,10 @@ def create_3d_reconstructions():
         # Pred Fixed
         pred_fixed_image_relative = pathlib.Path(pred_fixed_image_format).relative_to(input_folders["preds_fixed_2d"])
         pred_fixed_image_output_filepath = os.path.join(output_folders["preds_fixed_3d_reconstruct"], pred_fixed_image_relative)
+
+        # Pred Advanced Fixed
+        pred_advanced_fixed_image_relative = pathlib.Path(pred_advanced_image_format).relative_to(input_folders["preds_advanced_fixed_2d"])
+        pred_advanced_fixed_image_output_filepath = os.path.join(output_folders["preds_advanced_fixed_3d_reconstruct"], pred_advanced_fixed_image_relative)
 
         # 3D Folders - labels
         save_filename = label_image_output_filepath.replace("_<VIEW>.png", "")
@@ -152,6 +163,22 @@ def create_3d_reconstructions():
             save_filename=save_filename
         )
 
+        # 3D Folders - preds advanced fixed
+        save_filename = pred_advanced_fixed_image_output_filepath.replace("_<VIEW>.png", "")
+        pred_advanced_fixed_3d_path = pathlib.Path(source_folders["preds_advanced_fixed_3d"])
+        pred_advanced_fixed_3d_relative = str(pred_advanced_fixed_image_relative).replace("_<VIEW>.png", "*")
+        source_advanced_pred_fixed_3d_data_filepath = list(pred_advanced_fixed_3d_path.rglob(pred_advanced_fixed_3d_relative))[0]
+
+        pred_advanced_fixed_numpy_data = reconstruct_3d_from_2d(
+            format_of_2d_images=pred_advanced_image_format,
+            source_data_filepath=source_advanced_pred_fixed_3d_data_filepath
+        )
+        convert_numpy_to_data_file(
+            numpy_data=pred_advanced_fixed_numpy_data,
+            source_data_filepath=source_advanced_pred_fixed_3d_data_filepath,
+            save_filename=save_filename
+        )
+
     # format_of_2d_images = r".\parse_labels_mini_cropped_v5\PA000005_vessel_02584_<VIEW>.png"
     # final_data_3d = reconstruct_3d_from_2d(format_of_2d_images)
     #
@@ -165,13 +192,15 @@ def create_3d_fusions():
     input_folders = {
         "labels_3d_reconstruct": LABELS_3D_RECONSTRUCT,
         "preds_3d": PREDS_3D,
-        "preds_fixed_3d": PREDS_FIXED_3D
+        "preds_fixed_3d": PREDS_FIXED_3D,
+        "preds_advanced_fixed_3d": PREDS_ADVANCED_FIXED_3D
     }
 
     # Outputs
     output_folders = {
         "preds_3d_fusion": PREDS_3D_FUSION,
-        "preds_fixed_3d_fusion": PREDS_FIXED_3D_FUSION
+        "preds_fixed_3d_fusion": PREDS_FIXED_3D_FUSION,
+        "preds_advanced_fixed_3d_fusion": PREDS_ADVANCED_FIXED_3D_FUSION
     }
 
     # Create Output Folders
@@ -189,17 +218,23 @@ def create_3d_fusions():
         label_3d_reconstruct_filepath = input_filepaths["labels_3d_reconstruct"][filepath_idx]
         pred_3d_filepath = input_filepaths["preds_3d"][filepath_idx]
         pred_fixed_3d_filepath = input_filepaths["preds_fixed_3d"][filepath_idx]
+        pred_advanced_fixed_3d_filepath = input_filepaths["preds_advanced_fixed_3d"][filepath_idx]
 
         # Original data
         label_3d_reconstruct_numpy_data = convert_data_file_to_numpy(data_filepath=label_3d_reconstruct_filepath)
         pred_3d_numpy_data = convert_data_file_to_numpy(data_filepath=pred_3d_filepath)
         pred_fixed_3d_numpy_data = convert_data_file_to_numpy(data_filepath=pred_fixed_3d_filepath)
+        pred_advanced_fixed_3d_numpy_data = convert_data_file_to_numpy(data_filepath=pred_advanced_fixed_3d_filepath)
 
         # Fusions
         pred_3d_fusion = np.logical_or(pred_3d_numpy_data, label_3d_reconstruct_numpy_data)
         pred_3d_fusion = pred_3d_fusion.astype(np.float32)
+
         pred_fixed_3d_fusion = np.logical_or(pred_fixed_3d_numpy_data, label_3d_reconstruct_numpy_data)
         pred_fixed_3d_fusion = pred_fixed_3d_fusion.astype(np.float32)
+
+        pred_advanced_fixed_3d_fusion = np.logical_or(pred_advanced_fixed_3d_numpy_data, label_3d_reconstruct_numpy_data)
+        pred_advanced_fixed_3d_fusion = pred_advanced_fixed_3d_fusion.astype(np.float32)
 
         # Pred
         pred_3d_relative = pathlib.Path(pred_3d_filepath).relative_to(input_folders["preds_3d"])
@@ -208,6 +243,10 @@ def create_3d_fusions():
         # Pred Fixed
         pred_fixed_3d_relative = pathlib.Path(pred_fixed_3d_filepath).relative_to(input_folders["preds_fixed_3d"])
         pred_fixed_3d_output_filepath = os.path.join(output_folders["preds_fixed_3d_fusion"], pred_fixed_3d_relative)
+
+        # Pred Advanced Fixed
+        pred_advanced_fixed_3d_relative = pathlib.Path(pred_advanced_fixed_3d_filepath).relative_to(input_folders["preds_advanced_fixed_3d"])
+        pred_advanced_fixed_3d_output_filepath = os.path.join(output_folders["preds_advanced_fixed_3d_fusion"], pred_advanced_fixed_3d_relative)
 
         # 3D Folders - preds fusion
         save_filename = pred_3d_output_filepath
@@ -222,6 +261,14 @@ def create_3d_fusions():
         convert_numpy_to_data_file(
             numpy_data=pred_fixed_3d_fusion,
             source_data_filepath=pred_fixed_3d_filepath,
+            save_filename=save_filename
+        )
+
+        # 3D Folders - preds advanced fixed
+        save_filename = pred_advanced_fixed_3d_output_filepath
+        convert_numpy_to_data_file(
+            numpy_data=pred_advanced_fixed_3d_fusion,
+            source_data_filepath=pred_advanced_fixed_3d_filepath,
             save_filename=save_filename
         )
 
