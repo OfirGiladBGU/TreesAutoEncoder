@@ -220,10 +220,10 @@ def create_3d_fusions():
         pred_advanced_fixed_3d_filepath = input_filepaths["preds_advanced_fixed_3d"][filepath_idx]
 
         # Original data
-        label_3d_reconstruct_numpy_data = convert_data_file_to_numpy(data_filepath=label_3d_reconstruct_filepath)
-        pred_3d_numpy_data = convert_data_file_to_numpy(data_filepath=pred_3d_filepath)
-        pred_fixed_3d_numpy_data = convert_data_file_to_numpy(data_filepath=pred_fixed_3d_filepath)
-        pred_advanced_fixed_3d_numpy_data = convert_data_file_to_numpy(data_filepath=pred_advanced_fixed_3d_filepath)
+        label_3d_reconstruct_numpy_data = convert_data_file_to_numpy(data_filepath=label_3d_reconstruct_filepath).clip(min=0.0, max=1.0)
+        pred_3d_numpy_data = convert_data_file_to_numpy(data_filepath=pred_3d_filepath).clip(min=0.0, max=1.0)
+        pred_fixed_3d_numpy_data = convert_data_file_to_numpy(data_filepath=pred_fixed_3d_filepath).clip(min=0.0, max=1.0)
+        pred_advanced_fixed_3d_numpy_data = convert_data_file_to_numpy(data_filepath=pred_advanced_fixed_3d_filepath).clip(min=0.0, max=1.0)
 
         # Fusions
         pred_3d_fusion = np.logical_or(pred_3d_numpy_data, label_3d_reconstruct_numpy_data)

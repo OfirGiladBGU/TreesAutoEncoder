@@ -157,7 +157,7 @@ def crop_mini_cubes(data_3d: np.ndarray,
             return mini_cubes, other_mini_cubes_list
 
 
-def outlier_removal(pred_data: np.ndarray, label_data: np.ndarray):
+def outlier_removal_3d(pred_data: np.ndarray, label_data: np.ndarray):
     # # V1 - CONNECTED COMPONENTS
     # pred_data_fixed = np.logical_and(pred_data, label_data)
 
@@ -166,7 +166,11 @@ def outlier_removal(pred_data: np.ndarray, label_data: np.ndarray):
     # pred_data_fixed = pred_data - outlier_data
 
     # # V3 - CONNECTED COMPONENTS
-    pred_data_fixed = np.logical_and(pred_data > 0, label_data > 0)
+    # pred_data_fixed = np.logical_and(pred_data > 0, label_data > 0)
+    # pred_data_fixed = pred_data_fixed.astype(label_data.dtype)
+
+    # # V4 - CONNECTED COMPONENTS
+    pred_data_fixed = np.logical_and(pred_data, label_data)
     pred_data_fixed = pred_data_fixed.astype(label_data.dtype)
 
     # V1 - PATCH HOLES
@@ -228,7 +232,7 @@ def create_dataset_with_outliers_removed():
         label_numpy_data = convert_data_file_to_numpy(data_filepath=label_filepath)
         pred_numpy_data = convert_data_file_to_numpy(data_filepath=pred_filepath)
 
-        pred_fixed_numpy_data = outlier_removal(pred_data=pred_numpy_data, label_data=label_numpy_data)
+        pred_fixed_numpy_data = outlier_removal_3d(pred_data=pred_numpy_data, label_data=label_numpy_data)
         save_filename = os.path.join(output_folders["preds_fixed"], get_data_file_stem(data_filepath=pred_filepath))
         convert_numpy_to_data_file(
             numpy_data=pred_fixed_numpy_data,
@@ -454,9 +458,9 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
         pred_fixed_filepath = input_filepaths["preds_fixed"][filepath_idx]
 
         # Original data
-        label_numpy_data = convert_data_file_to_numpy(data_filepath=label_filepath)
-        pred_numpy_data = convert_data_file_to_numpy(data_filepath=pred_filepath)
-        pred_fixed_numpy_data = convert_data_file_to_numpy(data_filepath=pred_fixed_filepath)
+        label_numpy_data = convert_data_file_to_numpy(data_filepath=label_filepath).clip(min=0.0, max=1.0)
+        pred_numpy_data = convert_data_file_to_numpy(data_filepath=pred_filepath).clip(min=0.0, max=1.0)
+        pred_fixed_numpy_data = convert_data_file_to_numpy(data_filepath=pred_fixed_filepath).clip(min=0.0, max=1.0)
 
         # TODO: Debug
         # if (pred_numpy_data - pred_fixed_numpy_data).sum() != 0:
@@ -499,9 +503,6 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             pred_fixed_components_cubes = other_cubes_list[0]
 
         elif task_type in [TaskType.LOCAL_CONNECT, TaskType.PATCH_HOLES]:
-            pred_component_filepath = None
-            pred_fixed_component_filepath = None
-
             pred_components_cubes = None
             pred_fixed_components_cubes = None
 
@@ -778,6 +779,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                     if not (components_before > components_after):
                         pred_advanced_fixed_cube = temp_fixed
 
+                pred_advanced_fixed_cube = pred_advanced_fixed_cube.astype(pred_fixed_cube.dtype)
                 # Calculate the connected components for the advanced fixed preds
                 pred_advanced_fixed_components_cube = connected_components_3d(pred_advanced_fixed_cube)[0]
 
@@ -832,6 +834,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                     if not (components_before > components_after):
                         pred_advanced_fixed_cube = temp_fix
 
+                pred_advanced_fixed_cube = pred_advanced_fixed_cube.astype(pred_fixed_cube.dtype)
                 pred_advanced_fixed_components_cube = None
 
             elif task_type == TaskType.PATCH_HOLES:
@@ -841,11 +844,12 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 raise ValueError("Invalid Task Type")
 
             # Project 3D to 2D (Preds Fixed Advanced)
+            source_data_filepath = pred_fixed_filepath
             pred_advanced_fixed_projections = project_3d_to_2d(
                 data_3d=pred_advanced_fixed_cube,
                 projection_options=projection_options,
                 component_3d=pred_advanced_fixed_components_cube,
-                source_data_filepath=pred_filepath
+                source_data_filepath=source_data_filepath
             )
 
             # DEBUG
@@ -914,20 +918,30 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 "preds_advanced_fixed_components_3d": pred_advanced_fixed_components_cube
             }
 
-            for key, value in folder_3d_map:
+            for key, value in folder_3d_map.items():
+                if key == "preds_advanced_fixed_3d":
+                    source_name = "preds_fixed"
+                else:
+                    source_name = key.replace("_3d", "")
+                source_data_filepath = input_filepaths[source_name][filepath_idx]
                 save_filename = os.path.join(output_folders[key], output_3d_format)
                 convert_numpy_to_data_file(
                     numpy_data=value,
-                    source_data_filepath=label_filepath,
+                    source_data_filepath=source_data_filepath,
                     save_filename=save_filename
                 )
 
             if task_type == TaskType.SINGLE_COMPONENT:
-                for key, value in folder_3d_components_map:
+                for key, value in folder_3d_components_map.items():
+                    if key == "preds_advanced_fixed_components_3d":
+                        source_name = "preds_fixed_components_3d"
+                    else:
+                        source_name = key.replace("_3d", "")
+                    source_data_filepath = input_filepaths[source_name][filepath_idx]
                     save_filename = os.path.join(output_folders[key], output_3d_format)
                     convert_numpy_to_data_file(
                         numpy_data=value,
-                        source_data_filepath=label_filepath,
+                        source_data_filepath=source_data_filepath,
                         save_filename=save_filename
                     )
 
@@ -1219,7 +1233,7 @@ def main():
 
 
 if __name__ == "__main__":
-    STOP_INDEX = 20
+    STOP_INDEX = 10
 
     # TODO: Add classifier model to find cubes with holes better - model 2D to 1D
 
