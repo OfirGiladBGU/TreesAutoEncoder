@@ -447,8 +447,8 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
     # Config
     stride_dim = DATA_3D_STRIDE
     cube_dim = DATA_3D_SIZE
-    upper_threshold = math.pow(cube_dim[0], 2) * 0.95  # TODO: Support dynamic calculation
-    lower_threshold = math.pow(cube_dim[0], 2) * 0.05  # TODO: Support dynamic calculation
+    upper_threshold = math.pow(cube_dim[0], 2) * 0.9  # TODO: Support dynamic calculation
+    lower_threshold = math.pow(cube_dim[0], 2) * 0.1  # TODO: Support dynamic calculation
 
     # Create Output Folders
     for output_folder in output_folders.values():
@@ -966,8 +966,8 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
     # Config
     stride_dim = DATA_3D_STRIDE
     cube_dim = DATA_3D_SIZE
-    upper_threshold = math.pow(cube_dim[0], 2) * 0.95  # TODO: Support dynamic calculation
-    lower_threshold = math.pow(cube_dim[0], 2) * 0.05  # TODO: Support dynamic calculation
+    upper_threshold = math.pow(cube_dim[0], 2) * 0.9  # TODO: Support dynamic calculation
+    lower_threshold = math.pow(cube_dim[0], 2) * 0.1  # TODO: Support dynamic calculation
 
     # Create Output Folders
     for output_folder in output_folders.values():
@@ -1187,7 +1187,7 @@ def main():
 
 
 if __name__ == "__main__":
-    STOP_INDEX = 15
+    STOP_INDEX = 20
 
     # TODO: Add classifier model to find cubes with holes better - model 2D to 1D
 
