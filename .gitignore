@@ -1,6 +1,7 @@
 venv
 .env
 data
+data_crops
 data_results
 wandb
 weights

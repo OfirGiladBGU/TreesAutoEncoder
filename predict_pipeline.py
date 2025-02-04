@@ -27,14 +27,14 @@ def preprocess_2d(data_3d_filepath: str,
     data_2d_basename = f"{data_3d_basename}_<VIEW>"
 
     # # Get relative path parts
-    # relative_filepath = data_3d_filepath.relative_to(TRAIN_CROPPED_PATH)
+    # relative_filepath = data_3d_filepath.relative_to(CROPS_PATH)
     # relative_filepath_parts = list(relative_filepath.parts)
     #
     # # Update relative path parts to the relevant 2D images path
     # relative_filepath_parts[0] = relative_filepath_parts[0].replace("3d", "2d")
     # relative_filepath_parts[-1] = f"{data_2d_basename}.png"
     # format_of_2d_images_relative_filepath = pathlib.Path(*relative_filepath_parts)
-    # format_of_2d_images = os.path.join(TRAIN_CROPPED_PATH, format_of_2d_images_relative_filepath)
+    # format_of_2d_images = os.path.join(CROPS_PATH, format_of_2d_images_relative_filepath)
 
     format_of_2d_images = os.path.join(data_2d_folder, data_2d_basename + ".png")
 
@@ -92,7 +92,7 @@ def postprocess_2d(data_3d_filepath: str,
                 else:
                     pass
             else:
-                print(f"No '{view_advance_valid}' column in 'log.csv' data")
+                print(f"No '{view_advance_valid}' column in log csv data")
     else:  # TODO: use classifier results
         pass
 
@@ -344,7 +344,7 @@ def init_pipeline_models():
         args.input_size = args.input_size_model_2d
         args.model = args.model_2d
         model_2d = init_model(args=args)
-        model_2d_weights_filepath = f"{filepath}_{DATASET_FOLDER}_{model_2d.model_name}{ext}"
+        model_2d_weights_filepath = f"{filepath}_{DATASET_FOLDER}_new5_{model_2d.model_name}{ext}"
         model_2d.load_state_dict(torch.load(model_2d_weights_filepath))
         model_2d.eval()
         model_2d.to(args.device)
@@ -357,7 +357,7 @@ def init_pipeline_models():
         args.input_size = args.input_size_model_3d
         args.model = args.model_3d
         model_3d = init_model(args=args)
-        model_3d_weights_filepath = f"{filepath}_{DATASET_FOLDER}_{model_3d.model_name}{ext}"
+        model_3d_weights_filepath = f"{filepath}_{DATASET_FOLDER}_new5_{model_3d.model_name}{ext}"
         model_3d.load_state_dict(torch.load(model_3d_weights_filepath))
         model_3d.eval()
         model_3d.to(args.device)

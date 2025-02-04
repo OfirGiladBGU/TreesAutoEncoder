@@ -71,8 +71,7 @@ def create_3d_reconstructions():
     for key, value in input_folders.items():
         input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.png"))
 
-    log_filepath = os.path.join(TRAIN_CROPPED_PATH, "log.csv")
-    log_data = pd.read_csv(log_filepath)
+    log_data = pd.read_csv(TRAIN_LOG_PATH)
 
     labels_image_format_list = list()
     preds_image_format_list = list()
