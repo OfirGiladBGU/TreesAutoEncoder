@@ -6,7 +6,6 @@ import cv2
 from enum import Enum
 from typing import Union, Dict, Tuple
 from scipy.ndimage import label
-# from skimage import color
 
 # For .nii.gz
 import nibabel as nib

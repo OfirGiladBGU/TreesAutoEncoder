@@ -5,11 +5,13 @@ import pandas as pd
 from tqdm import tqdm
 import math
 from typing import Tuple, List
+from skimage import color
 
 from datasets.dataset_configurations import *
 from dataset_utils import (TaskType,
                            get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
-                           save_nii_gz_in_identity_affine, project_3d_to_2d, connected_components_3d)
+                           save_nii_gz_in_identity_affine, project_3d_to_2d,
+                           connected_components_3d, connected_components_2d)
 # TODO: Debug Tools
 from dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
@@ -630,168 +632,50 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             #     print("Debug")
 
             ########################
-            # Apply Continuity Fix #
+            # Continuity Fix in 3D #
             ########################
 
-            # V1 - Fixes in 2D
-
-            # pred_advanced_fixed_projections = dict()
-            # for view_idx, image_view in enumerate(IMAGES_6_VIEWS):
-            #     label_image = label_projections[f"{image_view}_image"]
-            #     pred_fixed_image = pred_fixed_projections[f"{image_view}_image"]
-            #
-            #     # TODO: repair pred fix to include connectable components
-            #     if task_type == TaskType.SINGLE_COMPONENT:
-            #         # TODO: check if local components num is similar between label and pred
-            #
-            #         # Calculate the connected components for the fixed preds
-            #         label_binary = (label_image > 0).astype(np.uint8)
-            #         pred_advanced_fixed_binary = (pred_fixed_image > 0).astype(np.uint8)
-            #         delta_binary = ((label_binary - pred_advanced_fixed_binary) > 0.5).astype(np.uint8)
-            #
-            #         # Identify connected components in binary_delta
-            #         delta_labeled, delta_num_components = connected_components_2d(delta_binary)
-            #
-            #         # Iterate through connected components in binary_delta
-            #         for component_label in range(1, delta_num_components + 1):
-            #             # Create a mask for the current connected component
-            #             component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
-            #
-            #             # Check the number of connected components before adding the mask
-            #             components_before = connected_components_2d(pred_advanced_fixed_binary)[1]
-            #
-            #             # Create a temporary image with the component added
-            #             temp_fix = np.logical_or(pred_advanced_fixed_binary, component_mask)
-            #             components_after = connected_components_2d(temp_fix)[1]
-            #
-            #             # Add the component only if it does not decrease the number of connected components
-            #             if not (components_before > components_after):
-            #                 pred_advanced_fixed_binary = temp_fix
-            #
-            #         # Update the pred_advanced_fixed_image
-            #         # pred_advanced_fixed_image = np.where(binary_pred_fixed > 0, label_image, pred_fixed_image)
-            #         pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0)
-            #         pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
-            #
-            #         if np.array_equal(pred_advanced_fixed_image, label_image):
-            #             cubes_data[cube_idx].update({
-            #                 f"{image_view}_advance_valid": False
-            #             })
-            #         else:
-            #             cubes_data[cube_idx].update({
-            #                 f"{image_view}_advance_valid": True
-            #             })
-            #
-            #         # Calculate the connected components for the advanced fixed preds
-            #         labeled_delta = connected_components_2d(pred_advanced_fixed_image)[0]
-            #         pred_advanced_fixed_projections[f"{image_view}_components"] = color.label2rgb(
-            #             label=labeled_delta
-            #         ) * 255
-            #
-            #     elif task_type == TaskType.LOCAL_CONNECT:
-            #         # Calculate the connected components for the fixed preds
-            #         label_binary = (label_image > 0).astype(np.uint8)
-            #         pred_fixed_advanced_binary = (pred_fixed_image > 0).astype(np.uint8)
-            #         delta_binary = ((label_binary - pred_fixed_advanced_binary) > 0.5).astype(np.uint8)
-            #
-            #         # Identify connected components in binary_delta
-            #         delta_labeled, delta_num_components = connected_components_2d(delta_binary)
-            #
-            #         # Iterate through connected components in binary_delta
-            #         for component_label in range(1, delta_num_components + 1):
-            #             # Create a mask for the current connected component
-            #             component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
-            #
-            #             # ROI - cropped area between the component mask: top, bottom, left, right
-            #             coords = np.argwhere(component_mask > 0)
-            #
-            #             # Get bounding box
-            #             left = np.min(coords[:, 1])  # Minimum column index
-            #             right = np.max(coords[:, 1])  # Maximum column index
-            #             top = np.min(coords[:, 0])  # Minimum row index
-            #             bottom = np.max(coords[:, 0])  # Maximum row index
-            #
-            #             min_x = max(0, left - 1)
-            #             max_x = min(right + 2, pred_fixed_advanced_binary.shape[1])
-            #             min_y = max(0, top - 1)
-            #             max_y = min(bottom + 2, pred_fixed_advanced_binary.shape[0])
-            #
-            #             # Check the number of connected components before adding the mask
-            #             roi_temp_before = pred_fixed_advanced_binary[min_y:max_y, min_x:max_x]
-            #             components_before = connected_components_2d(roi_temp_before)[1]
-            #
-            #             # Create a temporary image with the component added
-            #             temp_fix = np.logical_or(pred_fixed_advanced_binary, component_mask)
-            #             roi_temp_after = temp_fix[min_y:max_y, min_x:max_x]
-            #             components_after = connected_components_2d(roi_temp_after)[1]
-            #
-            #             # Add the component only if it does not decrease the number of connected components
-            #             # (on the local scope)
-            #             if not (components_before > components_after):
-            #                 pred_fixed_advanced_binary = temp_fix
-            #
-            #         # Update the pred_advanced_fixed_image
-            #         # pred_advanced_fixed_image = np.where(binary_pred_fixed > 0, label_image, pred_fixed_image)
-            #         pred_advanced_fixed_image = np.where(pred_fixed_advanced_binary > 0, label_image, 0)
-            #         pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
-            #
-            #         if np.array_equal(pred_advanced_fixed_image, label_image):
-            #             cubes_data[cube_idx].update({
-            #                 f"{image_view}_advance_valid": False
-            #             })
-            #         else:
-            #             cubes_data[cube_idx].update({
-            #                 f"{image_view}_advance_valid": True
-            #             })
-            #
-            #     elif task_type == TaskType.PATCH_HOLES:
-            #         pred_advanced_fixed_projections[f"{image_view}_image"] = pred_fixed_image
-            #
-            #     else:
-            #         raise ValueError("Invalid Task Type")
-
-
-            # V2 - Fixes in 3D
-
-            # New Cube
             pred_advanced_fixed_cube = pred_fixed_cube.copy()
 
             if task_type == TaskType.SINGLE_COMPONENT:
-                # Calculate the connected components for the fixed preds
+                # Calculate the connected components for the preds fixed
                 delta_cube = ((label_cube - pred_fixed_cube) > 0.5).astype(np.uint8)
 
-                # Identify connected components in binary_delta
-                delta_labeled, delta_num_components = connected_components_3d(delta_cube)
+                # Identify connected components in delta_cube
+                delta_labeled, delta_num_components = connected_components_3d(data_3d=delta_cube)
 
-                # Iterate through connected components in binary_delta
+                # Iterate through connected components in delta_cube
                 for component_label in range(1, delta_num_components + 1):
                     # Create a mask for the current connected component
                     component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
 
                     # Check the number of connected components before adding the mask
-                    components_before = connected_components_3d(pred_advanced_fixed_cube)[1]
+                    components_before = connected_components_3d(data_3d=pred_advanced_fixed_cube)[1]
 
                     # Create a temporary image with the component added
                     temp_fixed = np.logical_or(pred_advanced_fixed_cube, component_mask)
-                    components_after = connected_components_3d(temp_fixed)[1]
+                    components_after = connected_components_3d(data_3d=temp_fixed)[1]
 
                     # Add the component only if it does not decrease the number of connected components
                     if not (components_before > components_after):
                         pred_advanced_fixed_cube = temp_fixed
+                    else:
+                        # print("Debug")
+                        pass
 
                 pred_advanced_fixed_cube = pred_advanced_fixed_cube.astype(pred_fixed_cube.dtype)
                 # Calculate the connected components for the advanced fixed preds
-                pred_advanced_fixed_components_cube = connected_components_3d(pred_advanced_fixed_cube)[0]
+                pred_advanced_fixed_components_cube = connected_components_3d(data_3d=pred_advanced_fixed_cube)[0]
 
 
             elif task_type == TaskType.LOCAL_CONNECT:
-                # Calculate the connected components for the fixed preds
+                # Calculate the connected components for the preds fixed
                 delta_cube = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.uint8)
 
-                # Identify connected components in binary_delta
-                delta_labeled, delta_num_components = connected_components_3d(delta_cube)
+                # Identify connected components in delta_cube
+                delta_labeled, delta_num_components = connected_components_3d(data_3d=delta_cube)
 
-                # Iterate through connected components in binary_delta
+                # Iterate through connected components in delta_cube
                 for component_label in range(1, delta_num_components + 1):
                     # Create a mask for the current connected component
                     component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
@@ -809,30 +693,33 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                     front = np.min(coords[:, 2])  # Minimum depth index (Z-axis)
                     back = np.max(coords[:, 2])  # Maximum depth index (Z-axis)
 
-                    # Ensure ROI is within valid bounds
-                    min_x = max(0, left - 1)
-                    max_x = min(right + 2, pred_advanced_fixed_cube.shape[1])
+                    # Ensure ROI is within valid bounds (2 voxels padding)
+                    min_x = max(0, left - 2)
+                    max_x = min(right + 3, pred_advanced_fixed_cube.shape[1])
 
-                    min_y = max(0, top - 1)
-                    max_y = min(bottom + 2, pred_advanced_fixed_cube.shape[0])
+                    min_y = max(0, top - 2)
+                    max_y = min(bottom + 3, pred_advanced_fixed_cube.shape[0])
 
-                    min_z = max(0, front - 1)
-                    max_z = min(back + 2, pred_advanced_fixed_cube.shape[2])
+                    min_z = max(0, front - 2)
+                    max_z = min(back + 3, pred_advanced_fixed_cube.shape[2])
 
 
                     # Check the number of connected components before adding the mask
                     roi_temp_before = pred_advanced_fixed_cube[min_y:max_y, min_x:max_x, min_z:max_z]
-                    components_before = connected_components_3d(roi_temp_before)[1]
+                    components_before = connected_components_3d(data_3d=roi_temp_before, connectivity_type=6)[1]
 
                     # Create a temporary image with the component added
                     temp_fix = np.logical_or(pred_advanced_fixed_cube, component_mask)
                     roi_temp_after = temp_fix[min_y:max_y, min_x:max_x, min_z:max_z]
-                    components_after = connected_components_3d(roi_temp_after)[1]
+                    components_after = connected_components_3d(data_3d=roi_temp_after, connectivity_type=6)[1]
 
                     # Add the component only if it does not decrease the number of connected components
                     # (on the local scope)
                     if not (components_before > components_after):
                         pred_advanced_fixed_cube = temp_fix
+                    else:
+                        # print("Debug")
+                        pass
 
                 pred_advanced_fixed_cube = pred_advanced_fixed_cube.astype(pred_fixed_cube.dtype)
                 pred_advanced_fixed_components_cube = None
@@ -851,6 +738,129 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 component_3d=pred_advanced_fixed_components_cube,
                 source_data_filepath=source_data_filepath
             )
+
+            ########################
+            # Continuity Fix in 2D #
+            ########################
+
+            for view_idx, image_view in enumerate(IMAGES_6_VIEWS):
+                label_image = label_projections[f"{image_view}_image"]
+                pred_advanced_fixed_image = pred_advanced_fixed_projections[f"{image_view}_image"]
+
+                # TODO: repair pred fix to include connectable components
+                # TODO: check if local components num is similar between label and pred
+                if task_type == TaskType.SINGLE_COMPONENT:
+                    # Calculate the connected components for the preds fixed
+                    label_binary = (label_image > 0).astype(np.uint8)
+                    pred_advanced_fixed_binary = (pred_advanced_fixed_image > 0).astype(np.uint8)
+                    delta_binary = ((label_binary - pred_advanced_fixed_binary) > 0.5).astype(np.uint8)
+
+                    # Identify connected components in delta_binary
+                    delta_labeled, delta_num_components = connected_components_2d(data_2d=delta_binary)
+
+                    # Iterate through connected components in delta_binary
+                    for component_label in range(1, delta_num_components + 1):
+                        # Create a mask for the current connected component
+                        component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
+
+                        # Check the number of connected components before adding the mask
+                        components_before = connected_components_2d(data_2d=pred_advanced_fixed_binary)[1]
+
+                        # Create a temporary image with the component added
+                        temp_fix = np.logical_or(pred_advanced_fixed_binary, component_mask)
+                        components_after = connected_components_2d(data_2d=temp_fix)[1]
+
+                        # Add the component only if it does not decrease the number of connected components
+                        if not (components_before > components_after):
+                            pred_advanced_fixed_binary = temp_fix
+                        else:
+                            # print("Debug")
+                            pass
+
+                    # Update the pred_advanced_fixed_image
+                    pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0)
+                    pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
+
+                    if np.array_equal(pred_advanced_fixed_image, label_image):
+                        cubes_data[cube_idx].update({
+                            f"{image_view}_advance_valid": False
+                        })
+                    else:
+                        cubes_data[cube_idx].update({
+                            f"{image_view}_advance_valid": True
+                        })
+
+                    # Calculate the connected components for the advanced fixed preds
+                    labeled_delta = connected_components_2d(data_2d=pred_advanced_fixed_image)[0]
+                    pred_advanced_fixed_projections[f"{image_view}_components"] = color.label2rgb(
+                        label=labeled_delta
+                    ) * 255
+
+                elif task_type == TaskType.LOCAL_CONNECT:
+                    # Calculate the connected components for the preds fixed
+                    label_binary = (label_image > 0).astype(np.uint8)
+                    pred_fixed_advanced_binary = (pred_advanced_fixed_image > 0).astype(np.uint8)
+                    delta_binary = ((label_binary - pred_fixed_advanced_binary) > 0.5).astype(np.uint8)
+
+                    # Identify connected components in delta_binary
+                    delta_labeled, delta_num_components = connected_components_2d(data_2d=delta_binary)
+
+                    # Iterate through connected components in delta_binary
+                    for component_label in range(1, delta_num_components + 1):
+                        # Create a mask for the current connected component
+                        component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
+
+                        # ROI - cropped area between the component mask: top, bottom, left, right
+                        coords = np.argwhere(component_mask > 0)
+
+                        # Get bounding box
+                        left = np.min(coords[:, 1])  # Minimum column index
+                        right = np.max(coords[:, 1])  # Maximum column index
+                        top = np.min(coords[:, 0])  # Minimum row index
+                        bottom = np.max(coords[:, 0])  # Maximum row index
+
+                        # Ensure ROI is within valid bounds (1 pixel padding)
+                        min_x = max(0, left - 1)
+                        max_x = min(right + 2, pred_fixed_advanced_binary.shape[1])
+
+                        min_y = max(0, top - 1)
+                        max_y = min(bottom + 2, pred_fixed_advanced_binary.shape[0])
+
+                        # Check the number of connected components before adding the mask
+                        roi_temp_before = pred_fixed_advanced_binary[min_y:max_y, min_x:max_x]
+                        components_before = connected_components_2d(data_2d=roi_temp_before)[1]
+
+                        # Create a temporary image with the component added
+                        temp_fix = np.logical_or(pred_fixed_advanced_binary, component_mask)
+                        roi_temp_after = temp_fix[min_y:max_y, min_x:max_x]
+                        components_after = connected_components_2d(data_2d=roi_temp_after)[1]
+
+                        # Add the component only if it does not decrease the number of connected components
+                        # (on the local scope)
+                        if not (components_before > components_after):
+                            pred_fixed_advanced_binary = temp_fix
+                        else:
+                            # print("Debug")
+                            pass
+
+                    # Update the pred_advanced_fixed_image
+                    pred_advanced_fixed_image = np.where(pred_fixed_advanced_binary > 0, label_image, 0.0)
+                    pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
+
+                    if np.array_equal(pred_advanced_fixed_image, label_image):
+                        cubes_data[cube_idx].update({
+                            f"{image_view}_advance_valid": False
+                        })
+                    else:
+                        cubes_data[cube_idx].update({
+                            f"{image_view}_advance_valid": True
+                        })
+
+                elif task_type == TaskType.PATCH_HOLES:
+                    pred_advanced_fixed_projections[f"{image_view}_image"] = pred_fixed_image
+
+                else:
+                    raise ValueError("Invalid Task Type")
 
             # TODO: Add checks if the advanced fixed preds are valid (equal to 2d projections)
 
