@@ -782,15 +782,6 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                     pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0)
                     pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
 
-                    if np.array_equal(pred_advanced_fixed_image, label_image):
-                        cubes_data[cube_idx].update({
-                            f"{image_view}_advance_valid": False
-                        })
-                    else:
-                        cubes_data[cube_idx].update({
-                            f"{image_view}_advance_valid": True
-                        })
-
                     # Calculate the connected components for the advanced fixed preds
                     labeled_delta = connected_components_2d(data_2d=pred_advanced_fixed_image)[0]
                     pred_advanced_fixed_projections[f"{image_view}_components"] = color.label2rgb(
@@ -848,20 +839,21 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                     pred_advanced_fixed_image = np.where(pred_fixed_advanced_binary > 0, label_image, 0.0)
                     pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
 
-                    if np.array_equal(pred_advanced_fixed_image, label_image):
-                        cubes_data[cube_idx].update({
-                            f"{image_view}_advance_valid": False
-                        })
-                    else:
-                        cubes_data[cube_idx].update({
-                            f"{image_view}_advance_valid": True
-                        })
-
                 elif task_type == TaskType.PATCH_HOLES:
-                    pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
+                    pass
 
                 else:
                     raise ValueError("Invalid Task Type")
+
+                # Log info
+                if np.array_equal(pred_advanced_fixed_image, label_image):
+                    cubes_data[cube_idx].update({
+                        f"{image_view}_advance_valid": False
+                    })
+                else:
+                    cubes_data[cube_idx].update({
+                        f"{image_view}_advance_valid": True
+                    })
 
             # TODO: Add checks if the advanced fixed preds are valid (equal to 2d projections)
 
@@ -1237,9 +1229,9 @@ def main():
     # TODO: DEBUG
     # create_dataset_depth_2d_projections(data_options=data_options)
 
-    # task_type = TaskType.SINGLE_COMPONENT
-    task_type = TaskType.LOCAL_CONNECTIVITY
-    # task_type = TaskType.PATCH_HOLES
+    # task_type = TaskType.SINGLE_COMPONENT  # Parse2022
+    # task_type = TaskType.LOCAL_CONNECTIVITY  # Parse2022 / PipeForge3D - Mesh
+    task_type = TaskType.PATCH_HOLES  # PipeForge3D - PCD
 
     create_2d_projections_and_3d_cubes_for_training(task_type=task_type)
     # create_2d_projections_and_3d_cubes_for_evaluation(task_type=task_type)
