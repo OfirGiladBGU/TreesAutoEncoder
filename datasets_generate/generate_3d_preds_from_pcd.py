@@ -246,7 +246,7 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
         # Generate holes:
         # TODO: implement (Use different method)
         # generate_sphere_holes(numpy_data=numpy_data)
-        generate_plane_holes(numpy_data=numpy_data)
+        # generate_plane_holes(numpy_data=numpy_data)
         numpy_data = generate_plane_holes_v2(numpy_data=numpy_data)
 
         # Save data:
