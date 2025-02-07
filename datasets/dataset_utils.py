@@ -69,7 +69,7 @@ def convert_data_file_to_numpy(data_filepath, **kwargs) -> np.ndarray:
         raise ValueError("Invalid data format")
 
 
-def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, save_filename=None):
+def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, save_filename=None, **kwargs):
     extension_map = {
         # 2D
         ".png": _convert_numpy_to_png,
@@ -87,10 +87,11 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
         data_extension = pathlib.Path(source_data_filepath).suffix
 
     if data_extension in extension_map.keys():
-        extension_map[data_extension](
+        return extension_map[data_extension](
             numpy_data=numpy_data,
             source_data_filepath=source_data_filepath,
-            save_filename=save_filename
+            save_filename=save_filename,
+            **kwargs
         )
     else:
         raise ValueError("Invalid data format")
@@ -99,13 +100,14 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
 #################################
 # png to numpy and numpy to png #
 #################################
-def _convert_png_to_numpy(data_filepath: str) -> np.ndarray:
+def _convert_png_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
     numpy_data = cv2.imread(data_filepath)
     numpy_data = cv2.cvtColor(numpy_data, cv2.COLOR_BGR2GRAY)
     return numpy_data
 
 
-def _convert_numpy_to_png(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None):
+def _convert_numpy_to_png(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None,
+                          **kwargs) -> np.ndarray:
     if save_filename is not None and len(save_filename) > 0:
         save_filename = str(save_filename)
         if not save_filename.endswith(".png"):
@@ -125,8 +127,8 @@ def _convert_nii_gz_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
     return numpy_data
 
 
-def _convert_numpy_to_nii_gz(numpy_data: np.ndarray, source_data_filepath: str = None,
-                             save_filename=None) -> nib.Nifti1Image:
+def _convert_numpy_to_nii_gz(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None,
+                             **kwargs) -> nib.Nifti1Image:
     if source_data_filepath is not None:
         nifti_data = nib.load(source_data_filepath)
         new_nifti_data = nib.Nifti1Image(numpy_data, affine=nifti_data.affine, header=nifti_data.header)
@@ -143,7 +145,9 @@ def _convert_numpy_to_nii_gz(numpy_data: np.ndarray, source_data_filepath: str =
     return new_nifti_data
 
 
-def save_nii_gz_in_identity_affine(numpy_data=None, data_filepath=None, save_filename=None):
+# DEBUG: Save NII.GZ with identity affine
+def save_nii_gz_in_identity_affine(numpy_data=None, data_filepath=None, save_filename=None,
+                                   **kwargs) -> nib.Nifti1Image:
     if data_filepath is not None:
         nifti_data = nib.load(data_filepath)
         numpy_data = nifti_data.get_fdata()
@@ -168,7 +172,7 @@ def save_nii_gz_in_identity_affine(numpy_data=None, data_filepath=None, save_fil
 # TODO: Check how to make Abstract converter from supported file formats
 
 def _convert_ply_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
-    voxel_size = 0.05  # Define voxel size (the size of each grid cell)
+    voxel_size = kwargs.get("voxel_size", 0.05)  # Define voxel size (the size of each grid cell)
 
     # Mesh PLY
     if data_filepath.endswith("mesh.ply"):
@@ -195,8 +199,9 @@ def _convert_ply_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
     return numpy_data
 
 
-def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None):
-    voxel_size = 0.05  # Define voxel size (the size of each grid cell)
+def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None,
+                          **kwargs) -> Union[trimesh.Trimesh, o3d.geometry.PointCloud]:
+    voxel_size = kwargs.get("voxel_size", 0.05)  # Define voxel size (the size of each grid cell)
 
     # Mesh PLY
     if source_data_filepath.endswith("mesh.ply"):
@@ -259,8 +264,9 @@ def _convert_obj_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
     return numpy_data
 
 
-def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None) -> trimesh.Trimesh:
-    voxel_size = 2.0  # Define voxel size (the size of each grid cell)
+def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None,
+                          **kwargs) -> trimesh.Trimesh:
+    voxel_size = kwargs.get("voxel_size", 0.05)  # Define voxel size (the size of each grid cell)
 
     occupied_indices = np.argwhere(numpy_data == 1)  # Find occupied voxels (indices where numpy_data == 1)
     centers = occupied_indices * voxel_size  # Convert indices to real-world coordinates (Scale by voxel size)
@@ -291,7 +297,7 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
 #################################
 def _convert_pcd_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
     # V1 - Using Open3D VoxelGrid
-    # voxel_size = 2.0  # Define voxel size (the size of each grid cell)
+    # voxel_size = kwargs.get("voxel_size", 2.0)  # Define voxel size (the size of each grid cell)
     #
     # pcd = o3d.io.read_point_cloud(data_filepath)
     # voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=pcd, voxel_size=voxel_size)  # Voxelize pcd
@@ -325,9 +331,10 @@ def _convert_pcd_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
     return numpy_data
 
 
-def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None) -> o3d.geometry.PointCloud:
+def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None,
+                          **kwargs) -> o3d.geometry.PointCloud:
     # V1 - Using Open3D VoxelGrid
-    # voxel_size = 2.0  # Define voxel size (the size of each grid cell)
+    # voxel_size = kwargs.get("voxel_size", 2.0)  # Define voxel size (the size of each grid cell)
     #
     # occupied_indices = np.argwhere(numpy_data == 1)  # Find occupied voxels (indices where numpy_data == 1)
     # points = occupied_indices * voxel_size  # Convert indices to real-world coordinates (Scale by voxel size)
@@ -368,7 +375,8 @@ def _convert_npy_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
     return numpy_data
 
 
-def _convert_numpy_to_npy(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None) -> np.ndarray:
+def _convert_numpy_to_npy(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None,
+                          **kwargs) -> np.ndarray:
     if save_filename is not None and len(save_filename) > 0:
         save_filename = str(save_filename)
         if not save_filename.endswith(".npy"):

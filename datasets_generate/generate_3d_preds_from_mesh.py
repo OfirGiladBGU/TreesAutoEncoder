@@ -19,59 +19,10 @@ DATASET_PATH = os.path.join(DATA_PATH, "Pipes3DGeneratorCycles")
 ###################
 # Generate Labels #
 ###################
-def expand_connected_neighbors(array: np.ndarray) -> np.ndarray:
-    """
-    Expands the value of `1` to all 6-connected neighbors in a 3D numpy array.
-    Args:
-        array (np.ndarray): A 3D numpy array with binary values (0 and 1).
-
-    Returns:
-        np.ndarray: A 3D numpy array with the neighbors of all `1` voxels set to `1`.
-    """
-    # V1: Very slow method
-    # Get the shape of the array
-    # x_max, y_max, z_max = array.shape
-    #
-    # # Create a copy of the array to store results
-    # expanded_array = array.copy()
-    #
-    # # Iterate over the array to find all 1's and expand to their 6 neighbors
-    # for x in range(x_max):
-    #     for y in range(y_max):
-    #         for z in range(z_max):
-    #             if array[x, y, z] == 1:
-    #                 # Update neighbors in 6 directions
-    #                 if x > 0: expanded_array[x - 1, y, z] = 1
-    #                 if x < x_max - 1: expanded_array[x + 1, y, z] = 1
-    #                 if y > 0: expanded_array[x, y - 1, z] = 1
-    #                 if y < y_max - 1: expanded_array[x, y + 1, z] = 1
-    #                 if z > 0: expanded_array[x, y, z - 1] = 1
-    #                 if z < z_max - 1: expanded_array[x, y, z + 1] = 1
-
-    # V2: Faster method
-    # Define a kernel for 6-connected neighbors
-    kernel = np.array([
-        [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
-        [[0, 1, 0], [1, 0, 1], [0, 1, 0]],
-        [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
-    ])
-
-    # Apply the convolution
-    convolved = convolve(array, kernel, mode='constant', cval=0)
-
-    # Threshold the result to binary (0 or 1)
-    expanded_array = (convolved > 0).astype(np.uint8)
-
-    return expanded_array
-
-
 # Create new 'labels' folder with numpy data
-def convert_originals_data_to_labels_data(save_as_npy: bool = False, increase_density: bool = False):
+def convert_originals_data_to_labels_data(save_as_npy: bool = False, voxel_size=2.0, voxel_scale=0.5):
     """
     Converts the original data to discrete data for numpy array, and then save the result in labels folder.
-    :param save_as_npy:
-    :param increase_density:
-    :return:
     """
     input_folder = os.path.join(DATASET_PATH, "originals")
     output_folder = os.path.join(DATASET_PATH, "labels")
@@ -84,13 +35,8 @@ def convert_originals_data_to_labels_data(save_as_npy: bool = False, increase_de
         # Get index data:
         data_filepath = data_filepaths[filepath_idx]
 
-        voxel_size = 2.0
-        voxel_scale = 0.5
         numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath,
                                                 voxel_size=voxel_size, voxel_scale=voxel_scale)
-
-        if increase_density is True:
-            numpy_data = expand_connected_neighbors(array=numpy_data)
 
         # Save data:
         save_filename = os.path.join(output_folder, data_filepath.stem)
@@ -589,7 +535,11 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
 
 
 def main():
-    convert_originals_data_to_labels_data(save_as_npy=True, increase_density=False)
+    # From Mesh to Numpy without option to go back
+    voxel_size = 2.0
+    voxel_scale = 0.5
+
+    convert_originals_data_to_labels_data(save_as_npy=True, voxel_size=voxel_size, voxel_scale=voxel_scale)
     convert_labels_data_to_preds_data(save_as_npy=True)
 
 
