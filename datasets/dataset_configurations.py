@@ -3,12 +3,17 @@ import pathlib
 
 
 # Configurations
-# DATA_CROP_STRIDE = 16
-# DATA_CROP_SIZE = 32
+# # TODO: TEST: 48 - Parse2022 / PipesForge3D - Mesh
+# DATA_CROP_STRIDE = 16  # TODO: Read from config file
+# DATA_CROP_SIZE = 32  # TODO: Read from config file
 
-# TODO: TEST: 48
+# TODO: TEST: 48 - Parse2022 / PipesForge3D - Mesh
 DATA_CROP_STRIDE = 24  # TODO: Read from config file
 DATA_CROP_SIZE = 48  # TODO: Read from config file
+
+# # TODO: TEST: 96 - PipesForge3D - PCD
+# DATA_CROP_STRIDE = 48  # TODO: Read from config file
+# DATA_CROP_SIZE = 96  # TODO: Read from config file
 
 # Setups
 DATA_3D_STRIDE = (DATA_CROP_STRIDE, DATA_CROP_STRIDE, DATA_CROP_STRIDE)
