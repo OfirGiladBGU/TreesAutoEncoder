@@ -2,7 +2,6 @@ import argparse
 import os
 import pathlib
 import torch
-import cv2
 import numpy as np
 from torchvision import transforms
 import matplotlib.pyplot as plt
@@ -13,8 +12,9 @@ from typing import Tuple
 
 from datasets.dataset_configurations import *
 from datasets.dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
-                                    reverse_rotations, apply_threshold, connected_components_3d)
+                                    reverse_rotations, apply_threshold, connected_components_3d, TaskType)
 from models.model_list import init_model
+# TODO: Debug Tools
 from datasets.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
 #########
@@ -163,25 +163,6 @@ def noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
     #
     # return filtered_data_3d_input
 
-
-    # V2
-
-    # def connected_components_3d(data_3d: np.ndarray) -> Tuple[np.ndarray, int]:
-    #     # structure = np.ones((3, 3, 3), dtype=np.int8)  # 26-connectivity
-    #     # 6-connectivity
-    #     structure = np.zeros((3, 3, 3), dtype=np.int8)
-    #     active_points = [
-    #         (0, 1, 1), (2, 1, 1),  # Points along the X-axis
-    #         (1, 0, 1), (1, 2, 1),  # Points along the Y-axis
-    #         (1, 1, 0), (1, 1, 2),  # Points along the Z-axis
-    #         (1, 1, 1)  # Center point
-    #     ]
-    #     for x, y, z in active_points:
-    #         structure[x, y, z] = 1
-    #
-    #     labeled_array, num_features = label(data_3d, structure=structure)
-    #     return labeled_array, num_features
-
     filtered_data_3d = data_3d_original.copy().astype(np.uint8)
     data_delta = (data_3d_input - data_3d_original > 0.5).astype(np.uint8)
 
@@ -209,22 +190,6 @@ def noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
 
 
 def components_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
-    # def connected_components_3d(data_3d: np.ndarray) -> Tuple[np.ndarray, int]:
-    #     # structure = np.ones((3, 3, 3), dtype=np.int8)  # 26-connectivity
-    #     # 6-connectivity
-    #     structure = np.zeros((3, 3, 3), dtype=np.int8)
-    #     active_points = [
-    #         (0, 1, 1), (2, 1, 1),  # Points along the X-axis
-    #         (1, 0, 1), (1, 2, 1),  # Points along the Y-axis
-    #         (1, 1, 0), (1, 1, 2),  # Points along the Z-axis
-    #         (1, 1, 1)  # Center point
-    #     ]
-    #     for x, y, z in active_points:
-    #         structure[x, y, z] = 1
-    #
-    #     labeled_array, num_features = label(data_3d, structure=structure)
-    #     return labeled_array, num_features
-
     filtered_data_3d = data_3d_original.copy().astype(np.uint8)
     # data_delta = (data_3d_input - data_3d_original > 0.5).astype(np.uint8)
 
@@ -344,7 +309,7 @@ def init_pipeline_models():
         args.input_size = args.input_size_model_2d
         args.model = args.model_2d
         model_2d = init_model(args=args)
-        model_2d_weights_filepath = f"{filepath}_{DATASET_FOLDER}_new5_{model_2d.model_name}{ext}"
+        model_2d_weights_filepath = f"{filepath}_{DATASET_FOLDER}_{model_2d.model_name}{ext}"
         model_2d.load_state_dict(torch.load(model_2d_weights_filepath))
         model_2d.eval()
         model_2d.to(args.device)
@@ -357,7 +322,7 @@ def init_pipeline_models():
         args.input_size = args.input_size_model_3d
         args.model = args.model_3d
         model_3d = init_model(args=args)
-        model_3d_weights_filepath = f"{filepath}_{DATASET_FOLDER}_new5_{model_3d.model_name}{ext}"
+        model_3d_weights_filepath = f"{filepath}_{DATASET_FOLDER}_{model_3d.model_name}{ext}"
         model_3d.load_state_dict(torch.load(model_3d_weights_filepath))
         model_3d.eval()
         model_3d.to(args.device)
@@ -690,5 +655,8 @@ if __name__ == "__main__":
     # args.model_3d = "ae_3d_to_3d"
     args.model_3d = ""
     args.input_size_model_3d = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
+
+    # TODO: Support different tasks
+    args.task_type = TaskType.LOCAL_CONNECTIVITY
 
     main()

@@ -504,7 +504,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             )
             pred_fixed_components_cubes = other_cubes_list[0]
 
-        elif task_type in [TaskType.LOCAL_CONNECT, TaskType.PATCH_HOLES]:
+        elif task_type in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
             pred_components_cubes = None
             pred_fixed_components_cubes = None
 
@@ -545,7 +545,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                     "pred_global_components": global_components_3d_count,
                 })
 
-            elif task_type == TaskType.LOCAL_CONNECT:
+            elif task_type == TaskType.LOCAL_CONNECTIVITY:
                 pred_components_cube = None
                 pred_fixed_components_cube = None
 
@@ -555,11 +555,12 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 pred_components_cube = None
                 pred_fixed_components_cube = None
 
-                # TASK CONDITION: The region has holes
+                # (OLD) TASK CONDITION: The region has holes
+                # TASK CONDITION: NONE
                 delta = np.abs(label_cube - pred_fixed_cube) > 0.5
                 delta_count = np.count_nonzero(delta)
-                if delta_count == 0:
-                    continue
+                # if delta_count == 0:
+                #     continue
 
                 # Log 3D info
                 cubes_data[cube_idx].update({
@@ -668,7 +669,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 pred_advanced_fixed_components_cube = connected_components_3d(data_3d=pred_advanced_fixed_cube)[0]
 
 
-            elif task_type == TaskType.LOCAL_CONNECT:
+            elif task_type == TaskType.LOCAL_CONNECTIVITY:
                 # Calculate the connected components for the preds fixed
                 delta_cube = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.uint8)
 
@@ -796,7 +797,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                         label=labeled_delta
                     ) * 255
 
-                elif task_type == TaskType.LOCAL_CONNECT:
+                elif task_type == TaskType.LOCAL_CONNECTIVITY:
                     # Calculate the connected components for the preds fixed
                     label_binary = (label_image > 0).astype(np.uint8)
                     pred_fixed_advanced_binary = (pred_advanced_fixed_image > 0).astype(np.uint8)
@@ -857,7 +858,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                         })
 
                 elif task_type == TaskType.PATCH_HOLES:
-                    pred_advanced_fixed_projections[f"{image_view}_image"] = pred_fixed_image
+                    pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
 
                 else:
                     raise ValueError("Invalid Task Type")
@@ -909,7 +910,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                             save_filename=save_filename
                         )
 
-                elif task_type in [TaskType.LOCAL_CONNECT, TaskType.PATCH_HOLES]:
+                elif task_type in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
                     pass
 
                 else:
@@ -968,7 +969,7 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                     "label_local_components": local_components_3d_count
                 })
 
-            elif task_type in [TaskType.LOCAL_CONNECT, TaskType.PATCH_HOLES]:
+            elif task_type in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
                 pass
 
             else:
@@ -1077,7 +1078,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
                 stride_dim=stride_dim
             )
 
-        elif task_type in [TaskType.LOCAL_CONNECT, TaskType.PATCH_HOLES]:
+        elif task_type in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
             eval_component_filepath = None
             eval_components_cubes = None
 
@@ -1110,7 +1111,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
                     "eval_global_components": global_components_3d_count,
                 })
 
-            elif task_type == TaskType.LOCAL_CONNECT:
+            elif task_type == TaskType.LOCAL_CONNECTIVITY:
                 eval_components_cube = None
 
                 # TASK CONDITION: NONE
@@ -1180,7 +1181,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
                         save_filename=save_filename
                     )
 
-                elif task_type in [TaskType.LOCAL_CONNECT, TaskType.PATCH_HOLES]:
+                elif task_type in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
                     pass
 
                 else:
@@ -1205,7 +1206,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
                     save_filename=save_filename
                 )
 
-            elif task_type == [TaskType.LOCAL_CONNECT, TaskType.PATCH_HOLES]:
+            elif task_type == [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
                 pass
 
             else:
@@ -1237,7 +1238,7 @@ def main():
     # create_dataset_depth_2d_projections(data_options=data_options)
 
     # task_type = TaskType.SINGLE_COMPONENT
-    task_type = TaskType.LOCAL_CONNECT
+    task_type = TaskType.LOCAL_CONNECTIVITY
     # task_type = TaskType.PATCH_HOLES
 
     create_2d_projections_and_3d_cubes_for_training(task_type=task_type)

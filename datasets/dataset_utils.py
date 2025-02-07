@@ -19,7 +19,7 @@ from datasets.dataset_configurations import IMAGES_6_VIEWS
 
 class TaskType(Enum):
     SINGLE_COMPONENT = 1  # Assumption: Need to achieve a single component
-    LOCAL_CONNECT = 2  # Assumption: Need to connect components on focused scope
+    LOCAL_CONNECTIVITY = 2  # Assumption: Need to connect components on focused scope
     PATCH_HOLES = 3  # Assumption: Need to fix any type of holes
 
 
