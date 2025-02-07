@@ -268,7 +268,7 @@ class Trainer(object):
             # # LOSS += self.perceptual_loss(output=output_data, target=target_data)
 
 
-            # Test 8
+            # Test 8 - Parse2022 - 48
             fill_mask1 = (torch.abs(target_data - input_data) > 0).float()  # Area that should be filled
             black_mask1 = (target_data == 0).float()  # Area that should stay black
             keep_mask1 = 1.0 - (fill_mask1 + black_mask1)  # Area that should stay unchanged
