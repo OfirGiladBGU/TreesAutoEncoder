@@ -204,53 +204,82 @@ class Trainer(object):
 
 
             # Test 6
-            # holes_mask = ((target_data > 0) & (input_data == 0)).float()  # Convert to float for multiplication
-            # black_mask = (target_data == 0)  # area that should stay black
+            # # holes_mask = ((target_data > 0) & (input_data == 0)).float()  # Convert to float for multiplication
+            # # black_mask = (target_data == 0)  # area that should stay black
+            # #
+            # # diff = torch.abs(output_data - target_data)
+            # # masked_diff = diff * (holes_mask + black_mask)
+            # #
+            # # # Normalize by the number of pixels in the mask
+            # # LOSS = masked_diff.sum() / holes_mask.sum()
+            # # LOSS += loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
+            # # LOSS += loss_functions.bce_dice_loss(out=output_data, target=target_data)
             #
-            # diff = torch.abs(output_data - target_data)
-            # masked_diff = diff * (holes_mask + black_mask)
+            # # keep_mask1 = (input_data > 0).float()  # Area that should stay unchanged
+            # # black_mask1 = (target_data == 0).float()  # Area that should stay black
+            # # fill_mask1 = ((target_data > 0) & (input_data == 0)).float()   # Area that should be filled
+            #
+            # fill_mask1 = (torch.abs(target_data - input_data) > 0).float()  # Area that should be filled
+            # black_mask1 = (target_data == 0).float()  # Area that should stay black
+            # keep_mask1 = 1.0 - (fill_mask1 + black_mask1)  # Area that should stay unchanged
+            #
+            # # fill_weight = black_mask1.sum() / np.ones(shape=black_mask1.shape).sum() * 100
+            # # black_weight = fill_mask1.sum() / np.ones(shape=keep_mask1.shape).sum() * 100
+            # # keep_weight = 100 - (fill_weight + black_weight)
+            # # weighted_mask1 = fill_weight * fill_mask1 + black_weight * black_mask1 + keep_weight * keep_mask1
+            #
+            # # weighted_mask1 = 0.80 * fill_mask1 + 0.15 * keep_mask1 + 0.05 * black_mask1
+            #
+            # weighted_mask1 = 80.0 * fill_mask1 + 15.0 * keep_mask1 + 5.0 * black_mask1
+            #
+            # # abs_diff1 = torch.abs(output_data - target_data)
+            # # masked_abs_diff1 = abs_diff1 * fill_mask1
+            # # diff2 = torch.abs(output_data) * black_mask1 + torch.abs(output_data) * keep_mask1
+            #
+            # output_data_1 = output_data * weighted_mask1
+            # target_data_1 = target_data * weighted_mask1
             #
             # # Normalize by the number of pixels in the mask
-            # LOSS = masked_diff.sum() / holes_mask.sum()
-            # LOSS += loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
-            # LOSS += loss_functions.bce_dice_loss(out=output_data, target=target_data)
+            # LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
+            #
+            # # LOSS = masked_abs_diff1.sum()
+            # # LOSS += loss_functions.bce_loss(out=output_data, target=target_data, reduction='sum')
+            #
+            # # LOSS += loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
+            # # LOSS += self.perceptual_loss(output=output_data, target=target_data)
+            #
+            # # LOSS = loss_functions.l1_loss(out=output_data, target=target_data, reduction='sum')
+            #
+            # # LOSS += 100 * loss_functions.dice_loss(out=output_data, target=target_data)
 
-            # keep_mask1 = (input_data > 0).float()  # Area that should stay unchanged
+
+            # Test 7
+            # fill_mask1 = (torch.abs(target_data - input_data) > 0).float()  # Area that should be filled
             # black_mask1 = (target_data == 0).float()  # Area that should stay black
-            # fill_mask1 = ((target_data > 0) & (input_data == 0)).float()   # Area that should be filled
+            # keep_mask1 = 1.0 - (fill_mask1 + black_mask1)  # Area that should stay unchanged
+            #
+            # weighted_mask1 = 80.0 * fill_mask1 + 15.0 * keep_mask1 + 5.0 * black_mask1
+            #
+            # output_data_1 = output_data * weighted_mask1
+            # target_data_1 = target_data * weighted_mask1
+            #
+            # # Normalize by the number of pixels in the mask
+            # LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
+            # # LOSS += self.perceptual_loss(output=output_data, target=target_data)
 
+
+            # Test 8
             fill_mask1 = (torch.abs(target_data - input_data) > 0).float()  # Area that should be filled
             black_mask1 = (target_data == 0).float()  # Area that should stay black
             keep_mask1 = 1.0 - (fill_mask1 + black_mask1)  # Area that should stay unchanged
 
-            # fill_weight = black_mask1.sum() / np.ones(shape=black_mask1.shape).sum() * 100
-            # black_weight = fill_mask1.sum() / np.ones(shape=keep_mask1.shape).sum() * 100
-            # keep_weight = 100 - (fill_weight + black_weight)
-            # weighted_mask1 = fill_weight * fill_mask1 + black_weight * black_mask1 + keep_weight * keep_mask1
-
-            # weighted_mask1 = 0.80 * fill_mask1 + 0.15 * keep_mask1 + 0.05 * black_mask1
-
-            weighted_mask1 = 80.0 * fill_mask1 + 15.0 * keep_mask1 + 5.0 * black_mask1
-
-            # abs_diff1 = torch.abs(output_data - target_data)
-            # masked_abs_diff1 = abs_diff1 * fill_mask1
-            # diff2 = torch.abs(output_data) * black_mask1 + torch.abs(output_data) * keep_mask1
-
+            weighted_mask1 = 8.0 * fill_mask1 + 1.5 * keep_mask1 + 0.5 * black_mask1
             output_data_1 = output_data * weighted_mask1
             target_data_1 = target_data * weighted_mask1
 
-            # Normalize by the number of pixels in the mask
             LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
+            LOSS += 100 * loss_functions.vgg_loss.TVLoss(p=2).to(self.args.device)(output_data)
 
-            # LOSS = masked_abs_diff1.sum()
-            # LOSS += loss_functions.bce_loss(out=output_data, target=target_data, reduction='sum')
-
-            # LOSS += loss_functions.perceptual_loss(out=output_data, target=target_data, channels=1, device=self.args.device)
-            # LOSS += self.perceptual_loss(output=output_data, target=target_data)
-
-            # LOSS = loss_functions.l1_loss(out=output_data, target=target_data, reduction='sum')
-
-            # LOSS += 100 * loss_functions.dice_loss(out=output_data, target=target_data)
 
             # def weighted_mask_loss(predicted, target, mask, hole_weight=2.0):
             #     """
