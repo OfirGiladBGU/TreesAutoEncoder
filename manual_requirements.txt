@@ -17,3 +17,4 @@ pip install tqdm
 pip install wandb
 pip install pyglet==1.5.30  # required version < 2
 pip install einops
+pip install PyYAML

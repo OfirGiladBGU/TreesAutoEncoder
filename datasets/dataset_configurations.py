@@ -1,15 +1,30 @@
 import os
 import pathlib
+import yaml
+
+# Configurations File
+CONFIG_FILENAME = "parse2022_32.yaml"
+
+# Root Path
+ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
+
+# Read configurations from config file
+CONFIG_FILEPATH = os.path.join(ROOT_PATH, "configs", CONFIG_FILENAME)
+with open(CONFIG_FILEPATH, 'r') as stream:
+    config_data: dict = yaml.safe_load(stream)
+
+# Data Configurations
+DATA_CROP_STRIDE = config_data.get("DATA_CROP_STRIDE", 16)
+DATA_CROP_SIZE = config_data.get("DATA_CROP_STRIDE", 32)
 
 
-# Configurations
-# # TODO: TEST: 48 - Parse2022 / PipesForge3D - Mesh
+# # TODO: TEST: 32 - Parse2022 / PipesForge3D - Mesh
 # DATA_CROP_STRIDE = 16  # TODO: Read from config file
 # DATA_CROP_SIZE = 32  # TODO: Read from config file
 
 # TODO: TEST: 48 - Parse2022 / PipesForge3D - Mesh
-DATA_CROP_STRIDE = 24  # TODO: Read from config file
-DATA_CROP_SIZE = 48  # TODO: Read from config file
+# DATA_CROP_STRIDE = 24  # TODO: Read from config file
+# DATA_CROP_SIZE = 48  # TODO: Read from config file
 
 # # TODO: TEST: 96 - PipesForge3D - PCD
 # DATA_CROP_STRIDE = 48  # TODO: Read from config file
@@ -20,11 +35,14 @@ DATA_3D_STRIDE = (DATA_CROP_STRIDE, DATA_CROP_STRIDE, DATA_CROP_STRIDE)
 DATA_3D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE, DATA_CROP_SIZE)
 DATA_2D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE)
 
+LOWER_THRESHOLD_2D = config_data.get("LOWER_THRESHOLD_2D", 0.1)
+UPPER_THRESHOLD_2D = config_data.get("UPPER_THRESHOLD_2D", 0.9)
+
 # Define dataset folder
-DATASET_FOLDER = "parse2022_48"  # TODO: Read from config file
+DATASET_FOLDER = config_data.get("DATASET_FOLDER")  # TODO: Read from config file
+# DATASET_FOLDER = "parse2022_48"  # TODO: Read from config file
 
 # Data Folder Paths
-ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
 DATA_PATH = os.path.join(ROOT_PATH, "data")
 DATASET_PATH = os.path.join(DATA_PATH, DATASET_FOLDER)
 CROPS_PATH = os.path.join(ROOT_PATH, "data_crops", DATASET_FOLDER)
