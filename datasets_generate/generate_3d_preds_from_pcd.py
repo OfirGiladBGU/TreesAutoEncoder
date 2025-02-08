@@ -82,7 +82,11 @@ def convert_originals_data_to_labels_data(save_as_npy: bool = False, point_scale
         # Get index data:
         data_filepath = data_filepaths[filepath_idx]
 
-        numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath, voxel_size=voxel_size)
+        numpy_data = convert_data_file_to_numpy(
+            data_filepath=data_filepath,
+            point_scale=point_scale,
+            voxel_size=voxel_size
+        )
 
         if increase_density is True:
             numpy_data = expand_connected_neighbors(array=numpy_data)

@@ -268,7 +268,7 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
     min_bounds = source_mesh.bounds[0]  # Extract minimum bounds from source mesh
 
     # Apply shift (align with the original mesh space) and scale correctly
-    centers = (occupied_indices + min_bounds) * (1.0 / voxel_size)  # Apply voxel centering
+    centers = (occupied_indices + min_bounds)  # Apply voxel centering
 
     # Create cube meshes for each occupied voxel
     cubes = []
@@ -280,7 +280,11 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
         )
         cubes.append(cube)
     mesh = trimesh.util.concatenate(cubes)  # Combine all cubes into a single mesh
-    mesh.apply_scale(1.0 / point_scale)  # Apply reverse the scale
+    if voxel_size != 1.0:
+        mesh.apply_scale(1.0 / voxel_size)  # Apply reverse the scale
+    if point_scale != 1.0:
+        mesh.apply_scale(1.0 / point_scale)  # Apply reverse the scale
+
 
     if save_filename is not None and len(save_filename) > 0:
         save_filename = str(save_filename)
@@ -297,17 +301,18 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
 #################################
 def _convert_pcd_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
     # V1 - Using Open3D VoxelGrid
-    # point_scale = kwargs.get("point_scale", 1.0)  # Define points scale
+    point_scale = kwargs.get("point_scale", 1.0)  # Define points scale
     voxel_size = kwargs.get("voxel_size", 1.0)  # Define voxel size (the size of each grid cell)
 
+    # Find voxel grid
     pcd = o3d.io.read_point_cloud(data_filepath)
+    if point_scale != 1.0:
+        pcd.scale(scale=point_scale, center=pcd.get_center())  # Scale relative to center
     voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=pcd, voxel_size=voxel_size)  # Voxelize pcd
-    voxels = np.array([voxel.grid_index for voxel in voxel_grid.get_voxels()])  # Get voxel centers
-    max_bounds = np.max(voxels, axis=0)
-    min_bounds = np.min(voxels, axis=0)
-    grid_shape = max_bounds - min_bounds + 1  # Determine grid dimensions
 
-    grid_indices = voxels - min_bounds  # Shift indices to start at 0
+    # Build numpy data
+    grid_indices = np.array([voxel.grid_index for voxel in voxel_grid.get_voxels()])  # Get voxel centers
+    grid_shape = np.max(grid_indices, axis=0) + 1
     numpy_data = np.zeros(shape=grid_shape, dtype=np.uint8)
     for grid_index in grid_indices:
         numpy_data[tuple(grid_index)] = 1  # 1 = occupied, 0 = empty
@@ -358,19 +363,26 @@ def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, sav
 
 
     # V3 - Using Open3D VoxelGrid and correct shift
-    # point_scale = kwargs.get("point_scale", 1.0)  # Define points scale [Original]
+    point_scale = kwargs.get("point_scale", 1.0)  # Define points scale [Original]
     voxel_size = kwargs.get("voxel_size", 1.0)  # Define voxel size (the size of each grid cell) [Original]
 
+    # Find voxel grid
     source_pcd = o3d.io.read_point_cloud(source_data_filepath)
+    if point_scale != 1.0:
+        source_pcd.scale(scale=point_scale, center=source_pcd.get_center())  # Scale relative to center
     source_voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=source_pcd, voxel_size=voxel_size)  # Voxelize pcd
-    source_voxels = np.array([voxel.grid_index for voxel in source_voxel_grid.get_voxels()])  # Get voxel centers
-    min_bounds = np.min(source_voxels, axis=0)
 
+    source_origin = source_voxel_grid.origin
     grid_indices = np.argwhere(numpy_data == 1.0)  # Find the indices of all non-zero voxels [Shape: (N, 3)]
-    voxels = (grid_indices + min_bounds) * (1.0 / voxel_size) # Apply the inverse shift and scale to recover the original coordinates
+    voxels = (grid_indices + source_origin)  # Apply the inverse shift to recover the original coordinates
 
     pcd = o3d.geometry.PointCloud()  # Convert the points to Open3D PointCloud
     pcd.points = o3d.utility.Vector3dVector(voxels)
+
+    if voxel_size != 1.0:
+        pcd.scale(scale=(1.0 / voxel_size), center=pcd.get_center())  # Scale relative to center
+    if point_scale != 1.0:
+        pcd.scale(scale=(1.0 / point_scale), center=pcd.get_center())  # Scale relative to center
 
 
     # Save the PCD
