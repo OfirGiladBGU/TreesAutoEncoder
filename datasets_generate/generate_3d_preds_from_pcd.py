@@ -13,7 +13,7 @@ from datasets.dataset_configurations import DATA_PATH
 from datasets.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
 
-DATASET_PATH = os.path.join(DATA_PATH, "Pipes3DGeneratorPCD")
+DATASET_PATH = os.path.join(DATA_PATH, "PipeForge3DPCD")
 
 
 ###################
@@ -66,7 +66,8 @@ def expand_connected_neighbors(array: np.ndarray) -> np.ndarray:
 
 
 # Create new 'labels' folder with numpy data
-def convert_originals_data_to_labels_data(save_as_npy: bool = False, increase_density: bool = False):
+def convert_originals_data_to_labels_data(save_as_npy: bool = False, point_scale: float = 1.0, voxel_size: float = 1.0,
+                                          increase_density: bool = False):
     """
     Converts the original data to discrete data for numpy array, and then save the result in labels folder.
     """
@@ -81,7 +82,7 @@ def convert_originals_data_to_labels_data(save_as_npy: bool = False, increase_de
         # Get index data:
         data_filepath = data_filepaths[filepath_idx]
 
-        numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
+        numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath, voxel_size=voxel_size)
 
         if increase_density is True:
             numpy_data = expand_connected_neighbors(array=numpy_data)
@@ -91,8 +92,13 @@ def convert_originals_data_to_labels_data(save_as_npy: bool = False, increase_de
 
         if save_as_npy is True:
             data_filepath = f"{data_filepath}.npy"
-        convert_numpy_to_data_file(numpy_data=numpy_data, source_data_filepath=data_filepath,
-                                   save_filename=save_filename)
+        convert_numpy_to_data_file(
+            numpy_data=numpy_data,
+            source_data_filepath=data_filepath,
+            save_filename=save_filename,
+            point_scale=point_scale,
+            voxel_size=voxel_size
+        )
 
 
 ##################
@@ -336,10 +342,13 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
 
 def main():
     # From PCD to Numpy with option to go back
+    point_scale = 0.5
+    voxel_size = 1.0
     increase_density = False
 
-    # convert_originals_data_to_labels_data(save_as_npy=True, increase_density=increase_density)
-    convert_labels_data_to_preds_data(save_as_npy=True)
+    convert_originals_data_to_labels_data(save_as_npy=True, point_scale=point_scale, voxel_size=voxel_size,
+                                          increase_density=increase_density)
+    # convert_labels_data_to_preds_data(save_as_npy=True)
 
 
 if __name__ == '__main__':

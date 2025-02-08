@@ -172,27 +172,12 @@ def save_nii_gz_in_identity_affine(numpy_data=None, data_filepath=None, save_fil
 # TODO: Check how to make Abstract converter from supported file formats
 
 def _convert_ply_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
-    voxel_size = kwargs.get("voxel_size", 0.05)  # Define voxel size (the size of each grid cell)
-
     # Mesh PLY
     if data_filepath.endswith("mesh.ply"):
-        mesh = trimesh.load(data_filepath)
-        voxelized = mesh.voxelized(pitch=voxel_size)  # Pitch = voxel size
-
-        numpy_data = voxelized.matrix.astype(np.uint8)
+        numpy_data = _convert_obj_to_numpy(data_filepath=data_filepath, **kwargs)
     # Point Cloud PLY
     elif data_filepath.endswith("pcd.ply"):
-        pcd = o3d.io.read_point_cloud(data_filepath)
-        voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=pcd, voxel_size=voxel_size)  # Voxelize pcd
-        voxels = np.array([voxel.grid_index for voxel in voxel_grid.get_voxels()])  # Get voxel centers
-        max_bounds = np.max(voxels, axis=0)
-        min_bounds = np.min(voxels, axis=0)
-        grid_shape = max_bounds - min_bounds + 1  # Determine grid dimensions
-
-        numpy_data = np.zeros(shape=grid_shape, dtype=np.uint8)
-        for voxel in voxels:
-            grid_index = voxel - min_bounds  # Shift indices to start at 0
-            numpy_data[tuple(grid_index)] = 1  # 1 = occupied, 0 = empty
+        numpy_data = _convert_pcd_to_numpy(data_filepath=data_filepath, **kwargs)
     else:
         raise ValueError("Invalid data format")
 
@@ -201,49 +186,36 @@ def _convert_ply_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
 
 def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None,
                           **kwargs) -> Union[trimesh.Trimesh, o3d.geometry.PointCloud]:
-    voxel_size = kwargs.get("voxel_size", 0.05)  # Define voxel size (the size of each grid cell)
-
     # Mesh PLY
     if source_data_filepath.endswith("mesh.ply"):
-        occupied_indices = np.argwhere(numpy_data == 1)  # Find occupied voxels (indices where numpy_data == 1)
-        centers = occupied_indices * voxel_size  # Convert indices to real-world coordinates (Scale by voxel size)
+        ply_extension = "mesh.ply"
 
-        # Create cube meshes for each occupied voxel
-        cubes = []
-        for center in centers:
-            # Create a cube for each voxel
-            cube = trimesh.creation.box(
-                extents=[voxel_size] * 3,
-                transform=trimesh.transformations.translation_matrix(center)
-            )
-            cubes.append(cube)
-        mesh = trimesh.util.concatenate(cubes) # Combine all cubes into a single mesh
-
-        if save_filename is not None and len(save_filename) > 0:
-            save_filename = str(save_filename)
-            if not save_filename.endswith("mesh.ply"):
-                save_filename = f"{save_filename}_mesh.ply"
-            mesh.export(file_obj=save_filename)  # Save to PLY
-
+        # TODO: Call _convert_numpy_to_obj to get the correct mesh
+        source_data_filepath = "SAVE AS OBJ"
+        mesh = _convert_numpy_to_obj(numpy_data=numpy_data, source_data_filepath=source_data_filepath, **kwargs)
         new_ply_data = mesh
 
     # Point Cloud PLY
     elif source_data_filepath.endswith("pcd.ply"):
-        occupied_indices = np.argwhere(numpy_data == 1)  # Find occupied voxels (indices where numpy_data == 1)
-        points = occupied_indices * voxel_size  # Convert indices to real-world coordinates (Scale by voxel size)
+        ply_extension = "pcd.ply"
 
-        pcd = o3d.geometry.PointCloud() # Create Open3D PointCloud
-        pcd.points = o3d.utility.Vector3dVector(points)
-
-        if save_filename is not None and len(save_filename) > 0:
-            save_filename = str(save_filename)
-            if not save_filename.endswith("pcd.ply"):
-                save_filename = f"{save_filename}_pcd.ply"
-            o3d.io.write_point_cloud(filename=save_filename, pointcloud=pcd)  # Save to PLY
-
+        # TODO: Call _convert_numpy_to_pcd to get the correct pcd
+        source_data_filepath = "SAVE AS PCD"
+        pcd = _convert_numpy_to_pcd(numpy_data=numpy_data, source_data_filepath=source_data_filepath, **kwargs)
         new_ply_data = pcd
     else:
         raise ValueError("Invalid data format")
+
+
+    if save_filename is not None and len(save_filename) > 0:
+        save_filename = str(save_filename)
+        save_filename = f"{save_filename}_{ply_extension}"
+        if "mesh" in ply_extension:
+            new_ply_data.export(file_obj=save_filename)  # Save to PLY
+        elif "pcd" in ply_extension:
+            o3d.io.write_point_cloud(filename=save_filename, pointcloud=new_ply_data)  # Save to PLY
+        else:
+            raise ValueError("Invalid data format")
 
     return new_ply_data
 
@@ -252,12 +224,12 @@ def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, sav
 # obj to numpy and numpy to obj #
 #################################
 def _convert_obj_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
-    voxel_size = kwargs.get("voxel_size", 0.05)  # Define voxel size (the size of each grid cell)
-    voxel_scale = kwargs.get("voxel_scale", 1.0)  # Define voxel scale
+    point_scale = kwargs.get("point_scale", 1.0)  # Define points scale
+    voxel_size = kwargs.get("voxel_size", 2.0)  # Define voxel size (the size of each grid cell)
 
     mesh = trimesh.load(data_filepath)
-    if voxel_scale != 1.0:
-        mesh = mesh.apply_scale(voxel_scale)
+    if point_scale != 1.0:
+        mesh = mesh.apply_scale(point_scale)
     voxelized = mesh.voxelized(pitch=voxel_size)  # Pitch = voxel size
 
     numpy_data = voxelized.matrix.astype(np.uint8)
@@ -266,21 +238,49 @@ def _convert_obj_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
 
 def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, save_filename=None,
                           **kwargs) -> trimesh.Trimesh:
-    voxel_size = kwargs.get("voxel_size", 0.05)  # Define voxel size (the size of each grid cell)
+    # V1
+    # voxel_size = kwargs.get("voxel_size", 0.05)  # Define voxel size (the size of each grid cell)
+    #
+    # occupied_indices = np.argwhere(numpy_data == 1)  # Find occupied voxels (indices where numpy_data == 1)
+    # centers = occupied_indices * voxel_size  # Convert indices to real-world coordinates (Scale by voxel size)
+    #
+    # # Create cube meshes for each occupied voxel
+    # cubes = []
+    # for center in centers:
+    #     # Create a cube for each voxel
+    #     cube = trimesh.creation.box(
+    #         extents=[voxel_size] * 3,
+    #         transform=trimesh.transformations.translation_matrix(center)
+    #     )
+    #     cubes.append(cube)
+    # mesh = trimesh.util.concatenate(cubes)  # Combine all cubes into a single mesh
 
-    occupied_indices = np.argwhere(numpy_data == 1)  # Find occupied voxels (indices where numpy_data == 1)
-    centers = occupied_indices * voxel_size  # Convert indices to real-world coordinates (Scale by voxel size)
+    # V2
+
+    # TODO: Test
+
+    point_scale = kwargs.get("point_scale", 1.0)  # Define points scale [Original]
+    voxel_size = kwargs.get("voxel_size", 2.0)  # Define voxel size (the size of each grid cell) [Original]
+
+    occupied_indices = np.argwhere(numpy_data == 1.0)  # Find occupied voxels (indices where numpy_data == 1)
+
+    source_mesh = trimesh.load(source_data_filepath)
+    min_bounds = source_mesh.bounds[0]  # Extract minimum bounds from source mesh
+
+    # Apply shift (align with the original mesh space) and scale correctly
+    centers = (occupied_indices + min_bounds) * (1.0 / voxel_size)  # Apply voxel centering
 
     # Create cube meshes for each occupied voxel
     cubes = []
     for center in centers:
         # Create a cube for each voxel
         cube = trimesh.creation.box(
-            extents=[voxel_size] * 3,
+            extents=[1, 1, 1],  # Voxel size is 1x1x1
             transform=trimesh.transformations.translation_matrix(center)
         )
         cubes.append(cube)
     mesh = trimesh.util.concatenate(cubes)  # Combine all cubes into a single mesh
+    mesh.apply_scale(1.0 / point_scale)  # Apply reverse the scale
 
     if save_filename is not None and len(save_filename) > 0:
         save_filename = str(save_filename)
@@ -297,36 +297,37 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
 #################################
 def _convert_pcd_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
     # V1 - Using Open3D VoxelGrid
-    # voxel_size = kwargs.get("voxel_size", 2.0)  # Define voxel size (the size of each grid cell)
-    #
-    # pcd = o3d.io.read_point_cloud(data_filepath)
-    # voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=pcd, voxel_size=voxel_size)  # Voxelize pcd
-    # voxels = np.array([voxel.grid_index for voxel in voxel_grid.get_voxels()])  # Get voxel centers
-    # max_bounds = np.max(voxels, axis=0)
-    # min_bounds = np.min(voxels, axis=0)
-    # grid_shape = max_bounds - min_bounds + 1  # Determine grid dimensions
-    #
-    # numpy_data = np.zeros(shape=grid_shape, dtype=np.uint8)
-    # for voxel in voxels:
-    #     grid_index = voxel - min_bounds  # Shift indices to start at 0
-    #     numpy_data[tuple(grid_index)] = 1  # 1 = occupied, 0 = empty
+    # point_scale = kwargs.get("point_scale", 1.0)  # Define points scale
+    voxel_size = kwargs.get("voxel_size", 1.0)  # Define voxel size (the size of each grid cell)
 
-
-    # V2 - Convert Points to Discrete Voxels
     pcd = o3d.io.read_point_cloud(data_filepath)
-    points = np.asarray(pcd.points)
+    voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=pcd, voxel_size=voxel_size)  # Voxelize pcd
+    voxels = np.array([voxel.grid_index for voxel in voxel_grid.get_voxels()])  # Get voxel centers
+    max_bounds = np.max(voxels, axis=0)
+    min_bounds = np.min(voxels, axis=0)
+    grid_shape = max_bounds - min_bounds + 1  # Determine grid dimensions
 
-    rounded_points = np.round(points).astype(int)  # Round the point coordinates to the nearest integer
+    grid_indices = voxels - min_bounds  # Shift indices to start at 0
+    numpy_data = np.zeros(shape=grid_shape, dtype=np.uint8)
+    for grid_index in grid_indices:
+        numpy_data[tuple(grid_index)] = 1  # 1 = occupied, 0 = empty
 
-    min_coords = rounded_points.min(axis=0)  # Compute the minimum coordinates to shift all points to the positive space
-    shifted_points = rounded_points - min_coords
 
-    max_coords = shifted_points.max(axis=0)  # Determine the size of the voxel grid
-    numpy_data = np.zeros((max_coords[0] + 1, max_coords[1] + 1, max_coords[2] + 1), dtype=np.uint8)
-
-    for point in shifted_points:  # Set voxels corresponding to points to 1 (white)
-        x, y, z = point
-        numpy_data[x, y, z] = 1
+    # V2 - Convert Points to Discrete Voxels (Alternative)
+    # pcd = o3d.io.read_point_cloud(data_filepath)
+    # points = np.asarray(pcd.points)
+    #
+    # rounded_points = np.round(points).astype(int)  # Round the point coordinates to the nearest integer
+    #
+    # min_coords = rounded_points.min(axis=0)  # Compute the minimum coordinates to shift all points to the positive space
+    # shifted_points = rounded_points - min_coords
+    #
+    # max_coords = shifted_points.max(axis=0)  # Determine the size of the voxel grid
+    # numpy_data = np.zeros((max_coords[0] + 1, max_coords[1] + 1, max_coords[2] + 1), dtype=np.uint8)
+    #
+    # for point in shifted_points:  # Set voxels corresponding to points to 1 (white)
+    #     x, y, z = point
+    #     numpy_data[x, y, z] = 1
 
     return numpy_data
 
@@ -344,16 +345,32 @@ def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, sav
 
 
     # V2 - Convert Points to Discrete Voxels
-    pcd_data = o3d.io.read_point_cloud(source_data_filepath)  # Load the original PCD file to retrieve the shift
-    pcd_data_points = np.asarray(pcd_data.points)
-    shift = np.floor(pcd_data_points.min(axis=0)).astype(int)  # Recompute the original shift
+    # pcd_data = o3d.io.read_point_cloud(source_data_filepath)  # Load the original PCD file to retrieve the shift
+    # pcd_data_points = np.asarray(pcd_data.points)
+    # shift = np.floor(pcd_data_points.min(axis=0)).astype(int)  # Recompute the original shift
+    #
+    # voxel_indices = np.array(np.nonzero(numpy_data)).T  # Find the indices of all non-zero voxels [Shape: (N, 3)]
+    #
+    # original_points = voxel_indices + shift  # Apply the inverse shift to recover the original coordinates
+    #
+    # pcd = o3d.geometry.PointCloud()  # Convert the points to Open3D PointCloud
+    # pcd.points = o3d.utility.Vector3dVector(original_points)
 
-    voxel_indices = np.array(np.nonzero(numpy_data)).T  # Find the indices of all non-zero voxels [Shape: (N, 3)]
 
-    original_points = voxel_indices + shift  # Apply the inverse shift to recover the original coordinates
+    # V3 - Using Open3D VoxelGrid and correct shift
+    # point_scale = kwargs.get("point_scale", 1.0)  # Define points scale [Original]
+    voxel_size = kwargs.get("voxel_size", 1.0)  # Define voxel size (the size of each grid cell) [Original]
+
+    source_pcd = o3d.io.read_point_cloud(source_data_filepath)
+    source_voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=source_pcd, voxel_size=voxel_size)  # Voxelize pcd
+    source_voxels = np.array([voxel.grid_index for voxel in source_voxel_grid.get_voxels()])  # Get voxel centers
+    min_bounds = np.min(source_voxels, axis=0)
+
+    grid_indices = np.argwhere(numpy_data == 1.0)  # Find the indices of all non-zero voxels [Shape: (N, 3)]
+    voxels = (grid_indices + min_bounds) * (1.0 / voxel_size) # Apply the inverse shift and scale to recover the original coordinates
 
     pcd = o3d.geometry.PointCloud()  # Convert the points to Open3D PointCloud
-    pcd.points = o3d.utility.Vector3dVector(original_points)
+    pcd.points = o3d.utility.Vector3dVector(voxels)
 
 
     # Save the PCD

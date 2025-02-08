@@ -13,14 +13,14 @@ from datasets.dataset_configurations import DATA_PATH
 from datasets.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
 
-DATASET_PATH = os.path.join(DATA_PATH, "Pipes3DGeneratorCycles")
+DATASET_PATH = os.path.join(DATA_PATH, "PipeForge3DMesh")
 
 
 ###################
 # Generate Labels #
 ###################
 # Create new 'labels' folder with numpy data
-def convert_originals_data_to_labels_data(save_as_npy: bool = False, voxel_size=2.0, voxel_scale=0.5):
+def convert_originals_data_to_labels_data(save_as_npy: bool = False, point_scale: float = 0.5, voxel_size: float = 2.0):
     """
     Converts the original data to discrete data for numpy array, and then save the result in labels folder.
     """
@@ -35,16 +35,24 @@ def convert_originals_data_to_labels_data(save_as_npy: bool = False, voxel_size=
         # Get index data:
         data_filepath = data_filepaths[filepath_idx]
 
-        numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath,
-                                                voxel_size=voxel_size, voxel_scale=voxel_scale)
+        numpy_data = convert_data_file_to_numpy(
+            data_filepath=data_filepath,
+            point_scale=point_scale,
+            voxel_size=voxel_size
+        )
 
         # Save data:
         save_filename = os.path.join(output_folder, data_filepath.stem)
 
         if save_as_npy is True:
             data_filepath = f"{data_filepath}.npy"
-        convert_numpy_to_data_file(numpy_data=numpy_data, source_data_filepath=data_filepath,
-                                   save_filename=save_filename)
+        convert_numpy_to_data_file(
+            numpy_data=numpy_data,
+            source_data_filepath=data_filepath,
+            save_filename=save_filename,
+            point_scale=point_scale,
+            voxel_size=voxel_size
+        )
 
 
 ##################
@@ -632,10 +640,10 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
 
 def main():
     # From Mesh to Numpy without option to go back
+    point_scale = 0.5
     voxel_size = 2.0
-    voxel_scale = 0.5
 
-    convert_originals_data_to_labels_data(save_as_npy=True, voxel_size=voxel_size, voxel_scale=voxel_scale)
+    convert_originals_data_to_labels_data(save_as_npy=True, point_scale=point_scale, voxel_size=voxel_size)
     convert_labels_data_to_preds_data(save_as_npy=True)
 
 
