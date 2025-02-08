@@ -1,0 +1,9 @@
+DATASET_FOLDER: "PipeForge3DMesh_48"
+DATA_CROP_STRIDE: 24
+DATA_CROP_SIZE: 48
+LOWER_THRESHOLD_2D: 0.1
+UPPER_THRESHOLD_2D: 0.9
+
+# Meshes from PipeForge3D with:
+# voxel size 2.0
+# voxel scale 0.5
