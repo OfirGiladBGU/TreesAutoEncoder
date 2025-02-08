@@ -15,7 +15,7 @@ with open(CONFIG_FILEPATH, 'r') as stream:
 
 # Data Configurations
 DATA_CROP_STRIDE = config_data.get("DATA_CROP_STRIDE", 16)
-DATA_CROP_SIZE = config_data.get("DATA_CROP_STRIDE", 32)
+DATA_CROP_SIZE = config_data.get("DATA_CROP_SIZE", 32)
 
 
 # # TODO: TEST: 32 - Parse2022 / PipesForge3D - Mesh
