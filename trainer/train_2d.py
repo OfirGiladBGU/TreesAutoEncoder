@@ -269,30 +269,28 @@ class Trainer(object):
 
 
             # Test 8 - Parse2022 - 48
-            # fill_mask1 = (torch.abs(target_data - input_data) > 0).float()  # Area that should be filled
-            # black_mask1 = (target_data == 0).float()  # Area that should stay black
-            # keep_mask1 = 1.0 - (fill_mask1 + black_mask1)  # Area that should stay unchanged
-            #
-            # weighted_mask1 = 8.0 * fill_mask1 + 1.5 * keep_mask1 + 0.5 * black_mask1
-            # output_data_1 = output_data * weighted_mask1
-            # target_data_1 = target_data * weighted_mask1
-            #
-            # LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
-            # LOSS += 100 * loss_functions.vgg_loss.TVLoss(p=2).to(self.args.device)(output_data)
-
-
-            # Test 9 - PCD
             fill_mask1 = (torch.abs(target_data - input_data) > 0).float()  # Area that should be filled
-            # black_mask1 = (target_data == 0).float()  # Area that should stay black
-            # keep_mask1 = 1.0 - (fill_mask1 + black_mask1)  # Area that should stay unchanged
+            black_mask1 = (target_data == 0).float()  # Area that should stay black
+            keep_mask1 = 1.0 - (fill_mask1 + black_mask1)  # Area that should stay unchanged
 
-            weighted_mask1 = fill_mask1
+            weighted_mask1 = 8.0 * fill_mask1 + 1.5 * keep_mask1 + 0.5 * black_mask1
             output_data_1 = output_data * weighted_mask1
             target_data_1 = target_data * weighted_mask1
 
             LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
-            # LOSS += 100 * loss_functions.vgg_loss.TVLoss(p=2).to(self.args.device)(output_data)
-            LOSS += self.perceptual_loss(output_data, target_data)
+            LOSS += 100 * loss_functions.vgg_loss.TVLoss(p=2).to(self.args.device)(output_data)
+
+
+            # Test 9 - PCD
+            # fill_mask1 = (torch.abs(target_data - input_data) > 0).float()  # Area that should be filled
+            # black_mask1 = (target_data == 0).float()  # Area that should stay black
+            # keep_mask1 = 1.0 - (fill_mask1 + black_mask1)  # Area that should stay unchanged
+            #
+            # weighted_mask1 = 10.0 * fill_mask1 + 1.0 * keep_mask1 + 0.05 * black_mask1
+            # output_data_1 = output_data * weighted_mask1
+            # target_data_1 = target_data * weighted_mask1
+            #
+            # LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
 
 
             # def weighted_mask_loss(predicted, target, mask, hole_weight=2.0):

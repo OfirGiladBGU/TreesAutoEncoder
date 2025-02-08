@@ -3,7 +3,7 @@ import pathlib
 import yaml
 
 # Configurations File
-CONFIG_FILENAME = "parse2022_32.yaml"
+CONFIG_FILENAME = "parse2022_48.yaml"
 
 # Root Path
 ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent

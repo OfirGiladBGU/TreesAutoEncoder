@@ -255,20 +255,44 @@ class SelfAttention(nn.Module):
         self.value = nn.Conv2d(in_channels, in_channels, kernel_size=1)
         self.gamma = nn.Parameter(torch.zeros(1))
 
-    def forward(self, x):
-        batch_size, C, width, height = x.size()
-        query = self.query(x).view(batch_size, -1, width * height)  # B x C/8 x N
-        key = self.key(x).view(batch_size, -1, width * height)      # B x C/8 x N
-        value = self.value(x).view(batch_size, -1, width * height)  # B x C x N
+    # def forward(self, x):
+    #     batch_size, C, width, height = x.size()
+    #     query = self.query(x).view(batch_size, -1, width * height)  # B x C/8 x N
+    #     key = self.key(x).view(batch_size, -1, width * height)      # B x C/8 x N
+    #     value = self.value(x).view(batch_size, -1, width * height)  # B x C x N
+    #
+    #     attention = torch.bmm(query.permute(0, 2, 1), key)  # B x N x N
+    #     attention = torch.softmax(attention, dim=-1)
+    #
+    #     out = torch.bmm(value, attention.permute(0, 2, 1))  # B x C x N
+    #     out = out.view(batch_size, C, width, height)
+    #
+    #     out = self.gamma * out + x
+    #     return out
 
-        attention = torch.bmm(query.permute(0, 2, 1), key)  # B x N x N
+    def forward(self, x):
+        batch_size, C, H, W = x.shape  # Extract batch, channels, height, width
+
+        # Compute Query, Key, and Value
+        query = self.query(x).view(batch_size, -1, H * W)  # (B, C/8, N)
+        key = self.key(x).view(batch_size, -1, H * W)  # (B, C/8, N)
+        value = self.value(x).view(batch_size, -1, H * W)  # (B, C, N)
+
+        # Compute Attention Map (Correct order)
+        attention = torch.bmm(query.permute(0, 2, 1), key)  # (B, N, N) spatial attention
         attention = torch.softmax(attention, dim=-1)
 
-        out = torch.bmm(value, attention.permute(0, 2, 1))  # B x C x N
-        out = out.view(batch_size, C, width, height)
+        # Apply attention to value
+        out = torch.bmm(value, attention.permute(0, 2, 1))  # (B, C, N)
 
+        # Reshape back to (B, C, H, W)
+        out = out.view(batch_size, C, H, W)
+
+        # Residual Connection
         out = self.gamma * out + x
+
         return out
+
 
 # class Network2D(nn.Module):
 #     def __init__(self, args: argparse.Namespace):
