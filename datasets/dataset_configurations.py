@@ -3,7 +3,7 @@ import pathlib
 import yaml
 
 # Configurations File
-CONFIG_FILENAME = "parse2022_48.yaml"
+CONFIG_FILENAME = "PipeForge3DPCD.yaml"
 
 # Root Path
 ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
@@ -59,7 +59,8 @@ V1_1D_DATASETS = ['Trees1DV1']
 
 # Dataset 2D
 APPLY_LOG_FILTER = True
-APPLY_CONTINUITY_FIX = True
+# APPLY_CONTINUITY_FIX = True
+APPLY_MEDIAN_FILTER = True  # For PCDs
 V1_2D_DATASETS = ['Trees2DV1', 'Trees2DV1S']
 V2_2D_DATASETS = ['Trees2DV2', 'Trees2DV2M']
 

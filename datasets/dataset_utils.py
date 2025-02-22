@@ -531,7 +531,7 @@ def _calculate_depth_projection(data_3d: np.ndarray, component_3d: np.ndarray = 
         max_projection > 0,
         (255 * (1 - (depth_projection / axis_size))).astype(int),
         0
-    )
+    ).astype(np.uint8)
 
     depth_projects = dict()
     depth_projects["image"] = grayscale_depth_projection

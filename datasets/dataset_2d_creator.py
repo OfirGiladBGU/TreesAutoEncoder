@@ -6,6 +6,7 @@ from tqdm import tqdm
 import math
 from typing import Tuple, List
 from skimage import color
+import cv2
 
 from datasets.dataset_configurations import *
 from dataset_utils import (TaskType,
@@ -180,6 +181,13 @@ def outlier_removal_3d(pred_data: np.ndarray, label_data: np.ndarray):
     return pred_data_fixed
 
 
+def outlier_removal_2d(pred_data: np.ndarray, label_data: np.ndarray):
+    # V1 - PATCH HOLES
+    pred_data_fixed = np.where(pred_data > 0, label_data, 0)
+    pred_data_fixed = pred_data_fixed.astype(label_data.dtype)
+    return pred_data_fixed
+
+
 # def image_missing_connected_components_removal(pred, label):
 #     pred_missing_components = np.maximum(label - pred, 0)
 #
@@ -197,6 +205,7 @@ def outlier_removal_3d(pred_data: np.ndarray, label_data: np.ndarray):
 #     # Remove from the label the missing connected components in the pred that are have area bigger than 10 pixels
 #     repaired_label = label - pred_missing_components
 #     return repaired_label
+
 
 #####################
 # Create Pred Fixed #
@@ -513,10 +522,6 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
 
         print(f"Total Mini Cubes: {len(label_cubes)}\n")
 
-        ################
-        # Filter Crops #
-        ################
-
         cubes_count = len(label_cubes)
         cubes_count_digits_count = len(str(cubes_count))
         for cube_idx in tqdm(range(cubes_count)):
@@ -524,6 +529,10 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             label_cube = label_cubes[cube_idx]
             pred_cube = pred_cubes[cube_idx]
             pred_fixed_cube = pred_fixed_cubes[cube_idx]
+
+            #####################
+            # Task Filter Crops #
+            #####################
 
             # TODO: enable 2 modes
             if task_type == TaskType.SINGLE_COMPONENT:
@@ -570,6 +579,10 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             else:
                 raise ValueError("Invalid Task Type")
 
+            ####################
+            # Project 3D to 2D #
+            ####################
+
             # Project 3D to 2D (Labels)
             label_projections = project_3d_to_2d(
                 data_3d=label_cube,
@@ -593,10 +606,14 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 source_data_filepath=pred_filepath
             )
 
+            ########################
+            # Density Filter Crops #
+            ########################
+
             condition_list = [True] * len(IMAGES_6_VIEWS)
             for view_idx, image_view in enumerate(IMAGES_6_VIEWS):
                 label_image = label_projections[f"{image_view}_image"]
-                # pred_image = pred_projections[f"{image_view}_image"]
+                pred_image = pred_projections[f"{image_view}_image"]
                 pred_fixed_image = pred_fixed_projections[f"{image_view}_image"]
 
                 # Repair the labels - TODO: Check how to do smartly
@@ -605,6 +622,16 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                 #     label=label_image
                 # )
                 # repaired_label_image = label_projections[f"{image_6_view}_repaired_image"]
+
+                if APPLY_MEDIAN_FILTER:
+                    label_image = cv2.medianBlur(label_image, ksize=5)
+                    pred_image = cv2.medianBlur(pred_image, ksize=5)
+                    pred_fixed_image = cv2.medianBlur(pred_fixed_image, ksize=5)
+                    pred_fixed_image = outlier_removal_2d(pred_data=pred_fixed_image, label_data=label_image)
+
+                    label_projections[f"{image_view}_image"] = label_image
+                    pred_projections[f"{image_view}_image"] = pred_image
+                    pred_fixed_projections[f"{image_view}_image"] = pred_fixed_image
 
                 # Check Condition (If condition fails, mark the view as invalid):
                 condition = [
@@ -704,7 +731,6 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
                     min_z = max(0, front - 2)
                     max_z = min(back + 3, pred_advanced_fixed_cube.shape[2])
 
-
                     # Check the number of connected components before adding the mask
                     roi_temp_before = pred_advanced_fixed_cube[min_y:max_y, min_x:max_x, min_z:max_z]
                     components_before = connected_components_3d(data_3d=roi_temp_before, connectivity_type=6)[1]
@@ -747,6 +773,12 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
             for view_idx, image_view in enumerate(IMAGES_6_VIEWS):
                 label_image = label_projections[f"{image_view}_image"]
                 pred_advanced_fixed_image = pred_advanced_fixed_projections[f"{image_view}_image"]
+
+                if APPLY_MEDIAN_FILTER:
+                    pred_advanced_fixed_image = cv2.medianBlur(pred_advanced_fixed_image, ksize=5)
+                    pred_advanced_fixed_image = outlier_removal_2d(pred_data=pred_advanced_fixed_image, label_data=label_image)
+
+                    pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
 
                 # TODO: repair pred fix to include connectable components
                 # TODO: check if local components num is similar between label and pred
