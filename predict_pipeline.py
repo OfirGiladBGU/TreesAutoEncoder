@@ -332,6 +332,13 @@ def init_pipeline_models():
 
 
 def single_predict(data_3d_filepath, data_2d_folder, log_data=None):
+    # CONFIGS
+    apply_input_merge_2d = True
+    apply_input_merge_3d = True
+    apply_fusion = True
+    apply_noise_filter = True
+
+    # INPUTS
     data_3d_filepath = str(data_3d_filepath)
     data_2d_folder = str(data_2d_folder)
 
@@ -356,7 +363,7 @@ def single_predict(data_3d_filepath, data_2d_folder, log_data=None):
         if len(args.model_2d) > 0:
             data_2d_output = args.model_2d_class(data_2d_input)
 
-            # Parse 2D model output
+            # Handle additional tasks
             if "confidence map" in getattr(args.model_2d_class, "additional_tasks", list()):
                 data_2d_output, data_2d_output_confidence = data_2d_output
                 data_2d_output = torch.where(data_2d_output_confidence > 0.5, data_2d_output, 0)
@@ -367,7 +374,7 @@ def single_predict(data_3d_filepath, data_2d_folder, log_data=None):
             data_3d_filepath=data_3d_filepath,
             data_2d_input=data_2d_input,
             data_2d_output=data_2d_output,
-            apply_input_merge=True,
+            apply_input_merge=apply_input_merge_2d,
             log_data=log_data
         )
 
@@ -380,8 +387,8 @@ def single_predict(data_3d_filepath, data_2d_folder, log_data=None):
         data_3d_input = preprocess_3d(
             data_3d_filepath=data_3d_filepath,
             data_2d_output=data_2d_output,
-            apply_fusion=True,
-            apply_noise_filter=True
+            apply_fusion=apply_fusion,
+            apply_noise_filter=apply_noise_filter
         )
 
         # Predict 3D
@@ -393,7 +400,7 @@ def single_predict(data_3d_filepath, data_2d_folder, log_data=None):
         (data_3d_input, data_3d_output) = postprocess_3d(
             data_3d_input=data_3d_input,
             data_3d_output=data_3d_output,
-            apply_input_merge=True
+            apply_input_merge=apply_input_merge_3d
         )
 
         # DEBUG
@@ -425,8 +432,7 @@ def test_single_predict():
     )
 
 
-def full_predict():
-    input_basename = "PA000005"
+def full_predict(data_3d_basename):
     log_data = pd.read_csv(TRAIN_LOG_PATH)
 
     # data_3d_folder = PREDS_3D
@@ -436,7 +442,7 @@ def full_predict():
     data_2d_folder = PREDS_FIXED_2D
     # data_2d_folder = PREDS_ADVANCED_FIXED_2D
 
-    data_3d_filepaths = pathlib.Path(data_3d_folder).rglob(f"{input_basename}_*.*")
+    data_3d_filepaths = pathlib.Path(data_3d_folder).rglob(f"{data_3d_basename}_*.*")
     data_3d_filepaths = sorted(data_3d_filepaths)
 
     for data_3d_filepath in tqdm(data_3d_filepaths):
@@ -447,9 +453,7 @@ def full_predict():
         )
 
 
-def calculate_dice_scores():
-    data_3d_basename = "PA000005"
-
+def calculate_dice_scores(data_3d_basename):
     #################
     # CROPS COMPARE #
     #################
@@ -514,9 +518,7 @@ def calculate_dice_scores():
     )
 
 
-def full_merge():
-    data_3d_basename = "PA000005"
-
+def full_merge(data_3d_basename):
     # data_3d_folder = PREDS
 
     data_3d_folder = PREDS_FIXED
@@ -585,10 +587,10 @@ def main():
     # TODO: Requires Model Init
     # test_single_predict()
 
-    full_predict()
-    full_merge()
-
-    # calculate_dice_scores()
+    data_3d_basename = "PA000005"
+    full_predict(data_3d_basename=data_3d_basename)
+    full_merge(data_3d_basename=data_3d_basename)
+    # calculate_dice_scores(data_3d_basename=data_3d_basename)
 
 
 if __name__ == "__main__":
