@@ -38,7 +38,7 @@ def main():
 
     # Update save path
     filepath, ext = os.path.splitext(args.weights_filepath)
-    args.weights_filepath = f"{filepath}_{DATASET_FOLDER}_pcd_{model.model_name}{ext}"
+    args.weights_filepath = f"{filepath}_{DATASET_FOLDER}_{model.model_name}{ext}"
     os.makedirs(name=os.path.dirname(args.weights_filepath), exist_ok=True)
 
     # Update results path
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     # args.model = 'ae_6_2d_to_6_2d'
     # args.dataset = 'Trees2DV2'
 
-    args.epochs = 5
+    args.epochs = 10
 
     # TODO: check option that the original input is kept and only the holes are predicted and merged - V
     # TODO: filter noise
