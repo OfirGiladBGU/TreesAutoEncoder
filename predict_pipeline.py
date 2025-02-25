@@ -9,6 +9,7 @@ from tqdm import tqdm
 import pandas as pd
 from scipy.ndimage import convolve, label
 from typing import Tuple
+from concurrent.futures import ThreadPoolExecutor
 
 from datasets.dataset_configurations import *
 from datasets.dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
@@ -331,7 +332,7 @@ def init_pipeline_models():
         pass
 
 
-def single_predict(data_3d_filepath, data_2d_folder, log_data=None):
+def single_predict(data_3d_filepath, data_2d_folder, log_data=None, enable_debug=True):
     # CONFIGS
     apply_input_merge_2d = True
     apply_input_merge_3d = True
@@ -379,7 +380,8 @@ def single_predict(data_3d_filepath, data_2d_folder, log_data=None):
         )
 
         # DEBUG
-        debug_2d(data_3d_filepath=data_3d_filepath, data_2d_input=data_2d_input, data_2d_output=data_2d_output)
+        if enable_debug is True:
+            debug_2d(data_3d_filepath=data_3d_filepath, data_2d_input=data_2d_input, data_2d_output=data_2d_output)
 
         ##############
         # 3D Section #
@@ -404,7 +406,8 @@ def single_predict(data_3d_filepath, data_2d_folder, log_data=None):
         )
 
         # DEBUG
-        debug_3d(data_3d_filepath=data_3d_filepath, data_3d_input=data_3d_input)
+        if enable_debug is True:
+            debug_3d(data_3d_filepath=data_3d_filepath, data_3d_input=data_3d_input)
 
         export_output(data_3d_filepath=data_3d_filepath, data_3d_output=data_3d_output)
 
@@ -445,13 +448,32 @@ def full_predict(data_3d_basename):
     data_3d_filepaths = pathlib.Path(data_3d_folder).rglob(f"{data_3d_basename}_*.*")
     data_3d_filepaths = sorted(data_3d_filepaths)
 
-    for data_3d_filepath in tqdm(data_3d_filepaths):
-        single_predict(
-            data_3d_filepath=data_3d_filepath,
-            data_2d_folder=data_2d_folder,
-            log_data=log_data
-        )
+    # Single-threading - Sequential
+    # for data_3d_filepath in tqdm(data_3d_filepaths):
+    #     single_predict(
+    #         data_3d_filepath=data_3d_filepath,
+    #         data_2d_folder=data_2d_folder,
+    #         log_data=log_data,
+    #         enable_debug=True
+    #     )
 
+    # Multi-threading
+    futures = []
+    with ThreadPoolExecutor() as executor:
+        # Submit all tasks
+        for data_3d_filepath in data_3d_filepaths:
+            futures.append(
+                executor.submit(
+                    single_predict,
+                    data_3d_filepath=data_3d_filepath,
+                    data_2d_folder=data_2d_folder,
+                    log_data=log_data,
+                    enable_debug=False
+                )
+            )
+        # "Join" on all tasks by waiting for each future to complete.
+        for future in tqdm(futures):
+            future.result()  # This will block until the future is done.
 
 def calculate_dice_scores(data_3d_basename):
     #################
@@ -587,7 +609,7 @@ def main():
     # TODO: Requires Model Init
     # test_single_predict()
 
-    data_3d_basename = "PA000005"
+    data_3d_basename = "01"
     full_predict(data_3d_basename=data_3d_basename)
     full_merge(data_3d_basename=data_3d_basename)
     # calculate_dice_scores(data_3d_basename=data_3d_basename)
