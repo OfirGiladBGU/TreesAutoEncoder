@@ -13,7 +13,7 @@ from datasets.dataset_configurations import DATA_PATH
 from datasets.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
 
-DATASET_PATH = os.path.join(DATA_PATH, "PipeForge3DPCD")
+DATASET_PATH = os.path.join(DATA_PATH, "PipeForge3DPCD_small")
 
 
 ###################
@@ -352,7 +352,7 @@ def main():
 
     convert_originals_data_to_labels_data(save_as_npy=True, point_scale=point_scale, voxel_size=voxel_size,
                                           increase_density=increase_density)
-    # convert_labels_data_to_preds_data(save_as_npy=True)
+    convert_labels_data_to_preds_data(save_as_npy=True)
 
 
 if __name__ == '__main__':

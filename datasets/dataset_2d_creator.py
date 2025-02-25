@@ -1246,14 +1246,14 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
 
 def main():
     # TODO: Required for training with all modes
-    # create_dataset_with_outliers_removed()
+    create_dataset_with_outliers_removed()
 
-    # data_options = {
-    #     LABELS: True,
-    #     PREDS: True,
-    #     PREDS_FIXED: True,
-    #     EVALS: False
-    # }
+    data_options = {
+        LABELS: True,
+        PREDS: True,
+        PREDS_FIXED: True,
+        EVALS: False
+    }
 
     # TODO: Required for training with TaskType.SINGLE_COMPONENT
     # create_data_components(data_options=data_options)
