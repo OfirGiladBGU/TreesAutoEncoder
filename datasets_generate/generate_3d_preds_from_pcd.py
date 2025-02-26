@@ -433,7 +433,7 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
 
 def main():
     # From PCD to Numpy with option to go back
-    point_scale = 0.5
+    point_scale = 0.25
     voxel_size = 1.0
     increase_density = False
 
