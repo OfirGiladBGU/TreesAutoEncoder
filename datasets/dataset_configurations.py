@@ -1,9 +1,25 @@
 import os
 import pathlib
 import yaml
+from enum import Enum
 
-# Configurations File
+
+# TODO: Setup Configurations File
 CONFIG_FILENAME = "PipeForge3DPCD.yaml"
+
+#####################
+# Automatic Parsing #
+#####################
+
+class TaskType(Enum):
+    SINGLE_COMPONENT = 1  # Assumption: Need to achieve a single component
+    LOCAL_CONNECTIVITY = 2  # Assumption: Need to connect components on focused scope
+    PATCH_HOLES = 3  # Assumption: Need to fix any type of holes
+task_type_map = {
+    "SINGLE_COMPONENT": TaskType.SINGLE_COMPONENT,
+    "LOCAL_CONNECTIVITY": TaskType.LOCAL_CONNECTIVITY,
+    "PATCH_HOLES": TaskType.PATCH_HOLES
+}
 
 # Root Path
 ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
@@ -16,6 +32,7 @@ with open(CONFIG_FILEPATH, 'r') as stream:
 # Data Configurations
 DATA_CROP_STRIDE = config_data.get("DATA_CROP_STRIDE", 16)
 DATA_CROP_SIZE = config_data.get("DATA_CROP_SIZE", 32)
+TASK_TYPE = task_type_map.get(config_data.get("TASK_TYPE", "PATCH_HOLES"))
 
 
 # # TODO: TEST: 32 - Parse2022 / PipesForge3D - Mesh
@@ -60,7 +77,7 @@ V1_1D_DATASETS = ['Trees1DV1']
 # Dataset 2D
 APPLY_LOG_FILTER = True
 # APPLY_CONTINUITY_FIX = True
-APPLY_MEDIAN_FILTER = True  # For PCDs
+APPLY_MEDIAN_FILTER = False  # For PCDs
 V1_2D_DATASETS = ['Trees2DV1', 'Trees2DV1S']
 V2_2D_DATASETS = ['Trees2DV2', 'Trees2DV2M']
 

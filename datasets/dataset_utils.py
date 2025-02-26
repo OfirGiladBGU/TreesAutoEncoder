@@ -3,7 +3,6 @@ import pathlib
 import numpy as np
 import torch
 import cv2
-from enum import Enum
 from typing import Union, Dict, Tuple
 from scipy.ndimage import label
 
@@ -15,12 +14,6 @@ import trimesh
 import open3d as o3d
 
 from datasets.dataset_configurations import IMAGES_6_VIEWS
-
-
-class TaskType(Enum):
-    SINGLE_COMPONENT = 1  # Assumption: Need to achieve a single component
-    LOCAL_CONNECTIVITY = 2  # Assumption: Need to connect components on focused scope
-    PATCH_HOLES = 3  # Assumption: Need to fix any type of holes
 
 
 def validate_data_paths(data_paths: list[str]):

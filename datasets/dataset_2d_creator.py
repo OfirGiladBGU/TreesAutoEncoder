@@ -9,8 +9,7 @@ from skimage import color
 import cv2
 
 from datasets.dataset_configurations import *
-from dataset_utils import (TaskType,
-                           get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
+from dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                            save_nii_gz_in_identity_affine, project_3d_to_2d,
                            connected_components_3d, connected_components_2d)
 # TODO: Debug Tools
@@ -380,7 +379,14 @@ def create_data_components(data_options):
 ###############################
 # 2D Projections and 3D Cubes #
 ###############################
-def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
+def create_2d_projections_and_3d_cubes_for_training():
+    # Config
+    stride_dim = DATA_3D_STRIDE
+    cube_dim = DATA_3D_SIZE
+    upper_threshold = math.pow(cube_dim[0], 2) * UPPER_THRESHOLD_2D  # TODO: Support dynamic calculation
+    lower_threshold = math.pow(cube_dim[0], 2) * LOWER_THRESHOLD_2D  # TODO: Support dynamic calculation
+    task_type = TASK_TYPE
+
     projection_options = {
         "front": True,
         "back": True,
@@ -434,12 +440,6 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
 
     # Log Data
     log_data = dict()
-
-    # Config
-    stride_dim = DATA_3D_STRIDE
-    cube_dim = DATA_3D_SIZE
-    upper_threshold = math.pow(cube_dim[0], 2) * UPPER_THRESHOLD_2D  # TODO: Support dynamic calculation
-    lower_threshold = math.pow(cube_dim[0], 2) * LOWER_THRESHOLD_2D  # TODO: Support dynamic calculation
 
     # Create Output Folders
     for output_folder in output_folders.values():
@@ -1011,7 +1011,14 @@ def create_2d_projections_and_3d_cubes_for_training(task_type: TaskType):
     pd.DataFrame(log_data).T.to_csv(TRAIN_LOG_PATH)
 
 
-def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
+def create_2d_projections_and_3d_cubes_for_evaluation():
+    # Config
+    stride_dim = DATA_3D_STRIDE
+    cube_dim = DATA_3D_SIZE
+    upper_threshold = math.pow(cube_dim[0], 2) * UPPER_THRESHOLD_2D  # TODO: Support dynamic calculation
+    lower_threshold = math.pow(cube_dim[0], 2) * LOWER_THRESHOLD_2D  # TODO: Support dynamic calculation
+    task_type = TASK_TYPE
+
     projection_options = {
         "front": True,
         "back": True,
@@ -1045,12 +1052,6 @@ def create_2d_projections_and_3d_cubes_for_evaluation(task_type: TaskType):
 
     # Log Data
     log_data = dict()
-
-    # Config
-    stride_dim = DATA_3D_STRIDE
-    cube_dim = DATA_3D_SIZE
-    upper_threshold = math.pow(cube_dim[0], 2) * UPPER_THRESHOLD_2D  # TODO: Support dynamic calculation
-    lower_threshold = math.pow(cube_dim[0], 2) * LOWER_THRESHOLD_2D  # TODO: Support dynamic calculation
 
     # Create Output Folders
     for output_folder in output_folders.values():
@@ -1261,12 +1262,8 @@ def main():
     # TODO: DEBUG
     # create_dataset_depth_2d_projections(data_options=data_options)
 
-    # task_type = TaskType.SINGLE_COMPONENT  # Parse2022
-    # task_type = TaskType.LOCAL_CONNECTIVITY  # Parse2022 / PipeForge3D - Mesh
-    task_type = TaskType.PATCH_HOLES  # PipeForge3D - PCD
-
-    create_2d_projections_and_3d_cubes_for_training(task_type=task_type)
-    # create_2d_projections_and_3d_cubes_for_evaluation(task_type=task_type)
+    create_2d_projections_and_3d_cubes_for_training()
+    # create_2d_projections_and_3d_cubes_for_evaluation()
 
 
 if __name__ == "__main__":

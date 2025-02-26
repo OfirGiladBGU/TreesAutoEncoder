@@ -13,7 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from datasets.dataset_configurations import *
 from datasets.dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
-                                    reverse_rotations, apply_threshold, connected_components_3d, TaskType)
+                                    reverse_rotations, apply_threshold, connected_components_3d)
 from models.model_list import init_model
 # TODO: Debug Tools
 from datasets.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
@@ -334,7 +334,7 @@ def init_pipeline_models():
 
 def single_predict(data_3d_filepath, data_2d_folder, log_data=None, enable_debug=True):
     # CONFIGS
-    apply_input_merge_2d = True
+    apply_input_merge_2d = True  # False - for PipeForge3DPCD
     apply_input_merge_3d = True
     apply_fusion = True
     apply_noise_filter = True
@@ -627,7 +627,7 @@ if __name__ == "__main__":
 
     # 2
     # TODO: add 45 degrees projections
-    # TODO: use the ground truth to create create a holes
+    # TODO: use the ground truth to create create a holes - DONE
 
 
     # 3
@@ -637,7 +637,7 @@ if __name__ == "__main__":
     # TODO: try to find new loss functions to the 2D model
     # TODO: try to check how to cleanup the 2D models results on the 3D fusion
     # TODO: find a way to organize the plots - DONE
-    # TODO: test the full pipeline on the fixed preds
+    # TODO: test the full pipeline on the fixed preds - DONE
 
     # completed
     # TODO: run test of different inputs (100 examples)
@@ -681,6 +681,5 @@ if __name__ == "__main__":
     args.input_size_model_3d = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
     # TODO: Support different tasks
-    args.task_type = TaskType.LOCAL_CONNECTIVITY
 
     main()
