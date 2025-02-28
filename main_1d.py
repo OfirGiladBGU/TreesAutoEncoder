@@ -4,7 +4,7 @@ import torch
 import datetime
 import wandb
 
-from datasets.dataset_configurations import DATASET_FOLDER, MODEL_RESULTS_PATH
+from datasets.dataset_configurations import DATASET_OUTPUT_FOLDER, MODEL_RESULTS_PATH
 from datasets.dataset_list import init_dataset
 from trainer.train_1d import Trainer
 from models.model_list import init_model
@@ -38,7 +38,7 @@ def main():
 
     # Update save path
     filepath, ext = os.path.splitext(args.weights_filepath)
-    args.weights_filepath = f"{filepath}_{DATASET_FOLDER}_{model.model_name}{ext}"
+    args.weights_filepath = f"{filepath}_{DATASET_OUTPUT_FOLDER}_{model.model_name}{ext}"
     os.makedirs(name=os.path.dirname(args.weights_filepath), exist_ok=True)
 
     # Update results path

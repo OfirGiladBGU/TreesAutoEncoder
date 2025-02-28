@@ -34,19 +34,6 @@ DATA_CROP_STRIDE = config_data.get("DATA_CROP_STRIDE", 16)
 DATA_CROP_SIZE = config_data.get("DATA_CROP_SIZE", 32)
 TASK_TYPE = task_type_map.get(config_data.get("TASK_TYPE", "PATCH_HOLES"))
 
-
-# # TODO: TEST: 32 - Parse2022 / PipesForge3D - Mesh
-# DATA_CROP_STRIDE = 16  # TODO: Read from config file
-# DATA_CROP_SIZE = 32  # TODO: Read from config file
-
-# TODO: TEST: 48 - Parse2022 / PipesForge3D - Mesh
-# DATA_CROP_STRIDE = 24  # TODO: Read from config file
-# DATA_CROP_SIZE = 48  # TODO: Read from config file
-
-# # TODO: TEST: 96 - PipesForge3D - PCD
-# DATA_CROP_STRIDE = 48  # TODO: Read from config file
-# DATA_CROP_SIZE = 96  # TODO: Read from config file
-
 # Setups
 DATA_3D_STRIDE = (DATA_CROP_STRIDE, DATA_CROP_STRIDE, DATA_CROP_STRIDE)
 DATA_3D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE, DATA_CROP_SIZE)
@@ -56,16 +43,19 @@ LOWER_THRESHOLD_2D = config_data.get("LOWER_THRESHOLD_2D", 0.1)
 UPPER_THRESHOLD_2D = config_data.get("UPPER_THRESHOLD_2D", 0.9)
 
 # Define dataset folder
-DATASET_FOLDER = config_data.get("DATASET_FOLDER")  # TODO: Read from config file
-# DATASET_FOLDER = "parse2022_48"  # TODO: Read from config file
+DATASET_INPUT_FOLDER = config_data.get("DATASET_INPUT_FOLDER", None)
+DATASET_OUTPUT_FOLDER = config_data.get("DATASET_OUTPUT_FOLDER", None)
+if DATASET_INPUT_FOLDER is None:
+    raise ValueError("DATASET_INPUT_FOLDER is not defined in the configuration file")
+DATASET_OUTPUT_FOLDER = DATASET_INPUT_FOLDER if DATASET_OUTPUT_FOLDER is None else DATASET_OUTPUT_FOLDER
 
 # Data Folder Paths
 DATA_PATH = os.path.join(ROOT_PATH, "data")
-DATASET_PATH = os.path.join(DATA_PATH, DATASET_FOLDER)
-CROPS_PATH = os.path.join(ROOT_PATH, "data_crops", DATASET_FOLDER)
+DATASET_PATH = os.path.join(DATA_PATH, DATASET_INPUT_FOLDER)
+CROPS_PATH = os.path.join(ROOT_PATH, "data_crops", DATASET_OUTPUT_FOLDER)
 
 # Data Results Folder Paths
-RESULTS_PATH = os.path.join(ROOT_PATH, "data_results", DATASET_FOLDER)
+RESULTS_PATH = os.path.join(ROOT_PATH, "data_results", DATASET_OUTPUT_FOLDER)
 MODEL_RESULTS_PATH = os.path.join(RESULTS_PATH, "models")
 PREDICT_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "predict_pipeline")
 MERGE_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "merge_pipeline")
@@ -156,3 +146,5 @@ PROJECTION_MODE = "visualization"  # "visualization" or "training"
 # Logs
 TRAIN_LOG_PATH = os.path.join(CROPS_PATH, "train_log.csv")
 EVAL_LOG_PATH = os.path.join(CROPS_PATH, "eval_log.csv")
+
+# TODO: Add Predict Pipeline Configs
