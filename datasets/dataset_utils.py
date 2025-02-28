@@ -217,12 +217,12 @@ def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, sav
 # obj to numpy and numpy to obj #
 #################################
 def _convert_obj_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
-    point_scale = kwargs.get("point_scale", 1.0)  # Define points scale
+    mesh_scale = kwargs.get("mesh_scale", 1.0)  # Define points scale
     voxel_size = kwargs.get("voxel_size", 2.0)  # Define voxel size (the size of each grid cell)
 
     mesh = trimesh.load(data_filepath)
-    if point_scale != 1.0:
-        mesh = mesh.apply_scale(point_scale)
+    if mesh_scale != 1.0:
+        mesh = mesh.apply_scale(mesh_scale)
     voxelized = mesh.voxelized(pitch=voxel_size)  # Pitch = voxel size
 
     numpy_data = voxelized.matrix.astype(np.uint8)
@@ -252,7 +252,7 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
 
     # TODO: Test
 
-    point_scale = kwargs.get("point_scale", 1.0)  # Define points scale [Original]
+    mesh_scale = kwargs.get("mesh_scale", 1.0)  # Define points scale [Original]
     voxel_size = kwargs.get("voxel_size", 2.0)  # Define voxel size (the size of each grid cell) [Original]
 
     occupied_indices = np.argwhere(numpy_data == 1.0)  # Find occupied voxels (indices where numpy_data == 1)
@@ -275,8 +275,8 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
     mesh = trimesh.util.concatenate(cubes)  # Combine all cubes into a single mesh
     if voxel_size != 1.0:
         mesh.apply_scale(1.0 / voxel_size)  # Apply reverse the scale
-    if point_scale != 1.0:
-        mesh.apply_scale(1.0 / point_scale)  # Apply reverse the scale
+    if mesh_scale != 1.0:
+        mesh.apply_scale(1.0 / mesh_scale)  # Apply reverse the scale
 
 
     if save_filename is not None and len(save_filename) > 0:
@@ -294,13 +294,13 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
 #################################
 def _convert_pcd_to_numpy(data_filepath: str, **kwargs) -> np.ndarray:
     # V1 - Using Open3D VoxelGrid
-    point_scale = kwargs.get("point_scale", 1.0)  # Define points scale
+    points_scale = kwargs.get("points_scale", 1.0)  # Define points scale
     voxel_size = kwargs.get("voxel_size", 1.0)  # Define voxel size (the size of each grid cell)
 
     # Find voxel grid
     pcd = o3d.io.read_point_cloud(data_filepath)
-    if point_scale != 1.0:
-        pcd.scale(scale=point_scale, center=pcd.get_center())  # Scale relative to center
+    if points_scale != 1.0:
+        pcd.scale(scale=points_scale, center=pcd.get_center())  # Scale relative to center
     voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=pcd, voxel_size=voxel_size)  # Voxelize pcd
 
     # Build numpy data
@@ -356,13 +356,13 @@ def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, sav
 
 
     # V3 - Using Open3D VoxelGrid and correct shift
-    point_scale = kwargs.get("point_scale", 1.0)  # Define points scale [Original]
+    points_scale = kwargs.get("points_scale", 1.0)  # Define points scale [Original]
     voxel_size = kwargs.get("voxel_size", 1.0)  # Define voxel size (the size of each grid cell) [Original]
 
     # Find voxel grid
     source_pcd = o3d.io.read_point_cloud(source_data_filepath)
-    if point_scale != 1.0:
-        source_pcd.scale(scale=point_scale, center=source_pcd.get_center())  # Scale relative to center
+    if points_scale != 1.0:
+        source_pcd.scale(scale=points_scale, center=source_pcd.get_center())  # Scale relative to center
     source_voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=source_pcd, voxel_size=voxel_size)  # Voxelize pcd
 
     source_origin = source_voxel_grid.origin
@@ -374,8 +374,8 @@ def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, sav
 
     if voxel_size != 1.0:
         pcd.scale(scale=(1.0 / voxel_size), center=pcd.get_center())  # Scale relative to center
-    if point_scale != 1.0:
-        pcd.scale(scale=(1.0 / point_scale), center=pcd.get_center())  # Scale relative to center
+    if points_scale != 1.0:
+        pcd.scale(scale=(1.0 / points_scale), center=pcd.get_center())  # Scale relative to center
 
 
     # Save the PCD
@@ -463,7 +463,7 @@ def connected_components_2d(data_2d: np.ndarray) -> Tuple[np.ndarray, int]:
 #################
 
 # TODO: Edit to support for cubes
-def apply_rotation(data_3d: np.ndarray,
+def apply_rotations(data_3d: np.ndarray,
                     data_rotation: np.ndarray,
                     reverse: bool = False) -> np.ndarray:
     if np.array_equal(data_rotation, np.identity(3)):

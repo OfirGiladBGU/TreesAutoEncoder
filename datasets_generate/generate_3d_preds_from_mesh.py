@@ -20,7 +20,7 @@ DATASET_PATH = os.path.join(DATA_PATH, "PipeForge3DMesh")
 # Generate Labels #
 ###################
 # Create new 'labels' folder with numpy data
-def convert_originals_data_to_labels_data(save_as_npy: bool = False, point_scale: float = 0.5, voxel_size: float = 2.0):
+def convert_originals_data_to_labels_data(save_as_npy: bool = False, mesh_scale: float = 0.5, voxel_size: float = 2.0):
     """
     Converts the original data to discrete data for numpy array, and then save the result in labels folder.
     """
@@ -37,7 +37,7 @@ def convert_originals_data_to_labels_data(save_as_npy: bool = False, point_scale
 
         numpy_data = convert_data_file_to_numpy(
             data_filepath=data_filepath,
-            point_scale=point_scale,
+            mesh_scale=mesh_scale,
             voxel_size=voxel_size
         )
 
@@ -50,7 +50,7 @@ def convert_originals_data_to_labels_data(save_as_npy: bool = False, point_scale
             numpy_data=numpy_data,
             source_data_filepath=data_filepath,
             save_filename=save_filename,
-            point_scale=point_scale,
+            mesh_scale=mesh_scale,
             voxel_size=voxel_size
         )
 
@@ -640,10 +640,10 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
 
 def main():
     # From Mesh to Numpy without option to go back
-    point_scale = 0.5
+    mesh_scale = 0.5
     voxel_size = 2.0
 
-    convert_originals_data_to_labels_data(save_as_npy=True, point_scale=point_scale, voxel_size=voxel_size)
+    convert_originals_data_to_labels_data(save_as_npy=True, mesh_scale=mesh_scale, voxel_size=voxel_size)
     convert_labels_data_to_preds_data(save_as_npy=True)
 
 

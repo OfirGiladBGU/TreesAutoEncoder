@@ -66,7 +66,7 @@ def expand_connected_neighbors(array: np.ndarray) -> np.ndarray:
 
 
 # Create new 'labels' folder with numpy data
-def convert_originals_data_to_labels_data(save_as_npy: bool = False, point_scale: float = 1.0, voxel_size: float = 1.0,
+def convert_originals_data_to_labels_data(save_as_npy: bool = False, points_scale: float = 1.0, voxel_size: float = 1.0,
                                           increase_density: bool = False):
     """
     Converts the original data to discrete data for numpy array, and then save the result in labels folder.
@@ -84,7 +84,7 @@ def convert_originals_data_to_labels_data(save_as_npy: bool = False, point_scale
 
         numpy_data = convert_data_file_to_numpy(
             data_filepath=data_filepath,
-            point_scale=point_scale,
+            points_scale=points_scale,
             voxel_size=voxel_size
         )
 
@@ -100,7 +100,7 @@ def convert_originals_data_to_labels_data(save_as_npy: bool = False, point_scale
             numpy_data=numpy_data,
             source_data_filepath=data_filepath,
             save_filename=save_filename,
-            point_scale=point_scale,
+            points_scale=points_scale,
             voxel_size=voxel_size
         )
 
@@ -433,11 +433,11 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
 
 def main():
     # From PCD to Numpy with option to go back
-    point_scale = 0.25
+    points_scale = 0.25
     voxel_size = 1.0
     increase_density = False
 
-    convert_originals_data_to_labels_data(save_as_npy=True, point_scale=point_scale, voxel_size=voxel_size,
+    convert_originals_data_to_labels_data(save_as_npy=True, points_scale=points_scale, voxel_size=voxel_size,
                                           increase_density=increase_density)
     # convert_labels_data_to_preds_data(save_as_npy=True)
 
