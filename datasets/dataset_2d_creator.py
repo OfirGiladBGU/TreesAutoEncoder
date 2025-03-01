@@ -1267,8 +1267,6 @@ def main():
 
 
 if __name__ == "__main__":
-    STOP_INDEX = 20
-
     # TODO: Add classifier model to find cubes with holes better - model 2D to 1D
 
     # TODO:

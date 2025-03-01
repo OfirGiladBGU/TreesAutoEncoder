@@ -42,6 +42,8 @@ DATA_2D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE)
 LOWER_THRESHOLD_2D = config_data.get("LOWER_THRESHOLD_2D", 0.1)
 UPPER_THRESHOLD_2D = config_data.get("UPPER_THRESHOLD_2D", 0.9)
 
+STOP_INDEX = config_data.get("STOP_INDEX", -1)
+
 # Define dataset folder
 DATASET_INPUT_FOLDER = config_data.get("DATASET_INPUT_FOLDER", None)
 DATASET_OUTPUT_FOLDER = config_data.get("DATASET_OUTPUT_FOLDER", None)
