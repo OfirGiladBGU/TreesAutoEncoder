@@ -381,12 +381,6 @@ def create_data_components(data_options):
 ###############################
 def create_2d_projections_and_3d_cubes_for_training():
     # Config
-    stride_dim = DATA_3D_STRIDE
-    cube_dim = DATA_3D_SIZE
-    upper_threshold = math.pow(cube_dim[0], 2) * UPPER_THRESHOLD_2D  # TODO: Support dynamic calculation
-    lower_threshold = math.pow(cube_dim[0], 2) * LOWER_THRESHOLD_2D  # TODO: Support dynamic calculation
-    task_type = TASK_TYPE
-
     projection_options = {
         "front": True,
         "back": True,
@@ -402,7 +396,7 @@ def create_2d_projections_and_3d_cubes_for_training():
         "preds": PREDS,
         "preds_fixed": PREDS_FIXED
     }
-    if task_type == TaskType.SINGLE_COMPONENT:
+    if TASK_TYPE == TaskType.SINGLE_COMPONENT:
         input_folders.update({
             "preds_components": PREDS_COMPONENTS,
             "preds_fixed_components": PREDS_FIXED_COMPONENTS
@@ -424,7 +418,7 @@ def create_2d_projections_and_3d_cubes_for_training():
         "preds_advanced_fixed_2d": PREDS_ADVANCED_FIXED_2D,
         "preds_advanced_fixed_3d": PREDS_ADVANCED_FIXED_3D
     }
-    if task_type == TaskType.SINGLE_COMPONENT:
+    if TASK_TYPE == TaskType.SINGLE_COMPONENT:
         output_folders.update({
             # Preds Components
             "preds_components_2d": PREDS_COMPONENTS_2D,
@@ -488,14 +482,14 @@ def create_2d_projections_and_3d_cubes_for_training():
         label_cubes, other_cubes_list, cubes_data = crop_mini_cubes(
             data_3d=label_numpy_data,
             other_data_3d_list=[pred_numpy_data, pred_fixed_numpy_data],
-            cube_dim=cube_dim,
-            stride_dim=stride_dim,
+            cube_dim=DATA_3D_SIZE,
+            stride_dim=DATA_3D_STRIDE,
             cubes_data=True
         )
         pred_cubes = other_cubes_list[0]
         pred_fixed_cubes = other_cubes_list[1]
 
-        if task_type == TaskType.SINGLE_COMPONENT:
+        if TASK_TYPE == TaskType.SINGLE_COMPONENT:
             # Get index data:
             pred_component_filepath = input_filepaths["preds_components"][filepath_idx]
             pred_fixed_component_filepath = input_filepaths["preds_fixed_components"][filepath_idx]
@@ -508,12 +502,12 @@ def create_2d_projections_and_3d_cubes_for_training():
             pred_components_cubes, other_cubes_list = crop_mini_cubes(
                 data_3d=pred_component_numpy_data,
                 other_data_3d_list=[pred_fixed_component_numpy_data],
-                cube_dim=cube_dim,
-                stride_dim=stride_dim
+                cube_dim=DATA_3D_SIZE,
+                stride_dim=DATA_3D_STRIDE
             )
             pred_fixed_components_cubes = other_cubes_list[0]
 
-        elif task_type in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
+        elif TASK_TYPE in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
             pred_components_cubes = None
             pred_fixed_components_cubes = None
 
@@ -535,7 +529,7 @@ def create_2d_projections_and_3d_cubes_for_training():
             #####################
 
             # TODO: enable 2 modes
-            if task_type == TaskType.SINGLE_COMPONENT:
+            if TASK_TYPE == TaskType.SINGLE_COMPONENT:
                 # Get index data:
                 pred_components_cube = pred_components_cubes[cube_idx]
                 pred_fixed_components_cube = pred_fixed_components_cubes[cube_idx]
@@ -554,13 +548,13 @@ def create_2d_projections_and_3d_cubes_for_training():
                     "pred_global_components": global_components_3d_count,
                 })
 
-            elif task_type == TaskType.LOCAL_CONNECTIVITY:
+            elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
                 pred_components_cube = None
                 pred_fixed_components_cube = None
 
                 # TASK CONDITION: NONE
 
-            elif task_type == TaskType.PATCH_HOLES:
+            elif TASK_TYPE == TaskType.PATCH_HOLES:
                 pred_components_cube = None
                 pred_fixed_components_cube = None
 
@@ -635,9 +629,9 @@ def create_2d_projections_and_3d_cubes_for_training():
 
                 # Check Condition (If condition fails, mark the view as invalid):
                 condition = [
-                    not (upper_threshold > np.count_nonzero(label_image) > lower_threshold),
-                    # not (upper_threshold > np.count_nonzero(pred_image) > lower_threshold),  # Optional
-                    not (upper_threshold > np.count_nonzero(pred_fixed_image) > lower_threshold),
+                    not (UPPER_THRESHOLD_2D > np.count_nonzero(label_image) > LOWER_THRESHOLD_2D),
+                    # not (UPPER_THRESHOLD_2D > np.count_nonzero(pred_image) > LOWER_THRESHOLD_2D),  # Optional
+                    not (UPPER_THRESHOLD_2D > np.count_nonzero(pred_fixed_image) > LOWER_THRESHOLD_2D),
                 ]
 
                 # Check Condition (If condition fails, skip the current view):
@@ -665,7 +659,7 @@ def create_2d_projections_and_3d_cubes_for_training():
 
             pred_advanced_fixed_cube = pred_fixed_cube.copy()
 
-            if task_type == TaskType.SINGLE_COMPONENT:
+            if TASK_TYPE == TaskType.SINGLE_COMPONENT:
                 # Calculate the connected components for the preds fixed
                 delta_cube = ((label_cube - pred_fixed_cube) > 0.5).astype(np.uint8)
 
@@ -696,7 +690,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                 pred_advanced_fixed_components_cube = connected_components_3d(data_3d=pred_advanced_fixed_cube)[0]
 
 
-            elif task_type == TaskType.LOCAL_CONNECTIVITY:
+            elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
                 # Calculate the connected components for the preds fixed
                 delta_cube = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.uint8)
 
@@ -751,7 +745,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                 pred_advanced_fixed_cube = pred_advanced_fixed_cube.astype(pred_fixed_cube.dtype)
                 pred_advanced_fixed_components_cube = None
 
-            elif task_type == TaskType.PATCH_HOLES:
+            elif TASK_TYPE == TaskType.PATCH_HOLES:
                 pred_advanced_fixed_components_cube = None
 
             else:
@@ -782,7 +776,7 @@ def create_2d_projections_and_3d_cubes_for_training():
 
                 # TODO: repair pred fix to include connectable components
                 # TODO: check if local components num is similar between label and pred
-                if task_type == TaskType.SINGLE_COMPONENT:
+                if TASK_TYPE == TaskType.SINGLE_COMPONENT:
                     # Calculate the connected components for the preds fixed
                     label_binary = (label_image > 0).astype(np.uint8)
                     pred_advanced_fixed_binary = (pred_advanced_fixed_image > 0).astype(np.uint8)
@@ -820,7 +814,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                         label=labeled_delta
                     ) * 255
 
-                elif task_type == TaskType.LOCAL_CONNECTIVITY:
+                elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
                     # Calculate the connected components for the preds fixed
                     label_binary = (label_image > 0).astype(np.uint8)
                     pred_fixed_advanced_binary = (pred_advanced_fixed_image > 0).astype(np.uint8)
@@ -871,7 +865,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                     pred_advanced_fixed_image = np.where(pred_fixed_advanced_binary > 0, label_image, 0.0)
                     pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
 
-                elif task_type == TaskType.PATCH_HOLES:
+                elif TASK_TYPE == TaskType.PATCH_HOLES:
                     pass
 
                 else:
@@ -924,7 +918,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                         save_filename=save_filename
                     )
 
-                if task_type == TaskType.SINGLE_COMPONENT:
+                if TASK_TYPE == TaskType.SINGLE_COMPONENT:
                     for key, value in folder_2d_components_map.items():
                         data_2d = value[f"{image_view}_components"]
                         save_filename = os.path.join(output_folders[key], output_2d_format)
@@ -934,7 +928,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                             save_filename=save_filename
                         )
 
-                elif task_type in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
+                elif TASK_TYPE in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
                     pass
 
                 else:
@@ -968,7 +962,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                     save_filename=save_filename
                 )
 
-            if task_type == TaskType.SINGLE_COMPONENT:
+            if TASK_TYPE == TaskType.SINGLE_COMPONENT:
                 for key, value in folder_3d_components_map.items():
                     if key == "preds_advanced_fixed_components_3d":
                         source_name = "preds_fixed_components_3d"
@@ -993,7 +987,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                     "label_local_components": local_components_3d_count
                 })
 
-            elif task_type in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
+            elif TASK_TYPE in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
                 pass
 
             else:
@@ -1013,12 +1007,6 @@ def create_2d_projections_and_3d_cubes_for_training():
 
 def create_2d_projections_and_3d_cubes_for_evaluation():
     # Config
-    stride_dim = DATA_3D_STRIDE
-    cube_dim = DATA_3D_SIZE
-    upper_threshold = math.pow(cube_dim[0], 2) * UPPER_THRESHOLD_2D  # TODO: Support dynamic calculation
-    lower_threshold = math.pow(cube_dim[0], 2) * LOWER_THRESHOLD_2D  # TODO: Support dynamic calculation
-    task_type = TASK_TYPE
-
     projection_options = {
         "front": True,
         "back": True,
@@ -1032,7 +1020,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
     input_folders = {
         "evals": EVALS,
     }
-    if task_type == TaskType.SINGLE_COMPONENT:
+    if TASK_TYPE == TaskType.SINGLE_COMPONENT:
         input_folders.update({
             "evals_components": EVALS_COMPONENTS
         })
@@ -1043,7 +1031,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
         "evals_2d": EVALS_2D,
         "evals_3d": EVALS_3D,
     }
-    if task_type == TaskType.SINGLE_COMPONENT:
+    if TASK_TYPE == TaskType.SINGLE_COMPONENT:
         output_folders.update({
             # Evals Components
             "evals_components_2d": EVALS_COMPONENTS_2D,
@@ -1084,12 +1072,12 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
 
         eval_cubes, cubes_data = crop_mini_cubes(
             data_3d=eval_numpy_data,
-            cube_dim=cube_dim,
-            stride_dim=stride_dim,
+            cube_dim=DATA_3D_SIZE,
+            stride_dim=DATA_3D_STRIDE,
             cubes_data=True
         )
 
-        if task_type == TaskType.SINGLE_COMPONENT:
+        if TASK_TYPE == TaskType.SINGLE_COMPONENT:
             # Get index data:
             eval_component_filepath = input_filepaths["evals_components"][filepath_idx]
 
@@ -1099,11 +1087,11 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
             # Crop Mini Cubes
             eval_components_cubes = crop_mini_cubes(
                 data_3d=eval_component_numpy_data,
-                cube_dim=cube_dim,
-                stride_dim=stride_dim
+                cube_dim=DATA_3D_SIZE,
+                stride_dim=DATA_3D_STRIDE
             )
 
-        elif task_type in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
+        elif TASK_TYPE in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
             eval_component_filepath = None
             eval_components_cubes = None
 
@@ -1119,7 +1107,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
             eval_cube = eval_cubes[cube_idx]
 
             # TODO: enable 2 modes
-            if task_type == TaskType.SINGLE_COMPONENT:
+            if TASK_TYPE == TaskType.SINGLE_COMPONENT:
                 # Get index data:
                 eval_components_cube = eval_components_cubes[cube_idx]
 
@@ -1136,12 +1124,12 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
                     "eval_global_components": global_components_3d_count,
                 })
 
-            elif task_type == TaskType.LOCAL_CONNECTIVITY:
+            elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
                 eval_components_cube = None
 
                 # TASK CONDITION: NONE
 
-            elif task_type == TaskType.PATCH_HOLES:
+            elif TASK_TYPE == TaskType.PATCH_HOLES:
                 eval_components_cube = None
 
                 # TASK CONDITION: The region has holes
@@ -1163,7 +1151,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
                 eval_image = eval_projections[f"{image_view}_image"]
 
                 condition = [
-                    not (upper_threshold > np.count_nonzero(eval_image) > lower_threshold)
+                    not (UPPER_THRESHOLD_2D > np.count_nonzero(eval_image) > LOWER_THRESHOLD_2D)
                 ]
 
                 # Check Condition (If condition fails, skip the current view):
@@ -1196,7 +1184,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
                     save_filename=save_filename
                 )
 
-                if task_type == TaskType.SINGLE_COMPONENT:
+                if TASK_TYPE == TaskType.SINGLE_COMPONENT:
                     # 2D Folders - evals components
                     eval_components_2d = eval_projections[f"{image_view}_components"]
                     save_filename = os.path.join(output_folders["evals_components_2d"], output_2d_format)
@@ -1206,7 +1194,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
                         save_filename=save_filename
                     )
 
-                elif task_type in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
+                elif TASK_TYPE in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
                     pass
 
                 else:
@@ -1222,7 +1210,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
                 save_filename=save_filename
             )
 
-            if task_type == TaskType.SINGLE_COMPONENT:
+            if TASK_TYPE == TaskType.SINGLE_COMPONENT:
                 # 3D Folders - evals components
                 save_filename = os.path.join(output_folders["evals_components_3d"], output_3d_format)
                 convert_numpy_to_data_file(
@@ -1231,7 +1219,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
                     save_filename=save_filename
                 )
 
-            elif task_type == [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
+            elif TASK_TYPE == [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
                 pass
 
             else:
