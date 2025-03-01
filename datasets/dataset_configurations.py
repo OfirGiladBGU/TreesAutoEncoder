@@ -29,39 +29,39 @@ CONFIG_FILEPATH = os.path.join(ROOT_PATH, "configs", CONFIG_FILENAME)
 with open(CONFIG_FILEPATH, 'r') as stream:
     config_data: dict = yaml.safe_load(stream)
 
-# Data Configurations
-DATA_CROP_STRIDE = config_data.get("DATA_CROP_STRIDE", 16)
-DATA_CROP_SIZE = config_data.get("DATA_CROP_SIZE", 32)
-TASK_TYPE = task_type_map.get(config_data.get("TASK_TYPE", "PATCH_HOLES"))
-
-# Setups
-DATA_3D_STRIDE = (DATA_CROP_STRIDE, DATA_CROP_STRIDE, DATA_CROP_STRIDE)
-DATA_3D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE, DATA_CROP_SIZE)
-DATA_2D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE)
-
-LOWER_THRESHOLD_2D = config_data.get("LOWER_THRESHOLD_2D", 0.1)
-UPPER_THRESHOLD_2D = config_data.get("UPPER_THRESHOLD_2D", 0.9)
-
-STOP_INDEX = config_data.get("STOP_INDEX", -1)
-
-# Define dataset folder
+# Read Data Configurations
 DATASET_INPUT_FOLDER = config_data.get("DATASET_INPUT_FOLDER", None)
 DATASET_OUTPUT_FOLDER = config_data.get("DATASET_OUTPUT_FOLDER", None)
+DATA_CROP_STRIDE = config_data.get("DATA_CROP_STRIDE", 16)
+DATA_CROP_SIZE = config_data.get("DATA_CROP_SIZE", 32)
+LOWER_THRESHOLD_2D = config_data.get("LOWER_THRESHOLD_2D", 0.1)
+UPPER_THRESHOLD_2D = config_data.get("UPPER_THRESHOLD_2D", 0.9)
+TASK_TYPE = task_type_map.get(config_data.get("TASK_TYPE", "PATCH_HOLES"))
+STOP_INDEX = config_data.get("STOP_INDEX", -1)
+
+# Parse Data Configurations
 if DATASET_INPUT_FOLDER is None:
     raise ValueError("DATASET_INPUT_FOLDER is not defined in the configuration file")
 DATASET_OUTPUT_FOLDER = DATASET_INPUT_FOLDER if DATASET_OUTPUT_FOLDER is None else DATASET_OUTPUT_FOLDER
 
+DATA_3D_STRIDE = (DATA_CROP_STRIDE, DATA_CROP_STRIDE, DATA_CROP_STRIDE)
+DATA_3D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE, DATA_CROP_SIZE)
+DATA_2D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE)
+LOWER_THRESHOLD_2D = math.pow(DATA_CROP_SIZE, 2)
+
 # Data Folder Paths
 DATA_PATH = os.path.join(ROOT_PATH, "data")
-DATASET_PATH = os.path.join(DATA_PATH, DATASET_INPUT_FOLDER)
-CROPS_PATH = os.path.join(ROOT_PATH, "data_crops", DATASET_OUTPUT_FOLDER)
+DATA_CROPS_PATH = os.path.join(ROOT_PATH, "data_crops")
+DATA_RESULTS_PATH = os.path.join(ROOT_PATH, "data_results")
 
-# Data Results Folder Paths
-RESULTS_PATH = os.path.join(ROOT_PATH, "data_results", DATASET_OUTPUT_FOLDER)
-MODEL_RESULTS_PATH = os.path.join(RESULTS_PATH, "models")
-PREDICT_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "predict_pipeline")
-MERGE_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "merge_pipeline")
-VISUALIZATION_RESULTS_PATH = os.path.join(RESULTS_PATH, "visualization")
+# Dataset Folder Paths
+DATASET_PATH = os.path.join(DATA_PATH, DATASET_INPUT_FOLDER)
+CROPS_PATH = os.path.join(DATA_CROPS_PATH, DATASET_OUTPUT_FOLDER)
+RESULTS_PATH = os.path.join(DATA_RESULTS_PATH, DATASET_OUTPUT_FOLDER)
+
+#########
+# FLAGS #
+#########
 
 # Dataset 1D
 V1_1D_DATASETS = ['Trees1DV1']
@@ -77,7 +77,14 @@ V2_2D_DATASETS = ['Trees2DV2', 'Trees2DV2M']
 V1_3D_DATASETS = ['Trees3DV1']
 V2_3D_DATASETS = ['Trees3DV2', 'Trees3DV2M', 'Trees3DV3', 'Trees3DV4']
 
-# Data - Paths
+# Views Configurations
+IMAGES_6_VIEWS = ["top", "bottom", "front", "back", "left", "right"]
+PROJECTION_MODE = "visualization"  # "visualization" or "training"
+
+###################
+# DATASET - PATHS #
+###################
+
 LABELS = os.path.join(DATASET_PATH, "labels")  # TARGET
 
 PREDS = os.path.join(DATASET_PATH, "preds")  # INPUT
@@ -89,6 +96,9 @@ PREDS_FIXED_COMPONENTS = os.path.join(DATASET_PATH, "preds_fixed_components")
 EVALS = os.path.join(DATASET_PATH, "evals")
 EVALS_COMPONENTS = os.path.join(DATASET_PATH, "evals_components")
 
+#########################
+# DATASET CROPS - PATHS #
+#########################
 
 # Data 2D - Paths
 
@@ -135,18 +145,21 @@ PREDS_3D_FUSION = os.path.join(CROPS_PATH, "preds_3d_fusion")  # INPUT (Fusion d
 PREDS_FIXED_3D_FUSION = os.path.join(CROPS_PATH, "preds_fixed_3d_fusion")  # INPUT (Fusion data)
 PREDS_ADVANCED_FIXED_3D_FUSION = os.path.join(CROPS_PATH, "preds_advanced_fixed_3d_fusion")  # INPUT (Fusion data)
 
-
 # EVALUATION
 EVALS_3D = os.path.join(CROPS_PATH, "evals_3d")
 EVALS_COMPONENTS_3D = os.path.join(CROPS_PATH, "evals_components_3d")
 
-
-# Views Configurations
-IMAGES_6_VIEWS = ["top", "bottom", "front", "back", "left", "right"]
-PROJECTION_MODE = "visualization"  # "visualization" or "training"
-
-# Logs
+# LOGS
 TRAIN_LOG_PATH = os.path.join(CROPS_PATH, "train_log.csv")
 EVAL_LOG_PATH = os.path.join(CROPS_PATH, "eval_log.csv")
+
+###########################
+# DATASET RESULTS - PATHS #
+###########################
+
+MODELS_RESULTS_PATH = os.path.join(RESULTS_PATH, "models")
+PREDICT_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "predict_pipeline")
+MERGE_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "merge_pipeline")
+VISUALIZATION_RESULTS_PATH = os.path.join(RESULTS_PATH, "visualization")
 
 # TODO: Add Predict Pipeline Configs
