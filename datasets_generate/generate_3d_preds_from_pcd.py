@@ -13,7 +13,7 @@ from datasets.dataset_configurations import DATA_PATH
 from datasets.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
 
-DATASET_PATH = os.path.join(DATA_PATH, "PipeForge3DPCD")
+DATASET_PATH = os.path.join(DATA_PATH, "PipeForge3DPCDCycles")
 
 
 ###################
@@ -327,7 +327,7 @@ def generate_plane_holes_v6(numpy_data: np.ndarray):
 
     if len(white_points) > 0:
         for _ in range(num_of_centers):
-            plane_thickness = random.randint(1, 2)
+            plane_thickness = random.randint(2, 3)
 
             success = False
             while not success:
