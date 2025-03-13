@@ -69,6 +69,18 @@ class Trainer(object):
         # LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
         LOSS = loss_functions.bce_dice_loss(out=output_data, target=target_data)
 
+
+        # # Test 4
+        # fill_mask1 = (torch.abs(target_data - input_data) > 0).float()  # Area that should be filled
+        # black_mask1 = (target_data == 0).float()  # Area that should stay black
+        # keep_mask1 = 1.0 - (fill_mask1 + black_mask1)  # Area that should stay unchanged
+        #
+        # weighted_mask1 = 80.0 * fill_mask1 + 15.0 * keep_mask1 + 5.0 * black_mask1
+        # output_data_1 = output_data * weighted_mask1
+        # target_data_1 = target_data * weighted_mask1
+        #
+        # LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
+
         return LOSS
 
     def _train(self, epoch):
@@ -233,6 +245,7 @@ class Trainer(object):
 
                             fig.tight_layout()
                             plt.savefig(save_filename_2d)
+                            save_status = True
                         else:
                             data_idx = data[row_idx].squeeze().numpy()
                             # np.save(file=save_filename_3d, arr=data_idx)
@@ -241,9 +254,16 @@ class Trainer(object):
                                 source_data_filepath="dummy.npy",
                                 save_filename=save_filename_3d
                             )
-                            train_utils.data_3d_to_2d_plot(data_3d=data_idx, save_filename=save_filename_2d)
+                            save_status = train_utils.data_3d_to_2d_plot(
+                                data_3d=data_idx,
+                                save_filename=save_filename_2d
+                            )
 
-                        images_info_idx[title.lower()] = save_filename_2d
+                        # True - Plot was saved, False - Plot was not saved (Empty Image)
+                        if save_status:
+                            images_info_idx[title.lower()] = save_filename_2d
+                        else:
+                            images_info_idx[title.lower()] = None
 
                     images_info.append(images_info_idx)
 
@@ -258,10 +278,12 @@ class Trainer(object):
 
                 for col_idx in range(columns):
                     title: str = plotting_data_list[col_idx]["Title"]
-                    image_sample = Image.open(fp=f"{images_info[0][title.lower()]}.png")
-                    img_width = max(img_width, image_sample.size[0])
-                    img_height = max(img_height, image_sample.size[1])
-                    image_sample.close()
+                    image_filepath = images_info[0][title.lower()]
+                    if image_filepath is not None:
+                        image_sample = Image.open(fp=f"{image_filepath}.png")
+                        img_width = max(img_width, image_sample.size[0])
+                        img_height = max(img_height, image_sample.size[1])
+                        image_sample.close()
                     headers.append(f"{title}:")
 
                 # Create a font object (You may need to specify the path to a TTF font on your system)
@@ -300,8 +322,10 @@ class Trainer(object):
                     for col_idx in range(columns):
                         # Load image and paste into grid
                         title: str = plotting_data_list[col_idx]["Title"]
-                        data_image = Image.open(fp=f"{images_info[row_idx][title.lower()]}.png")
-                        grid_img.paste(data_image, (col_idx * img_width, header_height + row_idx * img_height))
+                        image_filepath = images_info[0][title.lower()]
+                        if image_filepath is not None:
+                            data_image = Image.open(fp=f"{image_filepath}.png")
+                            grid_img.paste(data_image, (col_idx * img_width, header_height + row_idx * img_height))
 
                 # Save the combined image
                 save_name = f"{self.args.dataset}_{batch_num}"
