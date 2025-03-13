@@ -51,15 +51,22 @@ def data_3d_to_2d_plot(data_3d: np.ndarray, save_filename, title: str = None):
 
     # Get the permutation
     i, j, k = permutation
-    ax.bar3d(nonzero_indices[i], nonzero_indices[j], nonzero_indices[k], 1, 1, 1, color='b')
 
-    # Set labels
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
+    # Check that it is not empty
+    if len(nonzero_indices[0]) > 0:
+        ax.bar3d(nonzero_indices[i], nonzero_indices[j], nonzero_indices[k], 1, 1, 1, color='b')
 
-    # Display the plot
-    if title is not None:
-        plt.title(title)
-    plt.savefig(save_filename)
-    plt.close('all')
+        # Set labels
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+
+        # Display the plot
+        if title is not None:
+            plt.title(title)
+        plt.savefig(save_filename)
+        plt.close('all')
+
+        return True
+    else:
+        return False
