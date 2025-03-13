@@ -321,7 +321,7 @@ class Trainer(object):
                     for col_idx in range(columns):
                         # Load image and paste into grid
                         title: str = plotting_data_list[col_idx]["Title"]
-                        image_filepath = images_info[0][title.lower()]
+                        image_filepath = images_info[row_idx][title.lower()]
                         if image_filepath is not None:
                             data_image = Image.open(fp=f"{image_filepath}.png")
                             grid_img.paste(data_image, (col_idx * img_width, header_height + row_idx * img_height))
