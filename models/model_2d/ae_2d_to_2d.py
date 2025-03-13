@@ -250,9 +250,9 @@ import torch.nn as nn
 class SelfAttention(nn.Module):
     def __init__(self, in_channels):
         super(SelfAttention, self).__init__()
-        self.query = nn.Conv2d(in_channels, in_channels // 8, kernel_size=1)
-        self.key = nn.Conv2d(in_channels, in_channels // 8, kernel_size=1)
-        self.value = nn.Conv2d(in_channels, in_channels, kernel_size=1)
+        self.query = nn.Conv2d(in_channels=in_channels, out_channels=in_channels // 8, kernel_size=1)
+        self.key = nn.Conv2d(in_channels=in_channels, out_channels=in_channels // 8, kernel_size=1)
+        self.value = nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=1)
         self.gamma = nn.Parameter(torch.zeros(1))
 
     # def forward(self, x):
@@ -458,40 +458,40 @@ class Network2D(nn.Module):
 
         # Encoder with larger kernels
         self.encoder1 = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2),  # (batch_size, 64, H, W)
+            nn.Conv2d(in_channels=1, out_channels=32, kernel_size=5, stride=1, padding=2),  # (batch_size, 64, H, W)
             nn.ReLU(True)
         )
         self.encoder2 = nn.Sequential(
-            nn.Conv2d(32, 64, kernel_size=5, stride=2, padding=2),  # (batch_size, 64, H/2, W/2)
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=5, stride=2, padding=2),  # (batch_size, 64, H/2, W/2)
             nn.ReLU(True)
         )
         self.encoder3 = nn.Sequential(
-            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),  # (batch_size, 128, H/4, W/4)
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),  # (batch_size, 128, H/4, W/4)
             nn.ReLU(True)
         )
         self.encoder4 = nn.Sequential(
-            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),  # (batch_size, 256, H/8, W/8)
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1),  # (batch_size, 256, H/8, W/8)
             nn.ReLU(True)
         )
 
         # Self-Attention after the encoder
-        self.attention = SelfAttention(256)
+        self.attention = SelfAttention(in_channels=256)
 
         # Decoder for reconstruction
         self.decoder1 = nn.Sequential(
-            nn.ConvTranspose2d(256, 128, kernel_size=3, stride=1, padding=1, output_padding=0),
+            nn.ConvTranspose2d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1, output_padding=0),
             nn.ReLU(True)
         )
         self.decoder2 = nn.Sequential(
-            nn.ConvTranspose2d(128, 64, kernel_size=3, stride=1, padding=1, output_padding=0),
+            nn.ConvTranspose2d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1, output_padding=0),
             nn.ReLU(True)
         )
         self.decoder3 = nn.Sequential(
-            nn.ConvTranspose2d(64, 32, kernel_size=5, stride=2, padding=2, output_padding=1),
+            nn.ConvTranspose2d(in_channels=64, out_channels=32, kernel_size=5, stride=2, padding=2, output_padding=1),
             nn.ReLU(True)
         )
         self.decoder4 = nn.Sequential(
-            nn.ConvTranspose2d(32, 1, kernel_size=5, stride=1, padding=2, output_padding=0),
+            nn.ConvTranspose2d(in_channels=32, out_channels=1, kernel_size=5, stride=1, padding=2, output_padding=0),
             nn.Sigmoid()  # Normalize output to [0, 1]
         )
 
