@@ -647,15 +647,14 @@ class Trainer(object):
             self.model.load_state_dict(torch.load(self.args.weights_filepath))
         self.model.eval()
 
-        iter_data = iter(self.test_loader)
         with torch.no_grad():
             batches_to_plot = min(len(self.test_loader), max_batches_to_plot)
-            for batch_idx in range(batches_to_plot):
-                print(f"Batch {batch_idx + 1}/{batches_to_plot}")
+            for batch_idx, batch_data in enumerate(self.test_loader):
+                batch_num = batch_idx + 1
+                print(f"Batch {batch_num}/{batches_to_plot}")
 
                 # Get the images from the test loader
-                batch_num = batch_idx + 1
-                input_data, target_data = next(iter_data)
+                input_data, target_data = batch_data
 
                 if self.args.dataset in self.datasets_for_holes:
                     target_data = input_data.clone()
@@ -758,3 +757,6 @@ class Trainer(object):
                 wandb.log(
                     data={f"Batch {batch_num} - Predict Plots": wandb.Image(plt)}
                 )
+
+                if batch_num == max_batches_to_plot:
+                    break
