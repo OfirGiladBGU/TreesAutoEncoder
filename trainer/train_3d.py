@@ -171,7 +171,7 @@ class Trainer(object):
             batches_to_plot = min(len(self.test_loader), max_batches_to_plot)
             for batch_idx, batch_data in enumerate(self.test_loader):
                 batch_num = batch_idx + 1
-                print(f"Batch {batch_num}/{batches_to_plot}")
+                print(f"[Predict] Batch: {batch_num}/{batches_to_plot}")
 
                 # Get the images from the test loader
                 input_data, target_data = batch_data
