@@ -673,7 +673,7 @@ class Trainer(object):
                     train_utils.create_2d_holes(input_data=input_data)
 
                 input_data = input_data.to(self.device)
-                target_data = target_data.to(self.device)
+                # target_data = target_data.to(self.device)
                 output_data = self.model(input_data)
 
                 if "confidence map" in getattr(self.model, "additional_tasks", list()):
@@ -691,7 +691,7 @@ class Trainer(object):
                 # Detach the images from the cuda and move them to CPU
                 if self.args.cuda is True:
                     input_data = input_data.cpu()
-                    target_data = target_data.cpu()
+                    # target_data = target_data.cpu()
                     output_data = output_data.cpu()
                     merge_data = merge_data.cpu()
 

@@ -178,7 +178,7 @@ class Trainer(object):
                 input_data, target_data = next(iter_data)
 
                 input_data = input_data.to(self.device)
-                target_data = target_data.to(self.device)
+                # target_data = target_data.to(self.device)
                 output_data = self.model(input_data)
 
                 # TODO: Threshold
@@ -191,7 +191,7 @@ class Trainer(object):
                 # Detach the images from the cuda and move them to CPU
                 if self.args.cuda:
                     input_data = input_data.cpu()
-                    target_data = target_data.cpu()
+                    # target_data = target_data.cpu()
                     output_data = output_data.cpu()
                     threshold_data = threshold_data.cpu()
                     occluded_data = occluded_data.cpu()
