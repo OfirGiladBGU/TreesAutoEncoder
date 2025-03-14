@@ -86,8 +86,11 @@ class Trainer(object):
     def _train(self, epoch):
         self.model.train()
         train_loss = 0
-        for batch_idx, batch_data in enumerate(self.train_loader):
+        batch_idx = -1
+        for batch_data in self.train_loader:
+            batch_idx += 1
             (input_data, target_data) = batch_data
+
             input_data = input_data.to(self.device)
             target_data = target_data.to(self.device)
 
@@ -121,8 +124,11 @@ class Trainer(object):
         self.model.eval()
         test_loss = 0
         with torch.no_grad():
-            for batch_idx, batch_data in enumerate(self.test_loader):
+            batch_idx = -1
+            for batch_data in self.test_loader:
+                batch_idx += 1
                 (input_data, target_data) = batch_data
+
                 input_data = input_data.to(self.device)
                 target_data = target_data.to(self.device)
 
@@ -169,7 +175,9 @@ class Trainer(object):
 
         with torch.no_grad():
             batches_to_plot = min(len(self.test_loader), max_batches_to_plot)
-            for batch_idx, batch_data in enumerate(self.test_loader):
+            batch_idx = -1
+            for batch_data in self.test_loader:
+                batch_idx += 1
                 batch_num = batch_idx + 1
                 print(f"[Predict] Batch: {batch_num}/{batches_to_plot}")
 
