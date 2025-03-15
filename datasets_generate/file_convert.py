@@ -1,4 +1,4 @@
-from datasets.dataset_utils import get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file
+from datasets.dataset_utils import get_data_file_extention, convert_data_file_to_numpy, convert_numpy_to_data_file
 
 
 if __name__ == '__main__':
@@ -14,8 +14,8 @@ if __name__ == '__main__':
         voxel_size=voxel_size
     )
 
-    input_extention = get_data_file_stem(data_filepath=data_filepath)
-    source_extention = get_data_file_stem(data_filepath=source_data_filepath)
+    input_extention = get_data_file_extention(data_filepath=data_filepath)
+    source_extention = get_data_file_extention(data_filepath=source_data_filepath)
     save_filename = data_filepath.replace(input_extention, source_extention)
     convert_numpy_to_data_file(
         numpy_data=numpy_data,
