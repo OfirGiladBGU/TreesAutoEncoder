@@ -3,7 +3,7 @@ from datasets.dataset_utils import get_data_file_extention, convert_data_file_to
 
 if __name__ == '__main__':
     # Input
-    data_filepath = r"C:\Users\ofirg\PycharmProjects\TreesAutoEncoder\datasets_generate\46_071_output.npy"
+    data_filepath = r".\46_071_pred.npy"
     source_data_filepath = r"dummy.pcd"
 
     src_kwargs = dict(
