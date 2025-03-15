@@ -26,14 +26,18 @@ def validate_data_paths(data_paths: list[str]):
             pass
 
 
+def get_data_file_extention(data_filepath: str) -> str:
+    if data_filepath.endswith(".nii.gz"):
+        data_extension = ".nii.gz"
+    else:
+        data_extension = pathlib.Path(data_filepath).suffix
+    return data_extension
+
+
 # TODO: Support for relative stem from the dataset folder (to support sub folders)
 def get_data_file_stem(data_filepath) -> str:
     data_filepath = str(data_filepath)
-    if data_filepath.endswith(".nii.gz"):
-        replace_extension = ".nii.gz"
-    else:
-        replace_extension = pathlib.Path(data_filepath).suffix
-
+    replace_extension = get_data_file_extention(data_filepath=data_filepath)
     data_filepath_stem = pathlib.Path(data_filepath.replace(replace_extension, "")).name
     return data_filepath_stem
 
@@ -50,10 +54,7 @@ def convert_data_file_to_numpy(data_filepath, **kwargs) -> np.ndarray:
         ".npy": _convert_npy_to_numpy
     }
     data_filepath = str(data_filepath)
-    if data_filepath.endswith(".nii.gz"):
-        data_extension = ".nii.gz"
-    else:
-        data_extension = pathlib.Path(data_filepath).suffix
+    data_extension = get_data_file_extention(data_filepath=data_filepath)
 
     if data_extension in extension_map.keys():
         numpy_data = extension_map[data_extension](data_filepath=data_filepath, **kwargs)
@@ -74,10 +75,7 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
         ".npy": _convert_numpy_to_npy  # Notice: Save as .npy ignores the source_data_filepath
     }
     source_data_filepath = str(source_data_filepath)
-    if source_data_filepath.endswith(".nii.gz"):
-        data_extension = ".nii.gz"
-    else:
-        data_extension = pathlib.Path(source_data_filepath).suffix
+    data_extension = get_data_file_extention(data_filepath=data_filepath)
 
     if data_extension in extension_map.keys():
         return extension_map[data_extension](
@@ -255,13 +253,15 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
     mesh_scale = kwargs.get("mesh_scale", 1.0)  # Define points scale [Original]
     voxel_size = kwargs.get("voxel_size", 2.0)  # Define voxel size (the size of each grid cell) [Original]
 
+    # Find minimum bounds
+    if source_data_filepath == "dummy.obj":
+        source_mesh = trimesh.load(source_data_filepath)
+        min_bounds = source_mesh.bounds[0]  # Extract minimum bounds from source mesh
+    else:
+        min_bounds = np.array([0, 0, 0])
+
     occupied_indices = np.argwhere(numpy_data == 1.0)  # Find occupied voxels (indices where numpy_data == 1)
-
-    source_mesh = trimesh.load(source_data_filepath)
-    min_bounds = source_mesh.bounds[0]  # Extract minimum bounds from source mesh
-
-    # Apply shift (align with the original mesh space) and scale correctly
-    centers = (occupied_indices + min_bounds)  # Apply voxel centering
+    centers = (occupied_indices + min_bounds)  # Apply shift (align with the original mesh space) and scale correctly
 
     # Create cube meshes for each occupied voxel
     cubes = []
@@ -359,13 +359,16 @@ def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, sav
     points_scale = kwargs.get("points_scale", 1.0)  # Define points scale [Original]
     voxel_size = kwargs.get("voxel_size", 1.0)  # Define voxel size (the size of each grid cell) [Original]
 
-    # Find voxel grid
-    source_pcd = o3d.io.read_point_cloud(source_data_filepath)
-    if points_scale != 1.0:
-        source_pcd.scale(scale=points_scale, center=source_pcd.get_center())  # Scale relative to center
-    source_voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=source_pcd, voxel_size=voxel_size)  # Voxelize pcd
+    # Find origin
+    if source_data_filepath == "dummy.pcd":
+        source_pcd = o3d.io.read_point_cloud(source_data_filepath)
+        if points_scale != 1.0:
+            source_pcd.scale(scale=points_scale, center=source_pcd.get_center())  # Scale relative to center
+        source_voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(input=source_pcd, voxel_size=voxel_size)  # Voxelize pcd
+        source_origin = source_voxel_grid.origin
+    else:
+        source_origin = np.array([0, 0, 0])
 
-    source_origin = source_voxel_grid.origin
     grid_indices = np.argwhere(numpy_data == 1.0)  # Find the indices of all non-zero voxels [Shape: (N, 3)]
     voxels = (grid_indices + source_origin)  # Apply the inverse shift to recover the original coordinates
 
