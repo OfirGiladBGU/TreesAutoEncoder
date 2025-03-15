@@ -180,18 +180,12 @@ def _convert_numpy_to_ply(numpy_data: np.ndarray, source_data_filepath=None, sav
     # Mesh PLY
     if source_data_filepath.endswith("mesh.ply"):
         ply_extension = "mesh.ply"
-
-        # TODO: Call _convert_numpy_to_obj to get the correct mesh
-        source_data_filepath = "SAVE AS OBJ"
         mesh = _convert_numpy_to_obj(numpy_data=numpy_data, source_data_filepath=source_data_filepath, **kwargs)
         new_ply_data = mesh
 
     # Point Cloud PLY
     elif source_data_filepath.endswith("pcd.ply"):
         ply_extension = "pcd.ply"
-
-        # TODO: Call _convert_numpy_to_pcd to get the correct pcd
-        source_data_filepath = "SAVE AS PCD"
         pcd = _convert_numpy_to_pcd(numpy_data=numpy_data, source_data_filepath=source_data_filepath, **kwargs)
         new_ply_data = pcd
     else:
