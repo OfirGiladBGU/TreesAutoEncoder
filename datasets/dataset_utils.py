@@ -254,7 +254,7 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
     voxel_size = kwargs.get("voxel_size", 2.0)  # Define voxel size (the size of each grid cell) [Original]
 
     # Find minimum bounds
-    if source_data_filepath == "dummy.obj":
+    if source_data_filepath != "dummy.obj":
         source_mesh = trimesh.load(source_data_filepath)
         min_bounds = source_mesh.bounds[0]  # Extract minimum bounds from source mesh
     else:
@@ -360,7 +360,7 @@ def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, sav
     voxel_size = kwargs.get("voxel_size", 1.0)  # Define voxel size (the size of each grid cell) [Original]
 
     # Find origin
-    if source_data_filepath == "dummy.pcd":
+    if source_data_filepath != "dummy.pcd":
         source_pcd = o3d.io.read_point_cloud(source_data_filepath)
         if points_scale != 1.0:
             source_pcd.scale(scale=points_scale, center=source_pcd.get_center())  # Scale relative to center
