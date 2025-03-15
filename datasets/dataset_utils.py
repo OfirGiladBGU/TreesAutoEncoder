@@ -75,7 +75,7 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
         ".npy": _convert_numpy_to_npy  # Notice: Save as .npy ignores the source_data_filepath
     }
     source_data_filepath = str(source_data_filepath)
-    data_extension = get_data_file_extention(data_filepath=data_filepath)
+    data_extension = get_data_file_extention(data_filepath=source_data_filepath)
 
     if data_extension in extension_map.keys():
         return extension_map[data_extension](
