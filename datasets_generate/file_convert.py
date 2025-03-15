@@ -3,15 +3,28 @@ from datasets.dataset_utils import get_data_file_extention, convert_data_file_to
 
 if __name__ == '__main__':
     # Input
-    data_filepath = r"..\data_results\PipeForge3DPCDCycles\45\45_output.npy"
-    source_data_filepath = r"..\data\PipeForge3DPCD\originals\45.pcd"
-    points_scale = 0.25
-    voxel_size = 1.0
+    data_filepath = r"C:\Users\ofirg\PycharmProjects\TreesAutoEncoder\datasets_generate\46_009_output_cnf.npy"
+    source_data_filepath = r"dummy.pcd"
+
+    kwargs = dict(
+        mesh_scale=1.0,
+        # voxel_size=2.0,
+
+        points_scale=1.0,
+        voxel_size=1.0
+    )
 
     numpy_data = convert_data_file_to_numpy(
         data_filepath=data_filepath,
-        points_scale=points_scale,
-        voxel_size=voxel_size
+        **kwargs
+    )
+
+    kwargs = dict(
+        mesh_scale=0.5,
+        # voxel_size=2.0
+
+        points_scale=0.25,
+        voxel_size=2.0
     )
 
     input_extention = get_data_file_extention(data_filepath=data_filepath)
@@ -21,6 +34,5 @@ if __name__ == '__main__':
         numpy_data=numpy_data,
         source_data_filepath=source_data_filepath,
         save_filename=save_filename,
-        points_scale=points_scale,
-        voxel_size=voxel_size
+        **kwargs
     )
