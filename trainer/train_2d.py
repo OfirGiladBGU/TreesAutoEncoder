@@ -642,9 +642,20 @@ class Trainer(object):
         model_parameters = copy.deepcopy(self.model.state_dict())
         torch.save(model_parameters, self.args.weights_filepath)
 
+    # Only supports the custom datasets
+    # Add to the other 2 custom dataset files
+    @staticmethod
+    def _print_batch_data_files(subset: torch.utils.data.Subset, data_indices):
+        subset_files = subset.dataset.data_files1
+        subset_indices = subset.indices
+        idx = -1
+        for data_idx in data_indices:
+            idx += 1
+            print(f"File Index: {idx}, Filepath: {subset_files[subset_indices[data_idx]]}")
+
     # TODO: Handle V1 and V2 cases
     def predict(self, max_batches_to_plot=2):
-        self.args.index_data = False
+        self.args.index_data = True
         print(f"[Model: '{self.model.model_name}'] Predicting...")
         os.makedirs(name=self.args.results_path, exist_ok=True)
 
@@ -662,7 +673,12 @@ class Trainer(object):
                 print(f"[Predict] Batch: {batch_num}/{batches_to_plot}")
 
                 # Get the images from the test loader
-                input_data, target_data = batch_data
+                data_indices, (input_data, target_data) = batch_data
+
+                self._print_batch_data_files(
+                    subset=self.test_loader.dataset.dataset,
+                    data_indices=data_indices
+                )
 
                 if self.args.dataset in self.datasets_for_holes:
                     target_data = input_data.clone()
