@@ -12,7 +12,7 @@ from datasets.dataset_utils import convert_data_file_to_numpy, validate_data_pat
 
 
 # 6 2D inputs + 1 3D target
-class TreesCustomDataset3DV1(Dataset):
+class TreesCustomDatasetV1(Dataset):
     def __init__(self, args: argparse.Namespace, data_paths: list, transform2d=None, transform3d=None):
         self.args = args
         self.data_paths = data_paths
@@ -92,7 +92,7 @@ class TreesCustomDataset3DV1(Dataset):
 
 
 # 1 3D input + 1 3D target
-class TreesCustomDataset3DV2(Dataset):
+class TreesCustomDatasetV2(Dataset):
     def __init__(self, args: argparse.Namespace, data_paths: list, transform3d=None):
         self.args = args
         self.data_paths = data_paths
@@ -166,32 +166,25 @@ class TreesCustomDataset3DV2(Dataset):
         return item
 
 
-class TreesCustomDataloader3D:
+class TreesCustomDataset3D:
     def __init__(self, args: argparse.Namespace, data_paths, transform2d=None, transform3d=None):
         validate_data_paths(data_paths=data_paths)
         self.args = args
         self.data_paths = data_paths
         self.transform2d = transform2d
         self.transform3d = transform3d
-        self._init_dataloader()
+        self._init_subsets()
 
-    def _init_dataloader(self):
-        """
-        Return Train and Val Dataloaders for the given parameters.
-
-        Returns:
-            train_dataloader: Train loader with 0.9 of the data.
-            val_dataloader: Val loader with 0.1 of the data.
-        """
+    def _init_subsets(self):
         if self.args.dataset in V1_3D_DATASETS:
-            tree_dataset = TreesCustomDataset3DV1(
+            trees_dataset = TreesCustomDatasetV1(
                 args=self.args,
                 data_paths=self.data_paths,
                 transform2d=self.transform2d,
                 transform3d=self.transform3d
             )
         elif self.args.dataset in V2_3D_DATASETS:
-            tree_dataset = TreesCustomDataset3DV2(
+            trees_dataset = TreesCustomDatasetV2(
                 args=self.args,
                 data_paths=self.data_paths,
                 transform3d=self.transform3d
@@ -199,35 +192,12 @@ class TreesCustomDataloader3D:
         else:
             raise Exception("Dataset not available in 'Custom Dataset 3D'")
 
-        dataset_size = len(tree_dataset)
+        dataset_size = len(trees_dataset)
         train_size = int(dataset_size * 0.9)
         val_size = dataset_size - train_size
 
-        # train_data, test_data = torch.utils.data.random_split(tree_dataset, [train_size, val_size])
+        # self.train_subset, self.test_subset = torch.utils.data.random_split(trees_dataset, [train_size, val_size])
 
         # Non random split
-        train_data = Subset(tree_dataset, indices=range(0, train_size))
-        test_data = Subset(tree_dataset, indices=range(train_size, train_size + val_size))
-
-        # Create dataloaders
-        if self.args is not None:
-            kwargs = {'num_workers': 1, 'pin_memory': True} if self.args.cuda else dict()
-            batch_size = self.args.batch_size
-        else:
-            kwargs = dict()
-            batch_size = 1
-        kwargs["batch_size"] = batch_size
-
-        self.train_dataloader = DataLoader(
-            dataset=train_data,
-            shuffle=True,
-            **kwargs
-        )
-        self.test_dataloader = DataLoader(
-            dataset=test_data,
-            shuffle=False,
-            **kwargs
-        )
-
-    def get_dataloader(self):
-        return self.train_dataloader, self.test_dataloader
+        self.train_subset = Subset(trees_dataset, indices=range(0, train_size))
+        self.test_subset = Subset(trees_dataset, indices=range(train_size, train_size + val_size))

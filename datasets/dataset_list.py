@@ -1,21 +1,62 @@
 import argparse
 import os
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
 
 from datasets.dataset_configurations import *
-from datasets.custom_datasets_1d import TreesCustomDataloader1D
-from datasets.custom_datasets_2d import TreesCustomDataloader2D
-from datasets.custom_datasets_3d import TreesCustomDataloader3D
+from datasets.custom_datasets_1d import TreesCustomDataset1D
+from datasets.custom_datasets_2d import TreesCustomDataset2D
+from datasets.custom_datasets_3d import TreesCustomDataset3D
 
+
+#########################
+# Generic Dataset Class #
+#########################
+class IndexableSubset(Dataset):
+    def __init__(self, args: argparse.Namespace, dataset):
+        self.args = args
+        self.dataset = dataset
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        data_idx = self.dataset[idx]
+        if self.args.index_data:
+            return idx, data_idx
+        else:
+            return data_idx
+
+
+class IndexableDataset(object):
+    def __init__(self, args: argparse.Namespace):
+        self.args = args
+        self.kwargs = {'num_workers': 1, 'pin_memory': True} if self.args.cuda else {}
+        self.kwargs['batch_size'] = self.args.batch_size
+
+        self.train_loader = None
+        self.test_loader = None
+
+    def init_dataloaders(self, train_subset, test_subset):
+        self.train_loader = DataLoader(
+            dataset=IndexableSubset(args=self.args, dataset=train_subset),
+            shuffle=True,
+            **self.kwargs
+        )
+        self.test_loader = DataLoader(
+            dataset=IndexableSubset(args=self.args, dataset=test_subset),
+            shuffle=False,
+            **self.kwargs
+        )
 
 ###################
 # Public Datasets #
 ###################
+class MNIST(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(MNIST, self).__init__(args=args)
 
-class MNIST(object):
-    def __init__(self, args):
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         root = os.path.join(DATA_PATH, "mnist")
@@ -23,22 +64,17 @@ class MNIST(object):
             transforms.ToTensor(),
             transforms.Resize(self.input_size[1])
         ])
-        kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
-        kwargs['batch_size'] = args.batch_size
-        self.train_loader = DataLoader(
-            dataset=datasets.MNIST(root=root, train=True, download=True, transform=transform),
-            shuffle=False,
-            **kwargs
-        )
-        self.test_loader = DataLoader(
-            dataset=datasets.MNIST(root=root, train=False, transform=transform),
-            shuffle=False,
-            **kwargs
+
+        self.init_dataloaders(
+            train_subset=datasets.MNIST(root=root, train=True, download=True, transform=transform),
+            test_subset=datasets.MNIST(root=root, train=False, transform=transform)
         )
 
 
-class EMNIST(object):
-    def __init__(self, args):
+class EMNIST(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(EMNIST, self).__init__(args=args)
+
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         root = os.path.join(DATA_PATH, "emnist")
@@ -46,22 +82,17 @@ class EMNIST(object):
             transforms.ToTensor(),
             transforms.Resize(self.input_size[1])
         ])
-        kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
-        kwargs['batch_size'] = args.batch_size
-        self.train_loader = DataLoader(
-            dataset=datasets.EMNIST(root=root, train=True, download=True, split='byclass', transform=transform),
-            shuffle=False,
-            **kwargs
-        )
-        self.test_loader = DataLoader(
-            dataset=datasets.EMNIST(root=root, train=False, split='byclass', transform=transform),
-            shuffle=False,
-            **kwargs
+
+        self.init_dataloaders(
+            train_subset=datasets.EMNIST(root=root, train=True, download=True, split='byclass', transform=transform),
+            test_subset=datasets.EMNIST(root=root, train=False, split='byclass', transform=transform)
         )
 
 
-class FashionMNIST(object):
-    def __init__(self, args):
+class FashionMNIST(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(FashionMNIST, self).__init__(args=args)
+
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         root = os.path.join(DATA_PATH, "fmnist")
@@ -69,22 +100,17 @@ class FashionMNIST(object):
             transforms.ToTensor(),
             transforms.Resize(self.input_size[1])
         ])
-        kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
-        kwargs['batch_size'] = args.batch_size
-        self.train_loader = DataLoader(
-            dataset=datasets.FashionMNIST(root=root, train=True, download=True, transform=transform),
-            shuffle=False,
-            **kwargs
-        )
-        self.test_loader = DataLoader(
-            dataset=datasets.FashionMNIST(root=root, train=False, transform=transform),
-            shuffle=False,
-            **kwargs
+
+        self.init_dataloaders(
+            train_subset=datasets.FashionMNIST(root=root, train=True, download=True, transform=transform),
+            test_subset=datasets.FashionMNIST(root=root, train=False, transform=transform)
         )
 
 
-class CIFAR10(object):
-    def __init__(self, args):
+class CIFAR10(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(CIFAR10, self).__init__(args=args)
+
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         root = os.path.join(DATA_PATH, "cifar10")
@@ -93,25 +119,20 @@ class CIFAR10(object):
             transforms.Resize(self.input_size[1]),
             transforms.Grayscale(num_output_channels=1)
         ])
-        kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
-        kwargs['batch_size'] = args.batch_size
-        self.train_loader = DataLoader(
-            dataset=datasets.CIFAR10(root=root, download=True, transform=transform),
-            shuffle=False,
-            **kwargs
-        )
-        self.test_loader = DataLoader(
-            dataset=datasets.CIFAR10(root=root, train=False, transform=transform),
-            shuffle=False,
-            **kwargs
+
+        self.init_dataloaders(
+            train_subset=datasets.CIFAR10(root=root, train=True, download=True, transform=transform),
+            test_subset=datasets.CIFAR10(root=root, train=False, transform=transform)
         )
 
 
 ##################
 # Local Datasets #
 ##################
-class TreesDataset1DV1(object):
-    def __init__(self, args):
+class TreesDataset1DV1(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(TreesDataset1DV1, self).__init__(args=args)
+
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         # src_path = PREDS_FIXED_2D
@@ -119,26 +140,38 @@ class TreesDataset1DV1(object):
         args.include_regression = False
 
         data_paths = [src_path]
-        trees_dataloader = TreesCustomDataloader1D(args=args, data_paths=data_paths)
-        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+        trees_dataset = TreesCustomDataset1D(args=args, data_paths=data_paths)
+
+        self.init_dataloaders(
+            train_subset=trees_dataset.train_subset,
+            test_subset=trees_dataset.test_subset
+        )
 
 
 # Train with 2D labels (with random holes) to predict 2D labels
-class TreesDataset2DV1S(object):
-    def __init__(self, args):
+class TreesDataset2DV1S(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(TreesDataset2DV1S, self).__init__(args=args)
+
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         src_path = LABELS_2D
         args.include_regression = False
 
         data_paths = [src_path]
-        trees_dataloader = TreesCustomDataloader2D(args=args, data_paths=data_paths)
-        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+        trees_dataset = TreesCustomDataset2D(args=args, data_paths=data_paths)
+
+        self.init_dataloaders(
+            train_subset=trees_dataset.train_subset,
+            test_subset=trees_dataset.test_subset
+        )
 
 
 # Train with 2D preds fixed to predict 2D labels
-class TreesDataset2DV1(object):
-    def __init__(self, args):
+class TreesDataset2DV1(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(TreesDataset2DV1, self).__init__(args=args)
+
         self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         # src_path = PREDS_FIXED_2D
@@ -147,13 +180,19 @@ class TreesDataset2DV1(object):
         args.include_regression = False
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader2D(args=args, data_paths=data_paths)
-        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+        trees_dataset = TreesCustomDataset2D(args=args, data_paths=data_paths)
+
+        self.init_dataloaders(
+            train_subset=trees_dataset.train_subset,
+            test_subset=trees_dataset.test_subset
+        )
 
 
 # Train with 6 2D preds fixed to predict 6 2D labels
-class TreesDataset2DV2(object):
-    def __init__(self, args):
+class TreesDataset2DV2(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(TreesDataset2DV2, self).__init__(args=args)
+
         self.input_size = (6, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         # src_path = PREDS_FIXED_2D
@@ -162,13 +201,19 @@ class TreesDataset2DV2(object):
         args.include_regression = False
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader2D(args=args, data_paths=data_paths)
-        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+        trees_dataset = TreesCustomDataset2D(args=args, data_paths=data_paths)
+
+        self.init_dataloaders(
+            train_subset=trees_dataset.train_subset,
+            test_subset=trees_dataset.test_subset
+        )
 
 
 # Train with 6 2D preds fixed to predict 6 2D labels (with regression)
-class TreesDataset2DV2M(object):
-    def __init__(self, args):
+class TreesDataset2DV2M(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(TreesDataset2DV2M, self).__init__(args=args)
+
         self.input_size = (6, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         # src_path = PREDS_FIXED_2D
@@ -177,13 +222,19 @@ class TreesDataset2DV2M(object):
         args.include_regression = True
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader2D(args=args, data_paths=data_paths)
-        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+        trees_dataset = TreesCustomDataset2D(args=args, data_paths=data_paths)
+
+        self.init_dataloaders(
+            train_subset=trees_dataset.train_subset,
+            test_subset=trees_dataset.test_subset
+        )
 
 
 # Train with 6 2D labels to predict 3D labels
-class TreesDataset3DV1(object):
-    def __init__(self, args):
+class TreesDataset3DV1(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(TreesDataset3DV1, self).__init__(args=args)
+
         self.input_size = (6, 1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
         src_path = LABELS_2D
@@ -191,13 +242,19 @@ class TreesDataset3DV1(object):
         args.include_regression = False
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader3D(args=args, data_paths=data_paths)
-        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+        trees_dataset = TreesCustomDataset3D(args=args, data_paths=data_paths)
+
+        self.init_dataloaders(
+            train_subset=trees_dataset.train_subset,
+            test_subset=trees_dataset.test_subset
+        )
 
 
 # Train with 3D reconstructed labels to predict 3D labels
-class TreesDataset3DV2(object):
-    def __init__(self, args):
+class TreesDataset3DV2(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(TreesDataset3DV2, self).__init__(args=args)
+
         self.input_size = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
         src_path = LABELS_3D_RECONSTRUCT
@@ -205,13 +262,19 @@ class TreesDataset3DV2(object):
         args.include_regression = False
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader3D(args=args, data_paths=data_paths)
-        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+        trees_dataset = TreesCustomDataset3D(args=args, data_paths=data_paths)
+
+        self.init_dataloaders(
+            train_subset=trees_dataset.train_subset,
+            test_subset=trees_dataset.test_subset
+        )
 
 
 # Train with 3D reconstructed labels to predict 3D labels (with regression)
-class TreesDataset3DV2M(object):
-    def __init__(self, args):
+class TreesDataset3DV2M(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(TreesDataset3DV2M, self).__init__(args=args)
+
         self.input_size = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
         src_path = LABELS_3D_RECONSTRUCT
@@ -219,13 +282,19 @@ class TreesDataset3DV2M(object):
         args.include_regression = True
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader3D(args=args, data_paths=data_paths)
-        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+        trees_dataset = TreesCustomDataset3D(args=args, data_paths=data_paths)
+
+        self.init_dataloaders(
+            train_subset=trees_dataset.train_subset,
+            test_subset=trees_dataset.test_subset
+        )
 
 
 # Train with 3D preds fixed fusion to predict 3D labels
-class TreesDataset3DV3(object):
-    def __init__(self, args):
+class TreesDataset3DV3(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(TreesDataset3DV3, self).__init__(args=args)
+
         self.input_size = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
         src_path = PREDS_FIXED_3D_FUSION
@@ -233,13 +302,19 @@ class TreesDataset3DV3(object):
         args.include_regression = False
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader3D(args=args, data_paths=data_paths)
-        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+        trees_dataset = TreesCustomDataset3D(args=args, data_paths=data_paths)
+
+        self.init_dataloaders(
+            train_subset=trees_dataset.train_subset,
+            test_subset=trees_dataset.test_subset
+        )
 
 
 # Train with 3D preds fixed to predict 3D labels (Direct Repair)
-class TreesDataset3DV4(object):
-    def __init__(self, args):
+class TreesDataset3DV4(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(TreesDataset3DV4, self).__init__(args=args)
+
         self.input_size = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
         src_path = PREDS_FIXED_3D
@@ -247,8 +322,12 @@ class TreesDataset3DV4(object):
         args.include_regression = False
 
         data_paths = [src_path, dst_path]
-        trees_dataloader = TreesCustomDataloader3D(args=args, data_paths=data_paths)
-        self.train_loader, self.test_loader = trees_dataloader.get_dataloader()
+        trees_dataset = TreesCustomDataset3D(args=args, data_paths=data_paths)
+
+        self.init_dataloaders(
+            train_subset=trees_dataset.train_subset,
+            test_subset=trees_dataset.test_subset
+        )
 
 
 # Init Method

@@ -86,24 +86,17 @@ class TreesCustomDatasetV1(Dataset):
         return item
 
 
-class TreesCustomDataloader1D:
+class TreesCustomDataset1D:
     def __init__(self, args: argparse.Namespace, data_paths, transform=None):
         validate_data_paths(data_paths=data_paths)
         self.args = args
         self.data_paths = data_paths
         self.transform = transform
-        self._init_dataloader()
+        self._init_subsets()
 
-    def _init_dataloader(self):
-        """
-        Return Train and Val Dataloaders for the given parameters.
-
-        Returns:
-            train_dataloader: Train loader with 0.9 of the data.
-            val_dataloader: Val loader with 0.1 of the data.
-        """
+    def _init_subsets(self):
         if self.args.dataset in V1_1D_DATASETS:
-            tree_dataset = TreesCustomDatasetV1(
+            trees_dataset = TreesCustomDatasetV1(
                 args=self.args,
                 data_paths=self.data_paths,
                 transform=self.transform
@@ -111,35 +104,12 @@ class TreesCustomDataloader1D:
         else:
             raise Exception("Dataset not available in 'Custom Dataset 1D'")
 
-        dataset_size = len(tree_dataset)
+        dataset_size = len(trees_dataset)
         train_size = int(dataset_size * 0.9)
         val_size = dataset_size - train_size
 
-        # train_data, test_data = torch.utils.data.random_split(tree_dataset, [train_size, val_size])
+        # self.train_subset, self.test_subset = torch.utils.data.random_split(trees_dataset, [train_size, val_size])
 
         # Non random split
-        train_data = Subset(tree_dataset, indices=range(0, train_size))
-        test_data = Subset(tree_dataset, indices=range(train_size, train_size + val_size))
-
-        # Create dataloaders
-        if self.args is not None:
-            kwargs = {'num_workers': 1, 'pin_memory': True} if self.args.cuda else dict()
-            batch_size = self.args.batch_size
-        else:
-            kwargs = dict()
-            batch_size = 1
-        kwargs["batch_size"] = batch_size
-
-        self.train_dataloader = DataLoader(
-            dataset=train_data,
-            shuffle=True,
-            **kwargs
-        )
-        self.test_dataloader = DataLoader(
-            dataset=test_data,
-            shuffle=False,
-            **kwargs
-        )
-
-    def get_dataloader(self):
-        return self.train_dataloader, self.test_dataloader
+        self.train_subset = Subset(trees_dataset, indices=range(0, train_size))
+        self.test_subset = Subset(trees_dataset, indices=range(train_size, train_size + val_size))

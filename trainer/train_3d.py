@@ -144,6 +144,7 @@ class Trainer(object):
         return test_avg_loss
 
     def train(self, use_weights=False):
+        self.args.index_data = False
         if use_weights is True:
             print("Loading Model Weights")
             self.model.load_state_dict(torch.load(self.args.weights_filepath))
@@ -165,6 +166,7 @@ class Trainer(object):
         torch.save(model_parameters, self.args.weights_filepath)
 
     def predict(self, max_batches_to_plot=2):
+        self.args.index_data = False
         print(f"[Model: '{self.model.model_name}'] Predicting...")
         os.makedirs(name=self.args.results_path, exist_ok=True)
 
