@@ -640,8 +640,11 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
 
 def main():
     # From Mesh to Numpy without option to go back
-    mesh_scale = 0.5
-    voxel_size = 2.0
+    # mesh_scale = 0.5
+    # voxel_size = 2.0
+
+    mesh_scale = 0.25
+    voxel_size = 1.0
 
     convert_originals_data_to_labels_data(save_as_npy=True, mesh_scale=mesh_scale, voxel_size=voxel_size)
     convert_labels_data_to_preds_data(save_as_npy=True)
