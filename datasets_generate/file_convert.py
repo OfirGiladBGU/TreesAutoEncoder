@@ -1,4 +1,4 @@
-from datasets.dataset_utils import get_data_file_extention, convert_data_file_to_numpy, convert_numpy_to_data_file
+from datasets.dataset_utils import get_data_file_extension, convert_data_file_to_numpy, convert_numpy_to_data_file
 
 
 if __name__ == '__main__':
@@ -27,9 +27,9 @@ if __name__ == '__main__':
         **src_kwargs
     )
 
-    input_extention = get_data_file_extention(data_filepath=data_filepath)
-    source_extention = get_data_file_extention(data_filepath=source_data_filepath)
-    save_filename = data_filepath.replace(input_extention, source_extention)
+    input_extension = get_data_file_extension(data_filepath=data_filepath)
+    source_extension = get_data_file_extension(data_filepath=source_data_filepath)
+    save_filename = data_filepath.replace(input_extension, source_extension)
     convert_numpy_to_data_file(
         numpy_data=numpy_data,
         source_data_filepath=source_data_filepath,

@@ -26,7 +26,7 @@ def validate_data_paths(data_paths: list[str]):
             pass
 
 
-def get_data_file_extention(data_filepath: str) -> str:
+def get_data_file_extension(data_filepath: str) -> str:
     if data_filepath.endswith(".nii.gz"):
         data_extension = ".nii.gz"
     else:
@@ -37,7 +37,7 @@ def get_data_file_extention(data_filepath: str) -> str:
 # TODO: Support for relative stem from the dataset folder (to support sub folders)
 def get_data_file_stem(data_filepath) -> str:
     data_filepath = str(data_filepath)
-    replace_extension = get_data_file_extention(data_filepath=data_filepath)
+    replace_extension = get_data_file_extension(data_filepath=data_filepath)
     data_filepath_stem = pathlib.Path(data_filepath.replace(replace_extension, "")).name
     return data_filepath_stem
 
@@ -54,7 +54,7 @@ def convert_data_file_to_numpy(data_filepath, **kwargs) -> np.ndarray:
         ".npy": _convert_npy_to_numpy
     }
     data_filepath = str(data_filepath)
-    data_extension = get_data_file_extention(data_filepath=data_filepath)
+    data_extension = get_data_file_extension(data_filepath=data_filepath)
 
     if data_extension in extension_map.keys():
         numpy_data = extension_map[data_extension](data_filepath=data_filepath, **kwargs)
@@ -75,7 +75,7 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
         ".npy": _convert_numpy_to_npy  # Notice: Save as .npy ignores the source_data_filepath
     }
     source_data_filepath = str(source_data_filepath)
-    data_extension = get_data_file_extention(data_filepath=source_data_filepath)
+    data_extension = get_data_file_extension(data_filepath=source_data_filepath)
 
     if data_extension in extension_map.keys():
         return extension_map[data_extension](
