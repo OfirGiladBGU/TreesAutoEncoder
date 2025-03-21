@@ -30,10 +30,11 @@ def main():
     model = init_model(args=args)
 
     wandb_project = "TreesAutoEncoder"
-    wandb_name = f"{model.model_name} - {datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    wandb_name = f"{model.model_name}>{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
     wandb.init(
         project=wandb_project,
-        name=wandb_name
+        name=wandb_name,
+        tags=[args.dataset, f"{args.epochs} epochs", f"size {args.input_size}"]
     )
 
     # Update save path
