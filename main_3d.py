@@ -4,7 +4,7 @@ import torch
 import datetime
 import wandb
 
-from datasets.dataset_configurations import DATASET_OUTPUT_FOLDER, MODELS_RESULTS_PATH
+from datasets.dataset_configurations import DATASET_INPUT_FOLDER, DATASET_OUTPUT_FOLDER, MODELS_RESULTS_PATH
 from datasets.dataset_list import init_dataset
 from trainer.train_3d import Trainer
 from models.model_list import init_model
@@ -34,7 +34,7 @@ def main():
     wandb.init(
         project=wandb_project,
         name=wandb_name,
-        tags=[args.dataset, f"{args.epochs} epochs", f"size {args.input_size}"]
+        tags=[args.dataset, DATASET_INPUT_FOLDER, f"{args.epochs} epochs", f"size {args.input_size}"]
     )
 
     # Update save path
