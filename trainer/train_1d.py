@@ -168,6 +168,7 @@ class Trainer(object):
 
         with torch.no_grad():
             batches_to_plot = min(len(self.test_loader), max_batches_to_plot)
+            z_fill_count = len(str(batches_to_plot))
             batch_idx = -1
             for batch_data in self.test_loader:
                 batch_idx += 1
@@ -237,8 +238,11 @@ class Trainer(object):
                 fig.tight_layout()
                 save_filename = os.path.join(self.args.results_path, f"{self.args.dataset}_{batch_num}.png")
                 plt.savefig(save_filename)
+
+                # Log the image to wandb
+                batch_num_str = str(batch_num).zfill(z_fill_count)
                 wandb.log(
-                    data={f"Batch {batch_num} - Predict Plots": wandb.Image(plt)}
+                    data={f"Batch {batch_num_str} - Predict Plots": wandb.Image(plt)}
                 )
 
                 if batch_num == max_batches_to_plot:
