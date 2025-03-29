@@ -37,30 +37,40 @@ from dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 #     convert_numpy_to_nii_gz(voxel_grid_refined, save_name="Test")
 
 
-def create_3d_reconstructions():
+def create_3d_reconstructions(include_debug):
     # Sources
     source_folders = {
-        "labels_3d": LABELS_3D,
-        "preds_3d": PREDS_3D,
-        "preds_fixed_3d": PREDS_FIXED_3D,
-        "preds_advanced_fixed_3d": PREDS_ADVANCED_FIXED_3D
+        "labels_3d": LABELS_3D
     }
 
     # Inputs
     input_folders = {
-        "labels_2d": LABELS_2D,
-        "preds_2d": PREDS_2D,
-        "preds_fixed_2d": PREDS_FIXED_2D,
-        "preds_advanced_fixed_2d": PREDS_ADVANCED_FIXED_2D
+        "labels_2d": LABELS_2D
     }
 
     # Outputs
     output_folders = {
-        "labels_3d_reconstruct": LABELS_3D_RECONSTRUCT,
-        "preds_3d_reconstruct": PREDS_3D_RECONSTRUCT,
-        "preds_fixed_3d_reconstruct": PREDS_FIXED_3D_RECONSTRUCT,
-        "preds_advanced_fixed_3d_reconstruct": PREDS_ADVANCED_FIXED_3D_RECONSTRUCT
+        "labels_3d_reconstruct": LABELS_3D_RECONSTRUCT
     }
+
+    if include_debug:
+        source_folders.update({
+            "preds_3d": PREDS_3D,
+            "preds_fixed_3d": PREDS_FIXED_3D,
+            "preds_advanced_fixed_3d": PREDS_ADVANCED_FIXED_3D
+        })
+
+        input_folders.update({
+            "preds_2d": PREDS_2D,
+            "preds_fixed_2d": PREDS_FIXED_2D,
+            "preds_advanced_fixed_2d": PREDS_ADVANCED_FIXED_2D
+        })
+
+        output_folders.update({
+            "preds_3d_reconstruct": PREDS_3D_RECONSTRUCT,
+            "preds_fixed_3d_reconstruct": PREDS_FIXED_3D_RECONSTRUCT,
+            "preds_advanced_fixed_3d_reconstruct": PREDS_ADVANCED_FIXED_3D_RECONSTRUCT
+        })
 
     # Create Output Folders
     for output_folder in output_folders.values():
@@ -68,115 +78,56 @@ def create_3d_reconstructions():
 
     # Get the filepaths
     input_filepaths = dict()
+    filepaths_found = list()
     for key, value in input_folders.items():
         input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.png"))
+        filepaths_found.append(len(input_filepaths[key]))
+
+    # Validation
+    if len(set(filepaths_found)) != 1:
+        raise ValueError("Different number of files found in the Input folders")
 
     log_data = pd.read_csv(TRAIN_LOG_PATH)
 
-    labels_image_format_list = list()
-    preds_image_format_list = list()
-    preds_fixed_image_format_list = list()
-    preds_advanced_fixed_image_format_list = list()
+    image_format_map = {
+        "labels_2d_format": list(),
+        "preds_2d_format": list(),
+        "preds_fixed_2d_format": list(),
+        "preds_advanced_fixed_2d_format": list()
+    }
 
     # Using iloc to select the first column
     for data_basename in tqdm(log_data.iloc[:, 0]):
-        labels_image_format = os.path.join(input_folders["labels_2d"], f"{data_basename}_<VIEW>.png")
-        pred_image_format = os.path.join(input_folders["preds_2d"], f"{data_basename}_<VIEW>.png")
-        pred_fixed_image_format = os.path.join(input_folders["preds_fixed_2d"], f"{data_basename}_<VIEW>.png")
-        pred_advanced_image_format = os.path.join(input_folders["preds_advanced_fixed_2d"], f"{data_basename}_<VIEW>.png")
+        for key, value in input_folders.items():
+            data_image_format = os.path.join(value, f"{data_basename}_<VIEW>.png")
+            image_format_map[f"{key}_format"].append(data_image_format)
 
-        labels_image_format_list.append(labels_image_format)
-        preds_image_format_list.append(pred_image_format)
-        preds_fixed_image_format_list.append(pred_fixed_image_format)
-        preds_advanced_fixed_image_format_list.append(pred_advanced_image_format)
-
-    filepaths_count = len(labels_image_format_list)
+    filepaths_count = len(image_format_map["labels_2d_format"])
     for filepath_idx in tqdm(range(filepaths_count)):
-        # Get index data
-        label_image_format = labels_image_format_list[filepath_idx]
-        pred_image_format = preds_image_format_list[filepath_idx]
-        pred_fixed_image_format = preds_fixed_image_format_list[filepath_idx]
-        pred_advanced_image_format = preds_advanced_fixed_image_format_list[filepath_idx]
+        for key, value in input_folders.items():
+            # Get index data
+            data_filepath = value
+            data_image_format = image_format_map[f"{key}_format"][filepath_idx]
 
-        # Label
-        label_image_relative = pathlib.Path(label_image_format).relative_to(input_folders["labels_2d"])
-        label_image_output_filepath = os.path.join(output_folders["labels_3d_reconstruct"], label_image_relative)
+            # Output path
+            data_image_relative = pathlib.Path(data_image_format).relative_to(data_filepath)
+            key_3d = key.replace("2d", "3d")
+            data_image_output_filepath = os.path.join(output_folders[f"{key_3d}_reconstruct"], data_image_relative)
 
-        # Pred
-        pred_image_relative = pathlib.Path(pred_image_format).relative_to(input_folders["preds_2d"])
-        pred_image_output_filepath = os.path.join(output_folders["preds_3d_reconstruct"], pred_image_relative)
-
-        # Pred Fixed
-        pred_fixed_image_relative = pathlib.Path(pred_fixed_image_format).relative_to(input_folders["preds_fixed_2d"])
-        pred_fixed_image_output_filepath = os.path.join(output_folders["preds_fixed_3d_reconstruct"], pred_fixed_image_relative)
-
-        # Pred Advanced Fixed
-        pred_advanced_fixed_image_relative = pathlib.Path(pred_advanced_image_format).relative_to(input_folders["preds_advanced_fixed_2d"])
-        pred_advanced_fixed_image_output_filepath = os.path.join(output_folders["preds_advanced_fixed_3d_reconstruct"], pred_advanced_fixed_image_relative)
-
-        # 3D Folders - labels
-        save_filename = label_image_output_filepath.replace("_<VIEW>.png", "")
-        label_3d_path = pathlib.Path(source_folders["labels_3d"])
-        label_3d_relative = str(label_image_relative).replace("_<VIEW>.png", "*")
-        source_label_3d_data_filepath = list(label_3d_path.rglob(label_3d_relative))[0]
-
-        label_numpy_data = reconstruct_3d_from_2d(
-            format_of_2d_images=label_image_format,
-            source_data_filepath=source_label_3d_data_filepath
-        )
-        convert_numpy_to_data_file(
-            numpy_data=label_numpy_data,
-            source_data_filepath=source_label_3d_data_filepath,
-            save_filename=save_filename
-        )
-
-        # 3D Folders - preds
-        save_filename = pred_image_output_filepath.replace("_<VIEW>.png", "")
-        pred_3d_path = pathlib.Path(source_folders["preds_3d"])
-        pred_3d_relative = str(pred_image_relative).replace("_<VIEW>.png", "*")
-        source_pred_3d_data_filepath = list(pred_3d_path.rglob(pred_3d_relative))[0]
-
-        pred_numpy_data = reconstruct_3d_from_2d(
-            format_of_2d_images=pred_image_format,
-            source_data_filepath=source_pred_3d_data_filepath
-        )
-        convert_numpy_to_data_file(
-            numpy_data=pred_numpy_data,
-            source_data_filepath=source_pred_3d_data_filepath,
-            save_filename=save_filename
-        )
-
-        # 3D Folders - preds fixed
-        save_filename = pred_fixed_image_output_filepath.replace("_<VIEW>.png", "")
-        pred_fixed_3d_path = pathlib.Path(source_folders["preds_fixed_3d"])
-        pred_fixed_3d_relative = str(pred_fixed_image_relative).replace("_<VIEW>.png", "*")
-        source_pred_fixed_3d_data_filepath = list(pred_fixed_3d_path.rglob(pred_fixed_3d_relative))[0]
-
-        pred_fixed_numpy_data = reconstruct_3d_from_2d(
-            format_of_2d_images=pred_fixed_image_format,
-            source_data_filepath=source_pred_fixed_3d_data_filepath
-        )
-        convert_numpy_to_data_file(
-            numpy_data=pred_fixed_numpy_data,
-            source_data_filepath=source_pred_fixed_3d_data_filepath,
-            save_filename=save_filename
-        )
-
-        # 3D Folders - preds advanced fixed
-        save_filename = pred_advanced_fixed_image_output_filepath.replace("_<VIEW>.png", "")
-        pred_advanced_fixed_3d_path = pathlib.Path(source_folders["preds_advanced_fixed_3d"])
-        pred_advanced_fixed_3d_relative = str(pred_advanced_fixed_image_relative).replace("_<VIEW>.png", "*")
-        source_advanced_pred_fixed_3d_data_filepath = list(pred_advanced_fixed_3d_path.rglob(pred_advanced_fixed_3d_relative))[0]
-
-        pred_advanced_fixed_numpy_data = reconstruct_3d_from_2d(
-            format_of_2d_images=pred_advanced_image_format,
-            source_data_filepath=source_advanced_pred_fixed_3d_data_filepath
-        )
-        convert_numpy_to_data_file(
-            numpy_data=pred_advanced_fixed_numpy_data,
-            source_data_filepath=source_advanced_pred_fixed_3d_data_filepath,
-            save_filename=save_filename
-        )
+            # 3D Folders
+            save_filename = data_image_output_filepath.replace("_<VIEW>.png", "")
+            data_3d_path = pathlib.Path(source_folders[key_3d])
+            data_3d_relative = str(data_image_relative).replace("_<VIEW>.png", "*")
+            source_data_3d_filepath = list(data_3d_path.rglob(data_3d_relative))[0]
+            numpy_3d_data = reconstruct_3d_from_2d(
+                format_of_2d_images=data_image_format,
+                source_data_filepath=source_data_3d_filepath
+            )
+            convert_numpy_to_data_file(
+                numpy_data=numpy_3d_data,
+                source_data_filepath=source_data_3d_filepath,
+                save_filename=save_filename
+            )
 
     # format_of_2d_images = r".\parse_labels_mini_cropped_v5\PA000005_vessel_02584_<VIEW>.png"
     # final_data_3d = reconstruct_3d_from_2d(format_of_2d_images)
@@ -208,68 +159,45 @@ def create_3d_fusions():
 
     # Get the filepaths
     input_filepaths = dict()
+    filepaths_found = list()
     for key, value in input_folders.items():
         input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.*"))
+        filepaths_found.append(len(input_filepaths[key]))
+
+    # # Validation
+    # if len(set(filepaths_found)) != 1:
+    #     raise ValueError("Different number of files found in the Input folders")
 
     filepaths_count = len(input_filepaths["labels_3d_reconstruct"])
     for filepath_idx in tqdm(range(filepaths_count)):
         # Get index data
         label_3d_reconstruct_filepath = input_filepaths["labels_3d_reconstruct"][filepath_idx]
-        pred_3d_filepath = input_filepaths["preds_3d"][filepath_idx]
-        pred_fixed_3d_filepath = input_filepaths["preds_fixed_3d"][filepath_idx]
-        pred_advanced_fixed_3d_filepath = input_filepaths["preds_advanced_fixed_3d"][filepath_idx]
-
-        # Original data
         label_3d_reconstruct_numpy_data = convert_data_file_to_numpy(data_filepath=label_3d_reconstruct_filepath).clip(min=0.0, max=1.0)
-        pred_3d_numpy_data = convert_data_file_to_numpy(data_filepath=pred_3d_filepath).clip(min=0.0, max=1.0)
-        pred_fixed_3d_numpy_data = convert_data_file_to_numpy(data_filepath=pred_fixed_3d_filepath).clip(min=0.0, max=1.0)
-        pred_advanced_fixed_3d_numpy_data = convert_data_file_to_numpy(data_filepath=pred_advanced_fixed_3d_filepath).clip(min=0.0, max=1.0)
 
-        # Fusions
-        pred_3d_fusion = np.logical_or(pred_3d_numpy_data, label_3d_reconstruct_numpy_data)
-        pred_3d_fusion = pred_3d_fusion.astype(np.float32)
+        # Loop over options
+        for key, value in input_folders.items():
+            if key == "labels_3d_reconstruct":
+                continue
 
-        pred_fixed_3d_fusion = np.logical_or(pred_fixed_3d_numpy_data, label_3d_reconstruct_numpy_data)
-        pred_fixed_3d_fusion = pred_fixed_3d_fusion.astype(np.float32)
+            # Get index data
+            data_filepath = input_filepaths[key][filepath_idx]
+            numpy_3d_data = convert_data_file_to_numpy(data_filepath=data_filepath).clip(min=0.0, max=1.0)
 
-        pred_advanced_fixed_3d_fusion = np.logical_or(pred_advanced_fixed_3d_numpy_data, label_3d_reconstruct_numpy_data)
-        pred_advanced_fixed_3d_fusion = pred_advanced_fixed_3d_fusion.astype(np.float32)
+            # Fusion
+            numpy_3d_fusion = np.logical_or(numpy_3d_data, label_3d_reconstruct_numpy_data)
+            numpy_3d_fusion = numpy_3d_fusion.astype(np.float32)
 
-        # Pred
-        pred_3d_relative = pathlib.Path(pred_3d_filepath).relative_to(input_folders["preds_3d"])
-        pred_3d_output_filepath = os.path.join(output_folders["preds_3d_fusion"], pred_3d_relative)
+            # Output path
+            numpy_3d_relative = pathlib.Path(data_filepath).relative_to(input_folders[key])
+            numpy_3d_output_filepath = os.path.join(output_folders[f"{key}_fusion"], numpy_3d_relative)
 
-        # Pred Fixed
-        pred_fixed_3d_relative = pathlib.Path(pred_fixed_3d_filepath).relative_to(input_folders["preds_fixed_3d"])
-        pred_fixed_3d_output_filepath = os.path.join(output_folders["preds_fixed_3d_fusion"], pred_fixed_3d_relative)
-
-        # Pred Advanced Fixed
-        pred_advanced_fixed_3d_relative = pathlib.Path(pred_advanced_fixed_3d_filepath).relative_to(input_folders["preds_advanced_fixed_3d"])
-        pred_advanced_fixed_3d_output_filepath = os.path.join(output_folders["preds_advanced_fixed_3d_fusion"], pred_advanced_fixed_3d_relative)
-
-        # 3D Folders - preds fusion
-        save_filename = pred_3d_output_filepath
-        convert_numpy_to_data_file(
-            numpy_data=pred_3d_fusion,
-            source_data_filepath=pred_3d_filepath,
-            save_filename=save_filename
-        )
-
-        # 3D Folders - preds fixed
-        save_filename = pred_fixed_3d_output_filepath
-        convert_numpy_to_data_file(
-            numpy_data=pred_fixed_3d_fusion,
-            source_data_filepath=pred_fixed_3d_filepath,
-            save_filename=save_filename
-        )
-
-        # 3D Folders - preds advanced fixed
-        save_filename = pred_advanced_fixed_3d_output_filepath
-        convert_numpy_to_data_file(
-            numpy_data=pred_advanced_fixed_3d_fusion,
-            source_data_filepath=pred_advanced_fixed_3d_filepath,
-            save_filename=save_filename
-        )
+            # 3D Folders - preds fusion
+            save_filename = numpy_3d_output_filepath
+            convert_numpy_to_data_file(
+                numpy_data=numpy_3d_fusion,
+                source_data_filepath=data_filepath,
+                save_filename=save_filename
+            )
 
 
 def test_2d_to_3d_and_back(data_3d_filepath, cropped_data_path):
@@ -320,7 +248,8 @@ def test_2d_to_3d_and_back(data_3d_filepath, cropped_data_path):
 
 
 def main():
-    create_3d_reconstructions()
+    include_debug = False
+    create_3d_reconstructions(include_debug=include_debug)
     create_3d_fusions()
 
     # TODO: DEBUG

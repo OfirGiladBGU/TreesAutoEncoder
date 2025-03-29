@@ -60,7 +60,7 @@ def convert_data_file_to_numpy(data_filepath, **kwargs) -> np.ndarray:
         numpy_data = extension_map[data_extension](data_filepath=data_filepath, **kwargs)
         return numpy_data
     else:
-        raise ValueError("Invalid data format")
+        raise ValueError(f"Invalid data format (Got extension: '{data_extension}')")
 
 
 def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, save_filename=None, **kwargs):
@@ -85,7 +85,7 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
             **kwargs
         )
     else:
-        raise ValueError("Invalid data format")
+        raise ValueError(f"Invalid data format (Got extension: '{data_extension}')")
 
 
 #################################
