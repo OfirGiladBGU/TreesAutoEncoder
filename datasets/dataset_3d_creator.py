@@ -164,9 +164,9 @@ def create_3d_fusions():
         input_filepaths[key] = sorted(pathlib.Path(value).rglob("*.*"))
         filepaths_found.append(len(input_filepaths[key]))
 
-    # # Validation
-    # if len(set(filepaths_found)) != 1:
-    #     raise ValueError("Different number of files found in the Input folders")
+    # Validation
+    if len(set(filepaths_found)) != 1:
+        raise ValueError("Different number of files found in the Input folders")
 
     filepaths_count = len(input_filepaths["labels_3d_reconstruct"])
     for filepath_idx in tqdm(range(filepaths_count)):
