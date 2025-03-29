@@ -151,6 +151,65 @@ class SelfAttention3D(nn.Module):
 
 # Creates Large Noise around thin connections
 
+# class Network3D(nn.Module):
+#     def __init__(self, args: argparse.Namespace):
+#         super(Network3D, self).__init__()
+#
+#         self.model_name = 'ae_3d_to_3d'
+#         self.input_size = args.input_size
+#
+#         # Encoder with larger kernels
+#         self.encoder1 = nn.Sequential(
+#             nn.Conv3d(in_channels=1, out_channels=32, kernel_size=5, stride=2, padding=2),  # (batch_size, 64, H/2, W/2)
+#             nn.ReLU(True)
+#         )
+#         self.encoder2 = nn.Sequential(
+#             nn.Conv3d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1),  # (batch_size, 128, H/4, W/4)
+#             nn.ReLU(True)
+#         )
+#         self.encoder3 = nn.Sequential(
+#             nn.Conv3d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),  # (batch_size, 256, H/8, W/8)
+#             nn.ReLU(True)
+#         )
+#
+#         # Self-Attention after the encoder
+#         # self.attention = SelfAttention3D(256)
+#
+#         # Decoder for reconstruction
+#         self.decoder1 = nn.Sequential(
+#             nn.ConvTranspose3d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1, output_padding=0),
+#             nn.ReLU(True)
+#         )
+#         self.decoder2 = nn.Sequential(
+#             nn.ConvTranspose3d(in_channels=64, out_channels=32, kernel_size=3, stride=1, padding=1, output_padding=0),
+#             nn.ReLU(True)
+#         )
+#         self.decoder3 = nn.Sequential(
+#             nn.ConvTranspose3d(in_channels=32, out_channels=1, kernel_size=5, stride=2, padding=2, output_padding=1),
+#             nn.Sigmoid()
+#         )
+#
+#     def forward(self, x):
+#         # Encoding
+#         x1 = self.encoder1(x)
+#         x2 = self.encoder2(x1)
+#         x3 = self.encoder3(x2)
+#
+#         # Attention block
+#         # x4 = self.attention(x3)
+#
+#         # Decoding for reconstruction with skip connections
+#         recon = self.decoder1(x3)
+#         recon = self.decoder2(recon + x2)  # Skip connection
+#         recon = self.decoder3(recon + x1)  # Skip connection
+#
+#         return recon
+
+
+##########
+# Test 4 #
+##########
+
 class Network3D(nn.Module):
     def __init__(self, args: argparse.Namespace):
         super(Network3D, self).__init__()
@@ -158,49 +217,27 @@ class Network3D(nn.Module):
         self.model_name = 'ae_3d_to_3d'
         self.input_size = args.input_size
 
-        # Encoder with larger kernels
-        self.encoder1 = nn.Sequential(
-            nn.Conv3d(in_channels=1, out_channels=32, kernel_size=5, stride=2, padding=2),  # (batch_size, 64, H/2, W/2)
-            nn.ReLU(True)
-        )
-        self.encoder2 = nn.Sequential(
-            nn.Conv3d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1),  # (batch_size, 128, H/4, W/4)
-            nn.ReLU(True)
-        )
-        self.encoder3 = nn.Sequential(
-            nn.Conv3d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),  # (batch_size, 256, H/8, W/8)
-            nn.ReLU(True)
+        # Single Encoder Layer
+        self.encoder = nn.Sequential(
+            nn.Conv3d(in_channels=1, out_channels=64, kernel_size=5, stride=2, padding=2),  # Downsample
+            nn.BatchNorm3d(64),
+            nn.ReLU(inplace=True)
         )
 
-        # Self-Attention after the encoder
-        # self.attention = SelfAttention3D(256)
+        # Optional: Latent bottleneck transformation
+        self.bottleneck = nn.Sequential(
+            nn.Conv3d(64, 64, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(inplace=True)
+        )
 
-        # Decoder for reconstruction
-        self.decoder1 = nn.Sequential(
-            nn.ConvTranspose3d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1, output_padding=0),
-            nn.ReLU(True)
-        )
-        self.decoder2 = nn.Sequential(
-            nn.ConvTranspose3d(in_channels=64, out_channels=32, kernel_size=3, stride=1, padding=1, output_padding=0),
-            nn.ReLU(True)
-        )
-        self.decoder3 = nn.Sequential(
-            nn.ConvTranspose3d(in_channels=32, out_channels=1, kernel_size=5, stride=2, padding=2, output_padding=1),
-            nn.Sigmoid()
+        # Single Decoder Layer
+        self.decoder = nn.Sequential(
+            nn.ConvTranspose3d(in_channels=64, out_channels=1, kernel_size=5, stride=2, padding=2, output_padding=1),
+            nn.Sigmoid()  # For normalized outputs
         )
 
     def forward(self, x):
-        # Encoding
-        x1 = self.encoder1(x)
-        x2 = self.encoder2(x1)
-        x3 = self.encoder3(x2)
-
-        # Attention block
-        # x4 = self.attention(x3)
-
-        # Decoding for reconstruction with skip connections
-        recon = self.decoder1(x3)
-        recon = self.decoder2(recon + x2)  # Skip connection
-        recon = self.decoder3(recon + x1)  # Skip connection
-
-        return recon
+        encoded = self.encoder(x)
+        latent = self.bottleneck(encoded)
+        decoded = self.decoder(latent)
+        return decoded
