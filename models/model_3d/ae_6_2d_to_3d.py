@@ -72,7 +72,10 @@ class Network3D(nn.Module):
 
 # Example usage
 if __name__ == '__main__':
-    model = MultiView3DReconstruction().cuda()
+    parser = argparse.ArgumentParser(description='2D to 3D Autoencoder')
+    args = parser.parse_args()
+    args.input_size = (6, 1, 32, 32)
+    model = Network3D(args=args).cuda()
     views = torch.randn(2, 6, 1, 32, 32).cuda()  # Dummy input for batch_size=2 and 6 views per sample
 
     scaler = GradScaler()
