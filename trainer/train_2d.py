@@ -646,7 +646,7 @@ class Trainer(object):
     # Add to the other 2 custom dataset files
     @staticmethod
     def _print_batch_data_files(subset: torch.utils.data.Subset, data_indices):
-        subset_files = subset.dataset.data_files1
+        subset_files = subset.dataset.data_files2
         subset_indices = subset.indices
         idx = -1
         for data_idx in data_indices:
@@ -654,7 +654,7 @@ class Trainer(object):
             print(f"File Index: {idx}, Filepath: {subset_files[subset_indices[data_idx]]}")
 
     # TODO: Handle V1 and V2 cases
-    def predict(self, max_batches_to_plot=2):
+    def predict(self, max_batches_to_plot=20):
         self.args.index_data = True
         print(f"[Model: '{self.model.model_name}'] Predicting...")
         os.makedirs(name=self.args.results_path, exist_ok=True)

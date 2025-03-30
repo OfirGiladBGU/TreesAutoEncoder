@@ -67,19 +67,21 @@ class Trainer(object):
 
         # Normalize by the number of pixels in the mask
         # LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
-        LOSS = loss_functions.bce_dice_loss(out=output_data, target=target_data)
+
+        # Test 4
+        # LOSS = loss_functions.bce_dice_loss(out=output_data, target=target_data)
 
 
-        # # Test 4
-        # fill_mask1 = (torch.abs(target_data - input_data) > 0).float()  # Area that should be filled
-        # black_mask1 = (target_data == 0).float()  # Area that should stay black
-        # keep_mask1 = 1.0 - (fill_mask1 + black_mask1)  # Area that should stay unchanged
-        #
-        # weighted_mask1 = 80.0 * fill_mask1 + 15.0 * keep_mask1 + 5.0 * black_mask1
-        # output_data_1 = output_data * weighted_mask1
-        # target_data_1 = target_data * weighted_mask1
-        #
-        # LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
+        # Test 5
+        fill_mask1 = (torch.abs(target_data - input_data) > 0).float()  # Area that should be filled
+        black_mask1 = (target_data == 0).float()  # Area that should stay black
+        keep_mask1 = 1.0 - (fill_mask1 + black_mask1)  # Area that should stay unchanged
+
+        weighted_mask1 = 8.0 * fill_mask1 + 1.5 * keep_mask1 + 0.5 * black_mask1
+        output_data_1 = output_data * weighted_mask1
+        target_data_1 = target_data * weighted_mask1
+
+        LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
 
         return LOSS
 
@@ -165,8 +167,19 @@ class Trainer(object):
         model_parameters = copy.deepcopy(self.model.state_dict())
         torch.save(model_parameters, self.args.weights_filepath)
 
+    # Only supports the custom datasets
+    # Add to the other 2 custom dataset files
+    @staticmethod
+    def _print_batch_data_files(subset: torch.utils.data.Subset, data_indices):
+        subset_files = subset.dataset.data_files2
+        subset_indices = subset.indices
+        idx = -1
+        for data_idx in data_indices:
+            idx += 1
+            print(f"File Index: {idx}, Filepath: {subset_files[subset_indices[data_idx]]}")
+
     def predict(self, max_batches_to_plot=2):
-        self.args.index_data = False
+        self.args.index_data = True
         print(f"[Model: '{self.model.model_name}'] Predicting...")
         os.makedirs(name=self.args.results_path, exist_ok=True)
 
@@ -185,7 +198,12 @@ class Trainer(object):
                 print(f"[Predict] Batch: {batch_num}/{batches_to_plot}")
 
                 # Get the images from the test loader
-                input_data, target_data = batch_data
+                data_indices, (input_data, target_data) = batch_data
+
+                self._print_batch_data_files(
+                    subset=self.test_loader.dataset.dataset,
+                    data_indices=data_indices
+                )
 
                 input_data = input_data.to(self.device)
                 # target_data = target_data.to(self.device)
