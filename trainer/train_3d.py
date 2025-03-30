@@ -220,7 +220,7 @@ class Trainer(object):
                 if self.args.cuda:
                     input_data = input_data.cpu()
                     # target_data = target_data.cpu()
-                    output_data = output_data.cpu()
+                    # output_data = output_data.cpu()  # Not relevant
                     threshold_data = threshold_data.cpu()
                     occluded_data = occluded_data.cpu()
                     merge_data = merge_data.cpu()
@@ -232,7 +232,7 @@ class Trainer(object):
                 plotting_data_list = [
                     {"Title": "Input", "Data": input_data},
                     {"Title": "Target", "Data": target_data},
-                    {"Title": "Output", "Data": output_data},
+                    # {"Title": "Output", "Data": output_data},  # Not relevant
                     {"Title": "Threshold", "Data": threshold_data},
                     {"Title": "Occluded", "Data": occluded_data},
                     {"Title": "Merge", "Data": merge_data}
@@ -363,7 +363,7 @@ class Trainer(object):
                 # Log the image to wandb
                 batch_num_str = str(batch_num).zfill(z_fill_count)
                 wandb.log(
-                    data={f"Batch {batch_num_str} - Predict Plots": wandb.Image(plt)}
+                    data={f"Batch {batch_num_str} - Predict Plots": wandb.Image(grid_img)}
                 )
 
                 if batch_num == max_batches_to_plot:
