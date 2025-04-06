@@ -156,10 +156,11 @@ class Trainer(object):
             for epoch in range(1, self.args.epochs + 1):
                 train_avg_loss = self._train(epoch=epoch)
                 test_avg_loss = self._test(epoch=epoch)
-                wandb.log(
-                    data={"Train Loss": train_avg_loss, "Test Loss": test_avg_loss},
-                    step=epoch
-                )
+                if self.args.wandb:
+                    wandb.log(
+                        data={"Train Loss": train_avg_loss, "Test Loss": test_avg_loss},
+                        step=epoch
+                    )
         except (KeyboardInterrupt, SystemExit):
             print("Manual Interruption")
 
@@ -361,10 +362,11 @@ class Trainer(object):
                 grid_img.save(save_filename)
 
                 # Log the image to wandb
-                batch_num_str = str(batch_num).zfill(z_fill_count)
-                wandb.log(
-                    data={f"Batch {batch_num_str} - Predict Plots": wandb.Image(grid_img)}
-                )
+                if self.args.wandb:
+                    batch_num_str = str(batch_num).zfill(z_fill_count)
+                    wandb.log(
+                        data={f"Batch {batch_num_str} - Predict Plots": wandb.Image(grid_img)}
+                    )
 
                 if batch_num == max_batches_to_plot:
                     break

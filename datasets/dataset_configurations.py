@@ -11,6 +11,13 @@ CONFIG_FILENAME = "PipeForge3DPCD.yaml"
 #####################
 # Automatic Parsing #
 #####################
+
+# Util classes
+class ModelType:
+    Model_1D = 1
+    Model_2D = 2
+    Model_3D = 3
+
 class DataType(Enum):
     TRAIN = 1
     EVAL = 2
@@ -19,6 +26,8 @@ class TaskType(Enum):
     SINGLE_COMPONENT = 1  # Assumption: Need to achieve a single component
     LOCAL_CONNECTIVITY = 2  # Assumption: Need to connect components on focused scope
     PATCH_HOLES = 3  # Assumption: Need to fix any type of holes
+
+# YAML text to Enum mapping
 task_type_map = {
     "SINGLE_COMPONENT": TaskType.SINGLE_COMPONENT,
     "LOCAL_CONNECTIVITY": TaskType.LOCAL_CONNECTIVITY,
