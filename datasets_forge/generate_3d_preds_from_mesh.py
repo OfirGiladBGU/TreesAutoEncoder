@@ -6,8 +6,8 @@ import random
 from scipy.ndimage import convolve, label, rotate
 import math
 
+from datasets_forge.dataset_configurations import DATA_PATH
 from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file
-from datasets.dataset_configurations import DATA_PATH
 
 # TODO: Debug Tools
 from datasets.dataset_visulalization import interactive_plot_2d, interactive_plot_3d

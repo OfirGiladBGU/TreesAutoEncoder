@@ -4,7 +4,8 @@ import torch
 import datetime
 import wandb
 
-from datasets.dataset_configurations import ModelType, DATASET_INPUT_FOLDER, DATASET_OUTPUT_FOLDER, MODELS_RESULTS_PATH
+from datasets_forge.dataset_configurations import (ModelType, DATASET_INPUT_FOLDER, DATASET_OUTPUT_FOLDER,
+                                                   MODELS_RESULTS_PATH)
 from datasets.dataset_list import init_dataset
 from models.model_list import init_model
 

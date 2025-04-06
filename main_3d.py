@@ -1,7 +1,7 @@
 import argparse
 import torch
 
-from datasets.dataset_configurations import ModelType
+from datasets_forge.dataset_configurations import ModelType
 from main_base import run_main
 
 

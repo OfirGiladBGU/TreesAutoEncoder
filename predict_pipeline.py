@@ -11,12 +11,12 @@ from scipy.ndimage import convolve, label
 from typing import Tuple
 from concurrent.futures import ThreadPoolExecutor
 
-from datasets.dataset_configurations import *
+from datasets_forge.dataset_configurations import *
 from datasets.dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                                     reverse_rotations, apply_threshold, connected_components_3d)
 from models.model_list import init_model
 # TODO: Debug Tools
-from datasets.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
+from datasets_visualize.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
 #########
 # Utils #

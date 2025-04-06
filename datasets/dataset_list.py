@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
 
-from datasets.dataset_configurations import *
+from datasets_forge.dataset_configurations import *
 from datasets.custom_datasets_1d import TreesCustomDataset1D
 from datasets.custom_datasets_2d import TreesCustomDataset2D
 from datasets.custom_datasets_3d import TreesCustomDataset3D

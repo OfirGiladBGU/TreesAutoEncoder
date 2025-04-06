@@ -13,7 +13,7 @@ import nibabel as nib
 import trimesh
 import open3d as o3d
 
-from datasets.dataset_configurations import IMAGES_6_VIEWS
+from datasets_forge.dataset_configurations import IMAGES_6_VIEWS
 
 
 def validate_data_paths(data_paths: list[str]):

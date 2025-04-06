@@ -6,8 +6,8 @@ from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision import transforms
 import pandas as pd
 
-from datasets.dataset_configurations import (APPLY_LOG_FILTER, TRAIN_LOG_PATH, V1_2D_DATASETS, V2_2D_DATASETS,
-                                             IMAGES_6_VIEWS)
+from datasets_forge.dataset_configurations import (APPLY_LOG_FILTER, TRAIN_LOG_PATH, V1_2D_DATASETS, V2_2D_DATASETS,
+                                                   IMAGES_6_VIEWS)
 from datasets.dataset_utils import get_data_file_stem, convert_data_file_to_numpy, validate_data_paths
 
 

@@ -5,9 +5,9 @@ import numpy as np
 import random
 import cv2
 
-from datasets.dataset_configurations import DATA_PATH
+from datasets_forge.dataset_configurations import DATA_PATH
 
-from datasets.dataset_visulalization import interactive_plot_2d
+from datasets_visualize.dataset_visulalization import interactive_plot_2d
 
 ##################
 # Generate Preds #

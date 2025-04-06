@@ -1,5 +1,5 @@
 import os
-from datasets.dataset_visulalization import convert_data_file_to_numpy, matplotlib_plot_3d, RESULTS_PATH
+from datasets_visualize.dataset_visulalization import convert_data_file_to_numpy, matplotlib_plot_3d, RESULTS_PATH
 
 
 def single_plot_3d():

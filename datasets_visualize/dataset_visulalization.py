@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 import plotly.graph_objects as go
 from skimage import color
 
-from datasets.dataset_configurations import *
+from datasets_forge.dataset_configurations import *
 from datasets.dataset_utils import convert_data_file_to_numpy, connected_components_3d
 
 ####################

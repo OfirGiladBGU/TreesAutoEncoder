@@ -7,7 +7,7 @@ from typing import Tuple, List
 from skimage import color
 import cv2
 
-from datasets.dataset_configurations import *
+from datasets_forge.dataset_configurations import *
 from datasets.dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                                     save_nii_gz_in_identity_affine, project_3d_to_2d,
                                     connected_components_3d, connected_components_2d)

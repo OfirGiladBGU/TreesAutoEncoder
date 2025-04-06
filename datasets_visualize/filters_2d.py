@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from datasets.dataset_configurations import DATA_PATH
+from datasets_forge.dataset_configurations import DATA_PATH
 
 # Load the image
 image_path = os.path.join(DATA_PATH, r"PipeForge3DPCD\labels_2d\01_back.png")
