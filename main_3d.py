@@ -29,7 +29,7 @@ if __name__ == "__main__":
                         help='Connect to Weights & Biases')
     parser.add_argument('--train', type=bool, default=True,
                         help='Perform model training')
-    parser.add_argument('--predcit', type=bool, default=True,
+    parser.add_argument('--predict', type=bool, default=True,
                         help='Perform model prediction')
 
     args = parser.parse_args()
