@@ -126,6 +126,7 @@ def matplotlib_plot_3d(data_3d: np.ndarray, save_filename, set_aspect_ratios=Fal
         color_mode = True
     else:
         color_mode = False
+    # color_mode = False
 
     # Plot the cubes based on the non-zero indices
     for permutation in list(itertools.permutations(iterable=[0, 1, 2], r=3)):
@@ -235,7 +236,7 @@ def single_plot_3d(data_3d_filepath, interactive_mode: bool = False, interactive
         numpy_3d_data = connected_components_3d(data_3d=numpy_3d_data)[0]
 
     if interactive_mode is False:
-        save_path = os.path.join(RESULTS_PATH, "single_predict")
+        save_path = os.path.join("TEST", "single_predict")
         os.makedirs(name=save_path, exist_ok=True)
         save_name = os.path.join(save_path, "result")
 

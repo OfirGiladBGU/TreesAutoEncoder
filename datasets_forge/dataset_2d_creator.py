@@ -3,17 +3,16 @@ import os
 import pathlib
 import pandas as pd
 from tqdm import tqdm
-import math
 from typing import Tuple, List
 from skimage import color
 import cv2
 
 from datasets.dataset_configurations import *
-from dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
-                           save_nii_gz_in_identity_affine, project_3d_to_2d,
-                           connected_components_3d, connected_components_2d)
+from datasets.dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
+                                    save_nii_gz_in_identity_affine, project_3d_to_2d,
+                                    connected_components_3d, connected_components_2d)
 # TODO: Debug Tools
-from dataset_visulalization import interactive_plot_2d, interactive_plot_3d
+from datasets_visualize.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
 
 #########

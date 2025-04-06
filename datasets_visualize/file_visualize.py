@@ -11,13 +11,15 @@ if __name__ == '__main__':
     vis.get_render_option().background_color = [0, 0, 0]
 
     # Visualize the files
-    if data_filepath.endswith(".obj"):
+    if data_filepath.endswith(".obj") or data_filepath.endswith("_mesh.ply"):
         mesh = o3d.io.read_triangle_mesh(data_filepath)  # For mesh files
         # o3d.visualization.draw_geometries([mesh], window_name="Mesh Viewer")
         vis.add_geometry(mesh)
-    else:
+    elif data_filepath.endswith(".pcd") or data_filepath.endswith("_pcd.ply"):
         pcd = o3d.io.read_point_cloud(data_filepath) # For point cloud files
         # o3d.visualization.draw_geometries([pcd], window_name="Point Cloud Viewer")
         vis.add_geometry(pcd)
+    else:
+        raise ValueError("Not Supported")
 
     vis.run()
