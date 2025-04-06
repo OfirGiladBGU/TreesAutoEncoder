@@ -31,6 +31,8 @@ if __name__ == "__main__":
                         help='Perform model training')
     parser.add_argument('--predict', type=bool, default=True,
                         help='Perform model prediction')
+    parser.add_argument('--max_batches_to_plot', type=int, default=20,
+                        help='Perform model prediction')
 
     args = parser.parse_args()
 

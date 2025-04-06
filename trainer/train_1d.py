@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import wandb
 from tqdm import tqdm
+import datetime
 
 from datasets_forge.dataset_configurations import V1_1D_DATASETS, IMAGES_6_VIEWS
 from datasets.dataset_utils import apply_threshold
@@ -26,12 +27,14 @@ class Trainer(object):
         self.model = model
         self.model.to(self.device)
 
+        self.start_time = datetime.datetime.now()
+
         # Get loaders
         self.train_loader = self.dataset.train_loader
         self.test_loader = self.dataset.test_loader
 
         # self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=3e-4)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=3e-4)
 
     def loss_function(self, output_data, target_data, input_data=None):
         """
@@ -84,7 +87,10 @@ class Trainer(object):
         train_avg_loss = train_loss / len(self.train_loader.dataset)
         train_accuracy = 100. * correct / len(self.train_loader.dataset)
         print(
-            '> [Train] Epoch: {}, Average Loss: {}\n'.format(epoch, train_avg_loss) +
+            '> [Train] Epoch: {}, Average Loss: {}\n'.format(
+                epoch,
+                train_avg_loss
+            ) +
             '> [Train] Epoch: {}, Accuracy: {}/{} ({:.0f}%)'.format(
                 epoch,
                 correct,
@@ -120,7 +126,11 @@ class Trainer(object):
         test_avg_loss = test_loss / len(self.test_loader.dataset)
         test_accuracy = 100. * correct / len(self.test_loader.dataset)
         print(
-            '> [Test] Epoch: {}, Average Loss: {}\n'.format(epoch, test_avg_loss) +
+            '> [Test] Epoch: {}, Average Loss: {} (Train Time Elapsed: {})\n'.format(
+                epoch,
+                test_avg_loss,
+                datetime.datetime.now() - self.start_time
+            ) +
             '> [Test] Epoch: {}, Accuracy: {}/{} ({:.0f}%)'.format(
                 epoch,
                 correct,
@@ -136,7 +146,12 @@ class Trainer(object):
             print("Loading Model Weights")
             self.model.load_state_dict(torch.load(self.args.weights_filepath))
 
-        print(f"[Model: '{self.model.model_name}'] Training...")
+        self.start_time = datetime.datetime.now()
+        start_timestamp = self.start_time.strftime('%Y-%m-%d_%H-%M-%S')
+        print(
+            f"[Model: '{self.model.model_name}'] Training... "
+            f"(Timestamp: {start_timestamp})"
+        )
         try:
             for epoch in range(1, self.args.epochs + 1):
                 train_avg_loss, train_accuracy = self._train(epoch=epoch)
@@ -150,16 +165,32 @@ class Trainer(object):
                         step=epoch
                     )
         except (KeyboardInterrupt, SystemExit):
-            print("Manual Interruption")
+            print(f"[Model: '{self.model.model_name}'] Manual Interruption!")
 
-        print("Saving Model Weights")
+        end_time = datetime.datetime.now()
+        end_timestamp = end_time.strftime('%Y-%m-%d_%H-%M-%S')
+        print(
+            f"[Model: '{self.model.model_name}'] Saving Model Weights... "
+            f"(Timestamp: {end_timestamp}, Train Time Elapsed: {end_time - self.start_time})"
+        )
         model_parameters = copy.deepcopy(self.model.state_dict())
         torch.save(model_parameters, self.args.weights_filepath)
 
+    # Only supports the custom datasets
+    # Add to the other 2 custom dataset files
+    @staticmethod
+    def _print_batch_data_files(subset: torch.utils.data.Subset, data_indices):
+        subset_files = subset.dataset.data_files1
+        # subset_files = subset.dataset.data_files2
+        subset_indices = subset.indices
+        idx = -1
+        for data_idx in data_indices:
+            idx += 1
+            print(f"File Index: {idx}, Filepath: {subset_files[subset_indices[data_idx]]}")
+
     # TODO: Handle V1 and V2 cases
     def predict(self, max_batches_to_plot=2):
-        self.args.index_data = False
-        print(f"[Model: '{self.model.model_name}'] Predicting...")
+        self.args.index_data = True
         os.makedirs(name=self.args.results_path, exist_ok=True)
 
         # Load model weights
@@ -174,21 +205,44 @@ class Trainer(object):
             for batch_data in self.test_loader:
                 batch_idx += 1
                 batch_num = batch_idx + 1
-                print(f"[Predict] Batch: {batch_num}/{batches_to_plot}")
+
+                self.start_time = datetime.datetime.now()
+                start_timestamp = self.start_time.strftime('%Y-%m-%d_%H-%M-%S')
+                print(
+                    f"[Model: '{self.model.model_name}'] Predicting Batch: {batch_num}/{batches_to_plot} "
+                    f"(Time: {start_timestamp})"
+                )
 
                 # Get the images from the test loader
-                input_data, target_data = batch_data
+                data_indices, (input_data, target_data) = batch_data
 
                 input_data = input_data.to(self.device)
-                target_data = target_data.to(self.device)
+                # target_data = target_data.to(self.device)
                 output_data = self.model(input_data)
 
+                end_time = datetime.datetime.now()
+                end_timestamp = end_time.strftime('%Y-%m-%d_%H-%M-%S')
+                print(
+                    f"[Model: '{self.model.model_name}'] Parsing Output ... "
+                    f"(Timestamp: {end_timestamp}, Train Time Elapsed: {end_time - self.start_time})"
+                )
+
+                self._print_batch_data_files(
+                    subset=self.test_loader.dataset.dataset,
+                    data_indices=data_indices
+                )
+
+                #################
+                # Parse Results #
+                #################
+
+                # TODO: Threshold
                 apply_threshold(tensor=output_data, threshold=0.5)
 
                 # Detach the images from the cuda and move them to CPU
                 if self.args.cuda is True:
                     input_data = input_data.cpu()
-                    target_data = target_data.cpu()
+                    # target_data = target_data.cpu()
                     output_data = output_data.cpu()
 
                 img_size = (64, 64, 3)  # Image size (H, W, C)

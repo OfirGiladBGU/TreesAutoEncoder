@@ -9,6 +9,7 @@ import numpy as np
 import wandb
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
+import datetime
 
 from datasets_forge.dataset_configurations import V1_3D_DATASETS, V2_3D_DATASETS, IMAGES_6_VIEWS
 from datasets.dataset_utils import apply_threshold, convert_numpy_to_data_file
@@ -26,6 +27,8 @@ class Trainer(object):
         self.dataset = dataset
         self.model = model
         self.model.to(self.device)
+
+        self.start_time = datetime.datetime.now()
 
         # Get loaders
         self.train_loader = self.dataset.train_loader
@@ -119,7 +122,12 @@ class Trainer(object):
                 )
 
         train_avg_loss = train_loss / len(self.train_loader.dataset)
-        print('> [Train] Epoch: {}, Average Loss: {}'.format(epoch, train_avg_loss))
+        print(
+            '> [Train] Epoch: {}, Average Loss: {}'.format(
+                epoch,
+                train_avg_loss
+            )
+        )
         return train_avg_loss
 
     def _test(self, epoch):
@@ -142,7 +150,13 @@ class Trainer(object):
                 ).item()
 
         test_avg_loss = test_loss / len(self.test_loader.dataset)
-        print('> [Test] Epoch: {}, Average Loss: {}'.format(epoch, test_avg_loss))
+        print(
+            '> [Test] Epoch: {}, Average Loss: {} (Train Time Elapsed: {})'.format(
+                epoch,
+                test_avg_loss,
+                datetime.datetime.now() - self.start_time
+            )
+        )
         return test_avg_loss
 
     def train(self, use_weights=False):
@@ -151,7 +165,12 @@ class Trainer(object):
             print("Loading Model Weights")
             self.model.load_state_dict(torch.load(self.args.weights_filepath))
 
-        print(f"[Model: '{self.model.model_name}'] Training...")
+        self.start_time = datetime.datetime.now()
+        start_timestamp = self.start_time.strftime('%Y-%m-%d_%H-%M-%S')
+        print(
+            f"[Model: '{self.model.model_name}'] Training... "
+            f"(Timestamp: {start_timestamp})"
+        )
         try:
             for epoch in range(1, self.args.epochs + 1):
                 train_avg_loss = self._train(epoch=epoch)
@@ -162,9 +181,14 @@ class Trainer(object):
                         step=epoch
                     )
         except (KeyboardInterrupt, SystemExit):
-            print("Manual Interruption")
+            print(f"[Model: '{self.model.model_name}'] Manual Interruption!")
 
-        print("Saving Model Weights")
+        end_time = datetime.datetime.now()
+        end_timestamp = end_time.strftime('%Y-%m-%d_%H-%M-%S')
+        print(
+            f"[Model: '{self.model.model_name}'] Saving Model Weights... "
+            f"(Timestamp: {end_timestamp}, Train Time Elapsed: {end_time - self.start_time})"
+        )
         model_parameters = copy.deepcopy(self.model.state_dict())
         torch.save(model_parameters, self.args.weights_filepath)
 
@@ -172,6 +196,7 @@ class Trainer(object):
     # Add to the other 2 custom dataset files
     @staticmethod
     def _print_batch_data_files(subset: torch.utils.data.Subset, data_indices):
+        # subset_files = subset.dataset.data_files1
         subset_files = subset.dataset.data_files2
         subset_indices = subset.indices
         idx = -1
@@ -179,9 +204,9 @@ class Trainer(object):
             idx += 1
             print(f"File Index: {idx}, Filepath: {subset_files[subset_indices[data_idx]]}")
 
+    # TODO: Handle V1 and V2 cases
     def predict(self, max_batches_to_plot=2):
         self.args.index_data = True
-        print(f"[Model: '{self.model.model_name}'] Predicting...")
         os.makedirs(name=self.args.results_path, exist_ok=True)
 
         # Load model weights
@@ -196,19 +221,36 @@ class Trainer(object):
             for batch_data in self.test_loader:
                 batch_idx += 1
                 batch_num = batch_idx + 1
-                print(f"[Predict] Batch: {batch_num}/{batches_to_plot}")
+
+                self.start_time = datetime.datetime.now()
+                start_timestamp = self.start_time.strftime('%Y-%m-%d_%H-%M-%S')
+                print(
+                    f"[Model: '{self.model.model_name}'] Predicting Batch: {batch_num}/{batches_to_plot} "
+                    f"(Time: {start_timestamp})"
+                )
 
                 # Get the images from the test loader
                 data_indices, (input_data, target_data) = batch_data
+
+                input_data = input_data.to(self.device)
+                # target_data = target_data.to(self.device)
+                output_data = self.model(input_data)
+
+                end_time = datetime.datetime.now()
+                end_timestamp = end_time.strftime('%Y-%m-%d_%H-%M-%S')
+                print(
+                    f"[Model: '{self.model.model_name}'] Parsing Output ... "
+                    f"(Timestamp: {end_timestamp}, Train Time Elapsed: {end_time - self.start_time})"
+                )
 
                 self._print_batch_data_files(
                     subset=self.test_loader.dataset.dataset,
                     data_indices=data_indices
                 )
 
-                input_data = input_data.to(self.device)
-                # target_data = target_data.to(self.device)
-                output_data = self.model(input_data)
+                #################
+                # Parse Results #
+                #################
 
                 # TODO: Threshold
                 threshold_data = output_data.clone()

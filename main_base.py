@@ -15,7 +15,8 @@ def configure_wandb(args, model):
     wandb.login(key=API_KEY)
 
     wandb_project = "TreesAutoEncoder"
-    wandb_name = f"{model.model_name}>{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    init_timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    wandb_name = f"{model.model_name}>{init_timestamp}"
     wandb.init(
         project=wandb_project,
         name=wandb_name,
@@ -57,7 +58,7 @@ def run_main(args: argparse.Namespace, model_type: ModelType):
     if args.train:
         trainer.train(use_weights=use_weights)
     if args.predict:
-        trainer.predict()
+        trainer.predict(max_batches_to_plot=args.max_batches_to_plot)
 
     if args.wandb:
         # wandb.finish()
