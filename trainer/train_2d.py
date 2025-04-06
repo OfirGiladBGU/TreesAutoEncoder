@@ -9,7 +9,7 @@ import numpy as np
 import wandb
 from tqdm import tqdm
 
-from datasets.dataset_configurations import V1_2D_DATASETS, V2_2D_DATASETS
+from datasets_forge.dataset_configurations import V1_2D_DATASETS, V2_2D_DATASETS
 from datasets.dataset_utils import apply_threshold
 from trainer import loss_functions
 from trainer import train_utils
