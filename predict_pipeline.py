@@ -707,7 +707,7 @@ if __name__ == "__main__":
     parser.add_argument('--seed', type=int, default=42, metavar='S',
                         help='random seed (default: 1)')
     parser.add_argument('--weights-filepath', type=str, default='./weights/Network.pth', metavar='N',
-                        help='Which dataset to use')
+                        help='Which weights to use')
     parser.add_argument('--model-2d', type=str, default="", metavar='N',
                         help='Which 2D model to use')
     parser.add_argument('--input-size-model-2d', type=tuple, default=(1, 32, 32), metavar='N',
