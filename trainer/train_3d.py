@@ -239,7 +239,7 @@ class Trainer(object):
                 end_time = datetime.datetime.now()
                 end_timestamp = end_time.strftime('%Y-%m-%d_%H-%M-%S')
                 print(
-                    f"[Model: '{self.model.model_name}'] Parsing Output ... "
+                    f"[Model: '{self.model.model_name}'] Parsing Output... "
                     f"(Timestamp: {end_timestamp}, Predict Time Elapsed: {end_time - self.start_time})"
                 )
 

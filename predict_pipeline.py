@@ -10,6 +10,7 @@ import pandas as pd
 from scipy.ndimage import convolve, label
 from typing import Tuple
 from concurrent.futures import ThreadPoolExecutor
+import datetime
 
 from datasets_forge.dataset_configurations import *
 from datasets.dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
@@ -448,6 +449,13 @@ def test_single_predict():
 
 
 def full_predict(data_3d_basename, data_type: DataType):
+    start_time = datetime.datetime.now()
+    start_timestamp = start_time.strftime('%Y-%m-%d_%H-%M-%S')
+    print(
+        f"[Full Predict] Started Predict... "
+        f"(Timestamp: {start_timestamp})"
+    )
+
     if data_type == DataType.TRAIN:
         log_data = pd.read_csv(TRAIN_LOG_PATH)
 
@@ -495,6 +503,85 @@ def full_predict(data_3d_basename, data_type: DataType):
         # "Join" on all tasks by waiting for each future to complete.
         for future in tqdm(futures):
             future.result()  # This will block until the future is done.
+
+    end_time = datetime.datetime.now()
+    end_timestamp = end_time.strftime('%Y-%m-%d_%H-%M-%S')
+    print(
+        f"[Full Predict] Completed Predict... "
+        f"(Timestamp: {end_timestamp}, Full Predict Time Elapsed: {end_time - start_time})"
+    )
+
+
+def full_merge(data_3d_basename, data_type: DataType):
+    start_time = datetime.datetime.now()
+    start_timestamp = start_time.strftime('%Y-%m-%d_%H-%M-%S')
+    print(
+        f"[Full Merge] Started Merge... "
+        f"(Timestamp: {start_timestamp})"
+    )
+
+    if data_type == DataType.TRAIN:
+        # TODO: create csv log per 3D object to improve search (Maybe in the future)
+        log_data = pd.read_csv(TRAIN_LOG_PATH)
+
+        # data_3d_folder = PREDS
+        data_3d_folder = PREDS_FIXED
+
+    else:
+        log_data = pd.read_csv(EVAL_LOG_PATH)
+
+        data_3d_folder = EVALS
+
+    # Input 3D object
+    data_3d_filepath = list(pathlib.Path(data_3d_folder).rglob(f"{data_3d_basename}*"))
+    if len(data_3d_filepath) == 1:
+        input_filepath = data_3d_filepath[0]
+    else:
+        raise ValueError(f"Expected 1 input files for '{data_3d_basename}' but got '{len(data_3d_filepath)}'.")
+
+    # Pipeline Predicts
+    predict_folder = PREDICT_PIPELINE_RESULTS_PATH
+    predict_filepaths = sorted(pathlib.Path(predict_folder).rglob(f"{data_3d_basename}_*_output.*"))
+
+    # Pipeline Merge output path
+    output_folder = MERGE_PIPELINE_RESULTS_PATH
+    os.makedirs(output_folder, exist_ok=True)
+
+    # Start
+    input_data = convert_data_file_to_numpy(data_filepath=input_filepath)
+
+    first_column = log_data.columns[0]
+    regex_pattern = f"{data_3d_basename}_.*"
+    matching_rows = log_data[log_data[first_column].str.contains(regex_pattern, regex=True, na=False)]
+
+    # Process the matching rows
+    for row_idx, (_, row) in enumerate(matching_rows.iterrows()):
+        predict_filepath = predict_filepaths[row_idx]
+        predict_data = convert_data_file_to_numpy(data_filepath=predict_filepath)
+
+        start_x, end_x, start_y, end_y, start_z, end_z = (
+            row["start_x"], row["end_x"], row["start_y"], row["end_y"], row["start_z"], row["end_z"]
+        )
+
+        size_x, size_y, size_z = end_x - start_x, end_y - start_y, end_z - start_z
+
+        # Perform the logical OR operation on the specific region
+        input_data[start_x:end_x, start_y:end_y, start_z:end_z] = np.logical_or(
+            input_data[start_x:end_x, start_y:end_y, start_z:end_z],
+            predict_data[:size_x, :size_y, :size_z]
+        )
+
+    # Save the final result
+    save_filename = os.path.join(output_folder, data_3d_basename)
+    convert_numpy_to_data_file(numpy_data=input_data, source_data_filepath=input_filepath,
+                               save_filename=save_filename)
+
+    end_time = datetime.datetime.now()
+    end_timestamp = end_time.strftime('%Y-%m-%d_%H-%M-%S')
+    print(
+        f"[Full Merge] Completed Merge... "
+        f"(Timestamp: {end_timestamp}, Full Merge Time Elapsed: {end_time - start_time})"
+    )
 
 
 def calculate_dice_scores(data_3d_basename):
@@ -562,64 +649,6 @@ def calculate_dice_scores(data_3d_basename):
     )
 
 
-def full_merge(data_3d_basename, data_type: DataType):
-    if data_type == DataType.TRAIN:
-        # TODO: create csv log per 3D object to improve search (Maybe in the future)
-        log_data = pd.read_csv(TRAIN_LOG_PATH)
-
-        # data_3d_folder = PREDS
-        data_3d_folder = PREDS_FIXED
-
-    else:
-        log_data = pd.read_csv(EVAL_LOG_PATH)
-
-        data_3d_folder = EVALS
-
-    # Input 3D object
-    data_3d_filepath = list(pathlib.Path(data_3d_folder).rglob(f"{data_3d_basename}*"))
-    if len(data_3d_filepath) == 1:
-        input_filepath = data_3d_filepath[0]
-    else:
-        raise ValueError(f"Expected 1 input files for '{data_3d_basename}' but got '{len(data_3d_filepath)}'.")
-
-    # Pipeline Predicts
-    predict_folder = PREDICT_PIPELINE_RESULTS_PATH
-    predict_filepaths = sorted(pathlib.Path(predict_folder).rglob(f"{data_3d_basename}_*_output.*"))
-
-    # Pipeline Merge output path
-    output_folder = MERGE_PIPELINE_RESULTS_PATH
-    os.makedirs(output_folder, exist_ok=True)
-
-    # Start
-    input_data = convert_data_file_to_numpy(data_filepath=input_filepath)
-
-    first_column = log_data.columns[0]
-    regex_pattern = f"{data_3d_basename}_.*"
-    matching_rows = log_data[log_data[first_column].str.contains(regex_pattern, regex=True, na=False)]
-
-    # Process the matching rows
-    for row_idx, (_, row) in enumerate(matching_rows.iterrows()):
-        predict_filepath = predict_filepaths[row_idx]
-        predict_data = convert_data_file_to_numpy(data_filepath=predict_filepath)
-
-        start_x, end_x, start_y, end_y, start_z, end_z = (
-            row["start_x"], row["end_x"], row["start_y"], row["end_y"], row["start_z"], row["end_z"]
-        )
-
-        size_x, size_y, size_z = end_x - start_x, end_y - start_y, end_z - start_z
-
-        # Perform the logical OR operation on the specific region
-        input_data[start_x:end_x, start_y:end_y, start_z:end_z] = np.logical_or(
-            input_data[start_x:end_x, start_y:end_y, start_z:end_z],
-            predict_data[:size_x, :size_y, :size_z]
-        )
-
-    # Save the final result
-    save_filename = os.path.join(output_folder, data_3d_basename)
-    convert_numpy_to_data_file(numpy_data=input_data, source_data_filepath=input_filepath,
-                               save_filename=save_filename)
-
-
 def main():
     # 1. Use model 1 on the `parse_preds_mini_cropped_v5`
     # 2. Save the results in `parse_fixed_mini_cropped_v5`
@@ -634,7 +663,7 @@ def main():
     # TODO: Requires Model Init
     # test_single_predict()
 
-    data_3d_basename = "01"
+    data_3d_basename = "Hospital CUP 1in3"
     data_type = DataType.TRAIN
     full_predict(data_3d_basename=data_3d_basename, data_type=data_type)
     full_merge(data_3d_basename=data_3d_basename, data_type=data_type)
