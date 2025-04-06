@@ -10,7 +10,7 @@ from datasets_forge.dataset_configurations import DATA_PATH
 from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file
 
 # TODO: Debug Tools
-from datasets.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
+from datasets_visualize.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
 
 DATASET_PATH = os.path.join(DATA_PATH, "PipeForge3DPCDCycles")
