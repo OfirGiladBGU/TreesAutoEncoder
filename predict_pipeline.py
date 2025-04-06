@@ -413,20 +413,32 @@ def single_predict(data_3d_filepath, data_2d_folder, log_data=None, enable_debug
 
 
 def test_single_predict():
+    data_type = DataType.TRAIN
+    # data_type = DataType.EVAL
+
     # input_filename = "PA000005_11899.nii.gz"
     # input_filename = "PA000078_11996.nii.gz"
     # input_filename = "47_52.npy"
     input_filename = "PA000005_0650.nii.gz"
-    log_data = pd.read_csv(TRAIN_LOG_PATH)
 
-    # data_3d_folder = PREDS_3D
-    # data_2d_folder = PREDS_2D
+    if data_type == DataType.TRAIN:
+        log_data = pd.read_csv(TRAIN_LOG_PATH)
 
-    data_3d_folder = PREDS_FIXED_3D
-    data_2d_folder = PREDS_FIXED_2D
-    # data_2d_folder = PREDS_ADVANCED_FIXED_2D
+        # data_3d_folder = PREDS_3D
+        # data_2d_folder = PREDS_2D
 
+        data_3d_folder = PREDS_FIXED_3D
+        data_2d_folder = PREDS_FIXED_2D
 
+        # data_3d_folder = PREDS_ADVANCED_FIXED_3D
+        # data_2d_folder = PREDS_ADVANCED_FIXED_2D
+    else:
+        log_data = pd.read_csv(EVAL_LOG_PATH)
+
+        data_3d_folder = EVALS_3D
+        data_2d_folder = EVALS_3D
+
+    # Get filepaths
     data_3d_filepath = os.path.join(data_3d_folder, input_filename)
     single_predict(
         data_3d_filepath=data_3d_filepath,
@@ -435,16 +447,25 @@ def test_single_predict():
     )
 
 
-def full_predict(data_3d_basename):
-    log_data = pd.read_csv(TRAIN_LOG_PATH)
+def full_predict(data_3d_basename, data_type: DataType):
+    if data_type == DataType.TRAIN:
+        log_data = pd.read_csv(TRAIN_LOG_PATH)
 
-    # data_3d_folder = PREDS_3D
-    # data_2d_folder = PREDS_2D
+        # data_3d_folder = PREDS_3D
+        # data_2d_folder = PREDS_2D
 
-    data_3d_folder = PREDS_FIXED_3D
-    data_2d_folder = PREDS_FIXED_2D
-    # data_2d_folder = PREDS_ADVANCED_FIXED_2D
+        # data_3d_folder = PREDS_FIXED_3D
+        # data_2d_folder = PREDS_FIXED_2D
 
+        data_3d_folder = PREDS_ADVANCED_FIXED_3D
+        data_2d_folder = PREDS_ADVANCED_FIXED_2D
+    else:
+        log_data = pd.read_csv(EVAL_LOG_PATH)
+
+        data_3d_folder = EVALS_3D
+        data_2d_folder = EVALS_3D
+
+    # Get filepaths
     data_3d_filepaths = pathlib.Path(data_3d_folder).rglob(f"{data_3d_basename}_*.*")
     data_3d_filepaths = sorted(data_3d_filepaths)
 
@@ -474,6 +495,7 @@ def full_predict(data_3d_basename):
         # "Join" on all tasks by waiting for each future to complete.
         for future in tqdm(futures):
             future.result()  # This will block until the future is done.
+
 
 def calculate_dice_scores(data_3d_basename):
     #################
@@ -540,10 +562,18 @@ def calculate_dice_scores(data_3d_basename):
     )
 
 
-def full_merge(data_3d_basename):
-    # data_3d_folder = PREDS
+def full_merge(data_3d_basename, data_type: DataType):
+    if data_type == DataType.TRAIN:
+        # TODO: create csv log per 3D object to improve search (Maybe in the future)
+        log_data = pd.read_csv(TRAIN_LOG_PATH)
 
-    data_3d_folder = PREDS_FIXED
+        # data_3d_folder = PREDS
+        data_3d_folder = PREDS_FIXED
+
+    else:
+        log_data = pd.read_csv(EVAL_LOG_PATH)
+
+        data_3d_folder = EVALS
 
     # Input 3D object
     data_3d_filepath = list(pathlib.Path(data_3d_folder).rglob(f"{data_3d_basename}*"))
@@ -551,10 +581,6 @@ def full_merge(data_3d_basename):
         input_filepath = data_3d_filepath[0]
     else:
         raise ValueError(f"Expected 1 input files for '{data_3d_basename}' but got '{len(data_3d_filepath)}'.")
-
-    # Log file
-    # TODO: create csv log per 3D object to improve search
-    log_path = TRAIN_LOG_PATH
 
     # Pipeline Predicts
     predict_folder = PREDICT_PIPELINE_RESULTS_PATH
@@ -566,7 +592,6 @@ def full_merge(data_3d_basename):
 
     # Start
     input_data = convert_data_file_to_numpy(data_filepath=input_filepath)
-    log_data = pd.read_csv(log_path)
 
     first_column = log_data.columns[0]
     regex_pattern = f"{data_3d_basename}_.*"
@@ -610,8 +635,9 @@ def main():
     # test_single_predict()
 
     data_3d_basename = "01"
-    full_predict(data_3d_basename=data_3d_basename)
-    full_merge(data_3d_basename=data_3d_basename)
+    data_type = DataType.TRAIN
+    full_predict(data_3d_basename=data_3d_basename, data_type=data_type)
+    full_merge(data_3d_basename=data_3d_basename, data_type=data_type)
     # calculate_dice_scores(data_3d_basename=data_3d_basename)
 
 

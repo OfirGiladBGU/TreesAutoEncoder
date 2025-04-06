@@ -11,6 +11,9 @@ CONFIG_FILENAME = "PipeForge3DPCD.yaml"
 #####################
 # Automatic Parsing #
 #####################
+class DataType(Enum):
+    TRAIN = 1
+    EVAL = 2
 
 class TaskType(Enum):
     SINGLE_COMPONENT = 1  # Assumption: Need to achieve a single component
