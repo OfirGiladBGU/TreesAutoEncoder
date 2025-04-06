@@ -240,7 +240,7 @@ class Trainer(object):
                 end_timestamp = end_time.strftime('%Y-%m-%d_%H-%M-%S')
                 print(
                     f"[Model: '{self.model.model_name}'] Parsing Output ... "
-                    f"(Timestamp: {end_timestamp}, Train Time Elapsed: {end_time - self.start_time})"
+                    f"(Timestamp: {end_timestamp}, Predict Time Elapsed: {end_time - self.start_time})"
                 )
 
                 self._print_batch_data_files(
