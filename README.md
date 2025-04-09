@@ -1,19 +1,39 @@
 # Trees Auto Encoder
 
 
+## Config info:
+```
+# Parse2022:
+None
+
+# PipeForge3D - OBJ:
+mesh_scale = 0.25
+voxel_size = 1.0
+
+# PipeForge3D - PCD:
+points_scale = 0.25
+voxel_size = 1.0
+
+# Hospital CUP:
+points_scale = ~50
+voxel_size = 1.0
+```
+
+
 ## How to create the datasets:
 
 1. Put the `parse2022` dataset with the `labels` and `preds` data on the path: `/parse2022`
    1. `labels` - The ground truth
    2. `preds` - The predicted labels by a model
-2. To build the `dataset_2d` run `dataset_2d_creator` script: [dataset_2d_creator.py](datasets/dataset_2d_creator.py)
-3. To build the `dataset_3d` run  `dataset_3d_creator` script: [dataset_3d_creator.py](datasets/Fdataset_3d_creator.py)
+2. To build the `dataset_2d` run `dataset_2d_creator` script: [dataset_2d_creator.py](datasets_forge/dataset_2d_creator.py)
+3. To build the `dataset_3d` run  `dataset_3d_creator` script: [dataset_3d_creator.py](datasets_forge/dataset_3d_creator.py)
 
 
 ## How To train the models:
 
-1. To train the `model_2d` run `main_2d` script: [main_2d.py](main_2d.py)
-2. To train the `model_3d` run `main_3d` script: [main_3d.py](main_3d.py)
+1. To train the `model_1d` run `main_1d` script: [main_1d.py](main_1d.py)
+2. To train the `model_2d` run `main_2d` script: [main_2d.py](main_2d.py)
+3. To train the `model_3d` run `main_3d` script: [main_3d.py](main_3d.py)
 
 
 ## How to test the full pipeline:
