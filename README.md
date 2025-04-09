@@ -22,7 +22,7 @@ voxel_size = 1.0
 
 ## How to create the datasets:
 
-1. Put the `parse2022` dataset with the `labels` and `preds` data on the path: `/parse2022`
+1. Put the `parse2022` dataset with the `labels` and `preds` data on the path: `./data/parse2022`
    1. `labels` - The ground truth
    2. `preds` - The predicted labels by a model
 2. To build the `dataset_2d` run `dataset_2d_creator` script: [dataset_2d_creator.py](datasets_forge/dataset_2d_creator.py)
