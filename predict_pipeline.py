@@ -84,6 +84,7 @@ def postprocess_2d(data_3d_filepath: str,
     apply_threshold(tensor=data_2d_output, threshold=0.2, keep_values=True)
 
     if log_data is not None:
+        # Replace invalid data with original input
         for idx, image_view in enumerate(IMAGES_6_VIEWS):
             view_advance_valid = f"{image_view}_advance_valid"
             if view_advance_valid in log_data.columns:
@@ -94,7 +95,8 @@ def postprocess_2d(data_3d_filepath: str,
                 else:
                     pass
             else:
-                print(f"No '{view_advance_valid}' column in log csv data")
+                # print(f"No '{view_advance_valid}' column in log csv data")
+                pass  # For Eval data there is no advance_valid column
     else:  # TODO: use classifier results
         pass
 
@@ -312,6 +314,7 @@ def init_pipeline_models():
         args.model = args.model_2d
         model_2d = init_model(args=args)
         model_2d_weights_filepath = f"{filepath}_{DATASET_OUTPUT_FOLDER}_{model_2d.model_name}{ext}"
+        # TODO: model_2d_weights_filepath = f"{filepath}_PipeForge3DPCD_{model_2d.model_name}{ext}"
         model_2d.load_state_dict(torch.load(model_2d_weights_filepath))
         model_2d.eval()
         model_2d.to(args.device)
@@ -325,6 +328,7 @@ def init_pipeline_models():
         args.model = args.model_3d
         model_3d = init_model(args=args)
         model_3d_weights_filepath = f"{filepath}_{DATASET_OUTPUT_FOLDER}_{model_3d.model_name}{ext}"
+        # TODO: model_3d_weights_filepath = f"{filepath}_PipeForge3DPCD_{model_3d.model_name}{ext}"
         model_3d.load_state_dict(torch.load(model_3d_weights_filepath))
         model_3d.eval()
         model_3d.to(args.device)
@@ -352,6 +356,8 @@ def single_predict(data_3d_filepath, data_2d_folder, log_data=None, enable_debug
         apply_batch_merge = False
 
     with torch.no_grad():
+        # TODO: Support 1D model TBD
+
         ##############
         # 2D Section #
         ##############
@@ -459,14 +465,14 @@ def full_predict(data_3d_basename, data_type: DataType):
     if data_type == DataType.TRAIN:
         log_data = pd.read_csv(TRAIN_LOG_PATH)
 
-        # data_3d_folder = PREDS_3D
-        # data_2d_folder = PREDS_2D
+        data_3d_folder = PREDS_3D
+        data_2d_folder = PREDS_2D
 
         # data_3d_folder = PREDS_FIXED_3D
         # data_2d_folder = PREDS_FIXED_2D
 
-        data_3d_folder = PREDS_ADVANCED_FIXED_3D
-        data_2d_folder = PREDS_ADVANCED_FIXED_2D
+        # data_3d_folder = PREDS_ADVANCED_FIXED_3D
+        # data_2d_folder = PREDS_ADVANCED_FIXED_2D
     else:
         log_data = pd.read_csv(EVAL_LOG_PATH)
 
@@ -649,12 +655,16 @@ def calculate_dice_scores(data_3d_basename):
     )
 
 
+def full_folder_predict(data_3d_basename, data_type: DataType):
+    raise NotImplementedError
+
+
 def main():
-    # 1. Use model 1 on the `parse_preds_mini_cropped_v5`
-    # 2. Save the results in `parse_fixed_mini_cropped_v5`
-    # 3. Perform direct `logical or` on `parse_fixed_mini_cropped_v5` to get `parse_prefixed_mini_cropped_3d_v5`
-    # 4. Use model 2 on the `parse_prefixed_mini_cropped_3d_v5`
-    # 5. Save the results in `parse_fixed_mini_cropped_3d_v5`
+    # 1. Use model 1 on the `parse_preds_mini_cropped`
+    # 2. Save the results in `parse_fixed_mini_cropped`
+    # 3. Perform direct `logical or` on `parse_fixed_mini_cropped` to get `parse_prefixed_mini_cropped_3d`
+    # 4. Use model 2 on the `parse_prefixed_mini_cropped_3d`
+    # 5. Save the results in `parse_fixed_mini_cropped_3d`
     # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
     # 7. Perform cleanup on the final result (delete small connected components)
 
@@ -671,36 +681,21 @@ def main():
 
 
 if __name__ == "__main__":
-    # 0:
-    # TODO: try to find the best noise filters
+    # RELEVANT TODOs
+    # TODO: Add script for full folder predict
 
-    # 1
-    # TODO: validate that after the 2d projection reconstruct, applying again 2d projection give the same results (artificial tests) - DONE
-    # TODO: add plots of 3d data in matplotlib - DONE
-    # TODO: creation of the 3d data of fixed 3d pred - DONE
+    # TODO: test loss functions to the 2D model
 
+    # TODO: try to improve cleanup of 2D models results for the 3D fusion - TBD
+    # TODO: support the classification models - TBD
+    # TODO: add 45 degrees projections - Removed
 
-    # 2
-    # TODO: add 45 degrees projections
-    # TODO: use the ground truth to create create a holes - DONE
-
-
-    # 3
-    # TODO: create the classification models
-
-
-    # TODO: try to find new loss functions to the 2D model
-    # TODO: try to check how to cleanup the 2D models results on the 3D fusion
-    # TODO: find a way to organize the plots - DONE
-    # TODO: test the full pipeline on the fixed preds - DONE
-
-    # completed
-    # TODO: run test of different inputs (100 examples)
-    # TODO: show best 10, worst 10, median 10
 
     # TODO: another note for next stage:
     # 1. Add label on number of connected components inside a 3D volume
     # 2. Use the label to add a task for the model to predict the number of connected components
+
+
     parser = argparse.ArgumentParser(description='Main function to run the prediction pipeline')
     parser.add_argument('--no-cuda', action='store_true', default=True,
                         help='enables CUDA predicting')
