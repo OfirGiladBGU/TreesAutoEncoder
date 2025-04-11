@@ -199,7 +199,7 @@ def global_components_noise_filter(data_3d_original: np.ndarray, data_3d_input: 
 
     # Identify connected components in delta_cube
     if base_mode == 0:
-        data_delta = (data_3d_input - data_3d_original > 0.5).astype(np.uint8)
+        delta_data = (data_3d_input - data_3d_original > 0.5).astype(np.uint8)
 
         delta_labeled, delta_num_components = connected_components_3d(
             data_3d=delta_data,
@@ -225,7 +225,7 @@ def global_components_noise_filter(data_3d_original: np.ndarray, data_3d_input: 
 
         # Add the component only if it does not increase the number of connected components
         if base_mode == 0:
-            if not (components_before =< components_after):
+            if not (components_before <= components_after):
                 filtered_data_3d = temp_fix
         else:
             if not (components_before < components_after):
