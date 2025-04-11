@@ -461,15 +461,26 @@ def connected_components_2d(data_2d: np.ndarray) -> Tuple[np.ndarray, int]:
 
 # 3D #
 
-def components_continuity_3d_single_component(label_cube, pred_advanced_fixed_cube,
-                                              reverse_mode: bool = False) -> np.ndarray:
+def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advanced_fixed_cube: np.ndarray,
+                                              reverse_mode: bool = False,
+                                              connectivity_type: int = 26,
+                                              delta_mode: int = 0) -> np.ndarray:
     running_pred_advanced_fixed_cube = pred_advanced_fixed_cube.copy().astype(np.uint8)
 
-    # Calculate the connected components for the preds fixed
-    delta_cube = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.uint8)
+    if delta_mode == 0:
+        # Calculate the connected components for the preds fixed
+        delta_cube = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.uint8)
 
-    # Identify connected components in delta_cube
-    delta_labeled, delta_num_components = connected_components_3d(data_3d=delta_cube)
+        # Identify connected components in delta_cube
+        delta_labeled, delta_num_components = connected_components_3d(
+            data_3d=delta_cube,
+            connectivity_type=connectivity_type
+        )
+    else:
+        delta_labeled, delta_num_components = connected_components_3d(
+            data_3d=pred_advanced_fixed_cube,
+            connectivity_type=connectivity_type
+        )
 
     # Iterate through connected components in delta_cube
     for component_label in range(1, delta_num_components + 1):
@@ -488,7 +499,10 @@ def components_continuity_3d_single_component(label_cube, pred_advanced_fixed_cu
             condition = not (components_before > components_after)
         else:
             # Add the component only if it does not increase the number of connected components [Predict Pipeline]
-            condition = not (components_before <= components_after)
+            if delta_mode == 0:
+                condition = not (components_before <= components_after)
+            else:
+                condition = not (components_before < components_after)
 
         if condition:
             running_pred_advanced_fixed_cube = temp_fixed
@@ -496,14 +510,15 @@ def components_continuity_3d_single_component(label_cube, pred_advanced_fixed_cu
             # print("Debug")
             pass
 
+    # Update the pred_advanced_fixed_cube
     pred_advanced_fixed_cube = running_pred_advanced_fixed_cube.astype(pred_advanced_fixed_cube.dtype)
-    # Calculate the connected components for the advanced fixed preds
-    # pred_advanced_fixed_components_cube = connected_components_3d(data_3d=pred_advanced_fixed_cube)[0]
+
     return pred_advanced_fixed_cube
 
 
-def components_continuity_3d_local_connectivity(label_cube, pred_advanced_fixed_cube,
-                                                reverse_mode: bool = False) -> np.ndarray:
+def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_advanced_fixed_cube: np.ndarray,
+                                                reverse_mode: bool = False,
+                                                connectivity_type: int = 26) -> np.ndarray:
     padding_size = 2
 
     running_pred_advanced_fixed_cube = pred_advanced_fixed_cube.copy().astype(np.uint8)
@@ -512,7 +527,10 @@ def components_continuity_3d_local_connectivity(label_cube, pred_advanced_fixed_
     delta_cube = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.uint8)
 
     # Identify connected components in delta_cube
-    delta_labeled, delta_num_components = connected_components_3d(data_3d=delta_cube)
+    delta_labeled, delta_num_components = connected_components_3d(
+        data_3d=delta_cube,
+        connectivity_type=connectivity_type
+    )
 
     # Iterate through connected components in delta_cube
     for component_label in range(1, delta_num_components + 1):
@@ -566,15 +584,15 @@ def components_continuity_3d_local_connectivity(label_cube, pred_advanced_fixed_
             # print("Debug")
             pass
 
+    # Update the pred_advanced_fixed_cube
     pred_advanced_fixed_cube = running_pred_advanced_fixed_cube.astype(pred_advanced_fixed_cube.dtype)
-    # pred_advanced_fixed_components_cube = None
 
     return pred_advanced_fixed_cube
 
 
 # 2D #
 
-def components_continuity_2d_single_component(label_image, pred_advanced_fixed_image,
+def components_continuity_2d_single_component(label_image: np.ndarray, pred_advanced_fixed_image: np.ndarray,
                                               reverse_mode: bool = False) -> np.ndarray:
     # Calculate the connected components for the preds fixed
     label_binary = (label_image > 0).astype(np.uint8)
@@ -611,18 +629,11 @@ def components_continuity_2d_single_component(label_image, pred_advanced_fixed_i
 
     # Update the pred_advanced_fixed_image
     pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0)
-    # pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
-    #
-    # # Calculate the connected components for the advanced fixed preds
-    # labeled_delta = connected_components_2d(data_2d=pred_advanced_fixed_image)[0]
-    # pred_advanced_fixed_projections[f"{image_view}_components"] = color.label2rgb(
-    #     label=labeled_delta
-    # ) * 255
 
     return pred_advanced_fixed_image
 
 
-def components_continuity_2d_local_connectivity(label_image, pred_advanced_fixed_image,
+def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_advanced_fixed_image: np.ndarray,
                                                 reverse_mode: bool = False) -> np.ndarray:
     padding_size = 1
 
@@ -682,7 +693,6 @@ def components_continuity_2d_local_connectivity(label_image, pred_advanced_fixed
 
     # Update the pred_advanced_fixed_image
     pred_advanced_fixed_image = np.where(pred_fixed_advanced_binary > 0, label_image, 0.0)
-    # pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
 
     return pred_advanced_fixed_image
 
