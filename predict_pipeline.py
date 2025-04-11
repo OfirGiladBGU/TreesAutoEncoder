@@ -328,6 +328,7 @@ def preprocess_3d(data_3d_filepath: str,
         data_3d_input = data_3d_reconstruct
 
     # TODO: validate filters!!!
+    # TODO: add the noise filters as revers continutiy fix for both 2D and 3D!
     if apply_noise_filter is True:
         # Parse2022
         # data_3d_input = naive_noise_filter(data_3d_original=pred_3d, data_3d_input=data_3d_input)
