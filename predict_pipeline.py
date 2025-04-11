@@ -145,35 +145,73 @@ def debug_2d(data_3d_filepath: str, data_2d_input: torch.Tensor, data_2d_output:
     plt.close(fig)
 
 
-def noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
+def naive_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
     # V1
 
-    # # Define a 3x3x3 kernel that will be used to check 6 neighbors (left, right, up, down, front, back)
-    # kernel = np.zeros((3, 3, 3), dtype=int)
-    #
-    # # Set only the 6-connectivity neighbors in the kernel
-    # kernel[1, 0, 1] = 1  # Left
-    # kernel[1, 2, 1] = 1  # Right
-    # kernel[0, 1, 1] = 1  # Up
-    # kernel[2, 1, 1] = 1  # Down
-    # kernel[1, 1, 0] = 1  # Front
-    # kernel[1, 1, 2] = 1  # Back
-    #
-    # # Convolve the binary array with the kernel to count neighbors
-    # neighbors_count = convolve(data_3d_input, kernel, mode='constant', cval=0)
-    #
-    # # Filter out voxels that have no neighboring voxels (i.e., neighbors_count == 0)
-    # filtered_data_3d_input = np.where((data_3d_input == 1) & (neighbors_count > 0), 1, 0)
-    #
-    # return filtered_data_3d_input
+    # Define a 3x3x3 kernel that will be used to check 6 neighbors (left, right, up, down, front, back)
+    kernel = np.zeros((3, 3, 3), dtype=int)
 
+    # Set only the 6-connectivity neighbors in the kernel
+    kernel[1, 0, 1] = 1  # Left
+    kernel[1, 2, 1] = 1  # Right
+    kernel[0, 1, 1] = 1  # Up
+    kernel[2, 1, 1] = 1  # Down
+    kernel[1, 1, 0] = 1  # Front
+    kernel[1, 1, 2] = 1  # Back
+
+    # Convolve the binary array with the kernel to count neighbors
+    neighbors_count = convolve(data_3d_input, kernel, mode='constant', cval=0)
+
+    # Filter out voxels that have no neighboring voxels (i.e., neighbors_count == 0)
+    filtered_data_3d_input = np.where((data_3d_input == 1) & (neighbors_count > 0), 1, 0)
+
+    return filtered_data_3d_input
+
+    # filtered_data_3d = data_3d_original.copy().astype(np.uint8)
+    # data_delta = (data_3d_input - data_3d_original > 0.5).astype(np.uint8)
+    #
+    # # Identify connected components in data_delta
+    # delta_labeled, delta_num_components = connected_components_3d(data_3d=data_delta, connectivity_type=6)
+    #
+    # # Iterate through connected components in data_delta
+    # for component_label in range(1, delta_num_components + 1):
+    #     # Create a mask for the current connected component
+    #     component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
+    #
+    #     # Check the number of connected components before adding the mask
+    #     components_before = connected_components_3d(filtered_data_3d)[1]
+    #
+    #     # Create a temporary data with the component added
+    #     temp_fix = np.logical_or(filtered_data_3d, component_mask)
+    #     components_after = connected_components_3d(temp_fix)[1]
+    #
+    #     # Add the component only if it does decrease the number of connected components
+    #     if components_after < components_before:
+    #         filtered_data_3d = temp_fix
+    #
+    # filtered_data_3d = filtered_data_3d.astype(np.float32)
+    # return filtered_data_3d
+
+
+def global_components_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray,
+                                   base_mode: int = 0, connectivity_type: int = 26):
     filtered_data_3d = data_3d_original.copy().astype(np.uint8)
-    data_delta = (data_3d_input - data_3d_original > 0.5).astype(np.uint8)
 
-    # Identify connected components in data_delta
-    delta_labeled, delta_num_components = connected_components_3d(data_3d=data_delta, connectivity_type=6)
+    # Identify connected components in delta_cube
+    if base_mode == 0:
+        data_delta = (data_3d_input - data_3d_original > 0.5).astype(np.uint8)
 
-    # Iterate through connected components in data_delta
+        delta_labeled, delta_num_components = connected_components_3d(
+            data_3d=delta_data,
+            connectivity_type=connectivity_type
+        )
+    else:
+        delta_labeled, delta_num_components = connected_components_3d(
+            data_3d=data_3d_input,
+            connectivity_type=connectivity_type
+        )
+
+    # Iterate through connected components in delta_cube
     for component_label in range(1, delta_num_components + 1):
         # Create a mask for the current connected component
         component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
@@ -185,41 +223,80 @@ def noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
         temp_fix = np.logical_or(filtered_data_3d, component_mask)
         components_after = connected_components_3d(temp_fix)[1]
 
-        # Add the component only if it does decrease the number of connected components
-        if components_after < components_before:
-            filtered_data_3d = temp_fix
+        # Add the component only if it does not increase the number of connected components
+        if base_mode == 0:
+            if not (components_before =< components_after):
+                filtered_data_3d = temp_fix
+        else:
+            if not (components_before < components_after):
+                filtered_data_3d = temp_fix
 
-    filtered_data_3d = filtered_data_3d.astype(np.float32)
+    filtered_data_3d = filtered_data_3d.astype(data_3d_original.dtype)
     return filtered_data_3d
 
 
-def components_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
+def local_components_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray,
+                                  connectivity_type: int = 26):
+    # TODO: Check completion in the local scope
+    padding_size = 2
+
     filtered_data_3d = data_3d_original.copy().astype(np.uint8)
-    # data_delta = (data_3d_input - data_3d_original > 0.5).astype(np.uint8)
 
-    # Identify connected components in
-    delta_labeled, delta_num_components = connected_components_3d(data_3d=data_3d_input, connectivity_type=6)
+    # Calculate the connected components for the delta cube
+    delta_cube = ((data_3d_input - data_3d_original) > 0.5).astype(np.uint8)
 
-    # Iterate through connected components in binary_delta
+    # Identify connected components in delta_cube
+    delta_labeled, delta_num_components = connected_components_3d(
+        data_3d=delta_cube,
+        connectivity_type=connectivity_type
+    )
+
+    # Iterate through connected components in delta_cube
     for component_label in range(1, delta_num_components + 1):
         # Create a mask for the current connected component
         component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
 
+        # ROI - cropped area between the component mask: top, bottom, left, right, front, back
+        coords = np.argwhere(component_mask > 0)
+
+        # Get bounding box in 3D
+        top = np.min(coords[:, 0])  # Minimum row index (Y-axis)
+        bottom = np.max(coords[:, 0])  # Maximum row index (Y-axis)
+
+        left = np.min(coords[:, 1])  # Minimum column index (X-axis)
+        right = np.max(coords[:, 1])  # Maximum column index (X-axis)
+
+        front = np.min(coords[:, 2])  # Minimum depth index (Z-axis)
+        back = np.max(coords[:, 2])  # Maximum depth index (Z-axis)
+
+        # Ensure ROI is within valid bounds (2 voxels padding)
+        min_y = max(0, top - padding_size)
+        max_y = min(bottom + padding_size + 1, filtered_data_3d.shape[0])
+
+        min_x = max(0, left - padding_size)
+        max_x = min(right + padding_size + 1, filtered_data_3d.shape[1])
+
+        min_z = max(0, front - padding_size)
+        max_z = min(back + padding_size + 1, filtered_data_3d.shape[2])
+
         # Check the number of connected components before adding the mask
-        components_before = connected_components_3d(filtered_data_3d)[1]
+        roi_temp_before = filtered_data_3d[min_y:max_y, min_x:max_x, min_z:max_z]
+        components_before = connected_components_3d(data_3d=roi_temp_before, connectivity_type=6)[1]
 
-        # Create a temporary data with the component added
+        # Create a temporary image with the component added
         temp_fix = np.logical_or(filtered_data_3d, component_mask)
-        components_after = connected_components_3d(temp_fix)[1]
+        roi_temp_after = temp_fix[min_y:max_y, min_x:max_x, min_z:max_z]
+        components_after = connected_components_3d(data_3d=roi_temp_after, connectivity_type=6)[1]
 
-        # Add the component only if it does decrease the number of connected components
-        # if components_after < components_before:
-        #     filtered_data_3d = temp_fix
-
-        if components_after <= components_before:
+        # Add the component only if it does not increase the number of connected components
+        # (on the local scope)
+        if not (components_before < components_after):
             filtered_data_3d = temp_fix
 
-    filtered_data_3d = filtered_data_3d.astype(np.float32)
+        # if not (components_before =< components_after):
+        #     filtered_data_3d = temp_fix
+
+    filtered_data_3d = filtered_data_3d.astype(data_3d_original.dtype)
     return filtered_data_3d
 
 
@@ -250,12 +327,23 @@ def preprocess_3d(data_3d_filepath: str,
     else:
         data_3d_input = data_3d_reconstruct
 
+    # TODO: validate filters!!!
     if apply_noise_filter is True:
         # Parse2022
-        # data_3d_input = noise_filter(data_3d_original=pred_3d, data_3d_input=data_3d_input)
+        # data_3d_input = naive_noise_filter(data_3d_original=pred_3d, data_3d_input=data_3d_input)
+
+        # data_3d_input = global_components_noise_filter(
+        #     data_3d_original=pred_3d, data_3d_input=data_3d_input, base_mode=0, connectivity_type=6
+        # )
 
         # Pipes3D
-        data_3d_input = components_noise_filter(data_3d_original=pred_3d, data_3d_input=data_3d_input)
+        data_3d_input = global_components_noise_filter(
+            data_3d_original=pred_3d, data_3d_input=data_3d_input, base_mode=1, connectivity_type=6
+        )
+
+        # data_3d_input = local_components_noise_filter(
+        #     data_3d_original=pred_3d, data_3d_input=data_3d_input, connectivity_type=26
+        # )
 
     data_3d_input = torch.Tensor(data_3d_input).unsqueeze(0).unsqueeze(0)
     return data_3d_input

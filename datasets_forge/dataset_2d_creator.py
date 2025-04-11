@@ -673,7 +673,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                     # Check the number of connected components before adding the mask
                     components_before = connected_components_3d(data_3d=pred_advanced_fixed_cube)[1]
 
-                    # Create a temporary image with the component added
+                    # Create a temporary data with the component added
                     temp_fixed = np.logical_or(pred_advanced_fixed_cube, component_mask)
                     components_after = connected_components_3d(data_3d=temp_fixed)[1]
 
@@ -690,6 +690,8 @@ def create_2d_projections_and_3d_cubes_for_training():
 
 
             elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
+                padding_size = 2
+
                 # Calculate the connected components for the preds fixed
                 delta_cube = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.uint8)
 
@@ -715,20 +717,20 @@ def create_2d_projections_and_3d_cubes_for_training():
                     back = np.max(coords[:, 2])  # Maximum depth index (Z-axis)
 
                     # Ensure ROI is within valid bounds (2 voxels padding)
-                    min_x = max(0, left - 2)
-                    max_x = min(right + 3, pred_advanced_fixed_cube.shape[1])
+                    min_y = max(0, top - padding_size)
+                    max_y = min(bottom + padding_size + 1, pred_advanced_fixed_cube.shape[0])
 
-                    min_y = max(0, top - 2)
-                    max_y = min(bottom + 3, pred_advanced_fixed_cube.shape[0])
+                    min_x = max(0, left - padding_size)
+                    max_x = min(right + padding_size + 1, pred_advanced_fixed_cube.shape[1])
 
-                    min_z = max(0, front - 2)
-                    max_z = min(back + 3, pred_advanced_fixed_cube.shape[2])
+                    min_z = max(0, front - padding_size)
+                    max_z = min(back + padding_size + 1, pred_advanced_fixed_cube.shape[2])
 
                     # Check the number of connected components before adding the mask
                     roi_temp_before = pred_advanced_fixed_cube[min_y:max_y, min_x:max_x, min_z:max_z]
                     components_before = connected_components_3d(data_3d=roi_temp_before, connectivity_type=6)[1]
 
-                    # Create a temporary image with the component added
+                    # Create a temporary data with the component added
                     temp_fix = np.logical_or(pred_advanced_fixed_cube, component_mask)
                     roi_temp_after = temp_fix[min_y:max_y, min_x:max_x, min_z:max_z]
                     components_after = connected_components_3d(data_3d=roi_temp_after, connectivity_type=6)[1]
@@ -814,6 +816,8 @@ def create_2d_projections_and_3d_cubes_for_training():
                     ) * 255
 
                 elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
+                    padding_size = 1
+
                     # Calculate the connected components for the preds fixed
                     label_binary = (label_image > 0).astype(np.uint8)
                     pred_fixed_advanced_binary = (pred_advanced_fixed_image > 0).astype(np.uint8)
@@ -831,17 +835,18 @@ def create_2d_projections_and_3d_cubes_for_training():
                         coords = np.argwhere(component_mask > 0)
 
                         # Get bounding box
-                        left = np.min(coords[:, 1])  # Minimum column index
-                        right = np.max(coords[:, 1])  # Maximum column index
                         top = np.min(coords[:, 0])  # Minimum row index
                         bottom = np.max(coords[:, 0])  # Maximum row index
 
-                        # Ensure ROI is within valid bounds (1 pixel padding)
-                        min_x = max(0, left - 1)
-                        max_x = min(right + 2, pred_fixed_advanced_binary.shape[1])
+                        left = np.min(coords[:, 1])  # Minimum column index
+                        right = np.max(coords[:, 1])  # Maximum column index
 
-                        min_y = max(0, top - 1)
-                        max_y = min(bottom + 2, pred_fixed_advanced_binary.shape[0])
+                        # Ensure ROI is within valid bounds (1 pixel padding)
+                        min_y = max(0, top - padding_size)
+                        max_y = min(bottom + padding_size + 1, pred_fixed_advanced_binary.shape[0])
+
+                        min_x = max(0, left - padding_size)
+                        max_x = min(right + padding_size + 1, pred_fixed_advanced_binary.shape[1])
 
                         # Check the number of connected components before adding the mask
                         roi_temp_before = pred_fixed_advanced_binary[min_y:max_y, min_x:max_x]
