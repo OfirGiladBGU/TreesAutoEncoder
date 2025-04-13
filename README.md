@@ -138,3 +138,7 @@ https://github.com/crowsonkb/vgg_loss/tree/master
 ## Tool to visualize cube:
 
 https://3dthis.com/photocube.htm
+
+## Configuring Matplotlib Plots to Display in a Window in PyCharm
+
+See the following question on [Stack Overflow](https://stackoverflow.com/questions/57015206/how-to-show-matplotlib-plots-in-a-window-instead-of-sciview-toolbar-in-pycharm-p).
