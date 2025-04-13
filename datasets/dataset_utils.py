@@ -465,9 +465,9 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
                                               reverse_mode: bool = False,
                                               connectivity_type: int = 26,
                                               delta_mode: int = 0) -> np.ndarray:
-    running_pred_advanced_fixed_cube = pred_advanced_fixed_cube.copy().astype(np.uint8)
-
     if delta_mode == 0:
+        running_pred_advanced_fixed_cube = pred_advanced_fixed_cube.copy().astype(np.uint8)
+
         # Calculate the connected components for the preds fixed
         delta_cube = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.uint8)
 
@@ -477,6 +477,8 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
             connectivity_type=connectivity_type
         )
     else:
+        running_pred_advanced_fixed_cube = label_cube.copy().astype(np.uint8)
+
         delta_labeled, delta_num_components = connected_components_3d(
             data_3d=pred_advanced_fixed_cube,
             connectivity_type=connectivity_type

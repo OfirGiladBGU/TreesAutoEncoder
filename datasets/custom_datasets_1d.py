@@ -104,6 +104,8 @@ class TreesCustomDataset1D:
         else:
             raise Exception("Dataset not available in 'Custom Dataset 1D'")
 
+        # TODO: Perform split based on the 3D files count
+
         dataset_size = len(trees_dataset)
         train_size = int(dataset_size * 0.9)
         val_size = dataset_size - train_size

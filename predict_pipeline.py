@@ -370,7 +370,7 @@ def preprocess_3d(data_3d_filepath: str,
             pred_advanced_fixed_cube=data_3d_input,
             reverse_mode=True,
             connectivity_type=6,
-            delta_mode = 1
+            delta_mode=1
         )
 
         # TODO: TEST THIS CASES!
@@ -561,7 +561,7 @@ def test_single_predict():
     # input_filename = "PA000005_11899.nii.gz"
     # input_filename = "PA000078_11996.nii.gz"
     # input_filename = "47_52.npy"
-    input_filename = "PA000005_0650.nii.gz"
+    input_filename = "20_303.npy"
 
     if data_type == DataType.TRAIN:
         log_data = pd.read_csv(TRAIN_LOG_PATH)
@@ -806,12 +806,12 @@ def main():
     init_pipeline_models()
 
     # TODO: Requires Model Init
-    # test_single_predict()
+    test_single_predict()
 
-    data_3d_basename = "Hospital CUP 1in3"
-    data_type = DataType.TRAIN
-    full_predict(data_3d_basename=data_3d_basename, data_type=data_type)
-    full_merge(data_3d_basename=data_3d_basename, data_type=data_type)
+    # data_3d_basename = "Hospital CUP 1in3"
+    # data_type = DataType.TRAIN
+    # full_predict(data_3d_basename=data_3d_basename, data_type=data_type)
+    # full_merge(data_3d_basename=data_3d_basename, data_type=data_type)
     # calculate_dice_scores(data_3d_basename=data_3d_basename)
 
 
