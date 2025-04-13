@@ -613,7 +613,7 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
         delta_binary = ((label_image - pred_advanced_fixed_image) >= 1.0).astype(np.uint8)
     else:
         # Compare pixels mask (Revealed cccluded object behind a hole will be ignored)
-        delta_binary = ((label_binary - pred_fixed_advanced_binary) > 0.5).astype(np.uint8)
+        delta_binary = ((label_binary - pred_advanced_fixed_binary) > 0.5).astype(np.uint8)
 
     # Identify connected components in delta_binary
     delta_labeled, delta_num_components = connected_components_2d(data_2d=delta_binary)
@@ -660,15 +660,15 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
 
     # Calculate the connected components for the preds fixed
     label_binary = (label_image > 0).astype(np.uint8)
-    pred_fixed_advanced_binary = (pred_advanced_fixed_image > 0).astype(np.uint8)
-    delta_binary = ((label_binary - pred_fixed_advanced_binary) > 0.5).astype(np.uint8)
+    pred_advanced_fixed_binary = (pred_advanced_fixed_image > 0).astype(np.uint8)
+    delta_binary = ((label_binary - pred_advanced_fixed_binary) > 0.5).astype(np.uint8)
 
     if binary_diff is False:
         # Compare pixels values (Revealed occluded object behind a hole will be detected)
         delta_binary = ((label_image - pred_advanced_fixed_image) >= 1.0).astype(np.uint8)
     else:
         # Compare pixels mask (Revealed cccluded object behind a hole will be ignored)
-        delta_binary = ((label_binary - pred_fixed_advanced_binary) > 0.5).astype(np.uint8)
+        delta_binary = ((label_binary - pred_advanced_fixed_binary) > 0.5).astype(np.uint8)
 
     # Identify connected components in delta_binary
     delta_labeled, delta_num_components = connected_components_2d(data_2d=delta_binary)
@@ -690,17 +690,17 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
 
         # Ensure ROI is within valid bounds (1 pixel padding)
         min_y = max(0, top - padding_size)
-        max_y = min(bottom + padding_size + 1, pred_fixed_advanced_binary.shape[0])
+        max_y = min(bottom + padding_size + 1, pred_advanced_fixed_binary.shape[0])
 
         min_x = max(0, left - padding_size)
-        max_x = min(right + padding_size + 1, pred_fixed_advanced_binary.shape[1])
+        max_x = min(right + padding_size + 1, pred_advanced_fixed_binary.shape[1])
 
         # Check the number of connected components before adding the mask
-        roi_temp_before = pred_fixed_advanced_binary[min_y:max_y, min_x:max_x]
+        roi_temp_before = pred_advanced_fixed_binary[min_y:max_y, min_x:max_x]
         components_before = connected_components_2d(data_2d=roi_temp_before)[1]
 
         # Create a temporary image with the component added
-        temp_fix = np.logical_or(pred_fixed_advanced_binary, component_mask)
+        temp_fix = np.logical_or(pred_advanced_fixed_binary, component_mask)
         roi_temp_after = temp_fix[min_y:max_y, min_x:max_x]
         components_after = connected_components_2d(data_2d=roi_temp_after)[1]
 
@@ -714,7 +714,7 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
             condition = not (components_before <= components_after)
 
         if condition:
-            pred_fixed_advanced_binary = temp_fix
+            pred_advanced_fixed_binary = temp_fix
         else:
             # print("Debug")
             pass
