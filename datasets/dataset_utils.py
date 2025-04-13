@@ -661,7 +661,6 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
     # Calculate the connected components for the preds fixed
     label_binary = (label_image > 0).astype(np.uint8)
     pred_advanced_fixed_binary = (pred_advanced_fixed_image > 0).astype(np.uint8)
-    delta_binary = ((label_binary - pred_advanced_fixed_binary) > 0.5).astype(np.uint8)
 
     if binary_diff is False:
         # Compare pixels values (Revealed occluded object behind a hole will be detected)
