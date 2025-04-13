@@ -6,6 +6,11 @@ import cv2
 from typing import Union, Dict, Tuple
 from scipy.ndimage import label
 
+# For visualization
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+from skimage import color
+
 # For .nii.gz
 import nibabel as nib
 
@@ -16,6 +21,9 @@ import open3d as o3d
 from datasets_forge.dataset_configurations import IMAGES_6_VIEWS
 
 
+###################
+# Data Converters #
+###################
 def validate_data_paths(data_paths: list[str]):
     for data_path in data_paths:
         if not pathlib.Path(data_path).exists():
@@ -476,7 +484,7 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
             data_3d=delta_cube,
             connectivity_type=connectivity_type
         )
-    else:
+    else: # Custom mode [Predict Pipeline]
         running_pred_advanced_fixed_cube = label_cube.copy().astype(np.uint8)
 
         delta_labeled, delta_num_components = connected_components_3d(
@@ -759,11 +767,11 @@ def apply_rotations(data_3d: np.ndarray,
 def _calculate_depth_projection(data_3d: np.ndarray, component_3d: np.ndarray = None, axis: int = 0):
     depth_projection = np.argmax(data_3d, axis=axis)
     max_projection = np.max(data_3d, axis=axis)
-    axis_size = data_3d.shape[axis]
+    max_axis_index = data_3d.shape[axis] - 1
 
     grayscale_depth_projection = np.where(
         max_projection > 0,
-        (255 * (1 - (depth_projection / axis_size))).astype(int),
+        np.round(255 * (1 - (depth_projection / max_axis_index))),
         0
     ).astype(np.uint8)
 
@@ -956,15 +964,19 @@ def project_3d_to_2d(data_3d: np.ndarray,
 def reverse_rotations(numpy_image: np.ndarray,
                       view_type: str,
                       source_data_filepath=None) -> np.ndarray:
+    # Asumption: The source volume should be a cube!
+    # TODO: In the future: support for non cubic crops (read the view type, open the source filepath, extract the matching dims)
+
     axis = 1  # Default axis for the 2D images
+    max_axis_index = numpy_image.shape[0] - 1
 
     # Convert to 3D
     data_3d = np.zeros(shape=(numpy_image.shape[0], numpy_image.shape[0], numpy_image.shape[0]), dtype=np.uint8)
     for i in range(numpy_image.shape[0]):
         for j in range(numpy_image.shape[1]):
-            gray_value = int(numpy_image[i, j])
+            gray_value = round(numpy_image[i, j])
             if gray_value > 0:
-                rescale_gray_value = int(numpy_image.shape[0] * (1 - (gray_value / 255)))
+                rescale_gray_value = round(max_axis_index * (1 - (gray_value / 255)))
 
                 if axis == 0:
                     data_3d[i, j, rescale_gray_value] = 1
@@ -1046,3 +1058,121 @@ def reconstruct_3d_from_2d(format_of_2d_images, source_data_filepath=None) -> np
     # convert_numpy_to_nii_gz(merged_data_3d, save_name=save_name)
 
     return merged_data_3d
+
+
+##############################
+# Interactive Visualizations #
+##############################
+
+# Interactive Plot 3D
+def _interactive_plot_3d(data_3d: np.ndarray, version: int = 1, **kwargs):
+    """
+    Interactive 3D plot using Plotly or Matplotlib
+    :param data_3d:
+    :param version:
+    :param kwargs: set_aspect_ratios, downsample_factor
+    :return:
+    """
+    if version == 1:
+        threshold = 0.5 * np.max(data_3d)
+        x, y, z = np.where(data_3d > threshold)
+
+        # Create the Plotly 3D scatter plot
+        fig = go.Figure(data=[go.Scatter3d(
+            x=x, y=y, z=z,
+            mode='markers',
+            marker=dict(
+                size=2,
+                color=data_3d[x, y, z],
+                colorscale='Viridis',
+                opacity=0.6
+            )
+        )])
+
+        # aspect_ratios = data_3d.shape  # Lengths of each dimension
+        fig.update_layout(scene=dict(
+            xaxis_title='X-axis',
+            yaxis_title='Y-axis',
+            zaxis_title='Z-axis',
+            # aspectmode="manual",  # Use manual aspect ratios
+            # aspectratio=dict(
+            #     x=aspect_ratios[0] / max(aspect_ratios),
+            #     y=aspect_ratios[1] / max(aspect_ratios),
+            #     z=aspect_ratios[2] / max(aspect_ratios),
+            # )
+        ), title="3D Volume Visualization")
+
+        fig.show()
+
+    elif version == 2:
+        # Downsample the images
+        downsample_factor = kwargs.get('downsample_factor', 1)
+        data_downsampled = data_3d[::downsample_factor, ::downsample_factor, ::downsample_factor]
+
+        # Get the indices of non-zero values in the downsampled array
+        nonzero_indices = np.where(data_downsampled != 0)
+
+        # Create a figure and a 3D axis
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Get the permutation
+        if data_3d.max() > 1:
+            color_mode = True
+        else:
+            color_mode = False
+
+        array_value = [
+            nonzero_indices[0],
+            nonzero_indices[1],
+            nonzero_indices[2]
+        ]
+        if color_mode is True:
+            color_value = data_downsampled[
+                nonzero_indices[0],
+                nonzero_indices[1],
+                nonzero_indices[2]
+            ]
+            color_value = color.label2rgb(label=color_value)
+            ax.bar3d(*array_value, 1, 1, 1, color=color_value)
+        else:
+            ax.bar3d(*array_value, 1, 1, 1, color='b')
+
+        # ax.bar3d(nonzero_indices[0], nonzero_indices[1], nonzero_indices[2], 1, 1, 1, color='b')
+
+        # Set labels
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+
+        # Set aspect ratios
+        set_aspect_ratios = kwargs.get('set_aspect_ratios', False)
+        if set_aspect_ratios is True:
+            aspect_ratios = np.array(
+                [data_3d.shape[0], data_3d.shape[1], data_3d.shape[2]])  # Use the actual shape of the volume
+            ax.set_box_aspect(aspect_ratios)
+
+        # Display the plot
+        plt.title('3d plot')
+        plt.show()
+    else:
+        raise ValueError("Invalid version number. Please use either 1 or 2.")
+
+# Interactive Plot 2D
+def _interactive_plot_2d(data_2d: np.ndarray, apply_label2rgb: bool = False):
+    """
+    Interactive 2D plot using Matplotlib
+    :param data_2d:
+    :param apply_label2rgb:
+    :return:
+    """
+    if apply_label2rgb:
+        colored_data = color.label2rgb(label=data_2d)
+    else:
+        colored_data = data_2d
+
+    if colored_data.shape == 3:
+        plt.imshow(colored_data)
+    else:
+        plt.imshow(colored_data, cmap='gray')
+    plt.show()

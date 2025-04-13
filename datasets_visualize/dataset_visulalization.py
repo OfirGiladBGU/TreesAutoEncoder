@@ -4,110 +4,16 @@ import os
 import itertools
 import cv2
 from PIL import Image, ImageDraw, ImageFont
-import plotly.graph_objects as go
 from skimage import color
 
 from datasets_forge.dataset_configurations import *
 from datasets.dataset_utils import convert_data_file_to_numpy, connected_components_3d
+from datasets.dataset_utils import _interactive_plot_2d as interactive_plot_2d
+from datasets.dataset_utils import _interactive_plot_3d as interactive_plot_3d
 
 ####################
 # 3D visualization #
 ####################
-
-# Interactive Plot 3D
-def interactive_plot_3d(data_3d: np.ndarray, version: int = 1, **kwargs):
-    """
-    Interactive 3D plot using Plotly or Matplotlib
-    :param data_3d:
-    :param version:
-    :param kwargs: set_aspect_ratios, downsample_factor
-    :return:
-    """
-    if version == 1:
-        threshold = 0.5 * np.max(data_3d)
-        x, y, z = np.where(data_3d > threshold)
-
-        # Create the Plotly 3D scatter plot
-        fig = go.Figure(data=[go.Scatter3d(
-            x=x, y=y, z=z,
-            mode='markers',
-            marker=dict(
-                size=2,
-                color=data_3d[x, y, z],
-                colorscale='Viridis',
-                opacity=0.6
-            )
-        )])
-
-        # aspect_ratios = data_3d.shape  # Lengths of each dimension
-        fig.update_layout(scene=dict(
-            xaxis_title='X-axis',
-            yaxis_title='Y-axis',
-            zaxis_title='Z-axis',
-            # aspectmode="manual",  # Use manual aspect ratios
-            # aspectratio=dict(
-            #     x=aspect_ratios[0] / max(aspect_ratios),
-            #     y=aspect_ratios[1] / max(aspect_ratios),
-            #     z=aspect_ratios[2] / max(aspect_ratios),
-            # )
-        ), title="3D Volume Visualization")
-
-        fig.show()
-
-    elif version == 2:
-        # Downsample the images
-        downsample_factor = kwargs.get('downsample_factor', 1)
-        data_downsampled = data_3d[::downsample_factor, ::downsample_factor, ::downsample_factor]
-
-        # Get the indices of non-zero values in the downsampled array
-        nonzero_indices = np.where(data_downsampled != 0)
-
-        # Create a figure and a 3D axis
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-
-        # Get the permutation
-        if data_3d.max() > 1:
-            color_mode = True
-        else:
-            color_mode = False
-
-        array_value = [
-            nonzero_indices[0],
-            nonzero_indices[1],
-            nonzero_indices[2]
-        ]
-        if color_mode is True:
-            color_value = data_downsampled[
-                nonzero_indices[0],
-                nonzero_indices[1],
-                nonzero_indices[2]
-            ]
-            color_value = color.label2rgb(label=color_value)
-            ax.bar3d(*array_value, 1, 1, 1, color=color_value)
-        else:
-            ax.bar3d(*array_value, 1, 1, 1, color='b')
-
-        # ax.bar3d(nonzero_indices[0], nonzero_indices[1], nonzero_indices[2], 1, 1, 1, color='b')
-
-        # Set labels
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
-        ax.set_zlabel('Z')
-
-        # Set aspect ratios
-        set_aspect_ratios = kwargs.get('set_aspect_ratios', False)
-        if set_aspect_ratios is True:
-            aspect_ratios = np.array(
-                [data_3d.shape[0], data_3d.shape[1], data_3d.shape[2]])  # Use the actual shape of the volume
-            ax.set_box_aspect(aspect_ratios)
-
-        # Display the plot
-        plt.title('3d plot')
-        plt.show()
-    else:
-        raise ValueError("Invalid version number. Please use either 1 or 2.")
-
 
 # Matplotlib Plot 3D
 def matplotlib_plot_3d(data_3d: np.ndarray, save_filename, set_aspect_ratios=False):
@@ -291,26 +197,6 @@ def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
 ####################
 # 2D visualization #
 ####################
-
-# Interactive Plot 2D
-def interactive_plot_2d(data_2d: np.ndarray, apply_label2rgb: bool = False):
-    """
-    Interactive 2D plot using Matplotlib
-    :param data_2d:
-    :param apply_label2rgb:
-    :return:
-    """
-    if apply_label2rgb:
-        colored_data = color.label2rgb(label=data_2d)
-    else:
-        colored_data = data_2d
-
-    if colored_data.shape == 3:
-        plt.imshow(colored_data)
-    else:
-        plt.imshow(colored_data, cmap='gray')
-    plt.show()
-
 
 # Matplotlib Plot 2D
 def matplotlib_plot_2d(save_filepath, data_2d_list):

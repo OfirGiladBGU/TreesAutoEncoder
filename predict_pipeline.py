@@ -81,7 +81,7 @@ def postprocess_2d(data_3d_filepath: str,
         raise ValueError("Invalid shape")
 
     # TODO: Threshold
-    apply_threshold(tensor=data_2d_output, threshold=0.2, keep_values=True)
+    # apply_threshold(tensor=data_2d_output, threshold=0.2, keep_values=True)
 
     if log_data is not None:
         # Replace invalid data with original input
@@ -105,24 +105,25 @@ def postprocess_2d(data_3d_filepath: str,
 
     # TODO: Add 2D filtering
     if apply_noise_filter is True:
-        pass
-    #     for idx in range(len(IMAGES_6_VIEWS)):
-    #         data_2d_input_idx = data_2d_input[idx]
-    #         data_2d_output_idx = data_2d_output[idx]
-    #
-    #         # Option1
-    #         # data_2d_output[idx] = components_continuity_2d_single_component(
-    #         #     label_image=data_2d_output_idx,
-    #         #     pred_advanced_fixed_image=data_2d_input_idx,
-    #         #     reverse_mode=True
-    #         # )
-    #
-    #         # Option2
-    #         data_2d_output[idx] = components_continuity_2d_local_connectivity(
-    #             label_image=data_2d_output_idx,
-    #             pred_advanced_fixed_image=data_2d_input_idx,
-    #             reverse_mode=True
-    #         )
+        for idx in range(len(IMAGES_6_VIEWS)):
+            data_2d_input_idx = np.round(data_2d_input[idx].numpy() * 255).astype(np.uint8)
+            data_2d_output_idx = np.round(data_2d_output[idx].numpy() * 255).astype(np.uint8)
+
+            # Option1
+            # filtered_output = components_continuity_2d_single_component(
+            #     label_image=data_2d_output_idx,
+            #     pred_advanced_fixed_image=data_2d_input_idx,
+            #     reverse_mode=True
+            # )
+
+            # Option2
+            filtered_output = components_continuity_2d_local_connectivity(
+                label_image=data_2d_output_idx,
+                pred_advanced_fixed_image=data_2d_input_idx,
+                reverse_mode=True
+            )
+
+            data_2d_output[idx] = torch.Tensor(filtered_output / 255.0)
 
     return data_2d_input, data_2d_output
 
@@ -142,8 +143,7 @@ def debug_2d(data_3d_filepath: str, data_2d_input: torch.Tensor, data_2d_output:
     for j in range(columns):
         ax.append(fig.add_subplot(rows, columns, 0 * columns + j + 1))
         numpy_image = data_2d_input_copy[j]
-        numpy_image = numpy_image * 255
-        numpy_image = numpy_image.astype(np.uint8)
+        numpy_image = np.round(numpy_image * 255).astype(np.uint8)
         numpy_image = np.expand_dims(numpy_image, axis=-1)
         plt.imshow(numpy_image, cmap='gray')
         ax[j].set_title(f"View {IMAGES_6_VIEWS[j]}:")
@@ -152,8 +152,7 @@ def debug_2d(data_3d_filepath: str, data_2d_input: torch.Tensor, data_2d_output:
     for j in range(columns):
         ax.append(fig.add_subplot(rows, columns, 1 * columns + j + 1))
         numpy_image = data_2d_output_copy[j]
-        numpy_image = numpy_image * 255
-        numpy_image = numpy_image.astype(np.uint8)
+        numpy_image = np.round(numpy_image * 255).astype(np.uint8)
         numpy_image = np.expand_dims(numpy_image, axis=-1)
         plt.imshow(numpy_image, cmap='gray')
         ax[j].set_title(f"View {IMAGES_6_VIEWS[j]}:")
@@ -365,13 +364,13 @@ def preprocess_3d(data_3d_filepath: str,
         # )
 
         # Pipes3D
-        data_3d_input = components_continuity_3d_single_component(
-            label_cube=pred_3d,
-            pred_advanced_fixed_cube=data_3d_input,
-            reverse_mode=True,
-            connectivity_type=6,
-            delta_mode=1
-        )
+        # data_3d_input = components_continuity_3d_single_component(
+        #     label_cube=pred_3d,
+        #     pred_advanced_fixed_cube=data_3d_input,
+        #     reverse_mode=True,
+        #     connectivity_type=6,
+        #     delta_mode=1
+        # )
 
         # TODO: TEST THIS CASES!
 
@@ -380,15 +379,15 @@ def preprocess_3d(data_3d_filepath: str,
         #     pred_advanced_fixed_cube=pred_3d,
         #     reverse_mode=True,
         #     connectivity_type=6,
-        #     delta_mode=1
+        #     delta_mode=0
         # )
 
-        # data_3d_input = components_continuity_3d_local_connectivity(
-        #     label_cube=data_3d_input,
-        #     pred_advanced_fixed_cube=pred_3d,
-        #     reverse_mode=True,
-        #     connectivity_type=26
-        # )
+        data_3d_input = components_continuity_3d_local_connectivity(
+            label_cube=data_3d_input,
+            pred_advanced_fixed_cube=pred_3d,
+            reverse_mode=True,
+            connectivity_type=6
+        )
 
     data_3d_input = torch.Tensor(data_3d_input).unsqueeze(0).unsqueeze(0)
     return data_3d_input
@@ -472,7 +471,7 @@ def init_pipeline_models():
 
 def single_predict(data_3d_filepath, data_2d_folder, log_data=None, enable_debug=True):
     # CONFIGS
-    apply_input_merge_2d = True  # False - for PipeForge3DPCD
+    apply_input_merge_2d = False  # False - for PipeForge3DPCD
     apply_input_merge_3d = True
     apply_fusion = True
     apply_noise_filter_2d = True

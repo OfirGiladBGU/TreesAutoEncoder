@@ -37,7 +37,7 @@ from datasets_visualize.dataset_visulalization import interactive_plot_2d, inter
 #     convert_numpy_to_nii_gz(voxel_grid_refined, save_name="Test")
 
 
-def create_3d_reconstructions(include_debug):
+def create_3d_reconstructions(include_debug: bool = False):
     # Sources
     source_folders = {
         "labels_3d": LABELS_3D
@@ -136,7 +136,6 @@ def create_3d_reconstructions(include_debug):
     # refine_construction(voxel_grid)
 
 
-# TODO: implement
 def create_3d_fusions():
     # Inputs
     input_folders = {
