@@ -113,14 +113,16 @@ def postprocess_2d(data_3d_filepath: str,
             # filtered_output = components_continuity_2d_single_component(
             #     label_image=data_2d_output_idx,
             #     pred_advanced_fixed_image=data_2d_input_idx,
-            #     reverse_mode=True
+            #     reverse_mode=True,
+            #     binary_diff = True
             # )
 
             # Option2
             filtered_output = components_continuity_2d_local_connectivity(
                 label_image=data_2d_output_idx,
                 pred_advanced_fixed_image=data_2d_input_idx,
-                reverse_mode=True
+                reverse_mode=True,
+                binary_diff=True
             )
 
             data_2d_output[idx] = torch.Tensor(filtered_output / 255.0)
@@ -568,11 +570,11 @@ def test_single_predict():
         # data_3d_folder = PREDS_3D
         # data_2d_folder = PREDS_2D
 
-        data_3d_folder = PREDS_FIXED_3D
-        data_2d_folder = PREDS_FIXED_2D
+        # data_3d_folder = PREDS_FIXED_3D
+        # data_2d_folder = PREDS_FIXED_2D
 
-        # data_3d_folder = PREDS_ADVANCED_FIXED_3D
-        # data_2d_folder = PREDS_ADVANCED_FIXED_2D
+        data_3d_folder = PREDS_ADVANCED_FIXED_3D
+        data_2d_folder = PREDS_ADVANCED_FIXED_2D
     else:
         log_data = pd.read_csv(EVAL_LOG_PATH)
 

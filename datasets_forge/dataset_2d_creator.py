@@ -719,7 +719,8 @@ def create_2d_projections_and_3d_cubes_for_training():
                     pred_advanced_fixed_image = components_continuity_2d_single_component(
                         label_image=label_image,
                         pred_advanced_fixed_image=pred_advanced_fixed_image,
-                        reverse_mode=False
+                        reverse_mode=False,
+                        binary_diff=False
                     )
                     pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
 
@@ -734,7 +735,8 @@ def create_2d_projections_and_3d_cubes_for_training():
                     pred_advanced_fixed_image = components_continuity_2d_local_connectivity(
                         label_image=label_image,
                         pred_advanced_fixed_image=pred_advanced_fixed_image,
-                        reverse_mode=False
+                        reverse_mode=False,
+                        binary_diff=False
                     )
                     pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
 

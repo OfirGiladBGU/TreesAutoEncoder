@@ -603,11 +603,17 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
 # 2D #
 
 def components_continuity_2d_single_component(label_image: np.ndarray, pred_advanced_fixed_image: np.ndarray,
-                                              reverse_mode: bool = False) -> np.ndarray:
+                                              reverse_mode: bool = False, binary_diff: bool = False) -> np.ndarray:
     # Calculate the connected components for the preds fixed
     label_binary = (label_image > 0).astype(np.uint8)
     pred_advanced_fixed_binary = (pred_advanced_fixed_image > 0).astype(np.uint8)
-    delta_binary = ((label_binary - pred_advanced_fixed_binary) > 0.5).astype(np.uint8)
+
+    if binary_diff is False:
+        # Compare pixels values (Revealed occluded object behind a hole will be detected)
+        delta_binary = ((label_image - pred_advanced_fixed_image) >= 1.0).astype(np.uint8)
+    else:
+        # Compare pixels mask (Revealed cccluded object behind a hole will be ignored)
+        delta_binary = ((label_binary - pred_fixed_advanced_binary) > 0.5).astype(np.uint8)
 
     # Identify connected components in delta_binary
     delta_labeled, delta_num_components = connected_components_2d(data_2d=delta_binary)
@@ -638,19 +644,31 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
             pass
 
     # Update the pred_advanced_fixed_image
-    pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0)
+    if reverse_mode is False:
+        # Keep revealed occluded object in a hole [Dataset Creation]
+        pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, pred_advanced_fixed_image)
+    else:
+        # Remove outliers [Predict Pipeline]
+        pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0)
 
     return pred_advanced_fixed_image
 
 
 def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_advanced_fixed_image: np.ndarray,
-                                                reverse_mode: bool = False) -> np.ndarray:
+                                                reverse_mode: bool = False, binary_diff: bool = True) -> np.ndarray:
     padding_size = 1
 
     # Calculate the connected components for the preds fixed
     label_binary = (label_image > 0).astype(np.uint8)
     pred_fixed_advanced_binary = (pred_advanced_fixed_image > 0).astype(np.uint8)
     delta_binary = ((label_binary - pred_fixed_advanced_binary) > 0.5).astype(np.uint8)
+
+    if binary_diff is False:
+        # Compare pixels values (Revealed occluded object behind a hole will be detected)
+        delta_binary = ((label_image - pred_advanced_fixed_image) >= 1.0).astype(np.uint8)
+    else:
+        # Compare pixels mask (Revealed cccluded object behind a hole will be ignored)
+        delta_binary = ((label_binary - pred_fixed_advanced_binary) > 0.5).astype(np.uint8)
 
     # Identify connected components in delta_binary
     delta_labeled, delta_num_components = connected_components_2d(data_2d=delta_binary)
@@ -702,7 +720,12 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
             pass
 
     # Update the pred_advanced_fixed_image
-    pred_advanced_fixed_image = np.where(pred_fixed_advanced_binary > 0, label_image, 0.0)
+    if reverse_mode is False:
+        # Keep revealed occluded object in a hole [Dataset Creation]
+        pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, pred_advanced_fixed_image)
+    else:
+        # Remove outliers [Predict Pipeline]
+        pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0)
 
     return pred_advanced_fixed_image
 
