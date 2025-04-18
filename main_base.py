@@ -1,6 +1,5 @@
 import argparse
 import os
-import torch
 import datetime
 import wandb
 
