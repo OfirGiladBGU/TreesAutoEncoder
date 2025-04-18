@@ -199,11 +199,11 @@ def create_3d_fusions():
             )
 
 
-def test_2d_to_3d_and_back(input_folder, data_3d_filepath, cropped_data_path):
+def test_2d_to_3d_and_back(data_3d_folder, data_3d_filepath, cropped_data_path):
     # Use the 2d projections to create a 3d reconstruction
     # Use the 3d reconstruction to create a 2d projection
     # Compare the new 2d projection with the original 2d projection
-    data_3d_stem = get_data_file_stem(data_filepath=data_3d_filepath, relative_to=input_folder)
+    data_3d_stem = get_data_file_stem(data_filepath=data_3d_filepath, relative_to=data_3d_folder)
     format_of_2d_images = os.path.join(cropped_data_path, f"{data_3d_stem}_<VIEW>.png")
 
     # Get the locally saved 2D images
@@ -252,10 +252,11 @@ def main():
     create_3d_fusions()
 
     # TODO: DEBUG
-    # data_3d_filepath = os.path.join(LABELS_3D, "PA000005_11899.nii.gz")
+    # data_3d_folder = LABELS_3D
+    # data_3d_filepath = os.path.join(data_3d_folder, "PA000005_11899.nii.gz")
     # cropped_data_path = LABELS_2D
     # test_2d_to_3d_and_back(
-    #     input_folder=LABELS_3D,
+    #     data_3d_folder=data_3d_folder,
     #     data_3d_filepath=data_3d_filepath,
     #     cropped_data_path=cropped_data_path
     # )
