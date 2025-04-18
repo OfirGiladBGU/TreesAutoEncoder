@@ -24,7 +24,7 @@ def configure_wandb(args, model):
 
 
 def run_main(args: argparse.Namespace, model_type: ModelType):
-    # Import relvant Trainer
+    # Import relevant Trainer
     if model_type == ModelType.Model_1D:
         from trainer.train_1d import Trainer
     elif model_type == ModelType.Model_2D:
