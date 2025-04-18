@@ -52,7 +52,7 @@ class TreesCustomDatasetV1(Dataset):
 
         for filepath_idx in range(filepaths_count):
             data_file1 = str(self.data_files1[filepath_idx])
-            data_file1_filename = get_data_file_stem(data_filepath=data_file1)
+            data_file1_filename = get_data_file_stem(data_filepath=data_file1, relative_to=data_paths[0])
             file1_conditions = [
                 # data_file1_filename not in non_valid_filenames,  # TODO (Optional)
                 data_file1_filename not in non_advance_valid_filenames

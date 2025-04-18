@@ -152,7 +152,7 @@ def single_plot_3d(data_3d_filepath, interactive_mode: bool = False, interactive
 
 
 # TODO: support for any 3D data
-def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
+def full_plot_3d(data_3d_stem: str, include_pipeline_results: bool = False):
     folder_paths = {
         "labels_3d": LABELS_3D,
         "labels_3d_reconstruct": LABELS_3D_RECONSTRUCT,
@@ -169,10 +169,10 @@ def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
     for key, value in folder_paths.items():
         save_path = os.path.join(VISUALIZATION_RESULTS_PATH, key)
         os.makedirs(name=save_path, exist_ok=True)
-        save_filename = os.path.join(str(save_path), f"{data_3d_basename}")
+        save_filename = os.path.join(str(save_path), f"{data_3d_stem}")
 
-        # data_3d_filepath = os.path.join(value, f"{data_3d_basename}.nii.gz")
-        data_3d_filepath = os.path.join(value, f"{data_3d_basename}.*")
+        # data_3d_filepath = os.path.join(value, f"{data_3d_stem}.nii.gz")
+        data_3d_filepath = os.path.join(value, f"{data_3d_stem}.*")
         numpy_3d_data = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
 
         matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_filename)
@@ -185,10 +185,10 @@ def full_plot_3d(data_3d_basename: str, include_pipeline_results: bool = False):
         for result_type in result_types:
             save_path = os.path.join(VISUALIZATION_RESULTS_PATH, f"pipeline_{result_type}")
             os.makedirs(name=save_path, exist_ok=True)
-            save_filename = os.path.join(str(save_path), f"{data_3d_basename}")
+            save_filename = os.path.join(str(save_path), f"{data_3d_stem}")
 
-            # data_3d_filepath = os.path.join(folder_path, f"{data_3d_basename}_{result_type}.nii.gz")
-            data_3d_filepath = os.path.join(folder_path, f"{data_3d_basename}_{result_type}.*")
+            # data_3d_filepath = os.path.join(folder_path, f"{data_3d_stem}_{result_type}.nii.gz")
+            data_3d_filepath = os.path.join(folder_path, f"{data_3d_stem}_{result_type}.*")
             numpy_3d_data = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
 
             matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_filename)
@@ -229,7 +229,7 @@ def single_plot_2d(data_2d_filepath, interactive_mode: bool = False):
         interactive_plot_2d(data_2d=numpy_2d_data)
 
 
-def full_plot_2d(data_3d_basename: str, plot_components: bool = False):
+def full_plot_2d(data_3d_stem: str, plot_components: bool = False):
     folder_paths = {
         "labels_2d": LABELS_2D,
         "preds_2d": PREDS_2D,
@@ -243,7 +243,7 @@ def full_plot_2d(data_3d_basename: str, plot_components: bool = False):
         })
 
     for key, value in folder_paths.items():
-        format_of_2d_images = os.path.join(value, f"{data_3d_basename}_<VIEW>.png")
+        format_of_2d_images = os.path.join(value, f"{data_3d_stem}_<VIEW>.png")
         # Projections 2D
         data_2d_list = list()
         for image_view in IMAGES_6_VIEWS:
@@ -253,7 +253,7 @@ def full_plot_2d(data_3d_basename: str, plot_components: bool = False):
 
         save_path = os.path.join(VISUALIZATION_RESULTS_PATH, key)
         os.makedirs(name=save_path, exist_ok=True)
-        save_filepath = os.path.join(str(save_path), f"{data_3d_basename}")
+        save_filepath = os.path.join(str(save_path), f"{data_3d_stem}")
         matplotlib_plot_2d(save_filepath=save_filepath, data_2d_list=data_2d_list)
 
 
@@ -274,14 +274,14 @@ def main():
 
     # Multiple Tests #
 
-    # data_3d_basename = "PA000005_11899"
-    # data_3d_basename = "PA000005_09039"
-    # data_3d_basename = "PA000005_10017"
-    # data_3d_basename = "PA000078_2020"
+    # data_3d_stem = "PA000005_11899"
+    # data_3d_stem = "PA000005_09039"
+    # data_3d_stem = "PA000005_10017"
+    # data_3d_stem = "PA000078_2020"
 
-    # full_plot_3d(data_3d_basename=data_3d_basename)
-    # full_plot_3d(data_3d_basename=data_3d_basename, include_pipeline_results=True)
-    # full_plot_2d(data_3d_basename=data_3d_basename, plot_components=False)
+    # full_plot_3d(data_3d_stem=data_3d_stem)
+    # full_plot_3d(data_3d_stem=data_3d_stem, include_pipeline_results=True)
+    # full_plot_2d(data_3d_stem=data_3d_stem, plot_components=False)
 
 
 if __name__ == "__main__":

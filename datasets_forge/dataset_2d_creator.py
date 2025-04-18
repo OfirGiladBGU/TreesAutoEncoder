@@ -241,7 +241,8 @@ def create_dataset_with_outliers_removed():
         pred_numpy_data = convert_data_file_to_numpy(data_filepath=pred_filepath)
 
         pred_fixed_numpy_data = outlier_removal_3d(pred_data=pred_numpy_data, label_data=label_numpy_data)
-        save_filename = os.path.join(output_folders["preds_fixed"], get_data_file_stem(data_filepath=pred_filepath))
+        data_stem = get_data_file_stem(data_filepath=pred_filepath, relative_to=output_folders["preds_fixed"])
+        save_filename = os.path.join(output_folders["preds_fixed"], data_stem)
         convert_numpy_to_data_file(
             numpy_data=pred_fixed_numpy_data,
             source_data_filepath=pred_filepath,
@@ -298,7 +299,7 @@ def create_dataset_depth_2d_projections(data_options: dict):
 
             # Get index data:
             data_filepath = input_filepaths[key][filepath_idx]
-            output_idx = get_data_file_stem(data_filepath=data_filepath)
+            output_idx = get_data_file_stem(data_filepath=data_filepath, relative_to=input_folders[key])
 
             data_numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
             data_projections = project_3d_to_2d(
@@ -469,8 +470,11 @@ def create_2d_projections_and_3d_cubes_for_training():
         # if (pred_numpy_data - pred_fixed_numpy_data).sum() != 0:
         #     raise ValueError("Outlier Removal Failed")
 
-        output_idx = get_data_file_stem(data_filepath=label_filepath)
+        output_idx = get_data_file_stem(data_filepath=label_filepath, relative_to=input_folders["labels"])
         print(f"[File: {output_idx}, Index: {filepath_idx + 1}/{filepaths_count}]")
+
+        # if str(output_idx) != "20":
+        #     continue
 
         #############
         # Crop Data #
@@ -697,6 +701,9 @@ def create_2d_projections_and_3d_cubes_for_training():
             ########################
             # Continuity Fix in 2D #
             ########################
+
+            # if str(cube_idx) != "303":
+            #     continue
 
             for view_idx, image_view in enumerate(IMAGES_6_VIEWS):
                 label_image = label_projections[f"{image_view}_image"]
@@ -942,7 +949,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
         eval_numpy_data = convert_data_file_to_numpy(data_filepath=eval_filepath)
 
         # Crop Mini Cubes
-        output_idx = get_data_file_stem(data_filepath=eval_filepath)
+        output_idx = get_data_file_stem(data_filepath=eval_filepath, relative_to=input_folders["evals"])
         print(f"[File: {output_idx}, Index: {filepath_idx + 1}/{filepaths_count}]")
 
         eval_cubes, cubes_data = crop_mini_cubes(

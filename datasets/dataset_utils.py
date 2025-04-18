@@ -42,11 +42,21 @@ def get_data_file_extension(data_filepath: str) -> str:
     return data_extension
 
 
-# TODO: Support for relative stem from the dataset folder (to support sub folders)
-def get_data_file_stem(data_filepath) -> str:
+# TODO: Support for relative stem from the dataset folder (to support sub folders) - NEED TO TEST
+def get_data_file_stem(data_filepath, relative_to=None) -> str:
+    """
+    :param data_filepath:
+    :param relative_to: When provided, the stem will also contain the relative path to the data
+    :return:
+    """
     data_filepath = str(data_filepath)
     replace_extension = get_data_file_extension(data_filepath=data_filepath)
-    data_filepath_stem = pathlib.Path(data_filepath.replace(replace_extension, "")).name
+    if relative_to is not None:
+        data_filepath = os.path.relpath(data_filepath, relative_to)
+    else:
+        data_filepath = os.path.basename(data_filepath)
+    data_filepath_stem = data_filepath.replace("\\", "/")  # Enable support for different OS
+    data_filepath_stem = data_filepath.replace(replace_extension, "")
     return data_filepath_stem
 
 

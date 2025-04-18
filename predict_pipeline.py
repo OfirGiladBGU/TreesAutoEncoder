@@ -21,11 +21,10 @@ from datasets_visualize.dataset_visulalization import interactive_plot_2d, inter
 #########
 # Utils #
 #########
-def preprocess_2d(data_3d_filepath: str,
+def preprocess_2d(data_3d_stem: str,
                   data_2d_folder: str,
                   apply_batch_merge: bool = False) -> torch.Tensor:
-    data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
-    data_2d_basename = f"{data_3d_basename}_<VIEW>"
+    data_2d_stem = f"{data_3d_stem}_<VIEW>"
 
     # # Get relative path parts
     # relative_filepath = data_3d_filepath.relative_to(CROPS_PATH)
@@ -33,11 +32,11 @@ def preprocess_2d(data_3d_filepath: str,
     #
     # # Update relative path parts to the relevant 2D images path
     # relative_filepath_parts[0] = relative_filepath_parts[0].replace("3d", "2d")
-    # relative_filepath_parts[-1] = f"{data_2d_basename}.png"
+    # relative_filepath_parts[-1] = f"{data_2d_stem}.png"
     # format_of_2d_images_relative_filepath = pathlib.Path(*relative_filepath_parts)
     # format_of_2d_images = os.path.join(CROPS_PATH, format_of_2d_images_relative_filepath)
 
-    format_of_2d_images = os.path.join(data_2d_folder, data_2d_basename + ".png")
+    format_of_2d_images = os.path.join(data_2d_folder, f"{data_2d_stem}.png")
 
     # Projections 2D
     data_2d_list = list()
@@ -58,14 +57,12 @@ def preprocess_2d(data_3d_filepath: str,
     return data_2d_input
 
 
-def postprocess_2d(data_3d_filepath: str,
+def postprocess_2d(data_3d_stem: str,
                    data_2d_input: torch.Tensor,
                    data_2d_output: torch.Tensor,
                    apply_input_merge: bool = False,
                    apply_noise_filter: bool = False,
                    log_data: pd.DataFrame = None) -> Tuple[torch.Tensor, torch.Tensor]:
-    data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
-
     # Convert (1, 6, w, h) to (6, w, h)
     if data_2d_input.shape[0] == 1 and data_2d_input.shape[1] == 6:
         data_2d_input = data_2d_input.squeeze(0)
@@ -88,7 +85,7 @@ def postprocess_2d(data_3d_filepath: str,
         for idx, image_view in enumerate(IMAGES_6_VIEWS):
             view_advance_valid = f"{image_view}_advance_valid"
             if view_advance_valid in log_data.columns:
-                data_2d_matching_rows = log_data[log_data[log_data.columns[0]] == data_3d_basename]
+                data_2d_matching_rows = log_data[log_data[log_data.columns[0]] == data_3d_stem]
                 data_2d_row = list(data_2d_matching_rows.iterrows())[0][1]
                 if data_2d_row[view_advance_valid] is False:
                     data_2d_output[idx] = data_2d_input[idx].clone()
@@ -130,9 +127,7 @@ def postprocess_2d(data_3d_filepath: str,
     return data_2d_input, data_2d_output
 
 
-def debug_2d(data_3d_filepath: str, data_2d_input: torch.Tensor, data_2d_output: torch.Tensor):
-    data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
-
+def debug_2d(data_3d_stem: str, data_2d_input: torch.Tensor, data_2d_output: torch.Tensor):
     data_2d_input_copy = data_2d_input.clone().numpy()
     data_2d_output_copy = data_2d_output.clone().numpy()
 
@@ -161,7 +156,7 @@ def debug_2d(data_3d_filepath: str, data_2d_input: torch.Tensor, data_2d_output:
 
     save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d")
     os.makedirs(save_path, exist_ok=True)
-    save_filepath = os.path.join(save_path, data_3d_basename)
+    save_filepath = os.path.join(save_path, data_3d_stem)
     fig.tight_layout()
     plt.savefig(save_filepath)
     plt.close(fig)
@@ -410,27 +405,23 @@ def postprocess_3d(data_3d_input: torch.Tensor,
     return data_3d_input, data_3d_output
 
 
-def debug_3d(data_3d_filepath, data_3d_input: torch.Tensor):
-    data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
-
+def debug_3d(data_3d_stem, data_3d_filepath, data_3d_input: torch.Tensor):
     data_3d_input = data_3d_input.clone().numpy()
 
     save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
     os.makedirs(save_path, exist_ok=True)
-    save_filepath = os.path.join(save_path, f"{data_3d_basename}_input")
+    save_filepath = os.path.join(save_path, f"{data_3d_stem}_input")
     convert_numpy_to_data_file(numpy_data=data_3d_input, source_data_filepath=data_3d_filepath,
                                save_filename=save_filepath)
 
 
-def export_output(data_3d_filepath, data_3d_output: torch.Tensor):
-    data_3d_basename = get_data_file_stem(data_filepath=data_3d_filepath)
-
+def export_output(data_3d_stem, data_3d_filepath, data_3d_output: torch.Tensor):
     data_3d_output = data_3d_output.numpy()
 
     save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
     os.makedirs(save_path, exist_ok=True)
 
-    save_filepath = os.path.join(save_path, f"{data_3d_basename}_output")
+    save_filepath = os.path.join(save_path, f"{data_3d_stem}_output")
     convert_numpy_to_data_file(numpy_data=data_3d_output, source_data_filepath=data_3d_filepath,
                                save_filename=save_filepath)
 
@@ -471,7 +462,7 @@ def init_pipeline_models():
         pass
 
 
-def single_predict(data_3d_filepath, data_2d_folder, log_data=None, enable_debug=True):
+def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder, log_data=None, enable_debug=True):
     # CONFIGS
     apply_input_merge_2d = False  # False - for PipeForge3DPCD
     apply_input_merge_3d = True
@@ -481,7 +472,10 @@ def single_predict(data_3d_filepath, data_2d_folder, log_data=None, enable_debug
 
     # INPUTS
     data_3d_filepath = str(data_3d_filepath)
+    data_3d_folder = str(data_3d_folder)
     data_2d_folder = str(data_2d_folder)
+
+    data_3d_stem = get_data_file_stem(data_filepath=data_3d_filepath, relative_to=data_3d_folder)
 
     os.makedirs(PREDICT_PIPELINE_RESULTS_PATH, exist_ok=True)
 
@@ -497,7 +491,7 @@ def single_predict(data_3d_filepath, data_2d_folder, log_data=None, enable_debug
         # 2D Section #
         ##############
         data_2d_input = preprocess_2d(
-            data_3d_filepath=data_3d_filepath,
+            data_3d_stem=data_3d_stem,
             data_2d_folder=data_2d_folder,
             apply_batch_merge=apply_batch_merge
         )
@@ -514,7 +508,7 @@ def single_predict(data_3d_filepath, data_2d_folder, log_data=None, enable_debug
             data_2d_output = data_2d_input.clone()
 
         (data_2d_input, data_2d_output) = postprocess_2d(
-            data_3d_filepath=data_3d_filepath,
+            data_3d_stem=data_3d_stem,
             data_2d_input=data_2d_input,
             data_2d_output=data_2d_output,
             apply_input_merge=apply_input_merge_2d,
@@ -524,7 +518,7 @@ def single_predict(data_3d_filepath, data_2d_folder, log_data=None, enable_debug
 
         # DEBUG
         if enable_debug is True:
-            debug_2d(data_3d_filepath=data_3d_filepath, data_2d_input=data_2d_input, data_2d_output=data_2d_output)
+            debug_2d(data_3d_stem=data_3d_stem, data_2d_input=data_2d_input, data_2d_output=data_2d_output)
 
         ##############
         # 3D Section #
@@ -550,19 +544,23 @@ def single_predict(data_3d_filepath, data_2d_folder, log_data=None, enable_debug
 
         # DEBUG
         if enable_debug is True:
-            debug_3d(data_3d_filepath=data_3d_filepath, data_3d_input=data_3d_input)
+            debug_3d(data_3d_stem=data_3d_stem, data_3d_filepath=data_3d_filepath, data_3d_input=data_3d_input)
 
-        export_output(data_3d_filepath=data_3d_filepath, data_3d_output=data_3d_output)
+        export_output(
+            data_3d_stem=data_3d_stem,
+            data_3d_filepath=data_3d_filepath,
+            data_3d_output=data_3d_output
+        )
 
 
 def test_single_predict():
     data_type = DataType.TRAIN
     # data_type = DataType.EVAL
 
-    # input_filename = "PA000005_11899.nii.gz"
-    # input_filename = "PA000078_11996.nii.gz"
-    # input_filename = "47_52.npy"
-    input_filename = "20_303.npy"
+    # base_filename = "PA000005_11899.nii.gz"
+    # base_filename = "PA000078_11996.nii.gz"
+    # base_filename = "47_52.npy"
+    base_filename = "20_303.npy"
 
     if data_type == DataType.TRAIN:
         log_data = pd.read_csv(TRAIN_LOG_PATH)
@@ -582,15 +580,16 @@ def test_single_predict():
         data_2d_folder = EVALS_3D
 
     # Get filepaths
-    data_3d_filepath = os.path.join(data_3d_folder, input_filename)
+    data_3d_filepath = os.path.join(data_3d_folder, base_filename)
     single_predict(
         data_3d_filepath=data_3d_filepath,
+        data_3d_folder=data_3d_folder
         data_2d_folder=data_2d_folder,
         log_data=log_data
     )
 
 
-def full_predict(data_3d_basename, data_type: DataType):
+def full_predict(data_3d_stem, data_type: DataType):
     start_time = datetime.datetime.now()
     start_timestamp = start_time.strftime('%Y-%m-%d_%H-%M-%S')
     print(
@@ -616,13 +615,14 @@ def full_predict(data_3d_basename, data_type: DataType):
         data_2d_folder = EVALS_3D
 
     # Get filepaths
-    data_3d_filepaths = pathlib.Path(data_3d_folder).rglob(f"{data_3d_basename}_*.*")
+    data_3d_filepaths = pathlib.Path(data_3d_folder).rglob(f"{data_3d_stem}_*.*")
     data_3d_filepaths = sorted(data_3d_filepaths)
 
     # Single-threading - Sequential
     # for data_3d_filepath in tqdm(data_3d_filepaths):
     #     single_predict(
     #         data_3d_filepath=data_3d_filepath,
+    #         data_3d_folder=data_3d_folder,
     #         data_2d_folder=data_2d_folder,
     #         log_data=log_data,
     #         enable_debug=True
@@ -637,6 +637,7 @@ def full_predict(data_3d_basename, data_type: DataType):
                 executor.submit(
                     single_predict,
                     data_3d_filepath=data_3d_filepath,
+                    data_3d_folder=data_3d_folder,
                     data_2d_folder=data_2d_folder,
                     log_data=log_data,
                     enable_debug=False
@@ -654,7 +655,7 @@ def full_predict(data_3d_basename, data_type: DataType):
     )
 
 
-def full_merge(data_3d_basename, data_type: DataType):
+def full_merge(data_3d_stem, data_type: DataType):
     start_time = datetime.datetime.now()
     start_timestamp = start_time.strftime('%Y-%m-%d_%H-%M-%S')
     print(
@@ -675,15 +676,15 @@ def full_merge(data_3d_basename, data_type: DataType):
         data_3d_folder = EVALS
 
     # Input 3D object
-    data_3d_filepath = list(pathlib.Path(data_3d_folder).rglob(f"{data_3d_basename}*"))
+    data_3d_filepath = list(pathlib.Path(data_3d_folder).rglob(f"{data_3d_stem}*"))
     if len(data_3d_filepath) == 1:
         input_filepath = data_3d_filepath[0]
     else:
-        raise ValueError(f"Expected 1 input files for '{data_3d_basename}' but got '{len(data_3d_filepath)}'.")
+        raise ValueError(f"Expected 1 input files for '{data_3d_stem}' but got '{len(data_3d_filepath)}'.")
 
     # Pipeline Predicts
     predict_folder = PREDICT_PIPELINE_RESULTS_PATH
-    predict_filepaths = sorted(pathlib.Path(predict_folder).rglob(f"{data_3d_basename}_*_output.*"))
+    predict_filepaths = sorted(pathlib.Path(predict_folder).rglob(f"{data_3d_stem}_*_output.*"))
 
     # Pipeline Merge output path
     output_folder = MERGE_PIPELINE_RESULTS_PATH
@@ -693,7 +694,7 @@ def full_merge(data_3d_basename, data_type: DataType):
     input_data = convert_data_file_to_numpy(data_filepath=input_filepath)
 
     first_column = log_data.columns[0]
-    regex_pattern = f"{data_3d_basename}_.*"
+    regex_pattern = f"{data_3d_stem}_.*"
     matching_rows = log_data[log_data[first_column].str.contains(regex_pattern, regex=True, na=False)]
 
     # Process the matching rows
@@ -714,7 +715,7 @@ def full_merge(data_3d_basename, data_type: DataType):
         )
 
     # Save the final result
-    save_filename = os.path.join(output_folder, data_3d_basename)
+    save_filename = os.path.join(output_folder, data_3d_stem)
     convert_numpy_to_data_file(numpy_data=input_data, source_data_filepath=input_filepath,
                                save_filename=save_filename)
 
@@ -726,22 +727,22 @@ def full_merge(data_3d_basename, data_type: DataType):
     )
 
 
-def calculate_dice_scores(data_3d_basename):
+def calculate_dice_scores(data_3d_stem):
     #################
     # CROPS COMPARE #
     #################
 
     # Baseline
     # output_folder = PREDS_3D
-    # output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}_*.*")
+    # output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_stem}_*.*")
 
     # Output
     # output_folder = PREDICT_PIPELINE_RESULTS_PATH
-    # output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}_*_output.*")
+    # output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_stem}_*_output.*")
 
     # Ground Truth
     # target_folder = LABELS_3D
-    # target_filepaths = pathlib.Path(target_folder).rglob(f"{data_3d_basename}_*.*")
+    # target_filepaths = pathlib.Path(target_folder).rglob(f"{data_3d_stem}_*.*")
 
     #####################
     # FULL DATA COMPARE #
@@ -749,15 +750,15 @@ def calculate_dice_scores(data_3d_basename):
 
     # Baseline
     # output_folder = PREDS
-    # output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}*.*")
+    # output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_stem}*.*")
 
     # Output
     output_folder = MERGE_PIPELINE_RESULTS_PATH
-    output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_basename}*.*")
+    output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_stem}*.*")
 
     # Ground Truth
     target_folder = LABELS
-    target_filepaths = pathlib.Path(target_folder).rglob(f"{data_3d_basename}*.*")
+    target_filepaths = pathlib.Path(target_folder).rglob(f"{data_3d_stem}*.*")
 
     #########################
     # Calculate Dice Scores #
@@ -791,7 +792,7 @@ def calculate_dice_scores(data_3d_basename):
     )
 
 
-def full_folder_predict(data_3d_basename, data_type: DataType):
+def full_folder_predict(data_3d_stem, data_type: DataType):
     raise NotImplementedError
 
 
@@ -809,11 +810,11 @@ def main():
     # TODO: Requires Model Init
     test_single_predict()
 
-    # data_3d_basename = "Hospital CUP 1in3"
+    # data_3d_stem = "Hospital CUP 1in3"
     # data_type = DataType.TRAIN
-    # full_predict(data_3d_basename=data_3d_basename, data_type=data_type)
-    # full_merge(data_3d_basename=data_3d_basename, data_type=data_type)
-    # calculate_dice_scores(data_3d_basename=data_3d_basename)
+    # full_predict(data_3d_stem=data_3d_stem, data_type=data_type)
+    # full_merge(data_3d_stem=data_3d_stem, data_type=data_type)
+    # calculate_dice_scores(data_3d_stem=data_3d_stem)
 
 
 if __name__ == "__main__":

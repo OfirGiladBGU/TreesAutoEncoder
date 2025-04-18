@@ -61,7 +61,7 @@ class TreesCustomDatasetV1(Dataset):
             filtered_data_files2 = []
             for filepath_idx in range(filepaths_count):
                 data_file1 = str(self.data_files1[filepath_idx])
-                data_file1_filename = get_data_file_stem(data_filepath=data_file1)
+                data_file1_filename = get_data_file_stem(data_filepath=data_file1, relative_to=data_paths[0])
                 file1_conditions = [
                     data_file1_filename not in non_valid_filenames,
                     # data_file1_filename not in non_advance_valid_filenames  # TODO (Optional)
@@ -71,7 +71,7 @@ class TreesCustomDatasetV1(Dataset):
 
                 if self.data_files2 is not None:
                     data_file2 = str(self.data_files2[filepath_idx])
-                    data_file2_filename = get_data_file_stem(data_filepath=data_file2)
+                    data_file2_filename = get_data_file_stem(data_filepath=data_file2, relative_to=data_paths[1])
                     file2_conditions = [
                         data_file2_filename not in non_valid_filenames,
                         # data_file2_filename not in non_advance_valid_filenames  # TODO (Optional)
@@ -169,7 +169,7 @@ class TreesCustomDatasetV2(Dataset):
         data_idx = idx * 6
         for i in range(6):
             data_file1 = str(self.data_files1[data_idx + i])
-            numpy_2d_data1 =convert_data_file_to_numpy(data_filepath=data_file1)
+            numpy_2d_data1 = convert_data_file_to_numpy(data_filepath=data_file1)
 
             numpy_2d_data1 = self.to_tensor(numpy_2d_data1)
             if self.transform is not None:
