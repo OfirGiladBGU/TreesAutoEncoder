@@ -21,7 +21,8 @@ def crop_mini_cubes(data_3d: np.ndarray,
                     other_data_3d_list: List[np.ndarray] = None,
                     cube_dim: Tuple[int, int, int] = (28, 28, 28),
                     stride_dim: Tuple[int, int, int] = (14, 14, 14),
-                    cubes_data: bool = False):
+                    cubes_data: bool = False,
+                    index_3d: int = -1):
     # Slower method
     # mini_cubes = list()
     # mini_cubes_data = list()
@@ -57,6 +58,7 @@ def crop_mini_cubes(data_3d: np.ndarray,
     #
     #             if cubes_data is True:
     #                 mini_cubes_data.append({
+    #                     "index_3d": index_3d,
     #                     "start_x": start_x,
     #                     "start_y": start_y,
     #                     "start_z": start_z,
@@ -131,6 +133,7 @@ def crop_mini_cubes(data_3d: np.ndarray,
                     end_z = min(z + cube_dim[2], data_3d.shape[2])
 
                     mini_cubes_data.append({
+                        "index_3d": index_3d,
                         "start_x": x,
                         "start_y": y,
                         "start_z": z,
@@ -471,7 +474,7 @@ def create_2d_projections_and_3d_cubes_for_training():
         #     raise ValueError("Outlier Removal Failed")
 
         output_idx = get_data_file_stem(data_filepath=label_filepath, relative_to=input_folders["labels"])
-        print(f"[File: {output_idx}, Index: {filepath_idx + 1}/{filepaths_count}]")
+        print(f"[File: {output_idx}, Number: {filepath_idx + 1}/{filepaths_count}]")
 
         # if str(output_idx) != "20":
         #     continue
@@ -486,7 +489,8 @@ def create_2d_projections_and_3d_cubes_for_training():
             other_data_3d_list=[pred_numpy_data, pred_fixed_numpy_data],
             cube_dim=DATA_3D_SIZE,
             stride_dim=DATA_3D_STRIDE,
-            cubes_data=True
+            cubes_data=True,
+            index_3d=filepath_idx
         )
         pred_cubes = other_cubes_list[0]
         pred_fixed_cubes = other_cubes_list[1]
@@ -884,7 +888,7 @@ def create_2d_projections_and_3d_cubes_for_training():
         if (filepath_idx + 1) == STOP_INDEX:
             break
 
-    pd.DataFrame(log_data).T.to_csv(TRAIN_LOG_PATH)
+    pd.DataFrame(data=log_data).T.to_csv(path_or_buf=TRAIN_LOG_PATH)
 
 
 def create_2d_projections_and_3d_cubes_for_evaluation():
@@ -950,13 +954,14 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
 
         # Crop Mini Cubes
         output_idx = get_data_file_stem(data_filepath=eval_filepath, relative_to=input_folders["evals"])
-        print(f"[File: {output_idx}, Index: {filepath_idx + 1}/{filepaths_count}]")
+        print(f"[File: {output_idx}, Number: {filepath_idx + 1}/{filepaths_count}]")
 
         eval_cubes, cubes_data = crop_mini_cubes(
             data_3d=eval_numpy_data,
             cube_dim=DATA_3D_SIZE,
             stride_dim=DATA_3D_STRIDE,
-            cubes_data=True
+            cubes_data=True,
+            index_3d=filepath_idx
         )
 
         if TASK_TYPE == TaskType.SINGLE_COMPONENT:
@@ -1112,7 +1117,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
         if (filepath_idx + 1) == STOP_INDEX:
             break
 
-    pd.DataFrame(log_data).T.to_csv(EVAL_LOG_PATH)
+    pd.DataFrame(data=log_data).T.to_csv(path_or_buf=EVAL_LOG_PATH)
 
 
 def main():
