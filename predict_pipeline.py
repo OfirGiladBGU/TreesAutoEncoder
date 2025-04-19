@@ -60,8 +60,9 @@ def preprocess_2d(data_3d_stem: str,
 def postprocess_2d(data_3d_stem: str,
                    data_2d_input: torch.Tensor,
                    data_2d_output: torch.Tensor,
-                   apply_input_merge: bool = False,
-                   apply_noise_filter: bool = False,
+                   apply_input_merge_2d: bool = False,
+                   apply_noise_filter_2d: bool = False,
+                   hard_noise_filter_2d: bool = True,
                    log_data: pd.DataFrame = None) -> Tuple[torch.Tensor, torch.Tensor]:
     # Convert (1, 6, w, h) to (6, w, h)
     if data_2d_input.shape[0] == 1 and data_2d_input.shape[1] == 6:
@@ -97,11 +98,11 @@ def postprocess_2d(data_3d_stem: str,
     else:  # TODO: use classifier results
         pass
 
-    if apply_input_merge is True:
+    if apply_input_merge_2d is True:
         data_2d_output = data_2d_input + torch.where(data_2d_input == 0, data_2d_output, 0)
 
     # TODO: Add 2D filtering
-    if apply_noise_filter is True:
+    if apply_noise_filter_2d is True:
         for idx in range(len(IMAGES_6_VIEWS)):
             data_2d_input_idx = np.round(data_2d_input[idx].numpy() * 255).astype(np.uint8)
             data_2d_output_idx = np.round(data_2d_output[idx].numpy() * 255).astype(np.uint8)
@@ -111,7 +112,8 @@ def postprocess_2d(data_3d_stem: str,
             #     label_image=data_2d_output_idx,
             #     pred_advanced_fixed_image=data_2d_input_idx,
             #     reverse_mode=True,
-            #     binary_diff = True
+            #     binary_diff=True,
+            #     hard_condition=hard_noise_filter_2d
             # )
 
             # Option2
@@ -119,7 +121,8 @@ def postprocess_2d(data_3d_stem: str,
                 label_image=data_2d_output_idx,
                 pred_advanced_fixed_image=data_2d_input_idx,
                 reverse_mode=True,
-                binary_diff=True
+                binary_diff=True,
+                hard_condition=hard_noise_filter_2d
             )
 
             data_2d_output[idx] = torch.Tensor(filtered_output / 255.0)
@@ -320,7 +323,8 @@ def naive_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
 def preprocess_3d(data_3d_filepath: str,
                   data_2d_output: torch.Tensor,
                   apply_fusion: bool = False,
-                  apply_noise_filter: bool = False) -> torch.Tensor:
+                  apply_noise_filter_3d: bool = False,
+                  hard_noise_filter_3d: bool = True) -> torch.Tensor:
     pred_3d = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
     data_2d_output = data_2d_output.numpy()
 
@@ -346,7 +350,7 @@ def preprocess_3d(data_3d_filepath: str,
 
     # TODO: validate filters!!!
     # TODO: add the noise filters as revers continuity fix for both 2D and 3D!
-    if apply_noise_filter is True:
+    if apply_noise_filter_3d is True:
         # Parse2022
         # data_3d_input = naive_noise_filter(data_3d_original=pred_3d, data_3d_input=data_3d_input)
 
@@ -357,7 +361,8 @@ def preprocess_3d(data_3d_filepath: str,
         #     pred_advanced_fixed_cube=data_3d_input,
         #     reverse_mode=True,
         #     connectivity_type=6,
-        #     delta_mode=0
+        #     delta_mode=0,
+        #     hard_condition=True
         # )
 
         # Pipes3D
@@ -367,6 +372,7 @@ def preprocess_3d(data_3d_filepath: str,
         #     reverse_mode=True,
         #     connectivity_type=6,
         #     delta_mode=1
+        #     hard_condition=False
         # )
 
         # TODO: TEST THIS CASES!
@@ -376,14 +382,16 @@ def preprocess_3d(data_3d_filepath: str,
         #     pred_advanced_fixed_cube=pred_3d,
         #     reverse_mode=True,
         #     connectivity_type=6,
-        #     delta_mode=0
+        #     delta_mode=0,
+        #     hard_condition=True
         # )
 
         data_3d_input = components_continuity_3d_local_connectivity(
             label_cube=data_3d_input,
             pred_advanced_fixed_cube=pred_3d,
             reverse_mode=True,
-            connectivity_type=6
+            connectivity_type=6,
+            hard_condition=hard_noise_filter_3d
         )
 
     data_3d_input = torch.Tensor(data_3d_input).unsqueeze(0).unsqueeze(0)
@@ -392,14 +400,14 @@ def preprocess_3d(data_3d_filepath: str,
 
 def postprocess_3d(data_3d_input: torch.Tensor,
                    data_3d_output: torch.Tensor,
-                   apply_input_merge: bool = False) -> Tuple[torch.Tensor, torch.Tensor]:
+                   apply_input_merge_3d: bool = False) -> Tuple[torch.Tensor, torch.Tensor]:
     data_3d_input = data_3d_input.squeeze().squeeze()
     data_3d_output = data_3d_output.squeeze().squeeze()
 
     # TODO: Threshold
     apply_threshold(tensor=data_3d_output, threshold=0.5, keep_values=False)
 
-    if apply_input_merge is True:
+    if apply_input_merge_3d is True:
         data_3d_output = data_3d_input + torch.where(data_3d_input == 0, data_3d_output, 0)
 
     return data_3d_input, data_3d_output
@@ -470,8 +478,10 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder, log_data=No
     apply_input_merge_2d = False  # False - for PipeForge3DPCD
     apply_input_merge_3d = True
     apply_fusion = True
-    apply_noise_filter_2d = False  # TODO: check why it is not working well
+    apply_noise_filter_2d = False  # Notice: Doesn't work well with revealed occluded objects
+    hard_noise_filter_2d = True
     apply_noise_filter_3d = True
+    hard_noise_filter_3d = True
 
     # INPUTS
     data_3d_filepath = str(data_3d_filepath)
@@ -514,8 +524,9 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder, log_data=No
             data_3d_stem=data_3d_stem,
             data_2d_input=data_2d_input,
             data_2d_output=data_2d_output,
-            apply_input_merge=apply_input_merge_2d,
-            apply_noise_filter=apply_noise_filter_2d,
+            apply_input_merge_2d=apply_input_merge_2d,
+            apply_noise_filter_2d=apply_noise_filter_2d,
+            hard_noise_filter_2d=hard_noise_filter_2d,
             log_data=log_data
         )
 
@@ -530,7 +541,8 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder, log_data=No
             data_3d_filepath=data_3d_filepath,
             data_2d_output=data_2d_output,
             apply_fusion=apply_fusion,
-            apply_noise_filter=apply_noise_filter_3d
+            apply_noise_filter_3d=apply_noise_filter_3d,
+            hard_noise_filter_3d=hard_noise_filter_3d,
         )
 
         # Predict 3D
@@ -542,7 +554,7 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder, log_data=No
         (data_3d_input, data_3d_output) = postprocess_3d(
             data_3d_input=data_3d_input,
             data_3d_output=data_3d_output,
-            apply_input_merge=apply_input_merge_3d
+            apply_input_merge_3d=apply_input_merge_3d
         )
 
         # DEBUG

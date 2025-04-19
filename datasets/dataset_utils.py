@@ -482,7 +482,8 @@ def connected_components_2d(data_2d: np.ndarray) -> Tuple[np.ndarray, int]:
 def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advanced_fixed_cube: np.ndarray,
                                               reverse_mode: bool = False,
                                               connectivity_type: int = 26,
-                                              delta_mode: int = 0) -> np.ndarray:
+                                              delta_mode: int = 0,
+                                              hard_condition: bool = False) -> np.ndarray:
     if delta_mode == 0:
         running_pred_advanced_fixed_cube = pred_advanced_fixed_cube.copy().astype(np.uint8)
 
@@ -522,7 +523,7 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
             condition = not (components_before > components_after)
         else:
             # Add the component only if it does not increase the number of connected components [Predict Pipeline]
-            if delta_mode == 0:
+            if hard_condition is True:
                 condition = not (components_before <= components_after)
             else:
                 condition = not (components_before < components_after)
@@ -541,7 +542,8 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
 
 def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_advanced_fixed_cube: np.ndarray,
                                                 reverse_mode: bool = False,
-                                                connectivity_type: int = 26) -> np.ndarray:
+                                                connectivity_type: int = 26,
+                                                hard_condition: bool = True) -> np.ndarray:
     # padding_size = 2
     padding_size = 1
 
@@ -603,7 +605,10 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
         else:
             # Add the component only if it does not increase the number of connected components
             # (on the local scope) [Predict Pipeline]
-            condition = not (components_before <= components_after)
+            if hard_condition is True:
+                condition = not (components_before <= components_after)
+            else:
+                condition = not (components_before < components_after)
 
         if condition:
             running_pred_advanced_fixed_cube = temp_fix
@@ -620,7 +625,9 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
 # 2D #
 
 def components_continuity_2d_single_component(label_image: np.ndarray, pred_advanced_fixed_image: np.ndarray,
-                                              reverse_mode: bool = False, binary_diff: bool = False) -> np.ndarray:
+                                              reverse_mode: bool = False,
+                                              binary_diff: bool = False,
+                                              hard_condition: bool = True) -> np.ndarray:
     # Calculate the missing connected components in preds fixed
     label_binary = (label_image > 0).astype(np.uint8)
     pred_advanced_fixed_binary = (pred_advanced_fixed_image > 0).astype(np.uint8)
@@ -653,8 +660,10 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
             condition = not (components_before > components_after)
         else:
             # Add the component only if it does not increase the number of connected components [Predict Pipeline]
-            # condition = not (components_before <= components_after)
-            condition = not (components_before < components_after)
+            if hard_condition is True:
+                condition = not (components_before <= components_after)
+            else:
+                condition = not (components_before < components_after)
 
         if condition:
             pred_advanced_fixed_binary = temp_fix
@@ -675,7 +684,9 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
 
 
 def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_advanced_fixed_image: np.ndarray,
-                                                reverse_mode: bool = False, binary_diff: bool = True) -> np.ndarray:
+                                                reverse_mode: bool = False,
+                                                binary_diff: bool = True,
+                                                hard_condition: bool = True) -> np.ndarray:
     padding_size = 1
 
     # Calculate the missing connected components in preds fixed
@@ -730,8 +741,10 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
         else:
             # Add the component only if it does not increase the number of connected components
             # (on the local scope) [Predict Pipeline]
-            # condition = not (components_before <= components_after)
-            condition = not (components_before < components_after)
+            if hard_condition is True:
+                condition = not (components_before <= components_after)
+            else:
+                condition = not (components_before < components_after)
 
         if condition:
             pred_advanced_fixed_binary = temp_fix
