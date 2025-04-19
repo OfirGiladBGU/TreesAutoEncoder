@@ -2,7 +2,7 @@ import argparse
 import os
 import pathlib
 import torch
-from torch.utils.data import Dataset, DataLoader, Subset
+from torch.utils.data import Dataset, Subset
 from torchvision import transforms
 import pandas as pd
 
@@ -108,10 +108,10 @@ class TreesCustomDataset1D:
 
         dataset_size = len(trees_dataset)
         train_size = int(dataset_size * 0.9)
-        val_size = dataset_size - train_size
+        test_size = dataset_size - train_size
 
-        # self.train_subset, self.test_subset = torch.utils.data.random_split(trees_dataset, [train_size, val_size])
+        # self.train_subset, self.test_subset = torch.utils.data.random_split(trees_dataset, [train_size, test_size])
 
         # Non random split
         self.train_subset = Subset(trees_dataset, indices=range(0, train_size))
-        self.test_subset = Subset(trees_dataset, indices=range(train_size, train_size + val_size))
+        self.test_subset = Subset(trees_dataset, indices=range(train_size, train_size + test_size))

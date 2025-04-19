@@ -22,7 +22,7 @@ def crop_mini_cubes(data_3d: np.ndarray,
                     cube_dim: Tuple[int, int, int] = (28, 28, 28),
                     stride_dim: Tuple[int, int, int] = (14, 14, 14),
                     cubes_data: bool = False,
-                    index_3d: int = -1):
+                    index_3d: str = ""):
     # Slower method
     # mini_cubes = list()
     # mini_cubes_data = list()
@@ -490,7 +490,7 @@ def create_2d_projections_and_3d_cubes_for_training():
             cube_dim=DATA_3D_SIZE,
             stride_dim=DATA_3D_STRIDE,
             cubes_data=True,
-            index_3d=filepath_idx
+            index_3d=f"~{output_idx}"
         )
         pred_cubes = other_cubes_list[0]
         pred_fixed_cubes = other_cubes_list[1]
@@ -961,7 +961,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
             cube_dim=DATA_3D_SIZE,
             stride_dim=DATA_3D_STRIDE,
             cubes_data=True,
-            index_3d=filepath_idx
+            index_3d=f"~{output_idx}"
         )
 
         if TASK_TYPE == TaskType.SINGLE_COMPONENT:
