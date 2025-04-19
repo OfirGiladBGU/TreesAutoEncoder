@@ -478,7 +478,7 @@ def create_2d_projections_and_3d_cubes_for_training():
         output_idx = get_data_file_stem(data_filepath=label_filepath, relative_to=input_folders["labels"])
         print(f"[File: {output_idx}, Number: {filepath_idx + 1}/{filepaths_count}]")
 
-        # if str(output_idx) != "20":
+        # if str(output_idx) != "46":
         #     continue
 
         #############
@@ -532,14 +532,16 @@ def create_2d_projections_and_3d_cubes_for_training():
             pred_cube = pred_cubes[cube_idx]
             pred_fixed_cube = pred_fixed_cubes[cube_idx]
 
-            # if cube_idx == 61:
-            #     print("Debug")
+            cube_idx_str = str(cube_idx).zfill(cubes_count_digits_count)
 
-            # if str(cube_idx) != "303":
+            # if cube_idx_str != "061":
+            #     continue
+
+            # if cube_idx_str != "303":
             #     continue
 
             # TODO: Add checks if the advanced fixed preds are valid (equal to 2d projections)
-            # if cube_idx == 3253:
+            # if cube_idx_str == "3253":
             #     print("Debug")
 
             #####################
@@ -776,8 +778,6 @@ def create_2d_projections_and_3d_cubes_for_training():
             ###############
             # Export Data #
             ###############
-
-            cube_idx_str = str(cube_idx).zfill(cubes_count_digits_count)
 
             folder_2d_map = {
                 "labels_2d": label_projections,
