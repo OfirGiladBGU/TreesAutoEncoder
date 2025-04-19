@@ -532,6 +532,16 @@ def create_2d_projections_and_3d_cubes_for_training():
             pred_cube = pred_cubes[cube_idx]
             pred_fixed_cube = pred_fixed_cubes[cube_idx]
 
+            # if cube_idx == 61:
+            #     print("Debug")
+
+            # if str(cube_idx) != "303":
+            #     continue
+
+            # TODO: Add checks if the advanced fixed preds are valid (equal to 2d projections)
+            # if cube_idx == 3253:
+            #     print("Debug")
+
             #####################
             # Task Filter Crops #
             #####################
@@ -658,9 +668,6 @@ def create_2d_projections_and_3d_cubes_for_training():
             if not any(condition_list):
                 continue
 
-            # if cube_idx == 787:
-            #     print("Debug")
-
             ########################
             # Continuity Fix in 3D #
             ########################
@@ -707,9 +714,6 @@ def create_2d_projections_and_3d_cubes_for_training():
             ########################
             # Continuity Fix in 2D #
             ########################
-
-            # if str(cube_idx) != "303":
-            #     continue
 
             for view_idx, image_view in enumerate(IMAGES_6_VIEWS):
                 label_image = label_projections[f"{image_view}_image"]
@@ -768,12 +772,6 @@ def create_2d_projections_and_3d_cubes_for_training():
                     cubes_data[cube_idx].update({
                         f"{image_view}_advance_valid": True
                     })
-
-            # TODO: Add checks if the advanced fixed preds are valid (equal to 2d projections)
-
-            # DEBUG
-            # if cube_idx == 3253:
-            #     print("Debug")
 
             ###############
             # Export Data #
