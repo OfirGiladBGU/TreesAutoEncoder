@@ -26,7 +26,7 @@ from datasets_forge.dataset_configurations import IMAGES_6_VIEWS
 ###################
 def validate_data_paths(data_paths: list[str]):
     for data_path in data_paths:
-        if not pathlib.Path(data_path).exists():
+        if not os.path.exists(data_path):
             raise ValueError(f"Invalid data path: {data_path}")
         elif len(os.listdir(data_path)) == 0:
             raise ValueError(f"Empty data path: {data_path}")
