@@ -470,7 +470,7 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder, log_data=No
     apply_input_merge_2d = False  # False - for PipeForge3DPCD
     apply_input_merge_3d = True
     apply_fusion = True
-    apply_noise_filter_2d = True
+    apply_noise_filter_2d = False  # TODO: check why it is not working well
     apply_noise_filter_3d = True
 
     # INPUTS
