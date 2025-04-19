@@ -454,6 +454,8 @@ def create_2d_projections_and_3d_cubes_for_training():
 
     print("Cropping Mini Cubes...")
     filepaths_count = len(input_filepaths["labels"])
+    if STOP_INDEX > 0:
+        filepaths_count = min(filepaths_count, STOP_INDEX)
     for filepath_idx in range(filepaths_count):
         #############
         # Load Data #
@@ -945,6 +947,8 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
     # TODO: Implement
     print("Cropping Mini Cubes...")
     filepaths_count = len(input_filepaths["evals"])
+    if STOP_INDEX > 0:
+        filepaths_count = min(filepaths_count, STOP_INDEX)
     for filepath_idx in range(filepaths_count):
         # Get index data:
         eval_filepath = input_filepaths["evals"][filepath_idx]
