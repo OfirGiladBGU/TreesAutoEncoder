@@ -629,7 +629,7 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
         # Compare pixels values (Revealed occluded object behind a hole will be detected)
         delta_binary = ((label_image - pred_advanced_fixed_image) >= 1.0).astype(np.uint8)
     else:
-        # Compare pixels mask (Revealed cccluded object behind a hole will be ignored)
+        # Compare pixels mask (Revealed occluded object behind a hole will be ignored)
         delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.uint8)
         # delta_binary = ((label_binary - pred_advanced_fixed_binary) > 0.5).astype(np.uint8)
 
@@ -653,7 +653,8 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
             condition = not (components_before > components_after)
         else:
             # Add the component only if it does not increase the number of connected components [Predict Pipeline]
-            condition = not (components_before <= components_after)
+            # condition = not (components_before <= components_after)
+            condition = not (components_before < components_after)
 
         if condition:
             pred_advanced_fixed_binary = temp_fix
@@ -685,7 +686,7 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
         # Compare pixels values (Revealed occluded object behind a hole will be detected)
         delta_binary = ((label_image - pred_advanced_fixed_image) >= 1.0).astype(np.uint8)
     else:
-        # Compare pixels mask (Revealed cccluded object behind a hole will be ignored)
+        # Compare pixels mask (Revealed occluded object behind a hole will be ignored)
         delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.uint8)
 
     # Identify connected components in delta_binary
@@ -729,7 +730,8 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
         else:
             # Add the component only if it does not increase the number of connected components
             # (on the local scope) [Predict Pipeline]
-            condition = not (components_before <= components_after)
+            # condition = not (components_before <= components_after)
+            condition = not (components_before < components_after)
 
         if condition:
             pred_advanced_fixed_binary = temp_fix
