@@ -463,6 +463,9 @@ def init_pipeline_models():
 
 
 def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder, log_data=None, enable_debug=True):
+    if not os.path.exists(data_3d_filepath):
+        raise ValueError(f"File: {data_3d_filepath} doesn't exist!")
+
     # CONFIGS
     apply_input_merge_2d = False  # False - for PipeForge3DPCD
     apply_input_merge_3d = True
@@ -560,7 +563,7 @@ def test_single_predict():
     # base_filename = "PA000005_11899.nii.gz"
     # base_filename = "PA000078_11996.nii.gz"
     # base_filename = "47_52.npy"
-    base_filename = "20_303.npy"
+    base_filename = "46_301.npy"
 
     if data_type == DataType.TRAIN:
         log_data = pd.read_csv(TRAIN_LOG_PATH)
