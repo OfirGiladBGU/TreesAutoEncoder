@@ -589,7 +589,7 @@ def test_single_predict():
     )
 
 
-def full_predict(data_3d_stem, data_type: DataType):
+def full_predict(data_3d_stem, data_type: DataType, log_data=None, data_3d_folder=None, data_2d_folder=None):
     start_time = datetime.datetime.now()
     start_timestamp = start_time.strftime('%Y-%m-%d_%H-%M-%S')
     print(
@@ -598,21 +598,28 @@ def full_predict(data_3d_stem, data_type: DataType):
     )
 
     if data_type == DataType.TRAIN:
-        log_data = pd.read_csv(TRAIN_LOG_PATH)
+        if log_data is None:
+            log_data = pd.read_csv(TRAIN_LOG_PATH)
 
-        data_3d_folder = PREDS_3D
-        data_2d_folder = PREDS_2D
+        if data_3d_folder is None:
+            data_3d_folder = PREDS_3D
+            # data_3d_folder = PREDS_FIXED_3D
+            # data_3d_folder = PREDS_ADVANCED_FIXED_3D
 
-        # data_3d_folder = PREDS_FIXED_3D
-        # data_2d_folder = PREDS_FIXED_2D
+        if data_2d_folder is None:
+            data_2d_folder = PREDS_2D
+            # data_2d_folder = PREDS_FIXED_2D
+            # data_2d_folder = PREDS_ADVANCED_FIXED_2D
 
-        # data_3d_folder = PREDS_ADVANCED_FIXED_3D
-        # data_2d_folder = PREDS_ADVANCED_FIXED_2D
     else:
-        log_data = pd.read_csv(EVAL_LOG_PATH)
+        if log_data is None:
+            log_data = pd.read_csv(EVAL_LOG_PATH)
 
-        data_3d_folder = EVALS_3D
-        data_2d_folder = EVALS_3D
+        if data_3d_folder is None:
+            data_3d_folder = EVALS_3D
+
+        if data_2d_folder is None:
+            data_2d_folder = EVALS_3D
 
     # Get filepaths
     data_3d_filepaths = pathlib.Path(data_3d_folder).glob(f"{data_3d_stem}_*.*")
@@ -655,7 +662,7 @@ def full_predict(data_3d_stem, data_type: DataType):
     )
 
 
-def full_merge(data_3d_stem, data_type: DataType):
+def full_merge(data_3d_stem, data_type: DataType, log_data=None, data_3d_folder=None):
     start_time = datetime.datetime.now()
     start_timestamp = start_time.strftime('%Y-%m-%d_%H-%M-%S')
     print(
@@ -664,16 +671,20 @@ def full_merge(data_3d_stem, data_type: DataType):
     )
 
     if data_type == DataType.TRAIN:
-        # TODO: create csv log per 3D object to improve search (Maybe in the future)
-        log_data = pd.read_csv(TRAIN_LOG_PATH)
+        if log_data is None:
+            log_data = pd.read_csv(TRAIN_LOG_PATH)
 
-        # data_3d_folder = PREDS
-        data_3d_folder = PREDS_FIXED
+        if data_3d_folder is None:
+            data_3d_folder = PREDS_3D
+            # data_3d_folder = PREDS_FIXED_3D
+            # data_3d_folder = PREDS_ADVANCED_FIXED_3D
 
     else:
-        log_data = pd.read_csv(EVAL_LOG_PATH)
+        if log_data is None:
+            log_data = pd.read_csv(EVAL_LOG_PATH)
 
-        data_3d_folder = EVALS
+        if data_3d_folder is None:
+            data_3d_folder = EVALS
 
     # Input 3D object
     data_3d_filepath = list(pathlib.Path(data_3d_folder).glob(f"{data_3d_stem}*"))
@@ -792,8 +803,50 @@ def calculate_dice_scores(data_3d_stem):
     )
 
 
-def full_folder_predict(data_3d_stem, data_type: DataType):
-    raise NotImplementedError
+def full_folder_predict(data_type: DataType):
+    if data_type == DataType.TRAIN:
+        log_data = pd.read_csv(TRAIN_LOG_PATH)
+
+        data_3d_folder = PREDS_3D
+        # data_3d_folder = PREDS_FIXED_3D
+        # data_3d_folder = PREDS_ADVANCED_FIXED_3D
+
+        data_2d_folder = PREDS_2D
+        # data_2d_folder = PREDS_FIXED_2D
+        # data_2d_folder = PREDS_ADVANCED_FIXED_2D
+    else:
+        log_data = pd.read_csv(EVAL_LOG_PATH)
+
+        data_3d_folder = EVALS_3D
+
+        data_2d_folder = EVALS_2D
+
+    index_3d_stems = log_data["index_3d"].unique()
+    data_3d_stem_list = [data_3d_stem[1:] for data_3d_stem in index_3d_stems]
+    data_3d_stem_count = len(data_3d_stem_list)
+
+    for idx, data_3d_stem in enumerate(data_3d_stem_list):
+        print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Predicting...")
+        full_predict(
+            data_3d_stem=data_3d_stem,
+            data_type=data_type,
+            log_data=log_data,
+            data_3d_folder=data_3d_folder,
+            data_2d_folder=data_2d_folder
+        )
+
+    for idx, data_3d_stem in enumerate(data_3d_stem_list):
+        print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Merging...")
+        full_merge(
+            data_3d_stem=data_3d_stem,
+            data_type=data_type,
+            log_data=log_data,
+            data_3d_folder=data_3d_folder
+        )
+
+    for idx, data_3d_stem in enumerate(data_3d_stem_list):
+        print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating Dice Scores...")
+        calculate_dice_scores(data_3d_stem=data_3d_stem)
 
 
 def main():
@@ -826,6 +879,7 @@ if __name__ == "__main__":
     # TODO: try to improve cleanup of 2D models results for the 3D fusion - TBD
     # TODO: support the classification models - TBD
     # TODO: add 45 degrees projections - Removed
+    # TODO: create csv log per 3D object to improve search (Maybe in the future) - Removed
 
 
     # TODO: another note for next stage:
