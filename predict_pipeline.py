@@ -583,7 +583,7 @@ def test_single_predict():
     data_3d_filepath = os.path.join(data_3d_folder, base_filename)
     single_predict(
         data_3d_filepath=data_3d_filepath,
-        data_3d_folder=data_3d_folder
+        data_3d_folder=data_3d_folder,
         data_2d_folder=data_2d_folder,
         log_data=log_data
     )
@@ -615,7 +615,7 @@ def full_predict(data_3d_stem, data_type: DataType):
         data_2d_folder = EVALS_3D
 
     # Get filepaths
-    data_3d_filepaths = pathlib.Path(data_3d_folder).rglob(f"{data_3d_stem}_*.*")
+    data_3d_filepaths = pathlib.Path(data_3d_folder).glob(f"{data_3d_stem}_*.*")
     data_3d_filepaths = sorted(data_3d_filepaths)
 
     # Single-threading - Sequential
@@ -676,7 +676,7 @@ def full_merge(data_3d_stem, data_type: DataType):
         data_3d_folder = EVALS
 
     # Input 3D object
-    data_3d_filepath = list(pathlib.Path(data_3d_folder).rglob(f"{data_3d_stem}*"))
+    data_3d_filepath = list(pathlib.Path(data_3d_folder).glob(f"{data_3d_stem}*"))
     if len(data_3d_filepath) == 1:
         input_filepath = data_3d_filepath[0]
     else:
@@ -684,7 +684,7 @@ def full_merge(data_3d_stem, data_type: DataType):
 
     # Pipeline Predicts
     predict_folder = PREDICT_PIPELINE_RESULTS_PATH
-    predict_filepaths = sorted(pathlib.Path(predict_folder).rglob(f"{data_3d_stem}_*_output.*"))
+    predict_filepaths = sorted(pathlib.Path(predict_folder).glob(f"{data_3d_stem}_*_output.*"))
 
     # Pipeline Merge output path
     output_folder = MERGE_PIPELINE_RESULTS_PATH
@@ -734,15 +734,15 @@ def calculate_dice_scores(data_3d_stem):
 
     # Baseline
     # output_folder = PREDS_3D
-    # output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_stem}_*.*")
+    # output_filepaths = pathlib.Path(output_folder).glob(f"{data_3d_stem}_*.*")
 
     # Output
     # output_folder = PREDICT_PIPELINE_RESULTS_PATH
-    # output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_stem}_*_output.*")
+    # output_filepaths = pathlib.Path(output_folder).glob(f"{data_3d_stem}_*_output.*")
 
     # Ground Truth
     # target_folder = LABELS_3D
-    # target_filepaths = pathlib.Path(target_folder).rglob(f"{data_3d_stem}_*.*")
+    # target_filepaths = pathlib.Path(target_folder).glob(f"{data_3d_stem}_*.*")
 
     #####################
     # FULL DATA COMPARE #
@@ -750,15 +750,15 @@ def calculate_dice_scores(data_3d_stem):
 
     # Baseline
     # output_folder = PREDS
-    # output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_stem}*.*")
+    # output_filepaths = pathlib.Path(output_folder).glob(f"{data_3d_stem}*.*")
 
     # Output
     output_folder = MERGE_PIPELINE_RESULTS_PATH
-    output_filepaths = pathlib.Path(output_folder).rglob(f"{data_3d_stem}*.*")
+    output_filepaths = pathlib.Path(output_folder).glob(f"{data_3d_stem}*.*")
 
     # Ground Truth
     target_folder = LABELS
-    target_filepaths = pathlib.Path(target_folder).rglob(f"{data_3d_stem}*.*")
+    target_filepaths = pathlib.Path(target_folder).glob(f"{data_3d_stem}*.*")
 
     #########################
     # Calculate Dice Scores #

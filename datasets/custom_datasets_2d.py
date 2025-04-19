@@ -6,8 +6,8 @@ from torch.utils.data import Dataset, Subset
 from torchvision import transforms
 import pandas as pd
 
-from datasets_forge.dataset_configurations import (APPLY_LOG_FILTER, TRAIN_LOG_PATH, V1_2D_DATASETS, V2_2D_DATASETS,
-                                                   IMAGES_6_VIEWS)
+from datasets_forge.dataset_configurations import (TRAIN_LOG_PATH, V1_2D_DATASETS, V2_2D_DATASETS, IMAGES_6_VIEWS,
+                                                   APPLY_LOG_FILTER)
 from datasets.dataset_utils import get_data_file_stem, convert_data_file_to_numpy, validate_data_paths
 
 
@@ -145,10 +145,8 @@ class TreesCustomDatasetV2(Dataset):
 
         if not os.path.exists(TRAIN_LOG_PATH):
             raise FileNotFoundError(f"File not found: {TRAIN_LOG_PATH}")
-        elif self.args.include_regression is True:
-            self.log_data = pd.read_csv(TRAIN_LOG_PATH)
-        else:
-            self.log_data = None
+        # elif self.args.include_regression is True:
+        self.log_data = pd.read_csv(TRAIN_LOG_PATH)
 
         self.paths_count = len(data_paths)
         if not (1 <= self.paths_count <= 2):
@@ -264,22 +262,28 @@ class TreesCustomDataset2D:
 
         # # self.train_subset, self.test_subset = torch.utils.data.random_split(trees_dataset, [train_size, test_size])
 
-
         # Option 2: Split based 3D files
         index_3d_stems = trees_dataset.log_data["index_3d"].unique()
         index_3d_split_index = round(len(index_3d_stems) * 0.9)
         train_stems = index_3d_stems[:index_3d_split_index]
-        test_stems = index_3d_stems[index_3d_split_index:]
+        # test_stems = index_3d_stems[index_3d_split_index:]
 
         train_indices = []
         test_indices = []
         for idx in range(len(trees_dataset)):
-            data_files1_stem = get_data_file_stem(
-                data_filepath=trees_dataset.data_files1[idx],
-                relative_to=trees_dataset.data_paths[0]
+            if isinstance(trees_dataset, TreesCustomDatasetV2):
+                file_idx = idx * len(IMAGES_6_VIEWS)
+            else:
+                file_idx = idx
+
+            data_files2_stem = get_data_file_stem(
+                data_filepath=trees_dataset.data_files2[file_idx],
+                relative_to=trees_dataset.data_paths[1]
             )
-            data_files1_base_stem = f"~{data_files1_stem.rsplit(sep='_', maxsplit=2)[0]}"
-            if data_files1_base_stem in train_stems:
+
+            # Format: ~/{output_idx}_{cube_idx}_{image_view}{ext}
+            data_files2_output_idx = f"~{data_files2_stem.rsplit(sep='_', maxsplit=2)[0]}"
+            if data_files2_output_idx in train_stems:
                 train_indices.append(idx)
             else:
                 test_indices.append(idx)

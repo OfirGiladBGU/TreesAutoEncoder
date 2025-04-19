@@ -7,8 +7,8 @@ from torchvision import transforms
 import pandas as pd
 import numpy as np
 
-from datasets_forge.dataset_configurations import TRAIN_LOG_PATH, V1_3D_DATASETS, V2_3D_DATASETS
-from datasets.dataset_utils import convert_data_file_to_numpy, validate_data_paths
+from datasets_forge.dataset_configurations import TRAIN_LOG_PATH, V1_3D_DATASETS, V2_3D_DATASETS, IMAGES_6_VIEWS
+from datasets.dataset_utils import get_data_file_stem, convert_data_file_to_numpy, validate_data_paths
 
 
 # 6 2D inputs + 1 3D target
@@ -22,10 +22,8 @@ class TreesCustomDatasetV1(Dataset):
 
         if not os.path.exists(TRAIN_LOG_PATH):
             raise FileNotFoundError(f"File not found: {TRAIN_LOG_PATH}")
-        elif self.args.include_regression is True:
-            self.log_data = pd.read_csv(TRAIN_LOG_PATH)
-        else:
-            self.log_data = None
+        # elif self.args.include_regression is True:
+        self.log_data = pd.read_csv(TRAIN_LOG_PATH)
 
         self.paths_count = len(data_paths)
         if not (1 <= self.paths_count <= 2):
@@ -33,16 +31,30 @@ class TreesCustomDatasetV1(Dataset):
         current_count = self.paths_count
 
         # current_count > 0:
-        self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.png")
-        self.data_files1 = sorted(self.data_files1)
+        # self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.png")
+        # self.data_files1 = sorted(self.data_files1)
+
+        self.data_files1 = []
         current_count -= 1
 
         if current_count > 0:
-            self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.*")
-            self.data_files2 = sorted(self.data_files2)
+            # self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.*")
+            # self.data_files2 = sorted(self.data_files2)
+
+            self.data_files2 = []
             current_count -= 1
         else:
             self.data_files2 = None
+
+        col_0 = self.log_data.columns[0]
+        for row_idx, row in self.log_data.iterrows():
+            for image_view in IMAGES_6_VIEWS:
+                data_file1 = os.path.join(data_paths[0], f"{row[col_0]}_{image_view}.png")
+                self.data_files1.append(data_file1)
+
+            if self.data_files2 is not None:
+                data_file2 = pathlib.Path(data_paths[1]).glob(f"{row[col_0]}.*")
+                self.data_files2.append(data_file2)
 
         self.scans_count = len(self.data_files2)
 
@@ -100,10 +112,8 @@ class TreesCustomDatasetV2(Dataset):
 
         if not os.path.exists(TRAIN_LOG_PATH):
             raise FileNotFoundError(f"File not found: {TRAIN_LOG_PATH}")
-        elif self.args.include_regression is True:
-            self.log_data = pd.read_csv(TRAIN_LOG_PATH)
-        else:
-            self.log_data = None
+        # elif self.args.include_regression is True:
+        self.log_data = pd.read_csv(TRAIN_LOG_PATH)
 
         self.paths_count = len(data_paths)
         if not (1 <= self.paths_count <= 2):
@@ -111,16 +121,29 @@ class TreesCustomDatasetV2(Dataset):
         current_count = self.paths_count
 
         # current_count > 0:
-        self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.*")
-        self.data_files1 = sorted(self.data_files1)
+        # self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.*")
+        # self.data_files1 = sorted(self.data_files1)
+
+        self.data_files1 = []
         current_count -= 1
 
         if current_count > 0:
-            self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.*")
-            self.data_files2 = sorted(self.data_files2)
+            # self.data_files2 = pathlib.Path(data_paths[1]).rglob("*.*")
+            # self.data_files2 = sorted(self.data_files2)
+
+            self.data_files2 = []
             current_count -= 1
         else:
             self.data_files2 = None
+
+        col_0 = self.log_data.columns[0]
+        for row_idx, row in self.log_data.iterrows():
+            data_file1 = pathlib.Path(data_paths[0]).glob(f"{row[col_0]}.*")
+            self.data_files1.append(data_file1)
+
+            if self.data_files2 is not None:
+                data_file2 = pathlib.Path(data_paths[1]).glob(f"{row[col_0]}.*")
+                self.data_files2.append(data_file2)
 
         self.scans_count = len(self.data_files2)
 
@@ -194,12 +217,35 @@ class TreesCustomDataset3D:
 
         # TODO: Perform split based on the 3D files count
 
-        dataset_size = len(trees_dataset)
-        train_size = int(dataset_size * 0.9)
-        test_size = dataset_size - train_size
+        # # Option 1: Split by files percentage
+        # dataset_size = len(trees_dataset)
+        # train_size = int(dataset_size * 0.9)
+        # test_size = dataset_size - train_size
+        # train_indices = range(0, train_size)
+        # test_indices = range(train_size, train_size + test_size)
 
-        # self.train_subset, self.test_subset = torch.utils.data.random_split(trees_dataset, [train_size, test_size])
+        # # self.train_subset, self.test_subset = torch.utils.data.random_split(trees_dataset, [train_size, test_size])
+
+        # Option 2: Split based 3D files
+        index_3d_stems = trees_dataset.log_data["index_3d"].unique()
+        index_3d_split_index = round(len(index_3d_stems) * 0.9)
+        train_stems = index_3d_stems[:index_3d_split_index]
+        # test_stems = index_3d_stems[index_3d_split_index:]
+
+        train_indices = []
+        test_indices = []
+        for idx in range(len(trees_dataset)):
+            data_files2_stem = get_data_file_stem(
+                data_filepath=trees_dataset.data_files2[idx],
+                relative_to=trees_dataset.data_paths[1]
+            )
+            # Format: ~/{output_idx}_{cube_idx}{ext}
+            data_files2_output_idx = f"~{data_files2_stem.rsplit(sep='_', maxsplit=1)[0]}"
+            if data_files2_output_idx in train_stems:
+                train_indices.append(idx)
+            else:
+                test_indices.append(idx)
 
         # Non random split
-        self.train_subset = Subset(trees_dataset, indices=range(0, train_size))
-        self.test_subset = Subset(trees_dataset, indices=range(train_size, train_size + test_size))
+        self.train_subset = Subset(dataset=trees_dataset, indices=train_indices)
+        self.test_subset = Subset(dataset=trees_dataset, indices=test_indices)

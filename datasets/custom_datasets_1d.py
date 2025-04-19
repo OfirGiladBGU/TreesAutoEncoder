@@ -20,17 +20,24 @@ class TreesCustomDatasetV1(Dataset):
 
         if not os.path.exists(TRAIN_LOG_PATH):
             raise FileNotFoundError(f"File not found: {TRAIN_LOG_PATH}")
-        else:
-            self.log_data = pd.read_csv(TRAIN_LOG_PATH)  # filter invalid data
+        self.log_data = pd.read_csv(TRAIN_LOG_PATH)  # filter invalid data
 
         self.paths_count = len(data_paths)
         if not (self.paths_count == 1):
             raise ValueError("Invalid number of data paths")
 
         # current_count > 0:
-        self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.png")
-        self.data_files1 = sorted(self.data_files1)
+        # self.data_files1 = pathlib.Path(data_paths[0]).rglob("*.png")
+        # self.data_files1 = sorted(self.data_files1)
+
+        self.data_files1 = []
         self.data_classes = []
+
+        col_0 = self.log_data.columns[0]
+        for row_idx, row in self.log_data.iterrows():
+            for image_view in IMAGES_6_VIEWS:
+                data_file1 = os.path.join(data_paths[0], f"{row[col_0]}_{image_view}.png")
+                self.data_files1.append(data_file1)
 
         ###############
         # Get classes #
@@ -86,6 +93,9 @@ class TreesCustomDatasetV1(Dataset):
         return item
 
 
+# TODO: TBD: 6 2D input + 1 1D target
+
+
 class TreesCustomDataset1D:
     def __init__(self, args: argparse.Namespace, data_paths, transform=None):
         validate_data_paths(data_paths=data_paths)
@@ -106,12 +116,35 @@ class TreesCustomDataset1D:
 
         # TODO: Perform split based on the 3D files count
 
-        dataset_size = len(trees_dataset)
-        train_size = int(dataset_size * 0.9)
-        test_size = dataset_size - train_size
+        # # Option 1: Split by files percentage
+        # dataset_size = len(trees_dataset)
+        # train_size = int(dataset_size * 0.9)
+        # test_size = dataset_size - train_size
+        # train_indices = range(0, train_size)
+        # test_indices = range(train_size, train_size + test_size)
 
-        # self.train_subset, self.test_subset = torch.utils.data.random_split(trees_dataset, [train_size, test_size])
+        # # self.train_subset, self.test_subset = torch.utils.data.random_split(trees_dataset, [train_size, test_size])
+
+        # Option 2: Split based 3D files
+        index_3d_stems = trees_dataset.log_data["index_3d"].unique()
+        index_3d_split_index = round(len(index_3d_stems) * 0.9)
+        train_stems = index_3d_stems[:index_3d_split_index]
+        # test_stems = index_3d_stems[index_3d_split_index:]
+
+        train_indices = []
+        test_indices = []
+        for idx in range(len(trees_dataset)):
+            data_files1_stem = get_data_file_stem(
+                data_filepath=trees_dataset.data_files1[idx],
+                relative_to=trees_dataset.data_paths[0]
+            )
+            # Format: ~/{output_idx}_{cube_idx}_{image_view}{ext}
+            data_files1_output_idx = f"~{data_files1_stem.rsplit(sep='_', maxsplit=2)[0]}"
+            if data_files1_output_idx in train_stems:
+                train_indices.append(idx)
+            else:
+                test_indices.append(idx)
 
         # Non random split
-        self.train_subset = Subset(trees_dataset, indices=range(0, train_size))
-        self.test_subset = Subset(trees_dataset, indices=range(train_size, train_size + test_size))
+        self.train_subset = Subset(dataset=trees_dataset, indices=train_indices)
+        self.test_subset = Subset(dataset=trees_dataset, indices=test_indices)
