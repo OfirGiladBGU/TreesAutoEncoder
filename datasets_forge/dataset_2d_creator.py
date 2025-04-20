@@ -337,6 +337,10 @@ def create_data_components(data_options):
         input_folders["preds"] = PREDS
         output_folders["preds_components"] = PREDS_COMPONENTS
 
+    if data_options.get(PREDS_FIXED, False) is True:
+        input_folders["preds_fixed"] = PREDS_FIXED
+        output_folders["preds_fixed_components"] = PREDS_FIXED_COMPONENTS
+
     if data_options.get(EVALS, False) is True:
         input_folders["evals"] = EVALS
         output_folders["evals_components"] = EVALS_COMPONENTS
