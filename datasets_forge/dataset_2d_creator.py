@@ -855,7 +855,7 @@ def create_2d_projections_and_3d_cubes_for_training():
             if TASK_TYPE == TaskType.SINGLE_COMPONENT:
                 for key, value in folder_3d_components_map.items():
                     if key == "preds_advanced_fixed_components_3d":
-                        source_name = "preds_fixed_components_3d"
+                        source_name = "preds_fixed_components"
                     else:
                         source_name = key.replace("_3d", "")
                     source_data_filepath = input_filepaths[source_name][filepath_idx]
