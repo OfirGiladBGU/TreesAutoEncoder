@@ -333,11 +333,11 @@ def create_data_components(data_options):
     # Outputs
     output_folders = {}
 
-    if data_options.get("preds", False) is True:
+    if data_options.get(PREDS, False) is True:
         input_folders["preds"] = PREDS
         output_folders["preds_components"] = PREDS_COMPONENTS
 
-    if data_options.get("evals", False) is True:
+    if data_options.get(EVALS, False) is True:
         input_folders["evals"] = EVALS
         output_folders["evals_components"] = EVALS_COMPONENTS
 
