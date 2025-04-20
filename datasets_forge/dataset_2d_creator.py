@@ -245,6 +245,7 @@ def create_dataset_with_outliers_removed():
 
         pred_fixed_numpy_data = outlier_removal_3d(pred_data=pred_numpy_data, label_data=label_numpy_data)
         data_stem = get_data_file_stem(data_filepath=pred_filepath, relative_to=output_folders["preds"])
+
         save_filename = os.path.join(output_folders["preds_fixed"], data_stem)
         convert_numpy_to_data_file(
             numpy_data=pred_fixed_numpy_data,
