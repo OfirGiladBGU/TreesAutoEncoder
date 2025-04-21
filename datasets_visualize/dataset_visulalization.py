@@ -17,6 +17,7 @@ from datasets.dataset_utils import _interactive_plot_3d as interactive_plot_3d
 
 # Matplotlib Plot 3D
 def matplotlib_plot_3d(data_3d: np.ndarray, save_filename, set_aspect_ratios=False):
+    os.makedirs(name=os.path.dirname(save_filename), exist_ok=True)
     print(
         f"Save filename: '{save_filename}*'\n"
         f"Data shape: '{data_3d.shape}'\n"
@@ -142,11 +143,10 @@ def single_plot_3d(data_3d_filepath, interactive_mode: bool = False, interactive
         numpy_3d_data = connected_components_3d(data_3d=numpy_3d_data)[0]
 
     if interactive_mode is False:
-        save_path = os.path.join("TEST", "single_predict")
-        os.makedirs(name=save_path, exist_ok=True)
-        save_name = os.path.join(save_path, "result")
+        save_path = os.path.join("TEST", "single_predict_3d")
+        save_filename = os.path.join(save_path, "result")
 
-        matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_name)
+        matplotlib_plot_3d(data_3d=numpy_3d_data, save_filename=save_filename)
     else:
         interactive_plot_3d(data_3d=numpy_3d_data, version=interactive_version, set_aspect_ratios=True)
 
@@ -168,7 +168,6 @@ def full_plot_3d(data_3d_stem: str, include_pipeline_results: bool = False):
 
     for key, value in folder_paths.items():
         save_path = os.path.join(VISUALIZATION_RESULTS_PATH, key)
-        os.makedirs(name=save_path, exist_ok=True)
         save_filename = os.path.join(str(save_path), f"{data_3d_stem}")
 
         # data_3d_filepath = os.path.join(value, f"{data_3d_stem}.nii.gz")
@@ -184,7 +183,6 @@ def full_plot_3d(data_3d_stem: str, include_pipeline_results: bool = False):
 
         for result_type in result_types:
             save_path = os.path.join(VISUALIZATION_RESULTS_PATH, f"pipeline_{result_type}")
-            os.makedirs(name=save_path, exist_ok=True)
             save_filename = os.path.join(str(save_path), f"{data_3d_stem}")
 
             # data_3d_filepath = os.path.join(folder_path, f"{data_3d_stem}_{result_type}.nii.gz")
@@ -199,8 +197,10 @@ def full_plot_3d(data_3d_stem: str, include_pipeline_results: bool = False):
 ####################
 
 # Matplotlib Plot 2D
-def matplotlib_plot_2d(save_filepath, data_2d_list):
-    columns = 6
+def matplotlib_plot_2d(data_2d_list, save_filename):
+    os.makedirs(name=os.path.dirname(save_filename), exist_ok=True)
+    # columns = 6
+    columns = len(data_2d_list)
     rows = 1
     fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
     ax = list()
@@ -210,8 +210,10 @@ def matplotlib_plot_2d(save_filepath, data_2d_list):
         ax.append(fig.add_subplot(rows, columns, 0 * columns + j + 1))
         numpy_image = data_2d_list[j]
         plt.imshow(numpy_image)
-        ax[j].set_title(f"View {IMAGES_6_VIEWS[j]}:")
-
+        if columns == len(IMAGES_6_VIEWS):
+            ax[j].set_title(f"View {IMAGES_6_VIEWS[j]}:")
+        else:
+            ax[j].set_title(f"View {j + 1}:")
     fig.tight_layout()
     plt.savefig(save_filepath)
     plt.close(fig)
@@ -224,7 +226,10 @@ def single_plot_2d(data_2d_filepath, interactive_mode: bool = False):
     numpy_2d_data = cv2.imread(data_2d_filepath, cv2.IMREAD_GRAYSCALE)
 
     if interactive_mode is False:
-        pass
+        save_path = os.path.join("TEST", "single_predict_2d")
+        save_filename = os.path.join(save_path, "result")
+
+        matplotlib_plot_2d(data_2d_list=[numpy_2d_data], save_filename=save_filename)
     else:
         interactive_plot_2d(data_2d=numpy_2d_data)
 
@@ -252,9 +257,8 @@ def full_plot_2d(data_3d_stem: str, plot_components: bool = False):
             data_2d_list.append(image)
 
         save_path = os.path.join(VISUALIZATION_RESULTS_PATH, key)
-        os.makedirs(name=save_path, exist_ok=True)
-        save_filepath = os.path.join(str(save_path), f"{data_3d_stem}")
-        matplotlib_plot_2d(save_filepath=save_filepath, data_2d_list=data_2d_list)
+        save_filename = os.path.join(save_path, data_3d_stem)
+        matplotlib_plot_2d(data_2d_list=data_2d_list, save_filename=save_filename)
 
 
 def main():

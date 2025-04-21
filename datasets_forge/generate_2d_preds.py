@@ -82,7 +82,7 @@ def convert_labels_data_to_preds_data():
     input_folder = os.path.join(CROPS_PATH, "labels_2d_v6")
     output_folder = os.path.join(CROPS_PATH, "preds_fixed_2d_v6")
 
-    os.makedirs(output_folder, exist_ok=True)
+    # os.makedirs(output_folder, exist_ok=True)
     data_filepaths = sorted(pathlib.Path(input_folder).rglob("*.*"))
 
     filepaths_count = len(data_filepaths)

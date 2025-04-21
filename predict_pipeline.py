@@ -418,7 +418,6 @@ def debug_3d(data_3d_stem, data_3d_filepath, data_3d_input: torch.Tensor):
 
     save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
     save_filename = os.path.join(save_path, f"{data_3d_stem}_input")
-    os.makedirs(name=os.path.dirname(save_filename), exist_ok=True)
     convert_numpy_to_data_file(numpy_data=data_3d_input, source_data_filepath=data_3d_filepath,
                                save_filename=save_filename)
 
@@ -428,7 +427,6 @@ def export_output(data_3d_stem, data_3d_filepath, data_3d_output: torch.Tensor):
 
     save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
     save_filename = os.path.join(save_path, f"{data_3d_stem}_output")
-    os.makedirs(name=os.path.dirname(save_filename), exist_ok=True)
     convert_numpy_to_data_file(numpy_data=data_3d_output, source_data_filepath=data_3d_filepath,
                                save_filename=save_filename)
 
@@ -742,7 +740,6 @@ def full_merge(data_3d_stem, data_type: DataType, log_data=None, source_data_3d_
 
     # Save the final result
     save_filename = os.path.join(output_folder, data_3d_stem)
-    os.makedirs(name=os.path.dirname(save_filename), exist_ok=True)
     convert_numpy_to_data_file(numpy_data=input_data, source_data_filepath=input_filepath,
                                save_filename=save_filename)
 
