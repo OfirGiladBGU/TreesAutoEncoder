@@ -60,7 +60,7 @@ def get_data_file_stem(data_filepath, relative_to=None) -> str:
     return data_filepath_stem
 
 
-def convert_data_file_to_numpy(data_filepath, **kwargs) -> np.ndarray:
+def convert_data_file_to_numpy(data_filepath, apply_data_threshold: bool = False, **kwargs) -> np.ndarray:
     extension_map = {
         # 2D
         ".png": _convert_png_to_numpy,
@@ -76,12 +76,15 @@ def convert_data_file_to_numpy(data_filepath, **kwargs) -> np.ndarray:
 
     if data_extension in extension_map.keys():
         numpy_data = extension_map[data_extension](data_filepath=data_filepath, **kwargs)
+        if apply_data_threshold is True:
+            apply_threshold(numpy_data, threshold=0.5, keep_values=False)
         return numpy_data
     else:
         raise ValueError(f"Invalid data format (Got extension: '{data_extension}')")
 
 
-def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, save_filename=None, **kwargs):
+def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, save_filename=None,
+                               apply_data_threshold: bool = False, **kwargs):
     extension_map = {
         # 2D
         ".png": _convert_numpy_to_png,
@@ -96,6 +99,8 @@ def convert_numpy_to_data_file(numpy_data: np.ndarray, source_data_filepath, sav
     data_extension = get_data_file_extension(data_filepath=source_data_filepath)
 
     if data_extension in extension_map.keys():
+        if apply_data_threshold:
+            apply_threshold(numpy_data, threshold=0.5, keep_values=False)
         return extension_map[data_extension](
             numpy_data=numpy_data,
             source_data_filepath=source_data_filepath,
@@ -432,10 +437,10 @@ def _convert_numpy_to_npy(numpy_data: np.ndarray, source_data_filepath=None, sav
 ################
 # Thresholding #
 ################
-def apply_threshold(tensor: torch.Tensor, threshold: float, keep_values: bool = False):
+def apply_threshold(data: Union[torch.Tensor, np.ndarray], threshold: float, keep_values: bool = False):
     if keep_values is False:
-        tensor[tensor >= threshold] = 1.0
-    tensor[tensor < threshold] = 0.0
+        data[data >= threshold] = 1.0
+    data[data < threshold] = 0.0
 
 
 ########################
@@ -1126,6 +1131,7 @@ def reconstruct_3d_from_2d(format_of_2d_images, source_data_filepath=None) -> np
     for i in range(1, len(data_list)):
         merged_data_3d = np.logical_or(merged_data_3d, data_list[i])
     merged_data_3d = merged_data_3d.astype(np.float32)
+    apply_threshold(merged_data_3d, threshold=0.5, keep_values=False)
 
     # save_name = format_of_2d_images.replace("<VIEW>", "result")
     # convert_numpy_to_nii_gz(merged_data_3d, save_name=save_name)

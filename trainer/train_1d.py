@@ -237,7 +237,7 @@ class Trainer(object):
                 #################
 
                 # TODO: Threshold
-                apply_threshold(tensor=output_data, threshold=0.5)
+                apply_threshold(output_data, threshold=0.5)
 
                 # Detach the images from the cuda and move them to CPU
                 if self.args.cuda is True:

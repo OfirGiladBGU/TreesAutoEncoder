@@ -254,9 +254,11 @@ class Trainer(object):
 
                 # TODO: Threshold
                 threshold_data = output_data.clone()
-                apply_threshold(tensor=threshold_data, threshold=0.1)
+                apply_threshold(threshold_data, threshold=0.1, keep_values=False)
 
                 occluded_data = ((threshold_data - input_data) > 0.5).float()
+                apply_threshold(occluded_data, threshold=0.5, keep_values=False)
+
                 merge_data = torch.where(input_data > 0, input_data, threshold_data)
 
                 # Detach the images from the cuda and move them to CPU

@@ -126,7 +126,8 @@ def create_3d_reconstructions(include_debug: bool = False):
             convert_numpy_to_data_file(
                 numpy_data=numpy_3d_data,
                 source_data_filepath=source_data_3d_filepath,
-                save_filename=save_filename
+                save_filename=save_filename,
+                apply_data_threshold=True
             )
 
     # format_of_2d_images = r".\parse_labels_mini_cropped_v5\PA000005_vessel_02584_<VIEW>.png"
@@ -171,7 +172,7 @@ def create_3d_fusions():
     for filepath_idx in tqdm(range(filepaths_count)):
         # Get index data
         label_3d_reconstruct_filepath = input_filepaths["labels_3d_reconstruct"][filepath_idx]
-        label_3d_reconstruct_numpy_data = convert_data_file_to_numpy(data_filepath=label_3d_reconstruct_filepath).clip(min=0.0, max=1.0)
+        label_3d_reconstruct_numpy_data = convert_data_file_to_numpy(data_filepath=label_3d_reconstruct_filepath, apply_data_threshold=True)
 
         # Loop over options
         for key, value in input_folders.items():
@@ -180,7 +181,7 @@ def create_3d_fusions():
 
             # Get index data
             data_filepath = input_filepaths[key][filepath_idx]
-            numpy_3d_data = convert_data_file_to_numpy(data_filepath=data_filepath).clip(min=0.0, max=1.0)
+            numpy_3d_data = convert_data_file_to_numpy(data_filepath=data_filepath, apply_data_threshold=True)
 
             # Fusion
             numpy_3d_fusion = np.logical_or(numpy_3d_data, label_3d_reconstruct_numpy_data)
@@ -195,7 +196,8 @@ def create_3d_fusions():
             convert_numpy_to_data_file(
                 numpy_data=numpy_3d_fusion,
                 source_data_filepath=data_filepath,
-                save_filename=save_filename
+                save_filename=save_filename,
+                apply_data_threshold=True
             )
 
 

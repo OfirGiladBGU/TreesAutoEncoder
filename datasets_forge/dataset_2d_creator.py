@@ -250,7 +250,8 @@ def create_dataset_with_outliers_removed():
         convert_numpy_to_data_file(
             numpy_data=pred_fixed_numpy_data,
             source_data_filepath=pred_filepath,
-            save_filename=save_filename
+            save_filename=save_filename,
+            apply_data_threshold=True
         )
 
 
@@ -472,9 +473,9 @@ def create_2d_projections_and_3d_cubes_for_training():
         pred_fixed_filepath = input_filepaths["preds_fixed"][filepath_idx]
 
         # Original data
-        label_numpy_data = convert_data_file_to_numpy(data_filepath=label_filepath).clip(min=0.0, max=1.0)
-        pred_numpy_data = convert_data_file_to_numpy(data_filepath=pred_filepath).clip(min=0.0, max=1.0)
-        pred_fixed_numpy_data = convert_data_file_to_numpy(data_filepath=pred_fixed_filepath).clip(min=0.0, max=1.0)
+        label_numpy_data = convert_data_file_to_numpy(data_filepath=label_filepath)
+        pred_numpy_data = convert_data_file_to_numpy(data_filepath=pred_filepath)
+        pred_fixed_numpy_data = convert_data_file_to_numpy(data_filepath=pred_fixed_filepath, apply_data_threshold=True)
 
         # TODO: Debug
         # if (pred_numpy_data - pred_fixed_numpy_data).sum() != 0:
@@ -850,7 +851,8 @@ def create_2d_projections_and_3d_cubes_for_training():
                 convert_numpy_to_data_file(
                     numpy_data=value,
                     source_data_filepath=source_data_filepath,
-                    save_filename=save_filename
+                    save_filename=save_filename,
+                    apply_data_threshold=True
                 )
 
             if TASK_TYPE == TaskType.SINGLE_COMPONENT:
@@ -1101,7 +1103,8 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
             convert_numpy_to_data_file(
                 numpy_data=eval_cube,
                 source_data_filepath=eval_filepath,
-                save_filename=save_filename
+                save_filename=save_filename,
+                apply_data_threshold=True
             )
 
             if TASK_TYPE == TaskType.SINGLE_COMPONENT:

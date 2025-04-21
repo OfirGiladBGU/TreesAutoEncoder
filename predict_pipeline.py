@@ -79,7 +79,7 @@ def postprocess_2d(data_3d_stem: str,
         raise ValueError("Invalid shape")
 
     # TODO: Threshold
-    # apply_threshold(tensor=data_2d_output, threshold=0.2, keep_values=True)
+    # apply_threshold(data_2d_output, threshold=0.2, keep_values=True)
 
     if log_data is not None:
         # Replace invalid data with original input
@@ -325,7 +325,7 @@ def preprocess_3d(data_3d_filepath: str,
                   apply_fusion: bool = False,
                   apply_noise_filter_3d: bool = False,
                   hard_noise_filter_3d: bool = True) -> torch.Tensor:
-    pred_3d = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
+    pred_3d = convert_data_file_to_numpy(data_filepath=data_3d_filepath, apply_data_threshold=True)
     data_2d_output = data_2d_output.numpy()
 
     # Reconstruct 3D
@@ -339,11 +339,13 @@ def preprocess_3d(data_3d_filepath: str,
     for i in range(1, len(data_3d_list)):
         data_3d_reconstruct = np.logical_or(data_3d_reconstruct, data_3d_list[i])
     data_3d_reconstruct = data_3d_reconstruct.astype(np.float32)
+    apply_threshold(data_3d_reconstruct, threshold=0.5, keep_values=False)
 
     # Fusion 3D
     if apply_fusion is True:
         data_3d_fusion = np.logical_or(data_3d_reconstruct, pred_3d)
         data_3d_fusion = data_3d_fusion.astype(np.float32)
+        apply_threshold(data_3d_fusion, threshold=0.5, keep_values=False)
         data_3d_input = data_3d_fusion
     else:
         data_3d_input = data_3d_reconstruct
@@ -405,7 +407,7 @@ def postprocess_3d(data_3d_input: torch.Tensor,
     data_3d_output = data_3d_output.squeeze().squeeze()
 
     # TODO: Threshold
-    apply_threshold(tensor=data_3d_output, threshold=0.5, keep_values=False)
+    apply_threshold(data_3d_output, threshold=0.5, keep_values=False)
 
     if apply_input_merge_3d is True:
         data_3d_output = data_3d_input + torch.where(data_3d_input == 0, data_3d_output, 0)
@@ -418,8 +420,12 @@ def debug_3d(data_3d_stem, data_3d_filepath, data_3d_input: torch.Tensor):
 
     save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
     save_filename = os.path.join(save_path, f"{data_3d_stem}_input")
-    convert_numpy_to_data_file(numpy_data=data_3d_input, source_data_filepath=data_3d_filepath,
-                               save_filename=save_filename)
+    convert_numpy_to_data_file(
+        numpy_data=data_3d_input,
+        source_data_filepath=data_3d_filepath,
+        save_filename=save_filename,
+        apply_data_threshold=True
+    )
 
 
 def export_output(data_3d_stem, data_3d_filepath, data_3d_output: torch.Tensor):
@@ -427,8 +433,12 @@ def export_output(data_3d_stem, data_3d_filepath, data_3d_output: torch.Tensor):
 
     save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
     save_filename = os.path.join(save_path, f"{data_3d_stem}_output")
-    convert_numpy_to_data_file(numpy_data=data_3d_output, source_data_filepath=data_3d_filepath,
-                               save_filename=save_filename)
+    convert_numpy_to_data_file(
+        numpy_data=data_3d_output,
+        source_data_filepath=data_3d_filepath,
+        save_filename=save_filename,
+        apply_data_threshold=True
+    )
 
 
 ##################
@@ -715,7 +725,7 @@ def full_merge(data_3d_stem, data_type: DataType, log_data=None, source_data_3d_
     # os.makedirs(output_folder, exist_ok=True)
 
     # Start
-    input_data = convert_data_file_to_numpy(data_filepath=input_filepath)
+    input_data = convert_data_file_to_numpy(data_filepath=input_filepath, apply_data_threshold=True)
 
     first_column = log_data.columns[0]
     regex_pattern = f"{data_3d_stem}_.*"
@@ -724,7 +734,7 @@ def full_merge(data_3d_stem, data_type: DataType, log_data=None, source_data_3d_
     # Process the matching rows
     for row_idx, (_, row) in enumerate(matching_rows.iterrows()):
         predict_filepath = predict_filepaths[row_idx]
-        predict_data = convert_data_file_to_numpy(data_filepath=predict_filepath)
+        predict_data = convert_data_file_to_numpy(data_filepath=predict_filepath, apply_data_threshold=True)
 
         start_x, end_x, start_y, end_y, start_z, end_z = (
             row["start_x"], row["end_x"], row["start_y"], row["end_y"], row["start_z"], row["end_z"]
@@ -740,8 +750,12 @@ def full_merge(data_3d_stem, data_type: DataType, log_data=None, source_data_3d_
 
     # Save the final result
     save_filename = os.path.join(output_folder, data_3d_stem)
-    convert_numpy_to_data_file(numpy_data=input_data, source_data_filepath=input_filepath,
-                               save_filename=save_filename)
+    convert_numpy_to_data_file(
+        numpy_data=input_data,
+        source_data_filepath=input_filepath,
+        save_filename=save_filename,
+        apply_data_threshold=True
+    )
 
     end_time = datetime.datetime.now()
     end_timestamp = end_time.strftime('%Y-%m-%d_%H-%M-%S')
@@ -797,8 +811,8 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
         output_filepath = output_filepaths[idx]
         target_filepath = target_filepaths[idx]
 
-        output_3d_numpy = convert_data_file_to_numpy(data_filepath=output_filepath)
-        target_3d_numpy = convert_data_file_to_numpy(data_filepath=target_filepath)
+        output_3d_numpy = convert_data_file_to_numpy(data_filepath=output_filepath, apply_data_threshold=True)
+        target_3d_numpy = convert_data_file_to_numpy(data_filepath=target_filepath, apply_data_threshold=True)
 
         dice_score = 2 * np.sum(output_3d_numpy * target_3d_numpy) / (np.sum(output_3d_numpy) + np.sum(target_3d_numpy))
 

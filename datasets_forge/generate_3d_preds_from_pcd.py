@@ -102,7 +102,8 @@ def convert_originals_data_to_labels_data(save_as_npy: bool = False, points_scal
             source_data_filepath=data_filepath,
             save_filename=save_filename,
             points_scale=points_scale,
-            voxel_size=voxel_size
+            voxel_size=voxel_size,
+            apply_data_threshold=True
         )
 
 
@@ -429,8 +430,12 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
 
         if save_as_npy is True:
             data_filepath = f"{data_filepath}.npy"
-        convert_numpy_to_data_file(numpy_data=numpy_data, source_data_filepath=data_filepath,
-                                   save_filename=save_filename)
+        convert_numpy_to_data_file(
+            numpy_data=numpy_data,
+            source_data_filepath=data_filepath,
+            save_filename=save_filename,
+            apply_data_threshold=True
+        )
 
 
 def main():

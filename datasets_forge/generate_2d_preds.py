@@ -103,8 +103,12 @@ def convert_labels_data_to_preds_data():
         data_filepath_stem = get_data_file_stem(data_filepath=data_filepath, relative_to=input_folder)
         save_filename = os.path.join(output_folder, data_filepath_stem)
 
-        convert_numpy_to_data_file(numpy_data=numpy_2d_data, source_data_filepath=data_filepath,
-                                   save_filename=save_filename)
+        convert_numpy_to_data_file(
+            numpy_data=numpy_2d_data,
+            source_data_filepath=data_filepath,
+            save_filename=save_filename,
+            apply_data_threshold=True
+        )
         # cv2.imwrite(f"{save_filename}.png", numpy_2d_data)
 
 
