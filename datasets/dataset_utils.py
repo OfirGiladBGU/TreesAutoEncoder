@@ -455,7 +455,7 @@ def connected_components_3d(data_3d: np.ndarray, connectivity_type: int = 26) ->
         raise ValueError("Invalid connectivity type")
 
     # Label connected components
-    labeled_array, num_features = label(data_3d, structure=structure)
+    labeled_array, num_features = label(input=data_3d, structure=structure)
 
     # print("Labeled Array:", labeled_array)
     # print("Number of Features:", num_features)
@@ -463,9 +463,18 @@ def connected_components_3d(data_3d: np.ndarray, connectivity_type: int = 26) ->
     return labeled_array, num_features
 
 
-def connected_components_2d(data_2d: np.ndarray) -> Tuple[np.ndarray, int]:
+def connected_components_2d(data_2d: np.ndarray, connectivity_type: int = 4) -> Tuple[np.ndarray, int]:
+    if connectivity_type == 4:
+        structure = None
+
+    elif connectivity_type == 8:
+        structure = np.ones(shape=(3, 3, 3), dtype=np.int8)
+
+    else:
+        raise ValueError("Invalid connectivity type")
+
     # Label connected components
-    labeled_array, num_features = label(data_2d)
+    labeled_array, num_features = label(input=data_2d, structure=structure)
 
     # print("Labeled Array:", labeled_array)
     # print("Number of Features:", num_features)
