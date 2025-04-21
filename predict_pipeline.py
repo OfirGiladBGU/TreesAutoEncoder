@@ -158,10 +158,10 @@ def debug_2d(data_3d_stem: str, data_2d_input: torch.Tensor, data_2d_output: tor
         ax[j].set_title(f"View {IMAGES_6_VIEWS[j]}:")
 
     save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d")
-    os.makedirs(save_path, exist_ok=True)
-    save_filepath = os.path.join(save_path, data_3d_stem)
+    save_filename = os.path.join(save_path, data_3d_stem)
+    os.makedirs(name=os.path.dirname(save_filename), exist_ok=True)
     fig.tight_layout()
-    plt.savefig(save_filepath)
+    plt.savefig(save_filename)
     plt.close(fig)
 
 
@@ -417,21 +417,20 @@ def debug_3d(data_3d_stem, data_3d_filepath, data_3d_input: torch.Tensor):
     data_3d_input = data_3d_input.clone().numpy()
 
     save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
-    os.makedirs(save_path, exist_ok=True)
-    save_filepath = os.path.join(save_path, f"{data_3d_stem}_input")
+    save_filename = os.path.join(save_path, f"{data_3d_stem}_input")
+    os.makedirs(name=os.path.dirname(save_filename), exist_ok=True)
     convert_numpy_to_data_file(numpy_data=data_3d_input, source_data_filepath=data_3d_filepath,
-                               save_filename=save_filepath)
+                               save_filename=save_filename)
 
 
 def export_output(data_3d_stem, data_3d_filepath, data_3d_output: torch.Tensor):
     data_3d_output = data_3d_output.numpy()
 
     save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
-    os.makedirs(save_path, exist_ok=True)
-
-    save_filepath = os.path.join(save_path, f"{data_3d_stem}_output")
+    save_filename = os.path.join(save_path, f"{data_3d_stem}_output")
+    os.makedirs(name=os.path.dirname(save_filename), exist_ok=True)
     convert_numpy_to_data_file(numpy_data=data_3d_output, source_data_filepath=data_3d_filepath,
-                               save_filename=save_filepath)
+                               save_filename=save_filename)
 
 
 ##################
@@ -490,7 +489,7 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder, log_data=No
 
     data_3d_stem = get_data_file_stem(data_filepath=data_3d_filepath, relative_to=data_3d_folder)
 
-    os.makedirs(PREDICT_PIPELINE_RESULTS_PATH, exist_ok=True)
+    # os.makedirs(PREDICT_PIPELINE_RESULTS_PATH, exist_ok=True)
 
     if args.input_size_model_2d[0] == 6 and len(args.input_size_model_2d) == 3:
         apply_batch_merge = True
@@ -714,7 +713,8 @@ def full_merge(data_3d_stem, data_type: DataType, log_data=None, source_data_3d_
 
     # Pipeline Merge output path
     output_folder = MERGE_PIPELINE_RESULTS_PATH
-    os.makedirs(output_folder, exist_ok=True)
+
+    # os.makedirs(output_folder, exist_ok=True)
 
     # Start
     input_data = convert_data_file_to_numpy(data_filepath=input_filepath)
@@ -742,6 +742,7 @@ def full_merge(data_3d_stem, data_type: DataType, log_data=None, source_data_3d_
 
     # Save the final result
     save_filename = os.path.join(output_folder, data_3d_stem)
+    os.makedirs(name=os.path.dirname(save_filename), exist_ok=True)
     convert_numpy_to_data_file(numpy_data=input_data, source_data_filepath=input_filepath,
                                save_filename=save_filename)
 
@@ -807,9 +808,9 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
         idx_format = get_data_file_stem(data_filepath=target_filepath)
         scores_dict[idx_format] = dice_score
 
-    save_name = os.path.join(PREDICT_PIPELINE_DICE_CSV_FILES_PATH, f"{data_3d_stem}_dice_scores.csv")
-    os.makedirs(name=os.path.dirname(save_name), exist_ok=True)
-    pd.DataFrame(scores_dict.items()).to_csv(save_name)
+    save_filepath = os.path.join(PREDICT_PIPELINE_DICE_CSV_FILES_PATH, f"{data_3d_stem}_dice_scores.csv")
+    os.makedirs(name=os.path.dirname(save_filepath), exist_ok=True)
+    pd.DataFrame(scores_dict.items()).to_csv(save_filepath)
     scores_list = list(scores_dict.values())
     print(
         "Stats:\n"
