@@ -779,7 +779,7 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
     if compare_crops_mode is True:
         # Baseline
         # output_folder = PREDS_3D
-        # output_filepaths = pathlib.Path(output_folder).glob(f"{data_3d_stem}_*.*")
+        # output_filepaths = list(pathlib.Path(output_folder).glob(f"{data_3d_stem}_*.*"))
 
         # Output
         output_folder = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
@@ -805,7 +805,7 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
     else:
         # Baseline
         # output_folder = PREDS
-        # output_filepaths = pathlib.Path(output_folder).glob(f"{data_3d_stem}*.*")
+        # output_filepaths = list(pathlib.Path(output_folder).glob(f"{data_3d_stem}*.*"))
 
         # Output
         output_folder = MERGE_PIPELINE_RESULTS_PATH
