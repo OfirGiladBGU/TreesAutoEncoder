@@ -5,9 +5,13 @@ import numpy as np
 import random
 import cv2
 
-from datasets_forge.dataset_configurations import DATA_PATH
+from datasets_forge.dataset_configurations import DATA_CROPS_PATH
+from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file, get_data_file_stem
 
+# TODO: Debug Tools
 from datasets_visualize.dataset_visulalization import interactive_plot_2d
+
+CROPS_PATH = os.path.join(DATA_CROPS_PATH, "parse2022_custom")
 
 ##################
 # Generate Preds #
@@ -75,8 +79,8 @@ def generate_line_holes_v1(numpy_data: np.ndarray, line_width=1):
 
 # Create new 'preds' folder with holes in numpy data
 def convert_labels_data_to_preds_data():
-    input_folder = os.path.join(DATA_PATH, "train_cropped_data", "parse2022_custom", "labels_2d_v6")
-    output_folder = os.path.join(DATA_PATH, "train_cropped_data", "parse2022_custom", "preds_fixed_2d_v6")
+    input_folder = os.path.join(CROPS_PATH, "labels_2d_v6")
+    output_folder = os.path.join(CROPS_PATH, "preds_fixed_2d_v6")
 
     os.makedirs(output_folder, exist_ok=True)
     data_filepaths = sorted(pathlib.Path(input_folder).rglob("*.*"))
@@ -86,8 +90,9 @@ def convert_labels_data_to_preds_data():
         # Get index data:
         data_filepath = data_filepaths[filepath_idx]
 
-        numpy_2d_data = cv2.imread(str(data_filepath))
-        numpy_2d_data = cv2.cvtColor(numpy_2d_data, cv2.COLOR_BGR2GRAY)
+        numpy_2d_data = convert_data_file_to_numpy(data_filepath=data_filepath)
+        # numpy_2d_data = cv2.imread(str(data_filepath))
+        # numpy_2d_data = cv2.cvtColor(numpy_2d_data, cv2.COLOR_BGR2GRAY)
 
         # Generate holes:
         # TODO: implement (Use different method)
@@ -95,8 +100,12 @@ def convert_labels_data_to_preds_data():
         numpy_2d_data = generate_line_holes_v1(numpy_data=numpy_2d_data)
 
         # Save data:
-        save_filename = os.path.join(output_folder, data_filepath.stem)
-        cv2.imwrite(f"{save_filename}.png", numpy_2d_data)
+        data_filepath_stem = get_data_file_stem(data_filepath=data_filepath, relative_to=input_folder)
+        save_filename = os.path.join(output_folder, data_filepath_stem)
+
+        convert_numpy_to_data_file(numpy_data=numpy_2d_data, source_data_filepath=data_filepath,
+                                   save_filename=save_filename)
+        # cv2.imwrite(f"{save_filename}.png", numpy_2d_data)
 
 
 def main():
