@@ -643,9 +643,16 @@ def full_predict(data_3d_stem, data_type: DataType, log_data=None, data_3d_folde
         if data_2d_folder is None:
             data_2d_folder = EVALS_3D
 
-    # Get filepaths
-    data_3d_filepaths = pathlib.Path(data_3d_folder).glob(f"{data_3d_stem}_*.*")
-    data_3d_filepaths = sorted(data_3d_filepaths)
+    # Get filepaths (based on folder)
+    # data_3d_filepaths = pathlib.Path(data_3d_folder).glob(f"{data_3d_stem}_*.*")
+    # data_3d_filepaths = sorted(data_3d_filepaths)
+
+    # Get filepath (based on csv)
+    data_3d_filepaths = []
+    col_0 = log_data.columns[0]
+    for row_idx, row in log_data.iterrows():
+        data_3d_file = list(pathlib.Path(data_3d_folder).glob(f"{row[col_0]}.*"))[0]
+        data_3d_filepaths.append(data_3d_file)
 
     # Single-threading - Sequential
     # for data_3d_filepath in tqdm(data_3d_filepaths):
@@ -878,14 +885,15 @@ def full_folder_predict(data_type: DataType):
             data_2d_folder=data_2d_folder
         )
 
-    for idx, data_3d_stem in enumerate(data_3d_stem_list):
-        print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Merging...")
-        full_merge(
-            data_3d_stem=data_3d_stem,
-            data_type=data_type,
-            log_data=log_data,
-            source_data_3d_folder=source_data_3d_folder
-        )
+    # TODO: Enable when `compare_crops_mode=False` is requested
+    # for idx, data_3d_stem in enumerate(data_3d_stem_list):
+    #     print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Merging...")
+    #     full_merge(
+    #         data_3d_stem=data_3d_stem,
+    #         data_type=data_type,
+    #         log_data=log_data,
+    #         source_data_3d_folder=source_data_3d_folder
+    #     )
 
     for idx, data_3d_stem in enumerate(data_3d_stem_list):
         print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating Dice Scores...")
