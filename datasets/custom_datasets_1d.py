@@ -127,7 +127,8 @@ class TreesCustomDataset1D:
 
         # Option 2: Split based on 3D files
         index_3d_uniques = trees_dataset.log_data["index_3d"].unique()
-        index_3d_split_index = round(len(index_3d_uniques) * 0.9)
+        split_percentage = 0.9
+        index_3d_split_index = min(round(len(index_3d_uniques) * split_percentage), len(index_3d_uniques) - 1)
         data_3d_stem_list = [data_3d_stem[1:] for data_3d_stem in index_3d_uniques]
 
         train_stems = data_3d_stem_list[:index_3d_split_index]

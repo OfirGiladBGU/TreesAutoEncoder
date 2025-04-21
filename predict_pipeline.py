@@ -677,7 +677,7 @@ def full_predict(data_3d_stem, data_type: DataType, log_data=None, data_3d_folde
     )
 
 
-def full_merge(data_3d_stem, data_type: DataType, log_data=None, data_3d_folder=None):
+def full_merge(data_3d_stem, data_type: DataType, log_data=None, source_data_3d_folder=None):
     start_time = datetime.datetime.now()
     start_timestamp = start_time.strftime('%Y-%m-%d_%H-%M-%S')
     print(
@@ -689,20 +689,20 @@ def full_merge(data_3d_stem, data_type: DataType, log_data=None, data_3d_folder=
         if log_data is None:
             log_data = pd.read_csv(TRAIN_LOG_PATH)
 
-        if data_3d_folder is None:
-            data_3d_folder = PREDS_3D
-            # data_3d_folder = PREDS_FIXED_3D
-            # data_3d_folder = PREDS_ADVANCED_FIXED_3D
+        if source_data_3d_folder is None:
+            source_data_3d_folder = PREDS
+            # source_data_3d_folder = PREDS_FIXED
+            # source_data_3d_folder = PREDS_ADVANCED_FIXED
 
     else:
         if log_data is None:
             log_data = pd.read_csv(EVAL_LOG_PATH)
 
-        if data_3d_folder is None:
-            data_3d_folder = EVALS
+        if source_data_3d_folder is None:
+            source_data_3d_folder = EVALS
 
     # Input 3D object
-    data_3d_filepath = list(pathlib.Path(data_3d_folder).glob(f"{data_3d_stem}*"))
+    data_3d_filepath = list(pathlib.Path(source_data_3d_folder).glob(f"{data_3d_stem}*"))
     if len(data_3d_filepath) == 1:
         input_filepath = data_3d_filepath[0]
     else:
@@ -710,7 +710,7 @@ def full_merge(data_3d_stem, data_type: DataType, log_data=None, data_3d_folder=
 
     # Pipeline Predicts
     predict_folder = PREDICT_PIPELINE_RESULTS_PATH
-    predict_filepaths = sorted(pathlib.Path(predict_folder).glob(f"{data_3d_stem}_*_output.*"))
+    predict_filepaths = sorted(pathlib.Path(os.path.join(predict_folder, "output_3d")).glob(f"{data_3d_stem}_*_output.*"))
 
     # Pipeline Merge output path
     output_folder = MERGE_PIPELINE_RESULTS_PATH
@@ -822,12 +822,16 @@ def full_folder_predict(data_type: DataType):
     if data_type == DataType.TRAIN:
         log_data = pd.read_csv(TRAIN_LOG_PATH)
 
-        data_3d_folder = PREDS_3D
-        # data_3d_folder = PREDS_FIXED_3D
+        # source_data_3d_folder = PREDS
+        source_data_3d_folder = PREDS_FIXED
+        # source_data_3d_folder = PREDS_ADVANCED_FIXED_3D
+
+        # data_3d_folder = PREDS_3D
+        data_3d_folder = PREDS_FIXED_3D
         # data_3d_folder = PREDS_ADVANCED_FIXED_3D
 
-        data_2d_folder = PREDS_2D
-        # data_2d_folder = PREDS_FIXED_2D
+        # data_2d_folder = PREDS_2D
+        data_2d_folder = PREDS_FIXED_2D
         # data_2d_folder = PREDS_ADVANCED_FIXED_2D
     else:
         log_data = pd.read_csv(EVAL_LOG_PATH)
@@ -841,7 +845,9 @@ def full_folder_predict(data_type: DataType):
 
     # Evaluate on Training - Test Data
     if data_3d_folder in [PREDS_3D, PREDS_FIXED_3D, PREDS_ADVANCED_FIXED_3D]:
-        index_3d_split_index = round(len(index_3d_uniques) * 0.9)
+        split_percentage = 0.9
+        index_3d_split_index = min(round(len(index_3d_uniques) * split_percentage), len(index_3d_uniques) - 1)
+
         # train_stems = data_3d_stem_list[:index_3d_split_index]
         test_stems = data_3d_stem_list[index_3d_split_index:]
 
@@ -865,7 +871,7 @@ def full_folder_predict(data_type: DataType):
             data_3d_stem=data_3d_stem,
             data_type=data_type,
             log_data=log_data,
-            data_3d_folder=data_3d_folder
+            source_data_3d_folder=source_data_3d_folder
         )
 
     for idx, data_3d_stem in enumerate(data_3d_stem_list):
@@ -874,24 +880,19 @@ def full_folder_predict(data_type: DataType):
 
 
 def main():
-    # 1. Use model 1 on the `parse_preds_mini_cropped`
-    # 2. Save the results in `parse_fixed_mini_cropped`
-    # 3. Perform direct `logical or` on `parse_fixed_mini_cropped` to get `parse_prefixed_mini_cropped_3d`
-    # 4. Use model 2 on the `parse_prefixed_mini_cropped_3d`
-    # 5. Save the results in `parse_fixed_mini_cropped_3d`
-    # 6. Run steps 1-5 for mini cubes and combine all the results to get the final result
-    # 7. Perform cleanup on the final result (delete small connected components)
-
     init_pipeline_models()
 
     # TODO: Requires Model Init
-    test_single_predict()
+    # test_single_predict()
 
+    data_type = DataType.TRAIN
     # data_3d_stem = "Hospital CUP 1in3"
-    # data_type = DataType.TRAIN
+
     # full_predict(data_3d_stem=data_3d_stem, data_type=data_type)
     # full_merge(data_3d_stem=data_3d_stem, data_type=data_type)
     # calculate_dice_scores(data_3d_stem=data_3d_stem)
+
+    full_folder_predict(data_type=data_type)
 
 
 if __name__ == "__main__":

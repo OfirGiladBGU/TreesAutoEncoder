@@ -23,25 +23,41 @@ voxel_size = 1.0
 ```
 
 
-## How to create the datasets:
+## How to create the dataset (Example for Parse2022):
 
 1. Put the `parse2022` dataset with the `labels` and `preds` data on the path: `./data/parse2022`
-   1. `labels` - The ground truth
-   2. `preds` - The predicted labels by a model
-2. To build the `dataset_2d` run `dataset_2d_creator` script: [dataset_2d_creator.py](datasets_forge/dataset_2d_creator.py)
-3. To build the `dataset_3d` run  `dataset_3d_creator` script: [dataset_3d_creator.py](datasets_forge/dataset_3d_creator.py)
+   - `labels` - The ground truth
+   - `preds` - The predicted labels by a model
+2. Create config file in `.yaml` format and put it in `configs` folder (see example: [parse2022.yaml](configs/parse2022.yaml)).
+3. Build the `dataset_2d` (also `dataset_1d`) by running `dataset_2d_creator` script: [dataset_2d_creator.py](datasets_forge/dataset_2d_creator.py)
+4. Build the `dataset_3d` by running  `dataset_3d_creator` script: [dataset_3d_creator.py](datasets_forge/dataset_3d_creator.py)
 
 
 ## How To train the models:
 
-1. To train the `model_1d` run `main_1d` script: [main_1d.py](main_1d.py)
-2. To train the `model_2d` run `main_2d` script: [main_2d.py](main_2d.py)
-3. To train the `model_3d` run `main_3d` script: [main_3d.py](main_3d.py)
+- To train the `model_1d` run `main_1d` script: [main_1d.py](main_1d.py)
+- To train the `model_2d` run `main_2d` script: [main_2d.py](main_2d.py)
+- To train the `model_3d` run `main_3d` script: [main_3d.py](main_3d.py)
 
+**Notice:** all scripts are calling the generic [main_base.py](main_base.py) scripts that call the matching training 
+scripts in the files, based on the `model_type` parameter in the relevant main script:
+
+- [train_1d.py](trainer/train_1d.py)
+- [train_2d.py](trainer/train_2d.py)
+- [train_3d.py](trainer/train_3d.py)
 
 ## How to test the full pipeline:
 
 1. Run the `predict_pipeline` script: [predict_pipeline.py](predict_pipeline.py)
+
+
+## Generate synthetic data with holes (Example for PipeForge3D):
+1. Put the `PipeForge3D` dataset with the `originals` data on the path: `./data/PipeForge3D`
+   - `originals` - The raw data, before voxelization
+2. Run either of the following scripts depending on your data type:
+   - [generate_3d_preds_from_mesh.py](datasets_forge/generate_3d_preds_from_mesh.py) - For mesh like data types: `_mesh.ply`, `.obj`, `.nii.gz` (annotations)
+   - [generate_3d_preds_from_pcd.py](datasets_forge/generate_3d_preds_from_pcd.py) - For point clound like data types: `_pcd.ply`, `.pcd`
+3. Repeat the steps in `How to create the dataset`.
 
 ---
 
@@ -110,6 +126,16 @@ Given the `3d ground truth` and the `3d predicted labels`:
       1. Train with the `cropped 3d predicted labels` to the `cropped 3d predicted labels` to **reconstruct** and get the `cropped 3d ground truth`
       2. Predict with the `cropped 3d predicted labels` to get the `cropped 3d fixed labels`
    3. Use all the `cropped 3d fixed label` to fix the `3d predicted labels`
+
+# Predict Pipeline Flow (Old):
+
+1. Use model 1 on the `parse_preds_mini_cropped`
+2. Save the results in `parse_fixed_mini_cropped`
+3. Perform direct `logical or` on `parse_fixed_mini_cropped` to get `parse_prefixed_mini_cropped_3d`
+4. Use model 2 on the `parse_prefixed_mini_cropped_3d`
+5. Save the results in `parse_fixed_mini_cropped_3d`
+6. Run steps 1-5 for mini cubes and combine all the results to get the final result
+7. Perform cleanup on the final result (delete small connected components)
 
 ---
 
