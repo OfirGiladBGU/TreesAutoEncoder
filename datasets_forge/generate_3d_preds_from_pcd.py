@@ -7,7 +7,7 @@ from scipy.ndimage import convolve, label, rotate
 import math
 
 from datasets_forge.dataset_configurations import DATA_PATH
-from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file
+from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file, get_data_file_stem
 
 # TODO: Debug Tools
 from datasets_visualize.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
@@ -74,7 +74,7 @@ def convert_originals_data_to_labels_data(save_as_npy: bool = False, points_scal
     input_folder = os.path.join(DATASET_PATH, "originals")
     output_folder = os.path.join(DATASET_PATH, "labels")
 
-    os.makedirs(output_folder, exist_ok=True)
+    # os.makedirs(output_folder, exist_ok=True)
     data_filepaths = sorted(pathlib.Path(input_folder).rglob("*.*"))
 
     filepaths_count = len(data_filepaths)
@@ -92,7 +92,8 @@ def convert_originals_data_to_labels_data(save_as_npy: bool = False, points_scal
             numpy_data = expand_connected_neighbors(array=numpy_data)
 
         # Save data:
-        save_filename = os.path.join(output_folder, data_filepath.stem)
+        data_filepath_stem = get_data_file_stem(data_filepath=data_filepath, relative_to=input_folder)
+        save_filename = os.path.join(output_folder, data_filepath_stem)
 
         if save_as_npy is True:
             data_filepath = f"{data_filepath}.npy"
@@ -404,7 +405,7 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
     input_folder = os.path.join(DATASET_PATH, "labels")
     output_folder = os.path.join(DATASET_PATH, "preds")
 
-    os.makedirs(output_folder, exist_ok=True)
+    # os.makedirs(output_folder, exist_ok=True)
     data_filepaths = sorted(pathlib.Path(input_folder).rglob("*.*"))
 
     filepaths_count = len(data_filepaths)
@@ -423,7 +424,8 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
         numpy_data = generate_plane_holes_v6(numpy_data=numpy_data)
 
         # Save data:
-        save_filename = os.path.join(output_folder, data_filepath.stem)
+        data_filepath_stem = get_data_file_stem(data_filepath=data_filepath, relative_to=input_folder)
+        save_filename = os.path.join(output_folder, data_filepath_stem)
 
         if save_as_npy is True:
             data_filepath = f"{data_filepath}.npy"
