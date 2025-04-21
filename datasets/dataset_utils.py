@@ -34,7 +34,8 @@ def validate_data_paths(data_paths: list[str]):
             pass
 
 
-def get_data_file_extension(data_filepath: str) -> str:
+def get_data_file_extension(data_filepath) -> str:
+    data_filepath = str(data_filepath)
     if data_filepath.endswith(".nii.gz"):
         data_extension = ".nii.gz"
     else:

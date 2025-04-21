@@ -782,12 +782,22 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
         # output_filepaths = pathlib.Path(output_folder).glob(f"{data_3d_stem}_*.*")
 
         # Output
-        output_folder = PREDICT_PIPELINE_RESULTS_PATH
-        output_filepaths = pathlib.Path(os.path.join(output_folder, "output_3d")).glob(f"{data_3d_stem}_*_output.*")
+        output_folder = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
+        output_filepaths = list(pathlib.Path(output_folder).glob(f"{data_3d_stem}_*_output.*"))
 
         # Ground Truth
         target_folder = LABELS_3D
-        target_filepaths = pathlib.Path(target_folder).glob(f"{data_3d_stem}_*.*")
+        # target_filepaths = pathlib.Path(target_folder).glob(f"{data_3d_stem}_*.*")
+        target_filepaths = []
+        for output_filepath in output_filepaths:
+            output_filepath_extension = get_data_file_extension(data_filepath=output_filepath)
+            output_filepath_stem = get_data_file_stem(data_filepath=output_filepath, relative_to=output_folder)
+            if output_folder == os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d"):
+                output_filepath_stem = str(output_filepath_stem).rsplit('_output', maxsplit=1)[0]
+            output_filename = f"{output_basename}{output_filepath_extension}"
+
+            target_filepath = os.path.join(target_folder, output_filename)
+            target_filepaths.append(target_filepath)
 
     #####################
     # FULL DATA COMPARE #
@@ -799,18 +809,26 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
 
         # Output
         output_folder = MERGE_PIPELINE_RESULTS_PATH
-        output_filepaths = pathlib.Path(output_folder).glob(f"{data_3d_stem}*.*")
+        output_filepaths = list(pathlib.Path(output_folder).glob(f"{data_3d_stem}*.*"))
 
         # Ground Truth
         target_folder = LABELS
-        target_filepaths = pathlib.Path(target_folder).glob(f"{data_3d_stem}*.*")
+        # target_filepaths = pathlib.Path(target_folder).glob(f"{data_3d_stem}*.*")
+        target_filepaths = []
+        for output_filepath in output_filepaths:
+            output_filepath_extension = get_data_file_extension(data_filepath=output_filepath)
+            output_filepath_stem = get_data_file_stem(data_filepath=output_filepath, relative_to=output_folder)
+            output_filename = f"{output_filepath_stem}{output_filepath_extension}"
+
+            target_filepath = os.path.join(target_folder, output_filename)
+            target_filepaths.append(target_filepath)
 
     #########################
     # Calculate Dice Scores #
     #########################
 
-    output_filepaths = sorted(output_filepaths)
-    target_filepaths = sorted(target_filepaths)
+    # output_filepaths = sorted(output_filepaths)
+    # target_filepaths = sorted(target_filepaths)
 
     filepaths_count = len(output_filepaths)
     scores_dict = dict()
