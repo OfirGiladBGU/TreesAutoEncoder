@@ -753,38 +753,38 @@ def full_merge(data_3d_stem, data_type: DataType, log_data=None, data_3d_folder=
     )
 
 
-def calculate_dice_scores(data_3d_stem):
+def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
     #################
     # CROPS COMPARE #
     #################
+    if compare_crops_mode is True:
+        # Baseline
+        # output_folder = PREDS_3D
+        # output_filepaths = pathlib.Path(output_folder).glob(f"{data_3d_stem}_*.*")
 
-    # Baseline
-    # output_folder = PREDS_3D
-    # output_filepaths = pathlib.Path(output_folder).glob(f"{data_3d_stem}_*.*")
+        # Output
+        output_folder = PREDICT_PIPELINE_RESULTS_PATH
+        output_filepaths = pathlib.Path(os.path.join(output_folder, "output_3d")).glob(f"{data_3d_stem}_*_output.*")
 
-    # Output
-    # output_folder = PREDICT_PIPELINE_RESULTS_PATH
-    # output_filepaths = pathlib.Path(output_folder).glob(f"{data_3d_stem}_*_output.*")
-
-    # Ground Truth
-    # target_folder = LABELS_3D
-    # target_filepaths = pathlib.Path(target_folder).glob(f"{data_3d_stem}_*.*")
+        # Ground Truth
+        target_folder = LABELS_3D
+        target_filepaths = pathlib.Path(target_folder).glob(f"{data_3d_stem}_*.*")
 
     #####################
     # FULL DATA COMPARE #
     #####################
+    else:
+        # Baseline
+        # output_folder = PREDS
+        # output_filepaths = pathlib.Path(output_folder).glob(f"{data_3d_stem}*.*")
 
-    # Baseline
-    # output_folder = PREDS
-    # output_filepaths = pathlib.Path(output_folder).glob(f"{data_3d_stem}*.*")
+        # Output
+        output_folder = MERGE_PIPELINE_RESULTS_PATH
+        output_filepaths = pathlib.Path(output_folder).glob(f"{data_3d_stem}*.*")
 
-    # Output
-    output_folder = MERGE_PIPELINE_RESULTS_PATH
-    output_filepaths = pathlib.Path(output_folder).glob(f"{data_3d_stem}*.*")
-
-    # Ground Truth
-    target_folder = LABELS
-    target_filepaths = pathlib.Path(target_folder).glob(f"{data_3d_stem}*.*")
+        # Ground Truth
+        target_folder = LABELS
+        target_filepaths = pathlib.Path(target_folder).glob(f"{data_3d_stem}*.*")
 
     #########################
     # Calculate Dice Scores #
@@ -836,8 +836,17 @@ def full_folder_predict(data_type: DataType):
 
         data_2d_folder = EVALS_2D
 
-    index_3d_stems = log_data["index_3d"].unique()
-    data_3d_stem_list = [data_3d_stem[1:] for data_3d_stem in index_3d_stems]
+    index_3d_uniques = log_data["index_3d"].unique()
+    data_3d_stem_list = [data_3d_stem[1:] for data_3d_stem in index_3d_uniques]
+
+    # Evaluate on Training - Test Data
+    if data_3d_folder in [PREDS_3D, PREDS_FIXED_3D, PREDS_ADVANCED_FIXED_3D]:
+        index_3d_split_index = round(len(index_3d_uniques) * 0.9)
+        # train_stems = data_3d_stem_list[:index_3d_split_index]
+        test_stems = data_3d_stem_list[index_3d_split_index:]
+
+        data_3d_stem_list = test_stems
+
     data_3d_stem_count = len(data_3d_stem_list)
 
     for idx, data_3d_stem in enumerate(data_3d_stem_list):
@@ -861,7 +870,7 @@ def full_folder_predict(data_type: DataType):
 
     for idx, data_3d_stem in enumerate(data_3d_stem_list):
         print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating Dice Scores...")
-        calculate_dice_scores(data_3d_stem=data_3d_stem)
+        calculate_dice_scores(data_3d_stem=data_3d_stem, compare_crops_mode=True)
 
 
 def main():

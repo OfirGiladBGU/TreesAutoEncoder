@@ -262,11 +262,13 @@ class TreesCustomDataset2D:
 
         # # self.train_subset, self.test_subset = torch.utils.data.random_split(trees_dataset, [train_size, test_size])
 
-        # Option 2: Split based 3D files
-        index_3d_stems = trees_dataset.log_data["index_3d"].unique()
-        index_3d_split_index = round(len(index_3d_stems) * 0.9)
-        train_stems = index_3d_stems[:index_3d_split_index]
-        # test_stems = index_3d_stems[index_3d_split_index:]
+        # Option 2: Split based on 3D files
+        index_3d_uniques = trees_dataset.log_data["index_3d"].unique()
+        index_3d_split_index = round(len(index_3d_uniques) * 0.9)
+        data_3d_stem_list = [data_3d_stem[1:] for data_3d_stem in index_3d_uniques]
+
+        train_stems = data_3d_stem_list[:index_3d_split_index]
+        # test_stems = data_3d_stem_list[index_3d_split_index:]
 
         train_indices = []
         test_indices = []
@@ -281,8 +283,8 @@ class TreesCustomDataset2D:
                 relative_to=trees_dataset.data_paths[1]
             )
 
-            # Format: ~/{output_idx}_{cube_idx}_{image_view}{ext}
-            data_files2_output_idx = f"~{data_files2_stem.rsplit(sep='_', maxsplit=2)[0]}"
+            # Format: {output_idx}_{cube_idx}_{image_view}{ext}
+            data_files2_output_idx = data_files2_stem.rsplit(sep='_', maxsplit=2)[0]
             if data_files2_output_idx in train_stems:
                 train_indices.append(idx)
             else:
