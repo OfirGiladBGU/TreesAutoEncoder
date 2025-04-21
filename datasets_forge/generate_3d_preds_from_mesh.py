@@ -609,7 +609,7 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
     input_folder = os.path.join(DATASET_PATH, "labels")
     output_folder = os.path.join(DATASET_PATH, "preds")
 
-    os.makedirs(output_folder, exist_ok=True)
+    # os.makedirs(output_folder, exist_ok=True)
     data_filepaths = sorted(pathlib.Path(input_folder).rglob("*.*"))
 
     filepaths_count = len(data_filepaths)
