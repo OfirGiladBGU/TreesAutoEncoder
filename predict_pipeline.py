@@ -807,7 +807,8 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
         idx_format = get_data_file_stem(data_filepath=target_filepath)
         scores_dict[idx_format] = dice_score
 
-    save_name = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "dice_scores.csv")
+    save_name = os.path.join(PREDICT_PIPELINE_DICE_CSV_FILES_PATH, f"{data_3d_stem}_dice_scores.csv")
+    os.makedirs(name=os.path.dirname(save_name), exist_ok=True)
     pd.DataFrame(scores_dict.items()).to_csv(save_name)
     scores_list = list(scores_dict.values())
     print(

@@ -6,7 +6,7 @@ from enum import Enum
 
 
 # TODO: Setup Configurations File
-CONFIG_FILENAME = "PipeForge3DPCD.yaml"
+CONFIG_FILENAME = "parse2022.yaml"
 
 #####################
 # Automatic Parsing #
@@ -175,5 +175,7 @@ MODELS_RESULTS_PATH = os.path.join(RESULTS_PATH, "models")
 PREDICT_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "predict_pipeline")
 MERGE_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "merge_pipeline")
 VISUALIZATION_RESULTS_PATH = os.path.join(RESULTS_PATH, "visualization")
+
+PREDICT_PIPELINE_DICE_CSV_FILES_PATH = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "csv_files")
 
 # TODO: Add Predict Pipeline Configs
