@@ -53,7 +53,7 @@ class TreesCustomDatasetV1(Dataset):
                 self.data_files1.append(data_file1)
 
             if self.data_files2 is not None:
-                data_file2 = pathlib.Path(data_paths[1]).glob(f"{row[col_0]}.*")
+                data_file2 = list(pathlib.Path(data_paths[1]).glob(f"{row[col_0]}.*"))[0]
                 self.data_files2.append(data_file2)
 
         self.scans_count = len(self.data_files2)
@@ -138,11 +138,11 @@ class TreesCustomDatasetV2(Dataset):
 
         col_0 = self.log_data.columns[0]
         for row_idx, row in self.log_data.iterrows():
-            data_file1 = pathlib.Path(data_paths[0]).glob(f"{row[col_0]}.*")
+            data_file1 = list(pathlib.Path(data_paths[0]).glob(f"{row[col_0]}.*"))[0]
             self.data_files1.append(data_file1)
 
             if self.data_files2 is not None:
-                data_file2 = pathlib.Path(data_paths[1]).glob(f"{row[col_0]}.*")
+                data_file2 = list(pathlib.Path(data_paths[1]).glob(f"{row[col_0]}.*"))[0]
                 self.data_files2.append(data_file2)
 
         self.scans_count = len(self.data_files2)
