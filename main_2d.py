@@ -51,7 +51,7 @@ if __name__ == "__main__":
     # args.model = 'ae_6_2d_to_6_2d'
     # args.dataset = 'Trees2DV2'
 
-    args.epochs = 10
+    args.epochs = 20
 
     # TODO: check option that the original input is kept and only the holes are predicted and merged - V
     # TODO: filter noise
