@@ -53,15 +53,17 @@ def get_data_file_stem(data_filepath, relative_to=None) -> str:
     data_filepath = str(data_filepath)
     replace_extension = get_data_file_extension(data_filepath=data_filepath)
     if relative_to is not None:
-        data_filepath = os.path.relpath(data_filepath, relative_to)
+        data_filepath_stem = os.path.relpath(data_filepath, relative_to)
     else:
-        data_filepath = os.path.basename(data_filepath)
-    data_filepath_stem = data_filepath.replace("\\", "/")  # Enable support for different OS
-    data_filepath_stem = data_filepath.replace(replace_extension, "")
+        data_filepath_stem = os.path.basename(data_filepath)
+    data_filepath_stem = data_filepath_stem.replace("\\", "/")  # Enable support for different OS
+    data_filepath_stem = data_filepath_stem.replace(replace_extension, "")
     return data_filepath_stem
 
 
 def convert_data_file_to_numpy(data_filepath, apply_data_threshold: bool = False, **kwargs) -> np.ndarray:
+    if not os.path.exists(data_filepath):
+        raise ValueError(f"Invalid data path: {data_filepath}")
     extension_map = {
         # 2D
         ".png": _convert_png_to_numpy,
