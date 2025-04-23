@@ -641,7 +641,7 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
             numpy_data=numpy_data,
             source_data_filepath=data_filepath,
             save_filename=save_filename,
-            apply_data_threshold=
+            apply_data_threshold=True
         )
 
 
