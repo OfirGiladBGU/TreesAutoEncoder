@@ -1,5 +1,5 @@
 DATASET_INPUT_FOLDER: "PipeForge3DMesh"
-DATASET_OUTPUT_FOLDER: "PipeForge3DMesh_48"
+DATASET_OUTPUT_FOLDER: "PipeForge3DMesh_LC_48"
 DATA_CROP_STRIDE: 24
 DATA_CROP_SIZE: 48
 LOWER_THRESHOLD_2D: 0.1
@@ -7,6 +7,6 @@ UPPER_THRESHOLD_2D: 0.9
 TASK_TYPE: "LOCAL_CONNECTIVITY"  # "PATCH_HOLES"
 STOP_INDEX: -1
 
-# Meshes from PipeForge3D with:
+# Meshes from PipeForge3D:
 # voxel size 2.0
 # voxel scale 0.5
