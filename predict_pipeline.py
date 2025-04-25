@@ -885,18 +885,22 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
     )
 
 
-def calculate_reduced_connected_components(data_3d_stem, components_mode="global"):
+def calculate_reduced_connected_components(data_3d_stem, components_mode="global", source_data_3d_folder=None):
     """
     Requires data_3d_stem result in MERGE_PIPELINE_RESULTS_PATH
     Works only for SINGLE_COMPONENT mode
     :param data_3d_stem:
     :param components_mode:
+    :param source_data_3d_folder:
     :return:
     """
 
     # Baseline
-    # input_folder = PREDS
-    input_folder = PREDS_FIXED
+    if source_data_3d_folder is None:
+        # input_folder = PREDS
+        input_folder = PREDS_FIXED
+    else:
+        input_folder = source_data_3d_folder
     input_filepath = list(pathlib.Path(input_folder).glob(f"{data_3d_stem}*.*"))[0]
 
     # Output
@@ -1002,7 +1006,6 @@ def full_folder_predict(data_type: DataType):
 
         # source_data_3d_folder = PREDS
         source_data_3d_folder = PREDS_FIXED
-        # source_data_3d_folder = PREDS_ADVANCED_FIXED_3D
 
         # data_3d_folder = PREDS_3D
         data_3d_folder = PREDS_FIXED_3D
@@ -1080,7 +1083,11 @@ def full_folder_predict(data_type: DataType):
     # components_mode = "local"
     for idx, data_3d_stem in enumerate(data_3d_stem_list):
         print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating Components Scores...")
-        calculate_reduced_connected_components(data_3d_stem=data_3d_stem, components_mode=components_mode)
+        calculate_reduced_connected_components(
+            data_3d_stem=data_3d_stem,
+            components_mode=components_mode,
+            source_data_3d_folder=source_data_3d_folder
+        )
 
 
 def main():
