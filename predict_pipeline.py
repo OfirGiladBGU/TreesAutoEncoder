@@ -902,7 +902,7 @@ def calculate_reduced_connected_components(data_3d_stem):
     output_filepath = list(pathlib.Path(output_folder).glob(f"{data_3d_stem}*.*"))[0]
 
     # Ground Truth
-    target_folder = LABELS_3D
+    target_folder = LABELS
     target_filepath = list(pathlib.Path(target_folder).glob(f"{data_3d_stem}*.*"))[0]
 
     # Calculate connected components
