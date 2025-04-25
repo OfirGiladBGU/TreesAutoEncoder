@@ -1003,6 +1003,11 @@ def full_folder_predict(data_type: DataType):
             source_data_3d_folder=source_data_3d_folder
         )
 
+    for idx, data_3d_stem in enumerate(data_3d_stem_list):
+        print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating Components Scores...")
+        calculate_reduced_connected_components(data_3d_stem=data_3d_stem)
+
+
 def main():
     init_pipeline_models()
 
