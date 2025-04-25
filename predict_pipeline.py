@@ -907,13 +907,13 @@ def calculate_reduced_connected_components(data_3d_stem):
 
     # Calculate connected components
     input_data_3d = convert_data_file_to_numpy(data_filepath=input_filepath, apply_data_threshold=True)
-    input_connected_components = connected_components_3d(data_3d=input_data_3d)[1] - 1
+    input_connected_components = connected_components_3d(data_3d=input_data_3d)[1]
 
     output_data_3d = convert_data_file_to_numpy(data_filepath=output_filepath, apply_data_threshold=True)
-    output_connected_components = connected_components_3d(data_3d=output_data_3d)[1] - 1
+    output_connected_components = connected_components_3d(data_3d=output_data_3d)[1]
 
     target_data_3d = convert_data_file_to_numpy(data_filepath=target_filepath, apply_data_threshold=True)
-    target_connected_components = connected_components_3d(data_3d=target_data_3d)[1] - 1
+    target_connected_components = connected_components_3d(data_3d=target_data_3d)[1]
 
     print(
         "Stats:\n"
