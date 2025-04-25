@@ -947,10 +947,6 @@ def full_folder_predict(data_type: DataType):
 
         data_2d_folder = EVALS_2D
 
-    ###################
-    # Test Dice Score #
-    ###################
-
     index_3d_uniques = log_data["index_3d"].unique()
     data_3d_stem_list = [data_3d_stem[1:] for data_3d_stem in index_3d_uniques]
 
@@ -965,6 +961,10 @@ def full_folder_predict(data_type: DataType):
         data_3d_stem_list = test_stems
 
     data_3d_stem_count = len(data_3d_stem_list)
+
+    ###################
+    # Test Dice Score #
+    ###################
 
     for idx, data_3d_stem in enumerate(data_3d_stem_list):
         print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Predicting...")
