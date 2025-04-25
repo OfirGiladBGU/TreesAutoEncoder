@@ -107,16 +107,25 @@ def postprocess_2d(data_3d_stem: str,
             data_2d_input_idx = np.round(data_2d_input[idx].numpy() * 255).astype(np.uint8)
             data_2d_output_idx = np.round(data_2d_output[idx].numpy() * 255).astype(np.uint8)
 
-            # Option1
-            # filtered_output = components_continuity_2d_single_component(
-            #     label_image=data_2d_output_idx,
-            #     pred_advanced_fixed_image=data_2d_input_idx,
-            #     reverse_mode=True,
-            #     binary_diff=True,
-            #     hard_condition=hard_noise_filter_2d
-            # )
+            # if TASK_TYPE == TaskType.SINGLE_COMPONENT:
+            #     filtered_output = components_continuity_2d_single_component(
+            #         label_image=data_2d_output_idx,
+            #         pred_advanced_fixed_image=data_2d_input_idx,
+            #         reverse_mode=True,
+            #         binary_diff=True,
+            #         hard_condition=hard_noise_filter_2d
+            #     )
+            # elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
+            #     filtered_output = components_continuity_2d_local_connectivity(
+            #         label_image=data_2d_output_idx,
+            #         pred_advanced_fixed_image=data_2d_input_idx,
+            #         reverse_mode=True,
+            #         binary_diff=True,
+            #         hard_condition=hard_noise_filter_2d
+            #     )
+            # else:
+            #     filtered_output = data_2d_output_idx
 
-            # Option2
             filtered_output = components_continuity_2d_local_connectivity(
                 label_image=data_2d_output_idx,
                 pred_advanced_fixed_image=data_2d_input_idx,
@@ -351,12 +360,12 @@ def preprocess_3d(data_3d_filepath: str,
         data_3d_input = data_3d_reconstruct
 
     # TODO: validate filters!!!
-    # TODO: add the noise filters as revers continuity fix for both 2D and 3D!
+    # TODO: add the noise filters as revers continuity fix for both 2D and 3D! - DONE
     if apply_noise_filter_3d is True:
+        # TODO: VALIDATE BEHAVIOUR IS NOT CHANGED!
+
         # Parse2022
         # data_3d_input = naive_noise_filter(data_3d_original=pred_3d, data_3d_input=data_3d_input)
-
-        # TODO: VALIDATE BEHAVIOUR IS NOT CHANGED!
 
         # data_3d_input = components_continuity_3d_single_component(
         #     label_cube=pred_3d,
@@ -379,14 +388,24 @@ def preprocess_3d(data_3d_filepath: str,
 
         # TODO: TEST THIS CASES!
 
-        # data_3d_input = components_continuity_3d_single_component(
-        #     label_cube=data_3d_input,
-        #     pred_advanced_fixed_cube=pred_3d,
-        #     reverse_mode=True,
-        #     connectivity_type=6,
-        #     delta_mode=0,
-        #     hard_condition=True
-        # )
+        # if TASK_TYPE == TaskType.SINGLE_COMPONENT:
+        #     data_3d_input = components_continuity_3d_single_component(
+        #         label_cube=data_3d_input,
+        #         pred_advanced_fixed_cube=pred_3d,
+        #         reverse_mode=True,
+        #         connectivity_type=6,
+        #         hard_condition=hard_noise_filter_3d
+        #     )
+        # elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
+        #     data_3d_input = components_continuity_3d_local_connectivity(
+        #         label_cube=data_3d_input,
+        #         pred_advanced_fixed_cube=pred_3d,
+        #         reverse_mode=True,
+        #         connectivity_type=6,
+        #         hard_condition=hard_noise_filter_3d
+        #     )
+        # else:
+        #     pass
 
         data_3d_input = components_continuity_3d_local_connectivity(
             label_cube=data_3d_input,
