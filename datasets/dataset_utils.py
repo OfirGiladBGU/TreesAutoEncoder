@@ -601,7 +601,7 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
         front = np.min(coords[:, 2])  # Minimum depth index (Z-axis)
         back = np.max(coords[:, 2])  # Maximum depth index (Z-axis)
 
-        # Ensure ROI is within valid bounds (2 voxels padding)
+        # Ensure ROI is within valid bounds
         min_y = max(0, top - padding_size)
         max_y = min(bottom + padding_size + 1, running_pred_advanced_fixed_cube.shape[0])
 
@@ -742,7 +742,7 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
         left = np.min(coords[:, 1])  # Minimum column index
         right = np.max(coords[:, 1])  # Maximum column index
 
-        # Ensure ROI is within valid bounds (1 pixel padding)
+        # Ensure ROI is within valid bounds
         min_y = max(0, top - padding_size)
         max_y = min(bottom + padding_size + 1, pred_advanced_fixed_binary.shape[0])
 
