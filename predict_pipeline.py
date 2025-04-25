@@ -918,7 +918,7 @@ def calculate_reduced_connected_components(data_3d_stem):
 
     # Formula: (Total Components Reduced / Total Components needs to be Reduced)
     reduction_percentage = ((input_connected_components - output_connected_components) /
-                            (output_connected_components - 1))
+                            (input_connected_components - 1))
     print(
         "Stats:\n"
         f"Input Connected Components: {input_connected_components}\n"
