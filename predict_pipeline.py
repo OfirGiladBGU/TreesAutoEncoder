@@ -920,9 +920,11 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
 
     # Calculate connected components
     if components_mode == "global":
-        input_connected_components = connected_components_3d(data_3d=input_data_3d)[1]
-        output_connected_components = connected_components_3d(data_3d=output_data_3d)[1]
-        target_connected_components = connected_components_3d(data_3d=target_data_3d)[1]
+        connectivity_type = 26
+
+        input_connected_components = connected_components_3d(data_3d=input_data_3d, connectivity_type=connectivity_type)[1]
+        output_connected_components = connected_components_3d(data_3d=output_data_3d, connectivity_type=connectivity_type)[1]
+        target_connected_components = connected_components_3d(data_3d=target_data_3d, connectivity_type=connectivity_type)[1]
 
         # Formula: (Total Components Reduced / Total Components needs to be Reduced)
         reduction_percentage = ((input_connected_components - output_connected_components) /
@@ -936,7 +938,7 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
         )
 
     elif components_mode == "local":
-        connectivity_type = 6
+        connectivity_type = 26
         padding_size = 1
 
         delta_data_3d = np.logical_xor(target_data_3d, input_data_3d).astype(np.uint8)
@@ -995,6 +997,31 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
             f"Output Filled Holes: {filled_holes}\n"
             f"Reduction Percentage: {reduction_percentage}"
         )
+
+        # OPTION 2
+
+        # connectivity_type = 26
+        #
+        # input_delta_data_3d = ((target_data_3d - input_data_3d) > 0.5).astype(np.uint8)
+        # (_, input_delta_num_components) = connected_components_3d(
+        #     data_3d=input_delta_data_3d,
+        #     connectivity_type=connectivity_type
+        # )
+        #
+        # output_delta_data_3d = ((target_data_3d - output_data_3d) > 0.5).astype(np.uint8)
+        # (_, output_delta_num_components) = connected_components_3d(
+        #     data_3d=output_delta_data_3d,
+        #     connectivity_type=connectivity_type
+        # )
+        #
+        # reduction_percentage = (input_delta_num_components - output_delta_num_components) / input_delta_num_components
+        #
+        # print(
+        #     "Stats:\n"
+        #     f"Input Holes: {input_delta_num_components}\n"
+        #     f"Output Filled Holes: {output_delta_num_components}\n"
+        #     f"Reduction Percentage: {reduction_percentage}"
+        # )
 
     else:
         raise ValueError("Invalid components_mode")
