@@ -916,13 +916,15 @@ def calculate_reduced_connected_components(data_3d_stem):
     target_data_3d = convert_data_file_to_numpy(data_filepath=target_filepath, apply_data_threshold=True)
     target_connected_components = connected_components_3d(data_3d=target_data_3d)[1]
 
-    completion_percentage = (input_connected_components - output_connected_components) / output_connected_components
+    # Formula: (Total Components Reduced / Total Components needs to be Reduced)
+    reduction_percentage = ((input_connected_components - output_connected_components) /
+                            (output_connected_components - 1))
     print(
         "Stats:\n"
         f"Input Connected Components: {input_connected_components}\n"
         f"Output Connected Components: {output_connected_components}\n"
         f"Target Connected Components: {target_connected_components}\n"
-        f"Completion Percentage: {completion_percentage}"
+        f"Reduction Percentage: {reduction_percentage}"
     )
 
 
