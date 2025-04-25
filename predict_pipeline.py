@@ -885,11 +885,12 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
     )
 
 
-def calculate_reduced_connected_components(data_3d_stem):
+def calculate_reduced_connected_components(data_3d_stem, components_mode="global"):
     """
     Requires data_3d_stem result in MERGE_PIPELINE_RESULTS_PATH
     Works only for SINGLE_COMPONENT mode
     :param data_3d_stem:
+    :param components_mode:
     :return:
     """
 
@@ -906,26 +907,93 @@ def calculate_reduced_connected_components(data_3d_stem):
     target_folder = LABELS
     target_filepath = list(pathlib.Path(target_folder).glob(f"{data_3d_stem}*.*"))[0]
 
-    # Calculate connected components
+    #############
+    # Load Data #
+    #############
     input_data_3d = convert_data_file_to_numpy(data_filepath=input_filepath, apply_data_threshold=True)
-    input_connected_components = connected_components_3d(data_3d=input_data_3d)[1]
-
     output_data_3d = convert_data_file_to_numpy(data_filepath=output_filepath, apply_data_threshold=True)
-    output_connected_components = connected_components_3d(data_3d=output_data_3d)[1]
-
     target_data_3d = convert_data_file_to_numpy(data_filepath=target_filepath, apply_data_threshold=True)
-    target_connected_components = connected_components_3d(data_3d=target_data_3d)[1]
 
-    # Formula: (Total Components Reduced / Total Components needs to be Reduced)
-    reduction_percentage = ((input_connected_components - output_connected_components) /
-                            (input_connected_components - 1))
-    print(
-        "Stats:\n"
-        f"Input Connected Components: {input_connected_components}\n"
-        f"Output Connected Components: {output_connected_components}\n"
-        f"Target Connected Components: {target_connected_components}\n"
-        f"Reduction Percentage: {reduction_percentage}"
-    )
+    # Calculate connected components
+    if components_mode == "global":
+        input_connected_components = connected_components_3d(data_3d=input_data_3d)[1]
+        output_connected_components = connected_components_3d(data_3d=output_data_3d)[1]
+        target_connected_components = connected_components_3d(data_3d=target_data_3d)[1]
+
+        # Formula: (Total Components Reduced / Total Components needs to be Reduced)
+        reduction_percentage = ((input_connected_components - output_connected_components) /
+                                (input_connected_components - 1))
+        print(
+            "Stats:\n"
+            f"Input Connected Components: {input_connected_components}\n"
+            f"Output Connected Components: {output_connected_components}\n"
+            f"Target Connected Components: {target_connected_components}\n"
+            f"Reduction Percentage: {reduction_percentage}"
+        )
+
+    elif components_mode == "local":
+        connectivity_type = 6
+        padding_size = 1
+
+        delta_data_3d = np.logical_xor(target_data_3d, input_data_3d).astype(np.uint8)
+        delta_labeled, delta_num_components = connected_components_3d(
+            data_3d=delta_data_3d,
+            connectivity_type=connectivity_type
+        )
+
+        filled_holes = 0
+        total_holes = delta_num_components
+
+        # Iterate through connected components in delta_cube
+        for component_label in range(1, delta_num_components + 1):
+            # Create a mask for the current connected component
+            component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
+
+            # ROI - cropped area between the component mask: top, bottom, left, right, front, back
+            coords = np.argwhere(component_mask > 0)
+
+            # Get bounding box in 3D
+            top = np.min(coords[:, 0])  # Minimum row index (Y-axis)
+            bottom = np.max(coords[:, 0])  # Maximum row index (Y-axis)
+
+            left = np.min(coords[:, 1])  # Minimum column index (X-axis)
+            right = np.max(coords[:, 1])  # Maximum column index (X-axis)
+
+            front = np.min(coords[:, 2])  # Minimum depth index (Z-axis)
+            back = np.max(coords[:, 2])  # Maximum depth index (Z-axis)
+
+            # Ensure ROI is within valid bounds
+            min_y = max(0, top - padding_size)
+            max_y = min(bottom + padding_size + 1, delta_data_3d.shape[0])
+
+            min_x = max(0, left - padding_size)
+            max_x = min(right + padding_size + 1, delta_data_3d.shape[1])
+
+            min_z = max(0, front - padding_size)
+            max_z = min(back + padding_size + 1, delta_data_3d.shape[2])
+
+            # Check the number of connected components before adding the mask
+            roi_temp_before = input_data_3d[min_y:max_y, min_x:max_x, min_z:max_z]
+            components_before = connected_components_3d(data_3d=roi_temp_before, connectivity_type=connectivity_type)[1]
+
+            # Create a temporary data with the component added
+            roi_temp_after = output_data_3d[min_y:max_y, min_x:max_x, min_z:max_z]
+            components_after = connected_components_3d(data_3d=roi_temp_after, connectivity_type=connectivity_type)[1]
+
+            if components_after < components_before:
+                filled_holes += 1
+
+        reduction_percentage = filled_holes / total_holes
+
+        print(
+            "Stats:\n"
+            f"Input Holes: {total_holes}\n"
+            f"Output Filled Holes: {filled_holes}\n"
+            f"Reduction Percentage: {reduction_percentage}"
+        )
+
+    else:
+        raise ValueError("Invalid components_mode")
 
 
 def full_folder_predict(data_type: DataType):
@@ -1008,9 +1076,11 @@ def full_folder_predict(data_type: DataType):
             source_data_3d_folder=source_data_3d_folder
         )
 
+    components_mode = "global"
+    # components_mode = "local"
     for idx, data_3d_stem in enumerate(data_3d_stem_list):
         print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating Components Scores...")
-        calculate_reduced_connected_components(data_3d_stem=data_3d_stem)
+        calculate_reduced_connected_components(data_3d_stem=data_3d_stem, components_mode=components_mode)
 
 
 def main():
