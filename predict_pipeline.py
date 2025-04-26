@@ -922,13 +922,14 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
     if components_mode == "global":
         connectivity_type = 26
 
+        # Notice: Usually `target_connected_components=1`
         (_, input_connected_components) = connected_components_3d(data_3d=input_data_3d, connectivity_type=connectivity_type)
         (_, output_connected_components) = connected_components_3d(data_3d=output_data_3d, connectivity_type=connectivity_type)
         (_, target_connected_components) = connected_components_3d(data_3d=target_data_3d, connectivity_type=connectivity_type)
 
         # Formula: (Total Components Reduced / Total Components needs to be Reduced)
         reduction_percentage = ((input_connected_components - output_connected_components) /
-                                (input_connected_components - 1))
+                                (input_connected_components - target_connected_components))
         print(
             "Stats:\n"
             f"Input Connected Components: {input_connected_components}\n"
