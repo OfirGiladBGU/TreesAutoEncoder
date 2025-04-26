@@ -1102,14 +1102,14 @@ def full_folder_predict(data_type: DataType):
     # Test Components Reduced #
     ###########################
 
-    # for idx, data_3d_stem in enumerate(data_3d_stem_list):
-    #     print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Merging...")
-    #     full_merge(
-    #         data_3d_stem=data_3d_stem,
-    #         data_type=data_type,
-    #         log_data=log_data,
-    #         source_data_3d_folder=source_data_3d_folder
-    #     )
+    for idx, data_3d_stem in enumerate(data_3d_stem_list):
+        print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Merging...")
+        full_merge(
+            data_3d_stem=data_3d_stem,
+            data_type=data_type,
+            log_data=log_data,
+            source_data_3d_folder=source_data_3d_folder
+        )
 
     # components_mode = "global"
     components_mode = "local"
