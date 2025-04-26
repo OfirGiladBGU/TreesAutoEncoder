@@ -5,6 +5,7 @@ import numpy as np
 import random
 from scipy.ndimage import convolve, label, rotate
 import math
+import shutil
 
 from datasets_forge.dataset_configurations import DATA_PATH
 from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file, get_data_file_stem
@@ -13,7 +14,7 @@ from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_
 from datasets_visualize.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
 
-DATASET_PATH = os.path.join(DATA_PATH, "PipeForge3DPCDCycles")
+DATASET_PATH = os.path.join(DATA_PATH, "PipeForge3DPCD")
 
 
 ###################
@@ -438,6 +439,13 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
         )
 
 
+def clone_preds_as_evals():
+    input_folder = os.path.join(DATASET_PATH, "preds")
+    output_folder = os.path.join(DATASET_PATH, "evals")
+
+    shutil.copytree(src=input_folder, dst=output_folder, dirs_exist_ok=True)
+
+
 def main():
     # From PCD to Numpy with option to go back
     points_scale = 0.25
@@ -446,7 +454,8 @@ def main():
 
     convert_originals_data_to_labels_data(save_as_npy=True, points_scale=points_scale, voxel_size=voxel_size,
                                           increase_density=increase_density)
-    # convert_labels_data_to_preds_data(save_as_npy=True)
+    convert_labels_data_to_preds_data(save_as_npy=True)
+    # clone_preds_as_evals()
 
 
 if __name__ == '__main__':

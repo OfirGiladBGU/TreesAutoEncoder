@@ -5,9 +5,10 @@ import numpy as np
 import random
 from scipy.ndimage import convolve, label, rotate
 import math
+import shutil
 
 from datasets_forge.dataset_configurations import DATA_PATH
-from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file, get_data_file_stem
+from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file, get_data_file_stem, connected_components_3d
 
 # TODO: Debug Tools
 from datasets_visualize.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
@@ -192,11 +193,6 @@ def generate_plane_holes_v3(numpy_data: np.ndarray):
     num_of_centers = 10
     white_points = np.argwhere(numpy_data > 0.5)  # Find all white points
 
-    def connected_components(data):
-        structure = np.ones((3, 3, 3), dtype=int)  # Define connectivity
-        labeled, num_components = label(data, structure=structure)
-        return num_components
-
     if len(white_points) > 0:
         for _ in range(num_of_centers):
             success = False
@@ -265,8 +261,8 @@ def generate_plane_holes_v3(numpy_data: np.ndarray):
                                         test_data[global_x, global_y, global_z] = 0
 
                 # Check if the crop created new connected components
-                original_components = connected_components(numpy_data)
-                new_components = connected_components(test_data)
+                (_, original_components) = connected_components_3d(data_3d=numpy_data, connectivity_type=26)
+                (_, new_components) = connected_components_3d(data_3d=test_data, connectivity_type=26)
 
                 if new_components > original_components:
                     numpy_data = test_data  # Apply the crop
@@ -281,11 +277,6 @@ def generate_plane_holes_v4(numpy_data: np.ndarray):
 
     num_of_centers = 10
     white_points = np.argwhere(numpy_data > 0.5)  # Find all white points
-
-    def connected_components(data):
-        structure = np.ones((3, 3, 3), dtype=int)  # Define connectivity
-        labeled, num_components = label(data, structure=structure)
-        return num_components
 
     if len(white_points) > 0:
         for _ in range(num_of_centers):
@@ -357,8 +348,8 @@ def generate_plane_holes_v4(numpy_data: np.ndarray):
                                         test_data[global_x, global_y, global_z] = 0
 
                 # Check if the crop created new connected components
-                original_components = connected_components(numpy_data)
-                new_components = connected_components(test_data)
+                (_, original_components) = connected_components_3d(data_3d=numpy_data, connectivity_type=26)
+                (_, new_components) = connected_components_3d(data_3d=test_data, connectivity_type=26)
 
                 if new_components > original_components:
                     numpy_data = test_data  # Apply the crop
@@ -449,9 +440,9 @@ def generate_plane_holes_v5(numpy_data: np.ndarray):
                                         test_data[global_x, global_y, global_z] = 0
 
                 # Check if the crop created new connected components in cube area
-                original_components = connected_components(cube)
+                (_, original_components) = connected_components_3d(data_3d=cube, connectivity_type=26)
                 test_cube = test_data[x_min:x_max, y_min:y_max, z_min:z_max]
-                new_components = connected_components(test_cube)
+                (_, new_components) = connected_components_3d(data_3d=test_cube, connectivity_type=26)
 
                 if new_components > original_components:
                     numpy_data = test_data  # Apply the crop
@@ -645,16 +636,25 @@ def convert_labels_data_to_preds_data(save_as_npy: bool = False):
         )
 
 
+def clone_preds_as_evals():
+    input_folder = os.path.join(DATASET_PATH, "preds")
+    output_folder = os.path.join(DATASET_PATH, "evals")
+
+    shutil.copytree(src=input_folder, dst=output_folder, dirs_exist_ok=True)
+
+
 def main():
     # From Mesh to Numpy without option to go back
     # mesh_scale = 0.5
     # voxel_size = 2.0
 
-    mesh_scale = 0.25
+    # mesh_scale = 0.25  # Size: ~150
+    mesh_scale = 0.35  # Size: ~200
     voxel_size = 1.0
 
     convert_originals_data_to_labels_data(save_as_npy=True, mesh_scale=mesh_scale, voxel_size=voxel_size)
     convert_labels_data_to_preds_data(save_as_npy=True)
+    # clone_preds_as_evals()
 
 
 if __name__ == '__main__':
