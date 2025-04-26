@@ -1116,7 +1116,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
                     save_filename=save_filename
                 )
 
-            elif TASK_TYPE == [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
+            elif TASK_TYPE in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
                 pass
 
             else:
