@@ -939,6 +939,8 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
         )
 
     elif components_mode == "local":
+        # Option 1
+
         connectivity_type = 26
         padding_size = 1
 
@@ -999,7 +1001,7 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
             f"Reduction Percentage: {reduction_percentage}"
         )
 
-        # OPTION 2
+        # Option 2
 
         # connectivity_type = 26
         #
@@ -1020,7 +1022,7 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
         # print(
         #     "Stats:\n"
         #     f"Input Holes: {input_delta_num_components}\n"
-        #     f"Output Filled Holes: {output_delta_num_components}\n"
+        #     f"Output Holes: {output_delta_num_components}\n"
         #     f"Reduction Percentage: {reduction_percentage}"
         # )
 
@@ -1098,17 +1100,17 @@ def full_folder_predict(data_type: DataType):
     # Test Components Reduced #
     ###########################
 
-    for idx, data_3d_stem in enumerate(data_3d_stem_list):
-        print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Merging...")
-        full_merge(
-            data_3d_stem=data_3d_stem,
-            data_type=data_type,
-            log_data=log_data,
-            source_data_3d_folder=source_data_3d_folder
-        )
+    # for idx, data_3d_stem in enumerate(data_3d_stem_list):
+    #     print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Merging...")
+    #     full_merge(
+    #         data_3d_stem=data_3d_stem,
+    #         data_type=data_type,
+    #         log_data=log_data,
+    #         source_data_3d_folder=source_data_3d_folder
+    #     )
 
-    components_mode = "global"
-    # components_mode = "local"
+    # components_mode = "global"
+    components_mode = "local"
     for idx, data_3d_stem in enumerate(data_3d_stem_list):
         print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating Components Scores...")
         calculate_reduced_connected_components(
