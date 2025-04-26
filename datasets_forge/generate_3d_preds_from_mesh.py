@@ -648,8 +648,10 @@ def main():
     # mesh_scale = 0.5
     # voxel_size = 2.0
 
-    # mesh_scale = 0.25  # Size: ~150
-    mesh_scale = 0.35  # Size: ~200
+    mesh_scale = 0.25  # Size: ~150
+    # mesh_scale = 0.35  # Size: ~200
+    # mesh_scale = 0.50  # Size: ~300
+    # mesh_scale = 0.70  # Size: ~400
     voxel_size = 1.0
 
     convert_originals_data_to_labels_data(save_as_npy=True, mesh_scale=mesh_scale, voxel_size=voxel_size)
