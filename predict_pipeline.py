@@ -618,7 +618,7 @@ def test_single_predict():
         log_data = pd.read_csv(EVAL_LOG_PATH)
 
         data_3d_folder = EVALS_3D
-        data_2d_folder = EVALS_3D
+        data_2d_folder = EVALS_2D
 
     # Get filepaths
     data_3d_filepath = os.path.join(data_3d_folder, base_filename)
@@ -660,7 +660,7 @@ def full_predict(data_3d_stem, data_type: DataType, log_data=None, data_3d_folde
             data_3d_folder = EVALS_3D
 
         if data_2d_folder is None:
-            data_2d_folder = EVALS_3D
+            data_2d_folder = EVALS_2D
 
     # Get filepaths (based on folder)
     # data_3d_filepaths = pathlib.Path(data_3d_folder).glob(f"{data_3d_stem}_*.*")
