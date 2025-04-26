@@ -473,7 +473,7 @@ def init_pipeline_models():
         args.model = args.model_2d
         model_2d = init_model(args=args)
         model_2d_weights_filepath = f"{filepath}_{DATASET_OUTPUT_FOLDER}_{model_2d.model_name}{ext}"
-        # TODO: model_2d_weights_filepath = f"{filepath}_PipeForge3DPCD_{model_2d.model_name}{ext}"
+        # TODO: model_2d_weights_filepath = f"{filepath}_PipeForge3DPCD_LC_32_{model_2d.model_name}{ext}"
         model_2d.load_state_dict(torch.load(model_2d_weights_filepath))
         model_2d.eval()
         model_2d.to(args.device)
@@ -487,7 +487,7 @@ def init_pipeline_models():
         args.model = args.model_3d
         model_3d = init_model(args=args)
         model_3d_weights_filepath = f"{filepath}_{DATASET_OUTPUT_FOLDER}_{model_3d.model_name}{ext}"
-        # TODO: model_3d_weights_filepath = f"{filepath}_PipeForge3DPCD_{model_3d.model_name}{ext}"
+        # TODO: model_3d_weights_filepath = f"{filepath}_PipeForge3DPCD_LC_32_{model_3d.model_name}{ext}"
         model_3d.load_state_dict(torch.load(model_3d_weights_filepath))
         model_3d.eval()
         model_3d.to(args.device)
@@ -953,8 +953,10 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
         filled_holes = 0
         total_holes = delta_num_components
 
+        print(f"Total Holes Found: {total_holes}. Checking Filled Holes...")
+
         # Iterate through connected components in delta_cube
-        for component_label in range(1, delta_num_components + 1):
+        for component_label in tqdm(range(1, delta_num_components + 1)):
             # Create a mask for the current connected component
             component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
 
