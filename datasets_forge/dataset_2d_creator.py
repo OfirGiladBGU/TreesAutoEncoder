@@ -368,7 +368,7 @@ def create_data_components(data_options):
             data_filepath = input_filepaths[key][filepath_idx]
 
             numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
-            data_3d_components = connected_components_3d(data_3d=numpy_data)[0]
+            (data_3d_components, _) = connected_components_3d(data_3d=numpy_data)
 
             # Save results
             save_name = data_filepath.relative_to(input_folders[key])
@@ -693,7 +693,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                 )
 
                 # Calculate the connected components for the advanced fixed preds
-                pred_advanced_fixed_components_cube = connected_components_3d(data_3d=pred_advanced_fixed_cube)[0]
+                (pred_advanced_fixed_components_cube, _) = connected_components_3d(data_3d=pred_advanced_fixed_cube)
 
             elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
                 # Update the pred_advanced_fixed_cube
@@ -869,7 +869,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                         save_filename=save_filename
                     )
 
-                label_components_cube = connected_components_3d(data_3d=label_cube)[0]
+                (label_components_cube, _) = connected_components_3d(data_3d=label_cube)
 
                 local_components_3d_indices = list(np.unique(label_components_cube))
                 local_components_3d_indices.remove(0)
@@ -1134,21 +1134,21 @@ def main():
     # TODO: Required for training with all modes
     # create_dataset_with_outliers_removed()
 
-    # data_options = {
-    #     LABELS: True,
-    #     PREDS: True,
-    #     PREDS_FIXED: True,
-    #     EVALS: False
-    # }
+    data_options = {
+        LABELS: True,
+        PREDS: False,
+        PREDS_FIXED: False,
+        EVALS: False
+    }
 
     # TODO: Required for training with TaskType.SINGLE_COMPONENT
     # create_data_components(data_options=data_options)
 
     # TODO: DEBUG
-    # create_dataset_depth_2d_projections(data_options=data_options)
+    create_dataset_depth_2d_projections(data_options=data_options)
 
-    create_2d_projections_and_3d_cubes_for_training()
-    # create_2d_projections_and_3d_cubes_for_evaluation()
+    # create_2d_projections_and_3d_cubes_for_training()
+    create_2d_projections_and_3d_cubes_for_evaluation()
 
 
 if __name__ == "__main__":

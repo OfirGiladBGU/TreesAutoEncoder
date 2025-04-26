@@ -140,7 +140,7 @@ def single_plot_3d(data_3d_filepath, interactive_mode: bool = False, interactive
                    connected_components_mode: bool = False):
     numpy_3d_data = convert_data_file_to_numpy(data_filepath=data_3d_filepath)
     if connected_components_mode is True:
-        numpy_3d_data = connected_components_3d(data_3d=numpy_3d_data)[0]
+        (numpy_3d_data, _) = connected_components_3d(data_3d=numpy_3d_data)
 
     if interactive_mode is False:
         save_path = os.path.join("TEST", "single_predict_3d")
@@ -215,7 +215,7 @@ def matplotlib_plot_2d(data_2d_list, save_filename):
         else:
             ax[j].set_title(f"View {j + 1}:")
     fig.tight_layout()
-    plt.savefig(save_filepath)
+    plt.savefig(save_filename)
     plt.close(fig)
 
 

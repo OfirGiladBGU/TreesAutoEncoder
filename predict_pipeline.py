@@ -922,9 +922,9 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
     if components_mode == "global":
         connectivity_type = 26
 
-        input_connected_components = connected_components_3d(data_3d=input_data_3d, connectivity_type=connectivity_type)[1]
-        output_connected_components = connected_components_3d(data_3d=output_data_3d, connectivity_type=connectivity_type)[1]
-        target_connected_components = connected_components_3d(data_3d=target_data_3d, connectivity_type=connectivity_type)[1]
+        (_, input_connected_components) = connected_components_3d(data_3d=input_data_3d, connectivity_type=connectivity_type)
+        (_, output_connected_components) = connected_components_3d(data_3d=output_data_3d, connectivity_type=connectivity_type)
+        (_, target_connected_components) = connected_components_3d(data_3d=target_data_3d, connectivity_type=connectivity_type)
 
         # Formula: (Total Components Reduced / Total Components needs to be Reduced)
         reduction_percentage = ((input_connected_components - output_connected_components) /
@@ -980,11 +980,11 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
 
             # Check the number of connected components before adding the mask
             roi_temp_before = input_data_3d[min_y:max_y, min_x:max_x, min_z:max_z]
-            components_before = connected_components_3d(data_3d=roi_temp_before, connectivity_type=connectivity_type)[1]
+            (_, components_before) = connected_components_3d(data_3d=roi_temp_before, connectivity_type=connectivity_type)
 
             # Create a temporary data with the component added
             roi_temp_after = output_data_3d[min_y:max_y, min_x:max_x, min_z:max_z]
-            components_after = connected_components_3d(data_3d=roi_temp_after, connectivity_type=connectivity_type)[1]
+            (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=connectivity_type)
 
             if components_after < components_before:
                 filled_holes += 1

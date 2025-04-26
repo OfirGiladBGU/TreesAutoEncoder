@@ -534,13 +534,13 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
         component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
 
         # Check the number of connected components before adding the mask
-        components_before = connected_components_3d(data_3d=running_pred_advanced_fixed_cube, connectivity_type=connectivity_type)[1]
-        # components_before = connected_components_3d(data_3d=running_pred_advanced_fixed_cube, connectivity_type=6)[1]
+        (_, components_before) = connected_components_3d(data_3d=running_pred_advanced_fixed_cube, connectivity_type=connectivity_type)
+        # (_, components_before) = connected_components_3d(data_3d=running_pred_advanced_fixed_cube, connectivity_type=6)
 
         # Create a temporary data with the component added
         temp_fixed = np.logical_or(running_pred_advanced_fixed_cube, component_mask)
-        components_after = connected_components_3d(data_3d=temp_fixed, connectivity_type=connectivity_type)[1]
-        # components_after = connected_components_3d(data_3d=temp_fixed, connectivity_type=6)[1]
+        (_, components_after) = connected_components_3d(data_3d=temp_fixed, connectivity_type=connectivity_type)
+        # (_, components_after) = connected_components_3d(data_3d=temp_fixed, connectivity_type=6)
 
         if reverse_mode is False:
             # Add the component only if it does not decrease the number of connected components [Dataset Creation]
@@ -613,14 +613,14 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
 
         # Check the number of connected components before adding the mask
         roi_temp_before = running_pred_advanced_fixed_cube[min_y:max_y, min_x:max_x, min_z:max_z]
-        components_before = connected_components_3d(data_3d=roi_temp_before, connectivity_type=connectivity_type)[1]
-        # components_before = connected_components_3d(data_3d=roi_temp_before, connectivity_type=6)[1]
+        (_, components_before) = connected_components_3d(data_3d=roi_temp_before, connectivity_type=connectivity_type)
+        # (_, components_before) = connected_components_3d(data_3d=roi_temp_before, connectivity_type=6)
 
         # Create a temporary data with the component added
         temp_fix = np.logical_or(running_pred_advanced_fixed_cube, component_mask)
         roi_temp_after = temp_fix[min_y:max_y, min_x:max_x, min_z:max_z]
-        components_after = connected_components_3d(data_3d=roi_temp_after, connectivity_type=connectivity_type)[1]
-        # components_after = connected_components_3d(data_3d=roi_temp_after, connectivity_type=6)[1]
+        (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=connectivity_type)
+        # (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=6)
 
         if reverse_mode is False:
             # Add the component only if it does not decrease the number of connected components
