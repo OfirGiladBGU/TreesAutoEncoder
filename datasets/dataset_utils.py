@@ -1045,8 +1045,7 @@ def project_3d_to_2d(data_3d: np.ndarray,
 def reverse_rotations(numpy_image: np.ndarray,
                       view_type: str,
                       source_data_filepath=None) -> np.ndarray:
-    # Asumption: The source volume should be a cube!
-    # TODO: In the future: support for non cubic crops (read the view type, open the source filepath, extract the matching dims)
+    # Assumption: The source volume should be a cube!
 
     axis = 1  # Default axis for the 2D images
     max_axis_index = numpy_image.shape[0] - 1
