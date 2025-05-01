@@ -616,7 +616,6 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
 
     # Update the pred_advanced_fixed_cube
     pred_advanced_fixed_cube = pred_advanced_fixed_binary.astype(pred_advanced_fixed_cube.dtype)
-
     return pred_advanced_fixed_cube
 
 
@@ -765,28 +764,30 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
             pass
 
     # Update the pred_advanced_fixed_image
-    if reverse_mode is False:
-        # Keep revealed occluded object in a hole [Dataset Creation]
-        # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, pred_advanced_fixed_image, 0.0)
-        # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0) # Keep occluded
+    # if reverse_mode is False:
+    #     # Keep revealed occluded object in a hole [Dataset Creation]
+    #     # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, pred_advanced_fixed_image, 0.0)
+    #     # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0) # Keep occluded
+    #
+    #     # TODO: Test
+    #     # mask = pred_advanced_fixed_binary > 0
+    #     # pred_advanced_fixed_image[mask] = np.where(
+    #     #     pred_advanced_fixed_image[mask] > 0,
+    #     #     pred_advanced_fixed_image[mask],
+    #     #     label_image[mask]
+    #     # )
+    #
+    #     mask = pred_advanced_fixed_binary > 0
+    #     pred_advanced_fixed_image[mask] = label_image[mask]
+    # else:
+    #     # Remove outliers [Predict Pipeline]
+    #     # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0)
+    #
+    #     mask = pred_advanced_fixed_binary > 0
+    #     pred_advanced_fixed_image[mask] = label_image[mask]
 
-        # TODO: Test
-        # mask = pred_advanced_fixed_binary > 0
-        # pred_advanced_fixed_image[mask] = np.where(
-        #     pred_advanced_fixed_image[mask] > 0,
-        #     pred_advanced_fixed_image[mask],
-        #     label_image[mask]
-        # )
-
-        mask = pred_advanced_fixed_binary > 0
-        pred_advanced_fixed_image[mask] = label_image[mask]
-    else:
-        # Remove outliers [Predict Pipeline]
-        # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0)
-
-        mask = pred_advanced_fixed_binary > 0
-        pred_advanced_fixed_image[mask] = label_image[mask]
-
+    mask = pred_advanced_fixed_binary > 0
+    pred_advanced_fixed_image[mask] = label_image[mask]
     return pred_advanced_fixed_image
 
 
@@ -873,29 +874,31 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
 
     # Update the pred_advanced_fixed_image
     pred_advanced_fixed_binary = unpad_data(numpy_data=pred_advanced_fixed_binary, pad_width=padding_size)
-    if reverse_mode is False:
-        # Keep revealed occluded object in a hole [Dataset Creation]
-        # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, pred_advanced_fixed_image, 0.0)
+    # if reverse_mode is False:
+    #     # Keep revealed occluded object in a hole [Dataset Creation]
+    #     # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, pred_advanced_fixed_image, 0.0)
+    #
+    #     # TODO: Test
+    #     # mask = pred_advanced_fixed_binary > 0
+    #     # pred_advanced_fixed_image[mask] = np.where(
+    #     #     pred_advanced_fixed_image[mask] > 0,
+    #     #     pred_advanced_fixed_image[mask],
+    #     #     label_image[mask]
+    #     # )
+    #
+    #     mask = pred_advanced_fixed_binary > 0
+    #     pred_advanced_fixed_image[mask] = label_image[mask]
+    #
+    #     # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0) # Keep occluded
+    # else:
+    #     # Remove outliers [Predict Pipeline]
+    #     # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0)
+    #
+    #     mask = pred_advanced_fixed_binary > 0
+    #     pred_advanced_fixed_image[mask] = label_image[mask]
 
-        # TODO: Test
-        # mask = pred_advanced_fixed_binary > 0
-        # pred_advanced_fixed_image[mask] = np.where(
-        #     pred_advanced_fixed_image[mask] > 0,
-        #     pred_advanced_fixed_image[mask],
-        #     label_image[mask]
-        # )
-
-        mask = pred_advanced_fixed_binary > 0
-        pred_advanced_fixed_image[mask] = label_image[mask]
-
-        # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0) # Keep occluded
-    else:
-        # Remove outliers [Predict Pipeline]
-        # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0)
-
-        mask = pred_advanced_fixed_binary > 0
-        pred_advanced_fixed_image[mask] = label_image[mask]
-
+    mask = pred_advanced_fixed_binary > 0
+    pred_advanced_fixed_image[mask] = label_image[mask]
     return pred_advanced_fixed_image
 
 
