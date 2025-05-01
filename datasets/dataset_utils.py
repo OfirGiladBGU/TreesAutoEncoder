@@ -796,15 +796,15 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
     padding_size = 1
 
     # Calculate the missing connected components in preds fixed
+    padded_label = pad_data(numpy_data=label_image, pad_width=padding_size)
     padded_pred_advanced_fixed = pad_data(numpy_data=pred_advanced_fixed_image, pad_width=padding_size)
     pred_advanced_fixed_binary = (padded_pred_advanced_fixed > 0).astype(np.uint8)
 
     if binary_diff is False:
         # Compare pixels values (Revealed occluded object behind a hole will be detected)
-        delta_binary = ((label_image - pred_advanced_fixed_image) >= 1.0).astype(np.uint8)
+        delta_binary = ((padded_label - padded_pred_advanced_fixed) >= 1.0).astype(np.uint8)
     else:
         # Compare pixels mask (Revealed occluded object behind a hole will be ignored)
-        padded_label = pad_data(numpy_data=label_image, pad_width=padding_size)
         label_binary = (padded_label > 0).astype(np.uint8)
         delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.uint8)
 
