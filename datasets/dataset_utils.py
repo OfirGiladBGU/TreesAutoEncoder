@@ -891,7 +891,6 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
         mask = pred_advanced_fixed_binary > 0
         pred_advanced_fixed_image[mask] = label_image[mask]
 
-    pred_advanced_fixed_image = unpad_data(numpy_data=pred_advanced_fixed_binary, pad_width=padding_size)
     return pred_advanced_fixed_image
 
 
