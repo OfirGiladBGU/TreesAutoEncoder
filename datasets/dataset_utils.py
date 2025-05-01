@@ -673,15 +673,15 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
 
         # Check the number of connected components before adding the mask
         roi_temp_before = pred_advanced_fixed_binary[min_y:max_y, min_x:max_x, min_z:max_z]
-        exmpand_mask = get_local_scope_mask(numpy_data=roi_temp_before, padding_size=padding_size)
-        apply_local_scope_mask(numpy_data=roi_temp_before, exmpand_mask=exmpand_mask)
+        expand_mask = get_local_scope_mask(numpy_data=roi_temp_before, padding_size=padding_size)
+        apply_local_scope_mask(numpy_data=roi_temp_before, expand_mask=expand_mask)
         (_, components_before) = connected_components_3d(data_3d=roi_temp_before, connectivity_type=connectivity_type)
         # (_, components_before) = connected_components_3d(data_3d=roi_temp_before, connectivity_type=6)
 
         # Create a temporary data with the component added
         temp_fix = np.logical_or(pred_advanced_fixed_binary, component_mask)
         roi_temp_after = temp_fix[min_y:max_y, min_x:max_x, min_z:max_z]
-        apply_local_scope_mask(numpy_data=roi_temp_after, exmpand_mask=exmpand_mask)
+        apply_local_scope_mask(numpy_data=roi_temp_after, expand_mask=expand_mask)
         (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=connectivity_type)
         # (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=6)
 
@@ -838,14 +838,14 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
 
         # Check the number of connected components before adding the mask
         roi_temp_before = pred_advanced_fixed_binary[min_y:max_y, min_x:max_x]
-        exmpand_mask = get_local_scope_mask(numpy_data=roi_temp_before, padding_size=padding_size)
-        apply_local_scope_mask(numpy_data=roi_temp_before, exmpand_mask=exmpand_mask)
+        expand_mask = get_local_scope_mask(numpy_data=roi_temp_before, padding_size=padding_size)
+        apply_local_scope_mask(numpy_data=roi_temp_before, expand_mask=expand_mask)
         (_, components_before) = connected_components_2d(data_2d=roi_temp_before, connectivity_type=connectivity_type)
 
         # Create a temporary image with the component added
         temp_fix = np.logical_or(pred_advanced_fixed_binary, component_mask)
         roi_temp_after = temp_fix[min_y:max_y, min_x:max_x]
-        apply_local_scope_mask(numpy_data=roi_temp_after, exmpand_mask=exmpand_mask)
+        apply_local_scope_mask(numpy_data=roi_temp_after, expand_mask=expand_mask)
         (_, components_after) = connected_components_2d(data_2d=roi_temp_after, connectivity_type=connectivity_type)
 
         if reverse_mode is False:
