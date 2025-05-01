@@ -700,6 +700,14 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
         # Keep revealed occluded object in a hole [Dataset Creation]
         pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, pred_advanced_fixed_image, 0.0)
         # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0) # Keep occluded
+
+        # TODO: Test
+        mask = pred_advanced_fixed_binary > 0
+        pred_advanced_fixed_image[mask] = np.where(
+            pred_advanced_fixed_image[mask] > 0,
+            pred_advanced_fixed_image[mask],
+            label_image[mask]
+        )
     else:
         # Remove outliers [Predict Pipeline]
         pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0)
@@ -779,7 +787,26 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
     # Update the pred_advanced_fixed_image
     if reverse_mode is False:
         # Keep revealed occluded object in a hole [Dataset Creation]
-        pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, pred_advanced_fixed_image, 0.0)
+        # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, pred_advanced_fixed_image, 0.0)
+
+        # # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0)
+        # for x in range(pred_advanced_fixed_binary.shape[0]):
+        #     for y in range(pred_advanced_fixed_binary.shape[1]):
+        #         for z in range(pred_advanced_fixed_binary.shape[2]):
+        #             if pred_advanced_fixed_binary[x, y, z] > 0:
+        #                 if pred_advanced_fixed_image[x, y, z] > 0:
+        #                     pred_advanced_fixed_image[x, y, z] = pred_advanced_fixed_image[x, y, z]
+        #                 else:
+        #                     pred_advanced_fixed_image[x, y, z] = label_image[x, y, z]
+
+        # TODO: Test
+        mask = pred_advanced_fixed_binary > 0
+        pred_advanced_fixed_image[mask] = np.where(
+            pred_advanced_fixed_image[mask] > 0,
+            pred_advanced_fixed_image[mask],
+            label_image[mask]
+        )
+
         # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0) # Keep occluded
     else:
         # Remove outliers [Predict Pipeline]
