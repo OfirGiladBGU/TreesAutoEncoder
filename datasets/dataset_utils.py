@@ -633,7 +633,7 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
 
     # Compare pixels mask
     padded_label = pad_data(numpy_data=label_cube, pad_width=padding_size)
-    label_binary = label_binary.astype(np.uint8)
+    label_binary = padded_label.astype(np.uint8)
     delta_cube = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.uint8)
     # delta_cube = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.uint8)
 
@@ -704,8 +704,8 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
             pass
 
     # Update the pred_advanced_fixed_cube
+    pred_advanced_fixed_binary = unpad_data(numpy_data=pred_advanced_fixed_binary, pad_width=padding_size)
     pred_advanced_fixed_cube = pred_advanced_fixed_binary.astype(pred_advanced_fixed_cube.dtype)
-    pred_advanced_fixed_cube = unpad_data(numpy_data=pred_advanced_fixed_cube, pad_width=padding_size)
     return pred_advanced_fixed_cube
 
 
@@ -867,6 +867,7 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
             pass
 
     # Update the pred_advanced_fixed_image
+    pred_advanced_fixed_binary = unpad_data(numpy_data=pred_advanced_fixed_binary, pad_width=padding_size)
     if reverse_mode is False:
         # Keep revealed occluded object in a hole [Dataset Creation]
         # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, pred_advanced_fixed_image, 0.0)
@@ -890,7 +891,7 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
         mask = pred_advanced_fixed_binary > 0
         pred_advanced_fixed_image[mask] = label_image[mask]
 
-    pred_advanced_fixed_image = unpad_data(numpy_data=pred_advanced_fixed_binary, padding_size=padding_size)
+    pred_advanced_fixed_image = unpad_data(numpy_data=pred_advanced_fixed_binary, pad_width=padding_size)
     return pred_advanced_fixed_image
 
 
