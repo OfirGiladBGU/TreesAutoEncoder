@@ -723,11 +723,12 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
     if binary_diff is False:
         # Compare pixels values (Revealed occluded object behind a hole will be detected)
         delta_binary = ((label_image - pred_advanced_fixed_image) >= 1.0).astype(np.int16)
-        pred_advanced_fixed_binary = ((pred_advanced_fixed_binary - delta_binary) >= 1.0).astype(np.int16)
     else:
         # Compare pixels mask (Revealed occluded object behind a hole will be ignored)
         delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16)
         # delta_binary = ((label_binary - pred_advanced_fixed_binary) > 0.5).astype(np.int16)
+
+    pred_advanced_fixed_binary = np.logical_xor(label_binary, delta_binary).astype(np.int16)
 
     # Identify connected components in delta_binary
     delta_labeled, delta_num_components = connected_components_2d(
@@ -808,11 +809,11 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
     if binary_diff is False:
         # Compare pixels values (Revealed occluded object behind a hole will be detected)
         delta_binary = ((padded_label - padded_pred_advanced_fixed) >= 1.0).astype(np.int16)
-        pred_advanced_fixed_binary = ((pred_advanced_fixed_binary - delta_binary) >= 1.0).astype(np.int16)
     else:
         # Compare pixels mask (Revealed occluded object behind a hole will be ignored)
-
         delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16)
+
+    pred_advanced_fixed_binary = np.logical_xor(label_binary, delta_binary).astype(np.int16)
 
     # Identify connected components in delta_binary
     delta_labeled, delta_num_components = connected_components_2d(
