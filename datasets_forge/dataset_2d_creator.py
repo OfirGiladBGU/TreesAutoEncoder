@@ -463,6 +463,9 @@ def create_2d_projections_and_3d_cubes_for_training():
     if STOP_INDEX > 0:
         filepaths_count = min(filepaths_count, STOP_INDEX)
     for filepath_idx in range(filepaths_count):
+        if not (START_INDEX <= (filepath_idx + 1)):
+            continue
+
         #############
         # Load Data #
         #############
@@ -955,15 +958,25 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
     if STOP_INDEX > 0:
         filepaths_count = min(filepaths_count, STOP_INDEX)
     for filepath_idx in range(filepaths_count):
+        if not (START_INDEX <= (filepath_idx + 1)):
+            continue
+
+        #############
+        # Load Data #
+        #############
+
         # Get index data:
         eval_filepath = input_filepaths["evals"][filepath_idx]
 
         # Original data
         eval_numpy_data = convert_data_file_to_numpy(data_filepath=eval_filepath)
 
-        # Crop Mini Cubes
         output_idx = get_data_file_stem(data_filepath=eval_filepath, relative_to=input_folders["evals"])
         print(f"[File: {output_idx}, Number: {filepath_idx + 1}/{filepaths_count}]")
+
+        #############
+        # Crop Data #
+        #############
 
         eval_cubes, cubes_data = crop_mini_cubes(
             data_3d=eval_numpy_data,
@@ -1002,6 +1015,8 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
             # Get index data:
             eval_cube = eval_cubes[cube_idx]
 
+            cube_idx_str = str(cube_idx).zfill(cubes_count_digits_count)
+
             # TODO: enable 2 modes
             if TASK_TYPE == TaskType.SINGLE_COMPONENT:
                 # Get index data:
@@ -1034,6 +1049,10 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
             else:
                 raise ValueError("Invalid Task Type")
 
+            ####################
+            # Project 3D to 2D #
+            ####################
+
             # Project 3D to 2D (Evals)
             eval_projections = project_3d_to_2d(
                 data_3d=eval_cube,
@@ -1041,6 +1060,10 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
                 source_data_filepath=eval_filepath,
                 component_3d=eval_components_cube
             )
+
+            ########################
+            # Density Filter Crops #
+            ########################
 
             condition_list = [True] * len(IMAGES_6_VIEWS)
             for view_idx, image_view in enumerate(IMAGES_6_VIEWS):
@@ -1066,7 +1089,9 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
             if not any(condition_list):
                 continue
 
-            cube_idx_str = str(cube_idx).zfill(cubes_count_digits_count)
+            ###############
+            # Export Data #
+            ###############
 
             for image_view in IMAGES_6_VIEWS:
                 output_2d_format = f"{output_idx}_{cube_idx_str}_{image_view}"

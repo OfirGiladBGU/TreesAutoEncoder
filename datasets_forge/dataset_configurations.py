@@ -6,7 +6,7 @@ from enum import Enum
 
 
 # TODO: Setup Configurations File
-CONFIG_FILENAME = "parse2022.yaml"
+CONFIG_FILENAME = "parse2022_LC_32.yaml"
 
 #####################
 # Automatic Parsing #
@@ -50,6 +50,7 @@ DATA_CROP_SIZE = config_data.get("DATA_CROP_SIZE", 32)
 LOWER_THRESHOLD_2D = config_data.get("LOWER_THRESHOLD_2D", 0.1)
 UPPER_THRESHOLD_2D = config_data.get("UPPER_THRESHOLD_2D", 0.9)
 TASK_TYPE = task_type_map.get(config_data.get("TASK_TYPE", "PATCH_HOLES"))
+START_INDEX = config_data.get("START_INDEX", -1)
 STOP_INDEX = config_data.get("STOP_INDEX", -1)
 
 # Parse Data Configurations
