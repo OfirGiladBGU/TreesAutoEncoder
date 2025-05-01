@@ -698,7 +698,7 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
     # Update the pred_advanced_fixed_image
     if reverse_mode is False:
         # Keep revealed occluded object in a hole [Dataset Creation]
-        pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, pred_advanced_fixed_image, 0.0)
+        # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, pred_advanced_fixed_image, 0.0)
         # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0) # Keep occluded
 
         # TODO: Test
