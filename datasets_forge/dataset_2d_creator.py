@@ -557,7 +557,6 @@ def create_2d_projections_and_3d_cubes_for_training():
             # Task Filter Crops #
             #####################
 
-            # TODO: enable 2 modes
             if TASK_TYPE == TaskType.SINGLE_COMPONENT:
                 # Get index data:
                 pred_components_cube = pred_components_cubes[cube_idx]
@@ -587,8 +586,8 @@ def create_2d_projections_and_3d_cubes_for_training():
                 pred_components_cube = None
                 pred_fixed_components_cube = None
 
-                # (OLD) TASK CONDITION: The region has holes
                 # TASK CONDITION: NONE
+
                 delta = np.abs(label_cube - pred_fixed_cube) > 0.5
                 delta_count = np.count_nonzero(delta)
                 # if delta_count == 0:
@@ -952,7 +951,6 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
     if len(set(filepaths_found)) != 1:
         raise ValueError("Different number of files found in the Input folders")
 
-    # TODO: Implement
     print("Cropping Mini Cubes...")
     filepaths_count = len(input_filepaths["evals"])
     if STOP_INDEX > 0:
@@ -1043,8 +1041,7 @@ def create_2d_projections_and_3d_cubes_for_evaluation():
             elif TASK_TYPE == TaskType.PATCH_HOLES:
                 eval_components_cube = None
 
-                # TASK CONDITION: The region has holes
-                # TODO: Implement
+                # TASK CONDITION: NONE
 
             else:
                 raise ValueError("Invalid Task Type")
