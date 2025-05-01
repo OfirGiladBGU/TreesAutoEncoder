@@ -4,7 +4,8 @@ import numpy as np
 import torch
 import cv2
 from typing import Union, Dict, Tuple
-from scipy.ndimage import label
+from scipy.ndimage import label, binary_dilation, generate_binary_structure
+from itertools import product
 
 # For visualization
 import matplotlib.pyplot as plt
@@ -501,6 +502,45 @@ def connected_components_2d(data_2d: np.ndarray, connectivity_type: int = 4) -> 
 # Components Continuity #
 #########################
 
+# Util #
+
+# Inplace update
+def zero_corners_2d(numpy_data: np.ndarray):
+    # Best suited for cases where minimal connectivity type was set.
+
+    # Generate all corner coordinates: positions where each index is either 0 or -1
+    corners = list(product([0, -1], repeat=numpy_data.ndim))
+
+    for corner in corners:
+        numpy_data[corner] = 0
+
+def zero_corners_3d(numpy_data: np.ndarray):
+    pass
+
+
+# def local_scope_mask(block_mask: np.ndarray, scope_only: bool = False):
+#     """
+#     Expands the block mask to include face-connected neighbors (6-connectivity).
+#
+#     Parameters:
+#         block_mask (ndarray): A binary mask of the cube (same shape as original array).
+#         scope_only (bool): If True, only returns the surrounding scope (excluding original block).
+#
+#     Returns:
+#         ndarray: A boolean mask of the scope (including or excluding the original block).
+#     """
+#     # Generate 6-connected structure (face connectivity)
+#     struct = generate_binary_structure(rank=block_mask.ndim, connectivity=1)
+#
+#     # Dilate to include neighbors
+#     expanded_mask = binary_dilation(block_mask, structure=struct)
+#
+#     if scope_only:
+#         return expanded_mask & ~block_mask  # only the surrounding layer
+#     else:
+#         return expanded_mask  # block + its face neighbors
+
+
 # 3D #
 
 def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advanced_fixed_cube: np.ndarray,
@@ -650,6 +690,7 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
 
 def components_continuity_2d_single_component(label_image: np.ndarray, pred_advanced_fixed_image: np.ndarray,
                                               reverse_mode: bool = False,
+                                              connectivity_type: int = 4,
                                               binary_diff: bool = False,
                                               hard_condition: bool = True) -> np.ndarray:
     # Calculate the missing connected components in preds fixed
@@ -665,7 +706,10 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
         # delta_binary = ((label_binary - pred_advanced_fixed_binary) > 0.5).astype(np.uint8)
 
     # Identify connected components in delta_binary
-    delta_labeled, delta_num_components = connected_components_2d(data_2d=delta_binary)
+    delta_labeled, delta_num_components = connected_components_2d(
+        data_2d=delta_binary,
+        connectivity_type=connectivity_type
+    )
 
     # Iterate through connected components in delta_binary
     for component_label in range(1, delta_num_components + 1):
@@ -673,11 +717,11 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
         component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
 
         # Check the number of connected components before adding the mask
-        components_before = connected_components_2d(data_2d=pred_advanced_fixed_binary)[1]
+        (_, components_before) = connected_components_2d(data_2d=pred_advanced_fixed_binary, connectivity_type=connectivity_type)
 
         # Create a temporary image with the component added
         temp_fix = np.logical_or(pred_advanced_fixed_binary, component_mask)
-        components_after = connected_components_2d(data_2d=temp_fix)[1]
+        (_, components_after) = connected_components_2d(data_2d=temp_fix, connectivity_type=connectivity_type)
 
         if reverse_mode is False:
             # Add the component only if it does not decrease the number of connected components [Dataset Creation]
@@ -702,12 +746,15 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
         # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0) # Keep occluded
 
         # TODO: Test
+        # mask = pred_advanced_fixed_binary > 0
+        # pred_advanced_fixed_image[mask] = np.where(
+        #     pred_advanced_fixed_image[mask] > 0,
+        #     pred_advanced_fixed_image[mask],
+        #     label_image[mask]
+        # )
+
         mask = pred_advanced_fixed_binary > 0
-        pred_advanced_fixed_image[mask] = np.where(
-            pred_advanced_fixed_image[mask] > 0,
-            pred_advanced_fixed_image[mask],
-            label_image[mask]
-        )
+        pred_advanced_fixed_image[mask] = label_image[mask]
     else:
         # Remove outliers [Predict Pipeline]
         pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0)
@@ -717,7 +764,8 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
 
 def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_advanced_fixed_image: np.ndarray,
                                                 reverse_mode: bool = False,
-                                                binary_diff: bool = True,
+                                                connectivity_type: int = 4,
+                                                binary_diff: bool = False,
                                                 hard_condition: bool = True) -> np.ndarray:
     padding_size = 1
 
@@ -733,7 +781,10 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
         delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.uint8)
 
     # Identify connected components in delta_binary
-    delta_labeled, delta_num_components = connected_components_2d(data_2d=delta_binary)
+    delta_labeled, delta_num_components = connected_components_2d(
+        data_2d=delta_binary,
+        connectivity_type=connectivity_type
+    )
 
     # Iterate through connected components in delta_binary
     for component_label in range(1, delta_num_components + 1):
@@ -759,12 +810,14 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
 
         # Check the number of connected components before adding the mask
         roi_temp_before = pred_advanced_fixed_binary[min_y:max_y, min_x:max_x]
-        components_before = connected_components_2d(data_2d=roi_temp_before)[1]
+        zero_corners_2d(numpy_data=roi_temp_before)
+        (_, components_before) = connected_components_2d(data_2d=roi_temp_before, connectivity_type=connectivity_type)
 
         # Create a temporary image with the component added
         temp_fix = np.logical_or(pred_advanced_fixed_binary, component_mask)
         roi_temp_after = temp_fix[min_y:max_y, min_x:max_x]
-        components_after = connected_components_2d(data_2d=roi_temp_after)[1]
+        zero_corners_2d(numpy_data=roi_temp_after)
+        (_, components_after) = connected_components_2d(data_2d=roi_temp_after, connectivity_type=connectivity_type)
 
         if reverse_mode is False:
             # Add the component only if it does not decrease the number of connected components
