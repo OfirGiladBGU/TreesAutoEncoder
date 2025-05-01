@@ -564,12 +564,12 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
                                               hard_condition: bool = False) -> np.ndarray:
     if delta_mode == 0:
         # Calculate the missing connected components in preds fixed
-        pred_advanced_fixed_binary = pred_advanced_fixed_cube.astype(np.uint8)
+        label_binary = label_cube.astype(np.int16)
+        pred_advanced_fixed_binary = pred_advanced_fixed_cube.astype(np.int16)
 
         # Compare pixels mask
-        label_binary = label_cube.astype(np.uint8)
-        delta_cube = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.uint8)
-        # delta_cube = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.uint8)
+        delta_cube = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16)
+        # delta_cube = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.int16)
 
         # Identify connected components in delta_cube
         delta_labeled, delta_num_components = connected_components_3d(
@@ -577,7 +577,7 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
             connectivity_type=connectivity_type
         )
     else: # Custom mode for [Predict Pipeline]
-        pred_advanced_fixed_binary = label_cube.astype(np.uint8)
+        pred_advanced_fixed_binary = label_cube.astype(np.int16)
 
         delta_labeled, delta_num_components = connected_components_3d(
             data_3d=pred_advanced_fixed_cube,
@@ -587,7 +587,7 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
     # Iterate through connected components in delta_cube
     for component_label in range(1, delta_num_components + 1):
         # Create a mask for the current connected component
-        component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
+        component_mask = np.equal(delta_labeled, component_label).astype(np.int16)
 
         # Check the number of connected components before adding the mask
         (_, components_before) = connected_components_3d(data_3d=pred_advanced_fixed_binary, connectivity_type=connectivity_type)
@@ -628,14 +628,15 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
     padding_size = 1
 
     # Calculate the missing connected components in preds fixed
+    padded_label = pad_data(numpy_data=label_cube, pad_width=padding_size)
     padded_pred_advanced_fixed = pad_data(numpy_data=pred_advanced_fixed_cube, pad_width=padding_size)
-    pred_advanced_fixed_binary = padded_pred_advanced_fixed.astype(np.uint8)
+
+    label_binary = padded_label.astype(np.int16)
+    pred_advanced_fixed_binary = padded_pred_advanced_fixed.astype(np.int16)
 
     # Compare pixels mask
-    padded_label = pad_data(numpy_data=label_cube, pad_width=padding_size)
-    label_binary = padded_label.astype(np.uint8)
-    delta_cube = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.uint8)
-    # delta_cube = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.uint8)
+    delta_cube = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16)
+    # delta_cube = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.int16)
 
     # Identify connected components in delta_cube
     delta_labeled, delta_num_components = connected_components_3d(
@@ -646,7 +647,7 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
     # Iterate through connected components in delta_cube
     for component_label in range(1, delta_num_components + 1):
         # Create a mask for the current connected component
-        component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
+        component_mask = np.equal(delta_labeled, component_label).astype(np.int16)
 
         # ROI - cropped area between the component mask: top, bottom, left, right, front, back
         coords = np.argwhere(component_mask > 0)
@@ -717,16 +718,17 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
                                               binary_diff: bool = False,
                                               hard_condition: bool = True) -> np.ndarray:
     # Calculate the missing connected components in preds fixed
-    pred_advanced_fixed_binary = (pred_advanced_fixed_image > 0).astype(np.uint8)
+    label_binary = (label_image > 0).astype(np.int16)
+    pred_advanced_fixed_binary = (pred_advanced_fixed_image > 0).astype(np.int16)
 
     if binary_diff is False:
         # Compare pixels values (Revealed occluded object behind a hole will be detected)
-        delta_binary = ((label_image - pred_advanced_fixed_image) >= 1.0).astype(np.uint8)
+        delta_binary = ((label_image - pred_advanced_fixed_image) >= 1.0).astype(np.int16)
+        pred_advanced_fixed_binary = ((pred_advanced_fixed_binary - delta_binary) >= 1.0).astype(np.int16)
     else:
         # Compare pixels mask (Revealed occluded object behind a hole will be ignored)
-        label_binary = (label_image > 0).astype(np.uint8)
-        delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.uint8)
-        # delta_binary = ((label_binary - pred_advanced_fixed_binary) > 0.5).astype(np.uint8)
+        delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16)
+        # delta_binary = ((label_binary - pred_advanced_fixed_binary) > 0.5).astype(np.int16)
 
     # Identify connected components in delta_binary
     delta_labeled, delta_num_components = connected_components_2d(
@@ -737,7 +739,7 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
     # Iterate through connected components in delta_binary
     for component_label in range(1, delta_num_components + 1):
         # Create a mask for the current connected component
-        component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
+        component_mask = np.equal(delta_labeled, component_label).astype(np.int16)
 
         # Check the number of connected components before adding the mask
         (_, components_before) = connected_components_2d(data_2d=pred_advanced_fixed_binary, connectivity_type=connectivity_type)
@@ -798,15 +800,18 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
     # Calculate the missing connected components in preds fixed
     padded_label = pad_data(numpy_data=label_image, pad_width=padding_size)
     padded_pred_advanced_fixed = pad_data(numpy_data=pred_advanced_fixed_image, pad_width=padding_size)
-    pred_advanced_fixed_binary = (padded_pred_advanced_fixed > 0).astype(np.uint8)
+
+    label_binary = (padded_label > 0).astype(np.int16)
+    pred_advanced_fixed_binary = (padded_pred_advanced_fixed > 0).astype(np.int16)
 
     if binary_diff is False:
         # Compare pixels values (Revealed occluded object behind a hole will be detected)
-        delta_binary = ((padded_label - padded_pred_advanced_fixed) >= 1.0).astype(np.uint8)
+        delta_binary = ((padded_label - padded_pred_advanced_fixed) >= 1.0).astype(np.int16)
+        pred_advanced_fixed_binary = ((pred_advanced_fixed_binary - delta_binary) >= 1.0).astype(np.int16)
     else:
         # Compare pixels mask (Revealed occluded object behind a hole will be ignored)
-        label_binary = (padded_label > 0).astype(np.uint8)
-        delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.uint8)
+
+        delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16)
 
     # Identify connected components in delta_binary
     delta_labeled, delta_num_components = connected_components_2d(
@@ -817,7 +822,7 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
     # Iterate through connected components in delta_binary
     for component_label in range(1, delta_num_components + 1):
         # Create a mask for the current connected component
-        component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
+        component_mask = np.equal(delta_labeled, component_label).astype(np.int16)
 
         # ROI - cropped area between the component mask: top, bottom, left, right
         coords = np.argwhere(component_mask > 0)
