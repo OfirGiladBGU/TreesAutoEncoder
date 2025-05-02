@@ -1099,6 +1099,12 @@ def full_folder_predict(data_type: DataType):
 
     data_3d_stem_count = len(data_3d_stem_list)
 
+    ########################
+    # Test 2D Avg L1 Error #
+    ########################
+
+    # TODO: Run the 2D models and compare the 2D results with the 2D GT
+
     ###################
     # Test Dice Score #
     ###################
