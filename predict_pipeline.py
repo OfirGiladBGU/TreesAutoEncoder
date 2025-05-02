@@ -63,6 +63,7 @@ def postprocess_2d(data_3d_stem: str,
                    apply_input_merge_2d: bool = False,
                    apply_noise_filter_2d: bool = False,
                    hard_noise_filter_2d: bool = True,
+                   connectivity_type_2d: int = 4,
                    log_data: pd.DataFrame = None) -> Tuple[torch.Tensor, torch.Tensor]:
     # Convert (1, 6, w, h) to (6, w, h)
     if data_2d_input.shape[0] == 1 and data_2d_input.shape[1] == 6:
@@ -138,6 +139,7 @@ def postprocess_2d(data_3d_stem: str,
                 label_image=data_2d_input_idx,
                 pred_advanced_fixed_image=data_2d_output_idx,
                 reverse_mode=False,
+                connectivity_type=connectivity_type_2d,
                 binary_diff=True,
                 hard_condition=hard_noise_filter_2d
             )
@@ -341,7 +343,8 @@ def preprocess_3d(data_3d_filepath: str,
                   data_2d_output: torch.Tensor,
                   apply_fusion: bool = False,
                   apply_noise_filter_3d: bool = False,
-                  hard_noise_filter_3d: bool = True) -> torch.Tensor:
+                  hard_noise_filter_3d: bool = True,
+                  connectivity_type_3d: int = 6) -> torch.Tensor:
     pred_3d = convert_data_file_to_numpy(data_filepath=data_3d_filepath, apply_data_threshold=True)
     data_2d_output = data_2d_output.numpy()
 
@@ -431,7 +434,7 @@ def preprocess_3d(data_3d_filepath: str,
             label_cube=pred_3d,
             pred_advanced_fixed_cube=data_3d_input,
             reverse_mode=False,
-            connectivity_type=6,
+            connectivity_type=connectivity_type_3d,
             hard_condition=hard_noise_filter_3d
         )
 
@@ -524,10 +527,14 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder, log_data=No
     apply_input_merge_2d = False  # False - for PipeForge3DPCD
     apply_input_merge_3d = True
     apply_fusion = True
+
     apply_noise_filter_2d = False  # Notice: Doesn't work well with revealed occluded objects
     hard_noise_filter_2d = True
+    connectivity_type_2d = 4
+
     apply_noise_filter_3d = True
     hard_noise_filter_3d = True
+    connectivity_type_3d = 6
 
     # INPUTS
     data_3d_filepath = str(data_3d_filepath)
@@ -573,6 +580,7 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder, log_data=No
             apply_input_merge_2d=apply_input_merge_2d,
             apply_noise_filter_2d=apply_noise_filter_2d,
             hard_noise_filter_2d=hard_noise_filter_2d,
+            connectivity_type_2d=connectivity_type_2d,
             log_data=log_data
         )
 
@@ -589,6 +597,7 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder, log_data=No
             apply_fusion=apply_fusion,
             apply_noise_filter_3d=apply_noise_filter_3d,
             hard_noise_filter_3d=hard_noise_filter_3d,
+            connectivity_type_3d=connectivity_type_3d
         )
 
         # Predict 3D
