@@ -423,7 +423,7 @@ def preprocess_3d(data_3d_filepath: str,
             label_cube=pred_3d,
             pred_advanced_fixed_cube=data_3d_input,
             reverse_mode=False,
-            connectivity_type=26,
+            connectivity_type=6,
             hard_condition=hard_noise_filter_3d
         )
 
