@@ -627,9 +627,8 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
 def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_advanced_fixed_cube: np.ndarray,
                                                 reverse_mode: bool = False,
                                                 connectivity_type: int = 26,
-                                                hard_condition: bool = True,
-                                                apply_dilation_scope: bool = True) -> np.ndarray:
-    # Notice: with `apply_dilation_scope=True` internal holes are included as well
+                                                hard_condition: bool = True) -> np.ndarray:
+    # padding_size = 2
     padding_size = 1
 
     # Calculate the missing connected components in preds fixed
@@ -654,7 +653,6 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
     )
 
     # Iterate through connected components in delta_binary
-    expand_mask = None
     for component_label in range(1, delta_num_components + 1):
         # Create a mask for the current connected component
         component_mask = np.equal(delta_labeled, component_label).astype(np.int16)
@@ -684,17 +682,15 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
 
         # Check the number of connected components before adding the mask
         roi_temp_before = pred_advanced_fixed_binary[min_y:max_y, min_x:max_x, min_z:max_z]
-        if apply_dilation_scope is True:
-            expand_mask = get_local_scope_mask(numpy_data=roi_temp_before, padding_size=padding_size)
-            apply_local_scope_mask(numpy_data=roi_temp_before, expand_mask=expand_mask)
+        expand_mask = get_local_scope_mask(numpy_data=roi_temp_before, padding_size=padding_size)
+        apply_local_scope_mask(numpy_data=roi_temp_before, expand_mask=expand_mask)
         (_, components_before) = connected_components_3d(data_3d=roi_temp_before, connectivity_type=connectivity_type)
         # (_, components_before) = connected_components_3d(data_3d=roi_temp_before, connectivity_type=6)
 
         # Create a temporary data with the component added
         temp_fix = np.logical_or(pred_advanced_fixed_binary, component_mask)
         roi_temp_after = temp_fix[min_y:max_y, min_x:max_x, min_z:max_z]
-        if apply_dilation_scope is True:
-            apply_local_scope_mask(numpy_data=roi_temp_after, expand_mask=expand_mask)
+        apply_local_scope_mask(numpy_data=roi_temp_after, expand_mask=expand_mask)
         (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=connectivity_type)
         # (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=6)
 
@@ -781,6 +777,28 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
             pass
 
     # Update the pred_advanced_fixed_image
+    # if reverse_mode is False:
+    #     # Keep revealed occluded object in a hole [Dataset Creation]
+    #     # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, pred_advanced_fixed_image, 0.0)
+    #     # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0) # Keep occluded
+    #
+    #     # TODO: Test
+    #     # mask = pred_advanced_fixed_binary > 0
+    #     # pred_advanced_fixed_image[mask] = np.where(
+    #     #     pred_advanced_fixed_image[mask] > 0,
+    #     #     pred_advanced_fixed_image[mask],
+    #     #     label_image[mask]
+    #     # )
+    #
+    #     mask = pred_advanced_fixed_binary > 0
+    #     pred_advanced_fixed_image[mask] = label_image[mask]
+    # else:
+    #     # Remove outliers [Predict Pipeline]
+    #     # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0)
+    #
+    #     mask = pred_advanced_fixed_binary > 0
+    #     pred_advanced_fixed_image[mask] = label_image[mask]
+
     mask = pred_advanced_fixed_binary > 0
     pred_advanced_fixed_image[mask] = label_image[mask]
     return pred_advanced_fixed_image
@@ -790,9 +808,7 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
                                                 reverse_mode: bool = False,
                                                 connectivity_type: int = 4,
                                                 binary_diff: bool = False,
-                                                hard_condition: bool = True,
-                                                apply_dilation_scope: bool = True) -> np.ndarray:
-    # Notice: with `apply_dilation_scope=True` internal holes are included as well
+                                                hard_condition: bool = True) -> np.ndarray:
     padding_size = 1
 
     # Calculate the missing connected components in preds fixed
@@ -820,7 +836,6 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
     )
 
     # Iterate through connected components in delta_binary
-    expand_mask = None
     for component_label in range(1, delta_num_components + 1):
         # Create a mask for the current connected component
         component_mask = np.equal(delta_labeled, component_label).astype(np.int16)
@@ -844,16 +859,14 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
 
         # Check the number of connected components before adding the mask
         roi_temp_before = pred_advanced_fixed_binary[min_y:max_y, min_x:max_x]
-        if apply_dilation_scope is True:
-            expand_mask = get_local_scope_mask(numpy_data=roi_temp_before, padding_size=padding_size)
-            apply_local_scope_mask(numpy_data=roi_temp_before, expand_mask=expand_mask)
+        expand_mask = get_local_scope_mask(numpy_data=roi_temp_before, padding_size=padding_size)
+        apply_local_scope_mask(numpy_data=roi_temp_before, expand_mask=expand_mask)
         (_, components_before) = connected_components_2d(data_2d=roi_temp_before, connectivity_type=connectivity_type)
 
         # Create a temporary image with the component added
         temp_fix = np.logical_or(pred_advanced_fixed_binary, component_mask)
         roi_temp_after = temp_fix[min_y:max_y, min_x:max_x]
-        if apply_dilation_scope is True:
-            apply_local_scope_mask(numpy_data=roi_temp_after, expand_mask=expand_mask)
+        apply_local_scope_mask(numpy_data=roi_temp_after, expand_mask=expand_mask)
         (_, components_after) = connected_components_2d(data_2d=roi_temp_after, connectivity_type=connectivity_type)
 
         if reverse_mode is False:
@@ -876,6 +889,29 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
 
     # Update the pred_advanced_fixed_image
     pred_advanced_fixed_binary = unpad_data(numpy_data=pred_advanced_fixed_binary, pad_width=padding_size)
+    # if reverse_mode is False:
+    #     # Keep revealed occluded object in a hole [Dataset Creation]
+    #     # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, pred_advanced_fixed_image, 0.0)
+    #
+    #     # TODO: Test
+    #     # mask = pred_advanced_fixed_binary > 0
+    #     # pred_advanced_fixed_image[mask] = np.where(
+    #     #     pred_advanced_fixed_image[mask] > 0,
+    #     #     pred_advanced_fixed_image[mask],
+    #     #     label_image[mask]
+    #     # )
+    #
+    #     mask = pred_advanced_fixed_binary > 0
+    #     pred_advanced_fixed_image[mask] = label_image[mask]
+    #
+    #     # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0) # Keep occluded
+    # else:
+    #     # Remove outliers [Predict Pipeline]
+    #     # pred_advanced_fixed_image = np.where(pred_advanced_fixed_binary > 0, label_image, 0.0)
+    #
+    #     mask = pred_advanced_fixed_binary > 0
+    #     pred_advanced_fixed_image[mask] = label_image[mask]
+
     mask = pred_advanced_fixed_binary > 0
     pred_advanced_fixed_image[mask] = label_image[mask]
     return pred_advanced_fixed_image
