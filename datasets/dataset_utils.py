@@ -568,12 +568,12 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
         pred_advanced_fixed_binary = pred_advanced_fixed_cube.astype(np.int16)
 
         # Compare pixels mask
-        delta_cube = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16)
-        # delta_cube = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.int16)
+        delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16)
+        # delta_binary = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.int16)
 
-        # Identify connected components in delta_cube
+        # Identify connected components in delta_binary
         delta_labeled, delta_num_components = connected_components_3d(
-            data_3d=delta_cube,
+            data_3d=delta_binary,
             connectivity_type=connectivity_type
         )
     else: # Custom mode for [Predict Pipeline]
@@ -584,7 +584,7 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
             connectivity_type=connectivity_type
         )
 
-    # Iterate through connected components in delta_cube
+    # Iterate through connected components in delta_binary
     for component_label in range(1, delta_num_components + 1):
         # Create a mask for the current connected component
         component_mask = np.equal(delta_labeled, component_label).astype(np.int16)
@@ -634,16 +634,16 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
     pred_advanced_fixed_binary = padded_pred_advanced_fixed.astype(np.int16)
 
     # Compare pixels mask
-    delta_cube = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16)
+    delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16)
     # delta_cube = ((label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.int16)
 
-    # Identify connected components in delta_cube
+    # Identify connected components in delta_binary
     delta_labeled, delta_num_components = connected_components_3d(
-        data_3d=delta_cube,
+        data_3d=delta_binary,
         connectivity_type=connectivity_type
     )
 
-    # Iterate through connected components in delta_cube
+    # Iterate through connected components in delta_binary
     for component_label in range(1, delta_num_components + 1):
         # Create a mask for the current connected component
         component_mask = np.equal(delta_labeled, component_label).astype(np.int16)
