@@ -126,10 +126,18 @@ def postprocess_2d(data_3d_stem: str,
             # else:
             #     filtered_output = data_2d_output_idx
 
+            # filtered_output = components_continuity_2d_local_connectivity(
+            #     label_image=data_2d_output_idx,
+            #     pred_advanced_fixed_image=data_2d_input_idx,
+            #     reverse_mode=True,
+            #     binary_diff=True,
+            #     hard_condition=hard_noise_filter_2d
+            # )
+
             filtered_output = components_continuity_2d_local_connectivity(
-                label_image=data_2d_output_idx,
-                pred_advanced_fixed_image=data_2d_input_idx,
-                reverse_mode=True,
+                label_image=data_2d_input_idx,
+                pred_advanced_fixed_image=data_2d_output_idx,
+                reverse_mode=False,
                 binary_diff=True,
                 hard_condition=hard_noise_filter_2d
             )
