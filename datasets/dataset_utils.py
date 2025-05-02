@@ -572,7 +572,8 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
         delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16) # the cubes are binary so it's equal
 
         # Initialize Base mask
-        pred_advanced_fixed_binary = np.logical_xor(label_binary, delta_binary).astype(np.int16)
+        pred_advanced_fixed_binary = ((label_binary - delta_binary) > 0).astype(np.int16)
+        # pred_advanced_fixed_binary = np.logical_xor(label_binary, delta_binary).astype(np.int16)
 
         # Identify connected components in delta_binary
         delta_labeled, delta_num_components = connected_components_3d(
@@ -618,7 +619,8 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
             pass
 
     # Update the pred_advanced_fixed_cube
-    pred_advanced_fixed_cube = pred_advanced_fixed_binary.astype(pred_advanced_fixed_cube.dtype)
+    mask = pred_advanced_fixed_binary > 0
+    pred_advanced_fixed_cube[mask] = label_cube[mask]
     return pred_advanced_fixed_cube
 
 
@@ -641,7 +643,8 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
     delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16) # the cubes are binary so it's equal
 
     # Initialize Base mask
-    pred_advanced_fixed_binary = np.logical_xor(label_binary, delta_binary).astype(np.int16)
+    pred_advanced_fixed_binary = ((label_binary - delta_binary) > 0).astype(np.int16)
+    # pred_advanced_fixed_binary = np.logical_xor(label_binary, delta_binary).astype(np.int16)
 
     # Identify connected components in delta_binary
     delta_labeled, delta_num_components = connected_components_3d(
@@ -711,7 +714,8 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
 
     # Update the pred_advanced_fixed_cube
     pred_advanced_fixed_binary = unpad_data(numpy_data=pred_advanced_fixed_binary, pad_width=padding_size)
-    pred_advanced_fixed_cube = pred_advanced_fixed_binary.astype(pred_advanced_fixed_cube.dtype)
+    mask = pred_advanced_fixed_binary > 0
+    pred_advanced_fixed_cube[mask] = label_cube[mask]
     return pred_advanced_fixed_cube
 
 
@@ -735,7 +739,8 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
         # delta_binary = ((label_binary - pred_advanced_fixed_binary) > 0.5).astype(np.int16)
 
     # Initialize Base mask
-    pred_advanced_fixed_binary = np.logical_xor(label_binary, delta_binary).astype(np.int16)
+    pred_advanced_fixed_binary = ((label_binary - delta_binary) > 0).astype(np.int16)
+    # pred_advanced_fixed_binary = np.logical_xor(label_binary, delta_binary).astype(np.int16)
 
     # Identify connected components in delta_binary
     delta_labeled, delta_num_components = connected_components_2d(
@@ -821,7 +826,8 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
         delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16)
 
     # Initialize Base mask
-    pred_advanced_fixed_binary = np.logical_xor(label_binary, delta_binary).astype(np.int16)
+    pred_advanced_fixed_binary = ((label_binary - delta_binary) > 0).astype(np.int16)
+    # pred_advanced_fixed_binary = np.logical_xor(label_binary, delta_binary).astype(np.int16)
 
     # Identify connected components in delta_binary
     delta_labeled, delta_num_components = connected_components_2d(
