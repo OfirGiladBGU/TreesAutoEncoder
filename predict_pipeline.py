@@ -970,21 +970,35 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
     elif components_mode == "local":
         # Option 1
 
+        apply_dilation_scope = True
         connectivity_type = 26
         padding_size = 1
 
-        delta_data_3d = np.logical_xor(target_data_3d, input_data_3d).astype(np.uint8)
+        padded_input = pad_data(numpy_data=input_data_3d, pad_width=padding_size)
+        padded_output = pad_data(numpy_data=output_data_3d, pad_width=padding_size)
+        # padded_target = pad_data(numpy_data=target_data_3d, pad_width=padding_size)
+
+        delta_binary = np.logical_xor(padded_output, padded_input).astype(np.int16)
         delta_labeled, delta_num_components = connected_components_3d(
-            data_3d=delta_data_3d,
+            data_3d=delta_binary,
             connectivity_type=connectivity_type
         )
 
         filled_holes = 0
         total_holes = delta_num_components
 
+        if total_holes == 0:
+            print(
+                "Stats:\n"
+                f"Input Holes: 0\n"
+                f"Output Filled Holes: 0\n"
+                f"Reduction Percentage: 1.0"
+            )
+
         print(f"Total Holes Found: {total_holes}. Checking Filled Holes...")
 
         # Iterate through connected components in delta_cube
+        expand_mask = None
         for component_label in tqdm(range(1, delta_num_components + 1)):
             # Create a mask for the current connected component
             component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
@@ -1003,24 +1017,31 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
             back = np.max(coords[:, 2])  # Maximum depth index (Z-axis)
 
             # Ensure ROI is within valid bounds
-            min_y = max(0, top - padding_size)
-            max_y = min(bottom + padding_size + 1, delta_data_3d.shape[0])
+            min_y = top - padding_size
+            max_y = bottom + padding_size + 1
 
-            min_x = max(0, left - padding_size)
-            max_x = min(right + padding_size + 1, delta_data_3d.shape[1])
+            min_x = left - padding_size
+            max_x = right + padding_size + 1
 
-            min_z = max(0, front - padding_size)
-            max_z = min(back + padding_size + 1, delta_data_3d.shape[2])
+            min_z = front - padding_size
+            max_z = back + padding_size + 1
 
             # Check the number of connected components before adding the mask
-            roi_temp_before = input_data_3d[min_y:max_y, min_x:max_x, min_z:max_z]
+            roi_temp_before = padded_input[min_y:max_y, min_x:max_x, min_z:max_z]
+            if apply_dilation_scope is True:
+                expand_mask = get_local_scope_mask(numpy_data=roi_temp_before, padding_size=padding_size)
+                apply_local_scope_mask(numpy_data=roi_temp_before, expand_mask=expand_mask)
             (_, components_before) = connected_components_3d(data_3d=roi_temp_before, connectivity_type=connectivity_type)
 
             # Create a temporary data with the component added
-            roi_temp_after = output_data_3d[min_y:max_y, min_x:max_x, min_z:max_z]
+            temp_fix = np.logical_or(padded_input, component_mask)
+            roi_temp_after = temp_fix[min_y:max_y, min_x:max_x, min_z:max_z]
+            if apply_dilation_scope is True:
+                apply_local_scope_mask(numpy_data=roi_temp_after, expand_mask=expand_mask)
             (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=connectivity_type)
 
-            if components_after < components_before:
+            # if components_after < components_before:
+            if components_after <= components_before:
                 filled_holes += 1
 
         reduction_percentage = filled_holes / total_holes
@@ -1032,7 +1053,7 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
             f"Reduction Percentage: {reduction_percentage}"
         )
 
-        # Option 2
+        # Option 2 - TEST
 
         # connectivity_type = 26
         #
@@ -1057,6 +1078,28 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
         #     f"Reduction Percentage: {reduction_percentage}"
         # )
 
+        # Option 3 - WORKS
+
+        # connectivity_type = 26
+        #
+        # # delta_binary = ((target_data_3d - input_data_3d) > 0.5).astype(np.int16)
+        # delta_binary = np.logical_xor(target_data_3d, input_data_3d).astype(np.int16)
+        # (_, input_delta_num_components) = connected_components_3d(
+        #     data_3d=delta_binary,
+        #     connectivity_type=connectivity_type
+        # )
+        # delta_mask = delta_binary.astype(bool)
+        #
+        # target_holes = target_data_3d[delta_mask]
+        # output_holes = output_data_3d[delta_mask]
+        # dice_score = 2 * np.sum(output_holes * target_holes) / (np.sum(output_holes) + np.sum(target_holes))
+        #
+        # print(
+        #     "Stats:\n"
+        #     f"Input Holes: {input_delta_num_components}\n"
+        #     f"Coverage Percentage: {dice_score}"
+        # )
+
     else:
         raise ValueError("Invalid components_mode")
 
@@ -1068,10 +1111,12 @@ def full_folder_predict(data_type: DataType):
         # source_data_3d_folder = PREDS
         source_data_3d_folder = PREDS_FIXED
 
+        # data_3d_folder = LABELS_3D  # SANITY
         # data_3d_folder = PREDS_3D
         data_3d_folder = PREDS_FIXED_3D
         # data_3d_folder = PREDS_ADVANCED_FIXED_3D
 
+        # data_2d_folder = LABELS_2D  # SANITY
         # data_2d_folder = PREDS_2D
         data_2d_folder = PREDS_FIXED_2D
         # data_2d_folder = PREDS_ADVANCED_FIXED_2D
