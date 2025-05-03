@@ -102,7 +102,6 @@ def postprocess_2d(data_3d_stem: str,
     if apply_input_merge_2d is True:
         data_2d_output = data_2d_input + torch.where(data_2d_input == 0, data_2d_output, 0)
 
-    # TODO: Add 2D filtering
     if apply_noise_filter_2d is True:
         for idx in range(len(IMAGES_6_VIEWS)):
             data_2d_input_idx = np.round(data_2d_input[idx].numpy() * 255).astype(np.uint8)
@@ -110,30 +109,22 @@ def postprocess_2d(data_3d_stem: str,
 
             # if TASK_TYPE == TaskType.SINGLE_COMPONENT:
             #     filtered_output = components_continuity_2d_single_component(
-            #         label_image=data_2d_output_idx,
-            #         pred_advanced_fixed_image=data_2d_input_idx,
-            #         reverse_mode=True,
+            #         label_image=data_2d_input_idx,
+            #         pred_advanced_fixed_image=data_2d_output_idx,
+            #         reverse_mode=False,
             #         binary_diff=True,
             #         hard_condition=hard_noise_filter_2d
             #     )
             # elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
             #     filtered_output = components_continuity_2d_local_connectivity(
-            #         label_image=data_2d_output_idx,
-            #         pred_advanced_fixed_image=data_2d_input_idx,
-            #         reverse_mode=True,
+            #         label_image=data_2d_input_idx,
+            #         pred_advanced_fixed_image=data_2d_output_idx,
+            #         reverse_mode=False,
             #         binary_diff=True,
             #         hard_condition=hard_noise_filter_2d
             #     )
             # else:
             #     filtered_output = data_2d_output_idx
-
-            # filtered_output = components_continuity_2d_local_connectivity(
-            #     label_image=data_2d_output_idx,
-            #     pred_advanced_fixed_image=data_2d_input_idx,
-            #     reverse_mode=True,
-            #     binary_diff=True,
-            #     hard_condition=hard_noise_filter_2d
-            # )
 
             filtered_output = components_continuity_2d_local_connectivity(
                 label_image=data_2d_input_idx,
@@ -185,8 +176,6 @@ def debug_2d(data_3d_stem: str, data_2d_input: torch.Tensor, data_2d_output: tor
 
 
 def naive_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
-    # V1
-
     # Define a 3x3x3 kernel that will be used to check 6 neighbors (left, right, up, down, front, back)
     kernel = np.zeros((3, 3, 3), dtype=int)
 
@@ -205,138 +194,6 @@ def naive_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
     filtered_data_3d_input = np.where((data_3d_input == 1) & (neighbors_count > 0), 1, 0)
 
     return filtered_data_3d_input
-
-    # filtered_data_3d = data_3d_original.copy().astype(np.uint8)
-    # data_delta = (data_3d_input - data_3d_original > 0.5).astype(np.uint8)
-    #
-    # # Identify connected components in data_delta
-    # delta_labeled, delta_num_components = connected_components_3d(data_3d=data_delta, connectivity_type=6)
-    #
-    # # Iterate through connected components in data_delta
-    # for component_label in range(1, delta_num_components + 1):
-    #     # Create a mask for the current connected component
-    #     component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
-    #
-    #     # Check the number of connected components before adding the mask
-    #     components_before = connected_components_3d(filtered_data_3d)[1]
-    #
-    #     # Create a temporary data with the component added
-    #     temp_fix = np.logical_or(filtered_data_3d, component_mask)
-    #     components_after = connected_components_3d(temp_fix)[1]
-    #
-    #     # Add the component only if it does decrease the number of connected components
-    #     if components_after < components_before:
-    #         filtered_data_3d = temp_fix
-    #
-    # filtered_data_3d = filtered_data_3d.astype(np.float32)
-    # return filtered_data_3d
-
-
-# def global_components_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray,
-#                                    base_mode: int = 0, connectivity_type: int = 26):
-#     filtered_data_3d = data_3d_original.copy().astype(np.uint8)
-#
-#     # Identify connected components in delta_cube
-#     if base_mode == 0:
-#         delta_data = (data_3d_input - data_3d_original > 0.5).astype(np.uint8)
-#
-#         delta_labeled, delta_num_components = connected_components_3d(
-#             data_3d=delta_data,
-#             connectivity_type=connectivity_type
-#         )
-#     else:
-#         delta_labeled, delta_num_components = connected_components_3d(
-#             data_3d=data_3d_input,
-#             connectivity_type=connectivity_type
-#         )
-#
-#     # Iterate through connected components in delta_cube
-#     for component_label in range(1, delta_num_components + 1):
-#         # Create a mask for the current connected component
-#         component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
-#
-#         # Check the number of connected components before adding the mask
-#         components_before = connected_components_3d(filtered_data_3d)[1]
-#
-#         # Create a temporary data with the component added
-#         temp_fix = np.logical_or(filtered_data_3d, component_mask)
-#         components_after = connected_components_3d(temp_fix)[1]
-#
-#         # Add the component only if it does not increase the number of connected components
-#         if base_mode == 0:
-#             if not (components_before <= components_after):
-#                 filtered_data_3d = temp_fix
-#         else:
-#             if not (components_before < components_after):
-#                 filtered_data_3d = temp_fix
-#
-#     filtered_data_3d = filtered_data_3d.astype(data_3d_original.dtype)
-#     return filtered_data_3d
-#
-#
-# def local_components_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray,
-#                                   connectivity_type: int = 26):
-#     # TODO: Check completion in the local scope
-#     padding_size = 2
-#
-#     filtered_data_3d = data_3d_original.copy().astype(np.uint8)
-#
-#     # Calculate the connected components for the delta cube
-#     delta_cube = ((data_3d_input - data_3d_original) > 0.5).astype(np.uint8)
-#
-#     # Identify connected components in delta_cube
-#     delta_labeled, delta_num_components = connected_components_3d(
-#         data_3d=delta_cube,
-#         connectivity_type=connectivity_type
-#     )
-#
-#     # Iterate through connected components in delta_cube
-#     for component_label in range(1, delta_num_components + 1):
-#         # Create a mask for the current connected component
-#         component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
-#
-#         # ROI - cropped area between the component mask: top, bottom, left, right, front, back
-#         coords = np.argwhere(component_mask > 0)
-#
-#         # Get bounding box in 3D
-#         top = np.min(coords[:, 0])  # Minimum row index (Y-axis)
-#         bottom = np.max(coords[:, 0])  # Maximum row index (Y-axis)
-#
-#         left = np.min(coords[:, 1])  # Minimum column index (X-axis)
-#         right = np.max(coords[:, 1])  # Maximum column index (X-axis)
-#
-#         front = np.min(coords[:, 2])  # Minimum depth index (Z-axis)
-#         back = np.max(coords[:, 2])  # Maximum depth index (Z-axis)
-#
-#         # Ensure ROI is within valid bounds (2 voxels padding)
-#         min_y = max(0, top - padding_size)
-#         max_y = min(bottom + padding_size + 1, filtered_data_3d.shape[0])
-#
-#         min_x = max(0, left - padding_size)
-#         max_x = min(right + padding_size + 1, filtered_data_3d.shape[1])
-#
-#         min_z = max(0, front - padding_size)
-#         max_z = min(back + padding_size + 1, filtered_data_3d.shape[2])
-#
-#         # Check the number of connected components before adding the mask
-#         roi_temp_before = filtered_data_3d[min_y:max_y, min_x:max_x, min_z:max_z]
-#         components_before = connected_components_3d(data_3d=roi_temp_before, connectivity_type=6)[1]
-#
-#         # Create a temporary image with the component added
-#         temp_fix = np.logical_or(filtered_data_3d, component_mask)
-#         roi_temp_after = temp_fix[min_y:max_y, min_x:max_x, min_z:max_z]
-#         components_after = connected_components_3d(data_3d=roi_temp_after, connectivity_type=6)[1]
-#
-#         # Add the component only if it does not increase the number of connected components
-#         # (on the local scope)
-#         if not (components_before < components_after):
-#             filtered_data_3d = temp_fix
-#
-#         # if not (components_before =< components_after):
-#         #     filtered_data_3d = temp_fix
-#
-#     filtered_data_3d = filtered_data_3d.astype(data_3d_original.dtype)
-#     return filtered_data_3d
 
 
 def preprocess_3d(data_3d_filepath: str,
@@ -371,64 +228,27 @@ def preprocess_3d(data_3d_filepath: str,
         data_3d_input = data_3d_reconstruct
 
     # TODO: validate filters!!!
-    # TODO: add the noise filters as revers continuity fix for both 2D and 3D! - DONE
     if apply_noise_filter_3d is True:
-        # TODO: VALIDATE BEHAVIOUR IS NOT CHANGED!
-
-        # Parse2022
         # data_3d_input = naive_noise_filter(data_3d_original=pred_3d, data_3d_input=data_3d_input)
-
-        # data_3d_input = components_continuity_3d_single_component(
-        #     label_cube=pred_3d,
-        #     pred_advanced_fixed_cube=data_3d_input,
-        #     reverse_mode=True,
-        #     connectivity_type=6,
-        #     delta_mode=0,
-        #     hard_condition=True
-        # )
-
-        # Pipes3D
-        # data_3d_input = components_continuity_3d_single_component(
-        #     label_cube=pred_3d,
-        #     pred_advanced_fixed_cube=data_3d_input,
-        #     reverse_mode=True,
-        #     connectivity_type=6,
-        #     delta_mode=1
-        #     hard_condition=False
-        # )
-
-        # TODO: TEST THIS CASES!
 
         # if TASK_TYPE == TaskType.SINGLE_COMPONENT:
         #     data_3d_input = components_continuity_3d_single_component(
-        #         label_cube=data_3d_input,
-        #         pred_advanced_fixed_cube=pred_3d,
-        #         reverse_mode=True,
-        #         connectivity_type=6,
+        #         label_cube=pred_3d,
+        #         pred_advanced_fixed_cube=data_3d_input,
+        #         reverse_mode=False,
+        #         connectivity_type=connectivity_type_3d,
         #         hard_condition=hard_noise_filter_3d
         #     )
         # elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
         #     data_3d_input = components_continuity_3d_local_connectivity(
-        #         label_cube=data_3d_input,
-        #         pred_advanced_fixed_cube=pred_3d,
-        #         reverse_mode=True,
-        #         connectivity_type=6,
+        #         label_cube=pred_3d,
+        #         pred_advanced_fixed_cube=data_3d_input,
+        #         reverse_mode=False,
+        #         connectivity_type=connectivity_type_3d,
         #         hard_condition=hard_noise_filter_3d
         #     )
         # else:
         #     pass
-
-        # TODO: OG
-
-        # data_3d_input = components_continuity_3d_local_connectivity(
-        #     label_cube=data_3d_input,
-        #     pred_advanced_fixed_cube=pred_3d,
-        #     reverse_mode=True,
-        #     connectivity_type=6,
-        #     hard_condition=hard_noise_filter_3d
-        # )
-
-        # TODO: TEST
 
         data_3d_input = components_continuity_3d_local_connectivity(
             label_cube=pred_3d,
