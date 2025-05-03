@@ -572,8 +572,9 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
         delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16) # the cubes are binary so it's equal
 
         # Initialize Base mask
-        pred_advanced_fixed_binary = ((label_binary - delta_binary) > 0.5).astype(np.int16)
-        # pred_advanced_fixed_binary = np.logical_xor(label_binary, delta_binary).astype(np.int16)
+        base_mask = ((label_binary - delta_binary) > 0.5).astype(np.int16)
+        # base_mask = np.logical_xor(label_binary, delta_binary).astype(np.int16)
+        final_mask = base_mask.copy()
 
         # Identify connected components in delta_binary
         delta_labeled, delta_num_components = connected_components_3d(
@@ -581,7 +582,8 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
             connectivity_type=connectivity_type
         )
     else: # Custom mode for [Predict Pipeline]
-        pred_advanced_fixed_binary = label_cube.astype(np.int16)
+        base_mask = label_cube.astype(np.int16)
+        final_mask = base_mask.copy()
 
         delta_labeled, delta_num_components = connected_components_3d(
             data_3d=pred_advanced_fixed_cube,
@@ -594,11 +596,11 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
         component_mask = np.equal(delta_labeled, component_label).astype(np.int16)
 
         # Check the number of connected components before adding the mask
-        (_, components_before) = connected_components_3d(data_3d=pred_advanced_fixed_binary, connectivity_type=connectivity_type)
-        # (_, components_before) = connected_components_3d(data_3d=pred_advanced_fixed_binary, connectivity_type=6)
+        (_, components_before) = connected_components_3d(data_3d=base_mask, connectivity_type=connectivity_type)
+        # (_, components_before) = connected_components_3d(data_3d=base_mask, connectivity_type=6)
 
         # Create a temporary data with the component added
-        temp_fixed = np.logical_or(pred_advanced_fixed_binary, component_mask)
+        temp_fixed = np.logical_or(base_mask, component_mask)
         (_, components_after) = connected_components_3d(data_3d=temp_fixed, connectivity_type=connectivity_type)
         # (_, components_after) = connected_components_3d(data_3d=temp_fixed, connectivity_type=6)
 
@@ -614,14 +616,14 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
             conditions.append(not (components_before < components_after))
 
         if all(conditions):
-            pred_advanced_fixed_binary = temp_fixed
+            final_mask = np.logical_or(final_mask, component_mask)
         else:
             # print("Debug")
             pass
 
     # Update the pred_advanced_fixed_cube
-    mask = pred_advanced_fixed_binary > 0
-    pred_advanced_fixed_cube[mask] = label_cube[mask]
+    final_mask = final_mask > 0
+    pred_advanced_fixed_cube[final_mask] = label_cube[final_mask]
     return pred_advanced_fixed_cube
 
 
@@ -645,8 +647,9 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
     delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16) # the cubes are binary so it's equal
 
     # Initialize Base mask
-    pred_advanced_fixed_binary = ((label_binary - delta_binary) > 0.5).astype(np.int16)
-    # pred_advanced_fixed_binary = np.logical_xor(label_binary, delta_binary).astype(np.int16)
+    base_mask = ((label_binary - delta_binary) > 0.5).astype(np.int16)
+    # base_mask = np.logical_xor(label_binary, delta_binary).astype(np.int16)
+    final_mask = base_mask.copy()
 
     # Identify connected components in delta_binary
     delta_labeled, delta_num_components = connected_components_3d(
@@ -684,7 +687,7 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
         max_z = back + padding_size + 1
 
         # Check the number of connected components before adding the mask
-        roi_temp_before = pred_advanced_fixed_binary[min_y:max_y, min_x:max_x, min_z:max_z]
+        roi_temp_before = base_mask[min_y:max_y, min_x:max_x, min_z:max_z]
         if apply_dilation_scope is True:
             expand_mask = get_local_scope_mask(numpy_data=roi_temp_before, padding_size=padding_size)
             apply_local_scope_mask(numpy_data=roi_temp_before, expand_mask=expand_mask)
@@ -692,7 +695,7 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
         # (_, components_before) = connected_components_3d(data_3d=roi_temp_before, connectivity_type=6)
 
         # Create a temporary data with the component added
-        temp_fix = np.logical_or(pred_advanced_fixed_binary, component_mask)
+        temp_fix = np.logical_or(base_mask, component_mask)
         roi_temp_after = temp_fix[min_y:max_y, min_x:max_x, min_z:max_z]
         if apply_dilation_scope is True:
             apply_local_scope_mask(numpy_data=roi_temp_after, expand_mask=expand_mask)
@@ -713,15 +716,15 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
             conditions.append(not (components_before < components_after))
 
         if all(conditions):
-            pred_advanced_fixed_binary = temp_fix
+            final_mask = np.logical_or(final_mask, component_mask)
         else:
             # print("Debug")
             pass
 
     # Update the pred_advanced_fixed_cube
-    pred_advanced_fixed_binary = unpad_data(numpy_data=pred_advanced_fixed_binary, pad_width=padding_size)
-    mask = pred_advanced_fixed_binary > 0
-    pred_advanced_fixed_cube[mask] = label_cube[mask]
+    final_mask = unpad_data(numpy_data=final_mask, pad_width=padding_size)
+    final_mask = final_mask > 0
+    pred_advanced_fixed_cube[final_mask] = label_cube[final_mask]
     return pred_advanced_fixed_cube
 
 
@@ -745,8 +748,9 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
         # delta_binary = (np.abs(label_binary - pred_advanced_fixed_binary) > 0.5).astype(np.int16)
 
     # Initialize Base mask
-    pred_advanced_fixed_binary = ((label_binary - delta_binary) > 0.5).astype(np.int16)
-    # pred_advanced_fixed_binary = np.logical_xor(label_binary, delta_binary).astype(np.int16)
+    base_mask = ((label_binary - delta_binary) > 0.5).astype(np.int16)
+    # base_mask = np.logical_xor(label_binary, delta_binary).astype(np.int16)
+    final_mask = base_mask.copy()
 
     # Identify connected components in delta_binary
     delta_labeled, delta_num_components = connected_components_2d(
@@ -760,10 +764,10 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
         component_mask = np.equal(delta_labeled, component_label).astype(np.int16)
 
         # Check the number of connected components before adding the mask
-        (_, components_before) = connected_components_2d(data_2d=pred_advanced_fixed_binary, connectivity_type=connectivity_type)
+        (_, components_before) = connected_components_2d(data_2d=base_mask, connectivity_type=connectivity_type)
 
         # Create a temporary image with the component added
-        temp_fix = np.logical_or(pred_advanced_fixed_binary, component_mask)
+        temp_fix = np.logical_or(base_mask, component_mask)
         (_, components_after) = connected_components_2d(data_2d=temp_fix, connectivity_type=connectivity_type)
 
         conditions = []
@@ -778,14 +782,14 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
             conditions.append(not (components_before < components_after))
 
         if all(conditions):
-            pred_advanced_fixed_binary = temp_fix
+            final_mask = np.logical_or(final_mask, component_mask)
         else:
             # print("Debug")
             pass
 
     # Update the pred_advanced_fixed_image
-    mask = pred_advanced_fixed_binary > 0
-    pred_advanced_fixed_image[mask] = label_image[mask]
+    final_mask = final_mask > 0
+    pred_advanced_fixed_image[final_mask] = label_image[final_mask]
     return pred_advanced_fixed_image
 
 
@@ -813,8 +817,9 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
         delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16)
 
     # Initialize Base mask
-    pred_advanced_fixed_binary = ((label_binary - delta_binary) > 0.5).astype(np.int16)
-    # pred_advanced_fixed_binary = np.logical_xor(label_binary, delta_binary).astype(np.int16)
+    base_mask = ((label_binary - delta_binary) > 0.5).astype(np.int16)
+    # base_mask = np.logical_xor(label_binary, delta_binary).astype(np.int16)
+    final_mask = base_mask.copy()
 
     # Identify connected components in delta_binary
     delta_labeled, delta_num_components = connected_components_2d(
@@ -846,14 +851,14 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
         max_x = (right + 1) + padding_size
 
         # Check the number of connected components before adding the mask
-        roi_temp_before = pred_advanced_fixed_binary[min_y:max_y, min_x:max_x]
+        roi_temp_before = base_mask[min_y:max_y, min_x:max_x]
         if apply_dilation_scope is True:
             expand_mask = get_local_scope_mask(numpy_data=roi_temp_before, padding_size=padding_size)
             apply_local_scope_mask(numpy_data=roi_temp_before, expand_mask=expand_mask)
         (_, components_before) = connected_components_2d(data_2d=roi_temp_before, connectivity_type=connectivity_type)
 
         # Create a temporary image with the component added
-        temp_fix = np.logical_or(pred_advanced_fixed_binary, component_mask)
+        temp_fix = np.logical_or(base_mask, component_mask)
         roi_temp_after = temp_fix[min_y:max_y, min_x:max_x]
         if apply_dilation_scope is True:
             apply_local_scope_mask(numpy_data=roi_temp_after, expand_mask=expand_mask)
@@ -873,15 +878,15 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
             conditions.append(not (components_before < components_after))
 
         if all(conditions):
-            pred_advanced_fixed_binary = temp_fix
+            final_mask = np.logical_or(final_mask, component_mask)
         else:
             # print("Debug")
             pass
 
     # Update the pred_advanced_fixed_image
-    pred_advanced_fixed_binary = unpad_data(numpy_data=pred_advanced_fixed_binary, pad_width=padding_size)
-    mask = pred_advanced_fixed_binary > 0
-    pred_advanced_fixed_image[mask] = label_image[mask]
+    final_mask = unpad_data(numpy_data=final_mask, pad_width=padding_size)
+    final_mask = final_mask > 0
+    pred_advanced_fixed_image[final_mask] = label_image[final_mask]
     return pred_advanced_fixed_image
 
 
