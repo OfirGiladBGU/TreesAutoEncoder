@@ -968,7 +968,7 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
         )
 
     elif components_mode == "local":
-        # Option 1
+        # Option 1 - Check how many holes in the input where filled enough to close a connection
 
         apply_dilation_scope = True
         connectivity_type = 26
@@ -1053,7 +1053,7 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
             f"Reduction Percentage: {reduction_percentage}"
         )
 
-        # Option 2 - TEST
+        # Option 2 - Works only on fully completed holes
 
         # connectivity_type = 26
         #
@@ -1078,7 +1078,7 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
         #     f"Reduction Percentage: {reduction_percentage}"
         # )
 
-        # Option 3 - WORKS
+        # Option 3 - Check converage percentage of the holes
 
         # connectivity_type = 26
         #
