@@ -1080,6 +1080,10 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
 
         # Option 3 - Comparing if there was reduction in the true holes locations
 
+        # mode 1 - compare if Output components is smaller than Input components
+        # mode 2 - compare GT and Output components on the locals scope
+        compare_mode = 1
+
         apply_dilation_scope = True
         connectivity_type = 26
         padding_size = 1
@@ -1137,8 +1141,10 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
             max_z = back + padding_size + 1
 
             # Check the number of connected components before adding the mask
-            roi_temp_before = padded_input[min_y:max_y, min_x:max_x, min_z:max_z]
-            # roi_temp_before = padded_target[min_y:max_y, min_x:max_x, min_z:max_z]
+            if compare_mode == 1:
+                roi_temp_before = padded_input[min_y:max_y, min_x:max_x, min_z:max_z]
+            else:
+                roi_temp_before = padded_target[min_y:max_y, min_x:max_x, min_z:max_z]
             if apply_dilation_scope is True:
                 expand_mask = get_local_scope_mask(numpy_data=roi_temp_before, padding_size=padding_size)
                 apply_local_scope_mask(numpy_data=roi_temp_before, expand_mask=expand_mask)
@@ -1151,8 +1157,12 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
                 apply_local_scope_mask(numpy_data=roi_temp_after, expand_mask=expand_mask)
             (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=connectivity_type)
 
-            if components_after < components_before:
-            # if components_after == components_before:
+            if compare_mode == 1:
+                condition = (components_after < components_before)
+            else:
+                condition = (components_after == components_before)
+
+            if condition:
                 filled_holes += 1
             else:
                 # print("DEBUG")
