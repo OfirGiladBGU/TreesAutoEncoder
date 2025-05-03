@@ -1273,9 +1273,10 @@ def full_folder_predict(data_type: DataType):
     #         source_data_3d_folder=source_data_3d_folder
     #     )
 
+    compare_crops_mode = True
     for idx, data_3d_stem in enumerate(data_3d_stem_list):
         print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating Dice Scores...")
-        calculate_dice_scores(data_3d_stem=data_3d_stem, compare_crops_mode=True)
+        calculate_dice_scores(data_3d_stem=data_3d_stem, compare_crops_mode=compare_crops_mode)
 
     ###########################
     # Test Components Reduced #
