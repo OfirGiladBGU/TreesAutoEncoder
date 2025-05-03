@@ -560,35 +560,25 @@ def apply_local_scope_mask(numpy_data: np.ndarray, expand_mask: np.ndarray):
 def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advanced_fixed_cube: np.ndarray,
                                               reverse_mode: bool = False,
                                               connectivity_type: int = 26,
-                                              delta_mode: int = 0,
                                               hard_condition: bool = False) -> np.ndarray:
-    if delta_mode == 0:
-        # Calculate the missing connected components in preds fixed
-        label_binary = label_cube.astype(np.int16)
-        pred_advanced_fixed_binary = pred_advanced_fixed_cube.astype(np.int16)
+    # Calculate the missing connected components in preds fixed
+    label_binary = label_cube.astype(np.int16)
+    pred_advanced_fixed_binary = pred_advanced_fixed_cube.astype(np.int16)
 
-        # Compare pixels mask
-        # delta_binary = (np.abs(label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.int16)
-        delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16) # the cubes are binary so it's equal
+    # Compare pixels mask
+    # delta_binary = (np.abs(label_cube - pred_advanced_fixed_cube) > 0.5).astype(np.int16)
+    delta_binary = np.logical_xor(label_binary, pred_advanced_fixed_binary).astype(np.int16) # the cubes are binary so it's equal
 
-        # Initialize Base mask
-        base_mask = ((label_binary - delta_binary) > 0.5).astype(np.int16)
-        # base_mask = np.logical_xor(label_binary, delta_binary).astype(np.int16)
-        final_mask = base_mask.copy()
+    # Initialize Base mask
+    base_mask = ((label_binary - delta_binary) > 0.5).astype(np.int16)
+    # base_mask = np.logical_xor(label_binary, delta_binary).astype(np.int16)
+    final_mask = base_mask.copy()
 
-        # Identify connected components in delta_binary
-        delta_labeled, delta_num_components = connected_components_3d(
-            data_3d=delta_binary,
-            connectivity_type=connectivity_type
-        )
-    else: # Custom mode for [Predict Pipeline]
-        base_mask = label_cube.astype(np.int16)
-        final_mask = base_mask.copy()
-
-        delta_labeled, delta_num_components = connected_components_3d(
-            data_3d=pred_advanced_fixed_cube,
-            connectivity_type=connectivity_type
-        )
+    # Identify connected components in delta_binary
+    delta_labeled, delta_num_components = connected_components_3d(
+        data_3d=delta_binary,
+        connectivity_type=connectivity_type
+    )
 
     # Iterate through connected components in delta_binary
     for component_label in range(1, delta_num_components + 1):
@@ -604,18 +594,20 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
         (_, components_after) = connected_components_3d(data_3d=temp_fixed, connectivity_type=connectivity_type)
         # (_, components_after) = connected_components_3d(data_3d=temp_fixed, connectivity_type=6)
 
-        conditions = []
-        if hard_condition is True:
-            conditions.append(not (components_before == components_after))
-
         if reverse_mode is False:
             # Add the component only if it does not decrease the number of connected components [Dataset Creation]
-            conditions.append(not (components_before > components_after))
+            if hard_condition is True:  # Removal is stronger
+                condition = components_before <= components_after
+            else:
+                condition = components_before < components_after
         else:
             # Add the component only if it does not increase the number of connected components [Predict Pipeline]
-            conditions.append(not (components_before < components_after))
+            if hard_condition is True:  # Removal is stronger
+                condition = components_before >= components_after
+            else:
+                condition = components_before > components_after
 
-        if all(conditions):
+        if condition:
             final_mask = np.logical_or(final_mask, component_mask)
         else:
             # print("Debug")
@@ -702,20 +694,22 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
         (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=connectivity_type)
         # (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=6)
 
-        conditions = []
-        if hard_condition is True:
-            conditions.append(not (components_before == components_after))
-
         if reverse_mode is False:
             # Add the component only if it does not decrease the number of connected components
             # (on the local scope) [Dataset Creation]
-            conditions.append(not (components_before > components_after))
+            if hard_condition is True:  # Removal is stronger
+                condition = components_before <= components_after
+            else:
+                condition = components_before < components_after
         else:
             # Add the component only if it does not increase the number of connected components
             # (on the local scope) [Predict Pipeline]
-            conditions.append(not (components_before < components_after))
+            if hard_condition is True:  # Removal is stronger
+                condition = components_before >= components_after
+            else:
+                condition = components_before > components_after
 
-        if all(conditions):
+        if condition:
             final_mask = np.logical_or(final_mask, component_mask)
         else:
             # print("Debug")
@@ -770,18 +764,20 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
         temp_fix = np.logical_or(base_mask, component_mask)
         (_, components_after) = connected_components_2d(data_2d=temp_fix, connectivity_type=connectivity_type)
 
-        conditions = []
-        if hard_condition is True:
-            conditions.append(not (components_before == components_after))
-
         if reverse_mode is False:
             # Add the component only if it does not decrease the number of connected components [Dataset Creation]
-            conditions.append(not (components_before > components_after))
+            if hard_condition is True:  # Removal is stronger
+                condition = components_before <= components_after
+            else:
+                condition = components_before < components_after
         else:
             # Add the component only if it does not increase the number of connected components [Predict Pipeline]
-            conditions.append(not (components_before < components_after))
+            if hard_condition is True:  # Removal is stronger
+                condition = components_before >= components_after
+            else:
+                condition = components_before > components_after
 
-        if all(conditions):
+        if condition:
             final_mask = np.logical_or(final_mask, component_mask)
         else:
             # print("Debug")
@@ -864,20 +860,22 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
             apply_local_scope_mask(numpy_data=roi_temp_after, expand_mask=expand_mask)
         (_, components_after) = connected_components_2d(data_2d=roi_temp_after, connectivity_type=connectivity_type)
 
-        conditions = []
-        if hard_condition is True:
-            conditions.append(not (components_before == components_after))
-
         if reverse_mode is False:
             # Add the component only if it does not decrease the number of connected components
             # (on the local scope) [Dataset Creation]
-            conditions.append(not (components_before > components_after))
+            if hard_condition is True:  # Removal is stronger
+                condition = components_before <= components_after
+            else:
+                condition = components_before < components_after
         else:
             # Add the component only if it does not increase the number of connected components
             # (on the local scope) [Predict Pipeline]
-            conditions.append(not (components_before < components_after))
+            if hard_condition is True:  # Removal is stronger
+                condition = components_before >= components_after
+            else:
+                condition = components_before > components_after
 
-        if all(conditions):
+        if condition:
             final_mask = np.logical_or(final_mask, component_mask)
         else:
             # print("Debug")
