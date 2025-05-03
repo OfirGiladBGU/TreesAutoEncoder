@@ -691,7 +691,8 @@ def create_2d_projections_and_3d_cubes_for_training():
                     label_cube=label_cube,
                     pred_advanced_fixed_cube=pred_advanced_fixed_cube,
                     reverse_mode=False,
-                    connectivity_type=26
+                    connectivity_type=26,
+                    hard_condition=False
                 )
 
                 # Calculate the connected components for the advanced fixed preds
@@ -703,7 +704,8 @@ def create_2d_projections_and_3d_cubes_for_training():
                     label_cube=label_cube,
                     pred_advanced_fixed_cube=pred_advanced_fixed_cube,
                     reverse_mode=False,
-                    connectivity_type=26
+                    connectivity_type=26,
+                    hard_condition=False
                 )
 
             elif TASK_TYPE == TaskType.PATCH_HOLES:
@@ -747,7 +749,9 @@ def create_2d_projections_and_3d_cubes_for_training():
                         label_image=label_image,
                         pred_advanced_fixed_image=pred_advanced_fixed_image,
                         reverse_mode=False,
-                        binary_diff=False
+                        connectivity_type=4,
+                        binary_diff=False,
+                        hard_condition=False
                     )
                     pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
 
@@ -763,7 +767,9 @@ def create_2d_projections_and_3d_cubes_for_training():
                         label_image=label_image,
                         pred_advanced_fixed_image=pred_advanced_fixed_image,
                         reverse_mode=False,
-                        binary_diff=False
+                        connectivity_type=4,
+                        binary_diff=False,
+                        hard_condition=False
                     )
                     pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
 
@@ -1156,21 +1162,21 @@ def main():
     # TODO: Required for training with all modes
     # create_dataset_with_outliers_removed()
 
-    data_options = {
-        LABELS: True,
-        PREDS: False,
-        PREDS_FIXED: False,
-        EVALS: False
-    }
+    # data_options = {
+    #     LABELS: True,
+    #     PREDS: False,
+    #     PREDS_FIXED: False,
+    #     EVALS: False
+    # }
 
     # TODO: Required for training with TaskType.SINGLE_COMPONENT
     # create_data_components(data_options=data_options)
 
     # TODO: DEBUG
-    create_dataset_depth_2d_projections(data_options=data_options)
+    # create_dataset_depth_2d_projections(data_options=data_options)
 
-    # create_2d_projections_and_3d_cubes_for_training()
-    create_2d_projections_and_3d_cubes_for_evaluation()
+    create_2d_projections_and_3d_cubes_for_training()
+    # create_2d_projections_and_3d_cubes_for_evaluation()
 
 
 if __name__ == "__main__":

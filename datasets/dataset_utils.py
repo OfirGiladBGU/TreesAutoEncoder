@@ -602,17 +602,18 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
         (_, components_after) = connected_components_3d(data_3d=temp_fixed, connectivity_type=connectivity_type)
         # (_, components_after) = connected_components_3d(data_3d=temp_fixed, connectivity_type=6)
 
+        conditions = []
+        if hard_condition is True:
+            conditions.append(not (components_before == components_after))
+
         if reverse_mode is False:
             # Add the component only if it does not decrease the number of connected components [Dataset Creation]
-            condition = not (components_before > components_after)
+            conditions.append(not (components_before > components_after))
         else:
             # Add the component only if it does not increase the number of connected components [Predict Pipeline]
-            if hard_condition is True:
-                condition = not (components_before <= components_after)
-            else:
-                condition = not (components_before < components_after)
+            conditions.append(not (components_before < components_after))
 
-        if condition:
+        if all(conditions):
             pred_advanced_fixed_binary = temp_fixed
         else:
             # print("Debug")
@@ -627,7 +628,7 @@ def components_continuity_3d_single_component(label_cube: np.ndarray, pred_advan
 def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_advanced_fixed_cube: np.ndarray,
                                                 reverse_mode: bool = False,
                                                 connectivity_type: int = 26,
-                                                hard_condition: bool = True,
+                                                hard_condition: bool = False,
                                                 apply_dilation_scope: bool = True) -> np.ndarray:
     # Notice: with `apply_dilation_scope=True` internal holes are included as well
     padding_size = 1
@@ -698,19 +699,20 @@ def components_continuity_3d_local_connectivity(label_cube: np.ndarray, pred_adv
         (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=connectivity_type)
         # (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=6)
 
+        conditions = []
+        if hard_condition is True:
+            conditions.append(not (components_before == components_after))
+
         if reverse_mode is False:
             # Add the component only if it does not decrease the number of connected components
             # (on the local scope) [Dataset Creation]
-            condition = not (components_before > components_after)
+            conditions.append(not (components_before > components_after))
         else:
             # Add the component only if it does not increase the number of connected components
             # (on the local scope) [Predict Pipeline]
-            if hard_condition is True:
-                condition = not (components_before <= components_after)
-            else:
-                condition = not (components_before < components_after)
+            conditions.append(not (components_before < components_after))
 
-        if condition:
+        if all(conditions):
             pred_advanced_fixed_binary = temp_fix
         else:
             # print("Debug")
@@ -729,7 +731,7 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
                                               reverse_mode: bool = False,
                                               connectivity_type: int = 4,
                                               binary_diff: bool = False,
-                                              hard_condition: bool = True) -> np.ndarray:
+                                              hard_condition: bool = False) -> np.ndarray:
     # Calculate the missing connected components in preds fixed
     label_binary = (label_image > 0).astype(np.int16)
     pred_advanced_fixed_binary = (pred_advanced_fixed_image > 0).astype(np.int16)
@@ -764,17 +766,18 @@ def components_continuity_2d_single_component(label_image: np.ndarray, pred_adva
         temp_fix = np.logical_or(pred_advanced_fixed_binary, component_mask)
         (_, components_after) = connected_components_2d(data_2d=temp_fix, connectivity_type=connectivity_type)
 
+        conditions = []
+        if hard_condition is True:
+            conditions.append(not (components_before == components_after))
+
         if reverse_mode is False:
             # Add the component only if it does not decrease the number of connected components [Dataset Creation]
-            condition = not (components_before > components_after)
+            conditions.append(not (components_before > components_after))
         else:
             # Add the component only if it does not increase the number of connected components [Predict Pipeline]
-            if hard_condition is True:
-                condition = not (components_before <= components_after)
-            else:
-                condition = not (components_before < components_after)
+            conditions.append(not (components_before < components_after))
 
-        if condition:
+        if all(conditions):
             pred_advanced_fixed_binary = temp_fix
         else:
             # print("Debug")
@@ -790,7 +793,7 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
                                                 reverse_mode: bool = False,
                                                 connectivity_type: int = 4,
                                                 binary_diff: bool = False,
-                                                hard_condition: bool = True,
+                                                hard_condition: bool = False,
                                                 apply_dilation_scope: bool = True) -> np.ndarray:
     # Notice: with `apply_dilation_scope=True` internal holes are included as well
     padding_size = 1
@@ -856,19 +859,20 @@ def components_continuity_2d_local_connectivity(label_image: np.ndarray, pred_ad
             apply_local_scope_mask(numpy_data=roi_temp_after, expand_mask=expand_mask)
         (_, components_after) = connected_components_2d(data_2d=roi_temp_after, connectivity_type=connectivity_type)
 
+        conditions = []
+        if hard_condition is True:
+            conditions.append(not (components_before == components_after))
+
         if reverse_mode is False:
             # Add the component only if it does not decrease the number of connected components
             # (on the local scope) [Dataset Creation]
-            condition = not (components_before > components_after)
+            conditions.append(not (components_before > components_after))
         else:
             # Add the component only if it does not increase the number of connected components
             # (on the local scope) [Predict Pipeline]
-            if hard_condition is True:
-                condition = not (components_before <= components_after)
-            else:
-                condition = not (components_before < components_after)
+            conditions.append(not (components_before < components_after))
 
-        if condition:
+        if all(conditions):
             pred_advanced_fixed_binary = temp_fix
         else:
             # print("Debug")
