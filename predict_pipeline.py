@@ -1088,7 +1088,7 @@ def full_folder_predict(data_type: DataType):
     data_3d_stem_list = [data_3d_stem[1:] for data_3d_stem in index_3d_uniques]
 
     # Evaluate on Training - Test Data
-    if data_3d_folder in [PREDS_3D, PREDS_FIXED_3D, PREDS_ADVANCED_FIXED_3D]:
+    if data_3d_folder != EVALS_3D:
         split_percentage = 0.9
         index_3d_split_index = min(round(len(index_3d_uniques) * split_percentage), len(index_3d_uniques) - 1)
 
