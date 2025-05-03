@@ -1151,7 +1151,7 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
                 apply_local_scope_mask(numpy_data=roi_temp_after, expand_mask=expand_mask)
             (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=connectivity_type)
 
-            if components_after <= components_before:
+            if components_after < components_before:
             # if components_after == components_before:
                 filled_holes += 1
             else:
