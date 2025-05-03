@@ -968,7 +968,7 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
         )
 
     elif components_mode == "local":
-        # # Option 1 - Check how many holes in the input where filled enough to close a connection
+        # # Option 1 - Check for each output fill, if some connections where colsed
         #
         # apply_dilation_scope = True
         # connectivity_type = 26
@@ -1052,8 +1052,33 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
         #     f"Output Filled Holes: {filled_holes}\n"
         #     f"Reduction Percentage: {reduction_percentage}"
         # )
+        #
+        # Option 2 - Compare how many hole components left after removing the output fills (Works only on fully completed holes)
+        #
+        # connectivity_type = 26
+        #
+        # input_delta_data_3d = ((target_data_3d - input_data_3d) > 0.5).astype(np.uint8)
+        # (_, input_delta_num_components) = connected_components_3d(
+        #     data_3d=input_delta_data_3d,
+        #     connectivity_type=connectivity_type
+        # )
+        #
+        # output_delta_data_3d = ((target_data_3d - output_data_3d) > 0.5).astype(np.uint8)
+        # (_, output_delta_num_components) = connected_components_3d(
+        #     data_3d=output_delta_data_3d,
+        #     connectivity_type=connectivity_type
+        # )
+        #
+        # reduction_percentage = (input_delta_num_components - output_delta_num_components) / input_delta_num_components
+        #
+        # print(
+        #     "Stats:\n"
+        #     f"Input Holes: {input_delta_num_components}\n"
+        #     f"Output Holes: {output_delta_num_components}\n"
+        #     f"Reduction Percentage: {reduction_percentage}"
+        # )
 
-        # Option 2 - Comparing if there was reduction in the true holes locations
+        # Option 3 - Comparing if there was reduction in the true holes locations
 
         apply_dilation_scope = True
         connectivity_type = 26
@@ -1142,52 +1167,27 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
             f"Reduction Percentage: {reduction_percentage}"
         )
 
-        # Option 3 - Works only on fully completed holes
+        # Option 4 - Check coverage percentage of the holes
 
-        # connectivity_type = 26
-        #
-        # input_delta_data_3d = ((target_data_3d - input_data_3d) > 0.5).astype(np.uint8)
-        # (_, input_delta_num_components) = connected_components_3d(
-        #     data_3d=input_delta_data_3d,
-        #     connectivity_type=connectivity_type
-        # )
-        #
-        # output_delta_data_3d = ((target_data_3d - output_data_3d) > 0.5).astype(np.uint8)
-        # (_, output_delta_num_components) = connected_components_3d(
-        #     data_3d=output_delta_data_3d,
-        #     connectivity_type=connectivity_type
-        # )
-        #
-        # reduction_percentage = (input_delta_num_components - output_delta_num_components) / input_delta_num_components
-        #
-        # print(
-        #     "Stats:\n"
-        #     f"Input Holes: {input_delta_num_components}\n"
-        #     f"Output Holes: {output_delta_num_components}\n"
-        #     f"Reduction Percentage: {reduction_percentage}"
-        # )
+        connectivity_type = 26
 
-        # Option 5 - Check coverage percentage of the holes
+        # delta_binary = ((target_data_3d - input_data_3d) > 0.5).astype(np.int16)
+        delta_binary = np.logical_xor(target_data_3d, input_data_3d).astype(np.int16)
+        (_, input_delta_num_components) = connected_components_3d(
+            data_3d=delta_binary,
+            connectivity_type=connectivity_type
+        )
+        delta_mask = delta_binary.astype(bool)
 
-        # connectivity_type = 26
-        #
-        # # delta_binary = ((target_data_3d - input_data_3d) > 0.5).astype(np.int16)
-        # delta_binary = np.logical_xor(target_data_3d, input_data_3d).astype(np.int16)
-        # (_, input_delta_num_components) = connected_components_3d(
-        #     data_3d=delta_binary,
-        #     connectivity_type=connectivity_type
-        # )
-        # delta_mask = delta_binary.astype(bool)
-        #
-        # target_holes = target_data_3d[delta_mask]
-        # output_holes = output_data_3d[delta_mask]
-        # dice_score = 2 * np.sum(output_holes * target_holes) / (np.sum(output_holes) + np.sum(target_holes))
-        #
-        # print(
-        #     "Stats:\n"
-        #     f"Input Holes: {input_delta_num_components}\n"
-        #     f"Coverage Percentage: {dice_score}"
-        # )
+        target_holes = target_data_3d[delta_mask]
+        output_holes = output_data_3d[delta_mask]
+        dice_score = 2 * np.sum(output_holes * target_holes) / (np.sum(output_holes) + np.sum(target_holes))
+
+        print(
+            "Stats:\n"
+            f"Input Holes: {input_delta_num_components}\n"
+            f"Coverage Percentage: {dice_score}"
+        )
 
     else:
         raise ValueError("Invalid components_mode")
