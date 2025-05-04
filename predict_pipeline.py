@@ -520,7 +520,8 @@ def test_single_predict():
     )
 
 
-def full_predict(data_3d_stem, data_type: DataType, log_data=None, data_3d_folder=None, data_2d_folder=None):
+def full_predict(data_3d_stem, data_type: DataType, log_data=None, data_3d_folder=None, data_2d_folder=None,
+                 run_2d_flow=True, run_3d_flow=True, export_2d=True, export_3d=True):
     start_time = datetime.datetime.now()
     start_timestamp = start_time.strftime('%Y-%m-%d_%H-%M-%S')
     print(
@@ -589,7 +590,11 @@ def full_predict(data_3d_stem, data_type: DataType, log_data=None, data_3d_folde
                     data_3d_folder=data_3d_folder,
                     data_2d_folder=data_2d_folder,
                     log_data=log_data,
-                    enable_debug=False
+                    enable_debug=False,
+                    run_2d_flow=run_2d_flow,
+                    run_3d_flow=run_3d_flow,
+                    export_2d=export_2d,
+                    export_3d=export_3d
                 )
             )
         # "Join" on all tasks by waiting for each future to complete.
@@ -1065,6 +1070,17 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
 
 
 def full_folder_predict(data_type: DataType):
+    run_full_predict = True
+
+    # Select which tests to run
+    test_2d_avg_l1_error = True
+    test_dice_score = True
+    test_components_reduced = True
+
+    ################
+    # Prepare Data #
+    ################
+
     if data_type == DataType.TRAIN:
         log_data = pd.read_csv(TRAIN_LOG_PATH)
 
@@ -1108,59 +1124,95 @@ def full_folder_predict(data_type: DataType):
     # Test 2D Avg L1 Error #
     ########################
 
-    # TODO: Run the 2D models and compare the 2D results with the 2D GT
+    if test_2d_avg_l1_error:
+        # TODO: Run the 2D models and compare the 2D results with the 2D GT
+
+        for idx, data_3d_stem in enumerate(data_3d_stem_list):
+            print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Predicting...")
+            full_predict(
+                data_3d_stem=data_3d_stem,
+                data_type=data_type,
+                log_data=log_data,
+                data_3d_folder=data_3d_folder,
+                data_2d_folder=data_2d_folder,
+                run_3d_flow=False,
+                export_3d=False
+            )
 
     ###################
     # Test Dice Score #
     ###################
 
-    for idx, data_3d_stem in enumerate(data_3d_stem_list):
-        print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Predicting...")
-        full_predict(
-            data_3d_stem=data_3d_stem,
-            data_type=data_type,
-            log_data=log_data,
-            data_3d_folder=data_3d_folder,
-            data_2d_folder=data_2d_folder
-        )
+    if test_dice_score:
+        compare_crops_mode = True
 
-    # TODO: Enable when `compare_crops_mode=False` is requested
-    # for idx, data_3d_stem in enumerate(data_3d_stem_list):
-    #     print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Merging...")
-    #     full_merge(
-    #         data_3d_stem=data_3d_stem,
-    #         data_type=data_type,
-    #         log_data=log_data,
-    #         source_data_3d_folder=source_data_3d_folder
-    #     )
+        if run_full_predict:
+            for idx, data_3d_stem in enumerate(data_3d_stem_list):
+                print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Predicting...")
+                full_predict(
+                    data_3d_stem=data_3d_stem,
+                    data_type=data_type,
+                    log_data=log_data,
+                    data_3d_folder=data_3d_folder,
+                    data_2d_folder=data_2d_folder,
+                    export_2d=False
+                )
+            run_full_predict = False
 
-    compare_crops_mode = True
-    for idx, data_3d_stem in enumerate(data_3d_stem_list):
-        print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating Dice Scores...")
-        calculate_dice_scores(data_3d_stem=data_3d_stem, compare_crops_mode=compare_crops_mode)
+        if compare_crops_mode is False:
+            for idx, data_3d_stem in enumerate(data_3d_stem_list):
+                print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Merging...")
+                full_merge(
+                    data_3d_stem=data_3d_stem,
+                    data_type=data_type,
+                    log_data=log_data,
+                    source_data_3d_folder=source_data_3d_folder
+                )
+
+        for idx, data_3d_stem in enumerate(data_3d_stem_list):
+            print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating Dice Scores...")
+            calculate_dice_scores(data_3d_stem=data_3d_stem, compare_crops_mode=compare_crops_mode)
 
     ###########################
     # Test Components Reduced #
     ###########################
 
-    for idx, data_3d_stem in enumerate(data_3d_stem_list):
-        print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Merging...")
-        full_merge(
-            data_3d_stem=data_3d_stem,
-            data_type=data_type,
-            log_data=log_data,
-            source_data_3d_folder=source_data_3d_folder
-        )
+    if test_components_reduced:
+        if run_full_predict:
+            for idx, data_3d_stem in enumerate(data_3d_stem_list):
+                print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Predicting...")
+                full_predict(
+                    data_3d_stem=data_3d_stem,
+                    data_type=data_type,
+                    log_data=log_data,
+                    data_3d_folder=data_3d_folder,
+                    data_2d_folder=data_2d_folder,
+                    export_2d=False
+                )
+            run_full_predict = False
 
-    # components_mode = "global"
-    components_mode = "local"
-    for idx, data_3d_stem in enumerate(data_3d_stem_list):
-        print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating Components Scores...")
-        calculate_reduced_connected_components(
-            data_3d_stem=data_3d_stem,
-            components_mode=components_mode,
-            source_data_3d_folder=source_data_3d_folder
-        )
+        for idx, data_3d_stem in enumerate(data_3d_stem_list):
+            print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Merging...")
+            full_merge(
+                data_3d_stem=data_3d_stem,
+                data_type=data_type,
+                log_data=log_data,
+                source_data_3d_folder=source_data_3d_folder
+            )
+
+        # if TASK_TYPE == TaskType.SINGLE_COMPONENT:
+        #     components_mode = "global"
+        # else:
+        #     components_mode = "local"
+
+        components_mode = "local"
+        for idx, data_3d_stem in enumerate(data_3d_stem_list):
+            print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating Components Scores...")
+            calculate_reduced_connected_components(
+                data_3d_stem=data_3d_stem,
+                components_mode=components_mode,
+                source_data_3d_folder=source_data_3d_folder
+            )
 
 
 def main():
