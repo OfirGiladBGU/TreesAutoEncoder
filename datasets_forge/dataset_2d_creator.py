@@ -686,27 +686,29 @@ def create_2d_projections_and_3d_cubes_for_training():
             pred_advanced_fixed_components_cube = None
 
             if TASK_TYPE == TaskType.SINGLE_COMPONENT:
-                # Update the pred_advanced_fixed_cube
-                pred_advanced_fixed_cube = components_continuity_3d_single_component(
-                    label_cube=label_cube,
-                    pred_advanced_fixed_cube=pred_advanced_fixed_cube,
-                    reverse_mode=False,
-                    connectivity_type=26,
-                    hard_condition=False
-                )
+                if APPLY_CONTINUITY_FIX_3D:
+                    # Update the pred_advanced_fixed_cube
+                    pred_advanced_fixed_cube = components_continuity_3d_single_component(
+                        label_cube=label_cube,
+                        pred_advanced_fixed_cube=pred_advanced_fixed_cube,
+                        reverse_mode=False,
+                        connectivity_type=26,
+                        hard_condition=False
+                    )
 
                 # Calculate the connected components for the advanced fixed preds
                 (pred_advanced_fixed_components_cube, _) = connected_components_3d(data_3d=pred_advanced_fixed_cube)
 
             elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
-                # Update the pred_advanced_fixed_cube
-                pred_advanced_fixed_cube = components_continuity_3d_local_connectivity(
-                    label_cube=label_cube,
-                    pred_advanced_fixed_cube=pred_advanced_fixed_cube,
-                    reverse_mode=False,
-                    connectivity_type=26,
-                    hard_condition=False
-                )
+                if APPLY_CONTINUITY_FIX_3D:
+                    # Update the pred_advanced_fixed_cube
+                    pred_advanced_fixed_cube = components_continuity_3d_local_connectivity(
+                        label_cube=label_cube,
+                        pred_advanced_fixed_cube=pred_advanced_fixed_cube,
+                        reverse_mode=False,
+                        connectivity_type=26,
+                        hard_condition=False
+                    )
 
             elif TASK_TYPE == TaskType.PATCH_HOLES:
                 pass
@@ -744,15 +746,16 @@ def create_2d_projections_and_3d_cubes_for_training():
                 # TODO: repair pred fix to include connectable components
                 # TODO: check if local components num is similar between label and pred
                 if TASK_TYPE == TaskType.SINGLE_COMPONENT:
-                    # Update the pred_advanced_fixed_image
-                    pred_advanced_fixed_image = components_continuity_2d_single_component(
-                        label_image=label_image,
-                        pred_advanced_fixed_image=pred_advanced_fixed_image,
-                        reverse_mode=False,
-                        connectivity_type=4,
-                        binary_diff=False,
-                        hard_condition=False
-                    )
+                    if APPLY_CONTINUITY_FIX_2D:
+                        # Update the pred_advanced_fixed_image
+                        pred_advanced_fixed_image = components_continuity_2d_single_component(
+                            label_image=label_image,
+                            pred_advanced_fixed_image=pred_advanced_fixed_image,
+                            reverse_mode=False,
+                            connectivity_type=4,
+                            binary_diff=False,
+                            hard_condition=False
+                        )
                     pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
 
                     # Calculate the connected components for the advanced fixed preds
@@ -762,15 +765,16 @@ def create_2d_projections_and_3d_cubes_for_training():
                     ) * 255
 
                 elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
-                    # Update the pred_advanced_fixed_image
-                    pred_advanced_fixed_image = components_continuity_2d_local_connectivity(
-                        label_image=label_image,
-                        pred_advanced_fixed_image=pred_advanced_fixed_image,
-                        reverse_mode=False,
-                        connectivity_type=4,
-                        binary_diff=False,
-                        hard_condition=False
-                    )
+                    if APPLY_CONTINUITY_FIX_2D:
+                        # Update the pred_advanced_fixed_image
+                        pred_advanced_fixed_image = components_continuity_2d_local_connectivity(
+                            label_image=label_image,
+                            pred_advanced_fixed_image=pred_advanced_fixed_image,
+                            reverse_mode=False,
+                            connectivity_type=4,
+                            binary_diff=False,
+                            hard_condition=False
+                        )
                     pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
 
                 elif TASK_TYPE == TaskType.PATCH_HOLES:
