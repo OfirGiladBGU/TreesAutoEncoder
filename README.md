@@ -1,7 +1,7 @@
 # Trees Auto Encoder
 
 Commit with big change:
-11.04.2025 - configured new noise filters based on the Continiuity fix 3D filters
+11.04.2025 - configured new noise filters based on the Continuity fix 3D filters
 
 
 ## Config info:
