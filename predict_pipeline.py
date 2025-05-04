@@ -735,6 +735,9 @@ def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
 
     l1_avg_errors_list = []
     l1_max_errors_list = []
+
+    total_hole_pixels = 0
+    total_filled_pixels = 0
     for idx in range(len(output_filepaths)):
         input_filepath_idx = input_filepaths[idx]
         target_filepath_idx = target_filepaths[idx]
@@ -748,8 +751,9 @@ def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
         if delta_binary_mask.sum() == 0:
             continue
 
-        masked_target = target_data[delta_binary_mask]
+        masked_input = input_data[delta_binary_mask]
         masked_output = output_data[delta_binary_mask]
+        masked_target = target_data[delta_binary_mask]
 
         l1_error = np.abs(masked_target - masked_output)
 
@@ -758,13 +762,19 @@ def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
         max_l1_error = np.max(l1_error)
         l1_max_errors_list.append(max_l1_error)
 
+        # Assumption: Filled holes should have higher pixel value than unfilled holes
+        total_filled_pixels += np.sum(masked_output > masked_input)
+        total_hole_pixels += np.sum(delta_binary_mask)
+
     if len(l1_avg_errors_list) > 0:
         final_avg_l1_error = np.mean(np.array(l1_avg_errors_list))
         final_max_l1_error = np.max(np.array(l1_max_errors_list))
+        increase_percentage = total_filled_pixels / total_hole_pixels
         print(
             "Stats:\n"
             f"Hole Average L1 Error: {final_avg_l1_error}\n"
             f"Hole Max L1 Error: {final_max_l1_error}\n"
+            f"Increase hole pixel value percentage: {increase_percentage}"
         )
     else:
         print("No L1 Errors found")
