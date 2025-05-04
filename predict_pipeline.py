@@ -753,7 +753,6 @@ def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
     )
 
 
-
 def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
     #################
     # CROPS COMPARE #
