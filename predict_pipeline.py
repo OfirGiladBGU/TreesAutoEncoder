@@ -167,7 +167,7 @@ def debug_2d(data_3d_stem: str, data_2d_input: torch.Tensor, data_2d_output: tor
         plt.imshow(numpy_image, cmap='gray')
         ax[j].set_title(f"View {IMAGES_6_VIEWS[j]}:")
 
-    save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d")
+    save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d_debug")
     save_filename = os.path.join(save_path, data_3d_stem)
     os.makedirs(name=os.path.dirname(save_filename), exist_ok=True)
     fig.tight_layout()
@@ -280,7 +280,7 @@ def postprocess_3d(data_3d_input: torch.Tensor,
 def debug_3d(data_3d_stem, data_3d_filepath, data_3d_input: torch.Tensor):
     data_3d_input = data_3d_input.clone().numpy()
 
-    save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
+    save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d_debug")
     save_filename = os.path.join(save_path, f"{data_3d_stem}_input")
     convert_numpy_to_data_file(
         numpy_data=data_3d_input,
@@ -408,6 +408,8 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder, log_data=No
         if enable_debug is True:
             debug_2d(data_3d_stem=data_3d_stem, data_2d_input=data_2d_input, data_2d_output=data_2d_output)
 
+        # TODO: Add export 2d
+
         ##############
         # 3D Section #
         ##############
@@ -435,6 +437,7 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder, log_data=No
         # DEBUG
         if enable_debug is True:
             debug_3d(data_3d_stem=data_3d_stem, data_3d_filepath=data_3d_filepath, data_3d_input=data_3d_input)
+            # TODO: Add matplotlib export
 
         export_output(
             data_3d_stem=data_3d_stem,
