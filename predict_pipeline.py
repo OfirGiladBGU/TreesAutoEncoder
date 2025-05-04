@@ -690,6 +690,70 @@ def full_merge(data_3d_stem, data_type: DataType, log_data=None, source_data_3d_
     )
 
 
+def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
+    # Output
+    output_folder = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d")
+    output_filepaths = list(pathlib.Path(output_folder).glob(f"{data_3d_stem}_*_*_output.*"))
+
+    # Input
+    if data_2d_folder is None:
+        # input_folder = PREDS_2D
+        input_folder = PREDS_FIXED_2D
+        # input_folder = PREDS_ADVANCED_FIXED_2D
+    else:
+        input_folder = data_2d_folder
+
+    input_filepaths = []
+    for output_filepath in output_filepaths:
+        output_filepath_extension = get_data_file_extension(data_filepath=output_filepath)
+        output_filepath_stem = get_data_file_stem(data_filepath=output_filepath, relative_to=output_folder)
+        if output_folder == os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d"):
+            output_filepath_stem = str(output_filepath_stem).rsplit('_output', maxsplit=1)[0]
+        output_filename = f"{output_filepath_stem}{output_filepath_extension}"
+
+        input_filepath = os.path.join(input_folder, output_filename)
+        input_filepaths.append(input_filepath)
+
+    # Ground Truth
+    target_folder = LABELS_2D
+    target_filepaths = []
+    for output_filepath in output_filepaths:
+        output_filepath_extension = get_data_file_extension(data_filepath=output_filepath)
+        output_filepath_stem = get_data_file_stem(data_filepath=output_filepath, relative_to=output_folder)
+        if output_folder == os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d"):
+            output_filepath_stem = str(output_filepath_stem).rsplit('_output', maxsplit=1)[0]
+        output_filename = f"{output_filepath_stem}{output_filepath_extension}"
+
+        target_filepath = os.path.join(target_folder, output_filename)
+        target_filepaths.append(target_filepath)
+
+
+    l1_errors_list = []
+    for idx in range(len(output_filepaths)):
+        input_filepath_idx = input_filepaths[idx]
+        target_filepath_idx = target_filepaths[idx]
+        output_filepath_idx = output_filepaths[idx]
+
+        input_data = convert_data_file_to_numpy(data_filepath=input_filepath_idx)
+        target_data = convert_data_file_to_numpy(data_filepath=target_filepath_idx)
+        output_data = convert_data_file_to_numpy(data_filepath=output_filepath_idx)
+
+        delta_binary_mask = (np.abs(target_data - input_data) > 0.5)
+        masked_target = target_data[delta_binary_mask]
+        masked_output = output_data[delta_binary_mask]
+
+        l1_error = np.abs(masked_target - masked_output)
+        avg_l1_error = np.mean(l1_error)
+        l1_errors_list.append(avg_l1_error)
+
+    final_avg_l1_error = np.mean(np.array(l1_errors_list))
+    print(
+        "Stats:\n"
+        f"Average L1 Error: {final_avg_l1_error}\n"
+    )
+
+
+
 def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
     #################
     # CROPS COMPARE #
@@ -1138,6 +1202,10 @@ def full_folder_predict(data_type: DataType):
                 run_3d_flow=False,
                 export_3d=False
             )
+
+        for idx, data_3d_stem in enumerate(data_3d_stem_list):
+            print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating 2D AVG L1 Error...")
+            calculate_2d_avg_l1_error(data_3d_stem=data_3d_stem, data_2d_folder=data_2d_folder)
 
     ###################
     # Test Dice Score #
