@@ -897,7 +897,7 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
         )
 
     elif components_mode == "local":
-        # # Option 1 - Check for each output fill, if some connections where colsed
+        # # Option 1 - Check for each output fill, if some connections where closed
         #
         # apply_dilation_scope = True
         # connectivity_type = 26
@@ -1007,104 +1007,104 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
         #     f"Reduction Percentage: {reduction_percentage}"
         # )
 
-        # Option 3 - Comparing if there was reduction in the true holes locations
+        # Option 3 - Comparing if there was reduction in the true holes locations (High Runtime)
 
         # mode 1 - compare if Output components is smaller than Input components
         # mode 2 - compare GT and Output components on the locals scope
-        compare_mode = 1
-
-        apply_dilation_scope = True
-        connectivity_type = 26
-        padding_size = 1
-
-        padded_input = pad_data(numpy_data=input_data_3d, pad_width=padding_size)
-        padded_output = pad_data(numpy_data=output_data_3d, pad_width=padding_size)
-        padded_target = pad_data(numpy_data=target_data_3d, pad_width=padding_size)
-
-        delta_binary = np.logical_xor(padded_target, padded_input).astype(np.int16)
-        delta_labeled, delta_num_components = connected_components_3d(
-            data_3d=delta_binary,
-            connectivity_type=connectivity_type
-        )
-
-        filled_holes = 0
-        total_holes = delta_num_components
-
-        if total_holes == 0:
-            print(
-                "Stats:\n"
-                f"Input Holes: 0\n"
-                f"Output Filled Holes: 0\n"
-                f"Reduction Percentage: 1.0"
-            )
-
-        print(f"Total Holes Found: {total_holes}. Checking Filled Holes...")
-
-        # Iterate through connected components in delta_cube
-        expand_mask = None
-        for component_label in tqdm(range(1, delta_num_components + 1)):
-            # Create a mask for the current connected component
-            component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
-
-            # ROI - cropped area between the component mask: top, bottom, left, right, front, back
-            coords = np.argwhere(component_mask > 0)
-
-            # Get bounding box in 3D
-            top = np.min(coords[:, 0])  # Minimum row index (Y-axis)
-            bottom = np.max(coords[:, 0])  # Maximum row index (Y-axis)
-
-            left = np.min(coords[:, 1])  # Minimum column index (X-axis)
-            right = np.max(coords[:, 1])  # Maximum column index (X-axis)
-
-            front = np.min(coords[:, 2])  # Minimum depth index (Z-axis)
-            back = np.max(coords[:, 2])  # Maximum depth index (Z-axis)
-
-            # Ensure ROI is within valid bounds
-            min_y = top - padding_size
-            max_y = bottom + padding_size + 1
-
-            min_x = left - padding_size
-            max_x = right + padding_size + 1
-
-            min_z = front - padding_size
-            max_z = back + padding_size + 1
-
-            # Check the number of connected components before adding the mask
-            if compare_mode == 1:
-                roi_temp_before = padded_input[min_y:max_y, min_x:max_x, min_z:max_z]
-            else:
-                roi_temp_before = padded_target[min_y:max_y, min_x:max_x, min_z:max_z]
-            if apply_dilation_scope is True:
-                expand_mask = get_local_scope_mask(numpy_data=roi_temp_before, padding_size=padding_size)
-                apply_local_scope_mask(numpy_data=roi_temp_before, expand_mask=expand_mask)
-            (_, components_before) = connected_components_3d(data_3d=roi_temp_before,
-                                                             connectivity_type=connectivity_type)
-
-            # Create a temporary data with the component added
-            roi_temp_after = padded_output[min_y:max_y, min_x:max_x, min_z:max_z]
-            if apply_dilation_scope is True:
-                apply_local_scope_mask(numpy_data=roi_temp_after, expand_mask=expand_mask)
-            (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=connectivity_type)
-
-            if compare_mode == 1:
-                condition = (components_after < components_before)
-            else:
-                condition = (components_after == components_before)
-
-            if condition:
-                filled_holes += 1
-            else:
-                # print("DEBUG")
-                pass
-
-        reduction_percentage = filled_holes / total_holes
-
-        print(
-            "Stats:\n"
-            f"Input Holes: {total_holes}\n"
-            f"Output Filled Holes: {filled_holes}\n"
-            f"Reduction Percentage: {reduction_percentage}"
-        )
+        # compare_mode = 1
+        #
+        # apply_dilation_scope = True
+        # connectivity_type = 26
+        # padding_size = 1
+        #
+        # padded_input = pad_data(numpy_data=input_data_3d, pad_width=padding_size)
+        # padded_output = pad_data(numpy_data=output_data_3d, pad_width=padding_size)
+        # padded_target = pad_data(numpy_data=target_data_3d, pad_width=padding_size)
+        #
+        # delta_binary = np.logical_xor(padded_target, padded_input).astype(np.int16)
+        # delta_labeled, delta_num_components = connected_components_3d(
+        #     data_3d=delta_binary,
+        #     connectivity_type=connectivity_type
+        # )
+        #
+        # filled_holes = 0
+        # total_holes = delta_num_components
+        #
+        # if total_holes == 0:
+        #     print(
+        #         "Stats:\n"
+        #         f"Input Holes: 0\n"
+        #         f"Output Filled Holes: 0\n"
+        #         f"Reduction Percentage: 1.0"
+        #     )
+        #
+        # print(f"Total Holes Found: {total_holes}. Checking Filled Holes...")
+        #
+        # # Iterate through connected components in delta_cube
+        # expand_mask = None
+        # for component_label in tqdm(range(1, delta_num_components + 1)):
+        #     # Create a mask for the current connected component
+        #     component_mask = np.equal(delta_labeled, component_label).astype(np.uint8)
+        #
+        #     # ROI - cropped area between the component mask: top, bottom, left, right, front, back
+        #     coords = np.argwhere(component_mask > 0)
+        #
+        #     # Get bounding box in 3D
+        #     top = np.min(coords[:, 0])  # Minimum row index (Y-axis)
+        #     bottom = np.max(coords[:, 0])  # Maximum row index (Y-axis)
+        #
+        #     left = np.min(coords[:, 1])  # Minimum column index (X-axis)
+        #     right = np.max(coords[:, 1])  # Maximum column index (X-axis)
+        #
+        #     front = np.min(coords[:, 2])  # Minimum depth index (Z-axis)
+        #     back = np.max(coords[:, 2])  # Maximum depth index (Z-axis)
+        #
+        #     # Ensure ROI is within valid bounds
+        #     min_y = top - padding_size
+        #     max_y = bottom + padding_size + 1
+        #
+        #     min_x = left - padding_size
+        #     max_x = right + padding_size + 1
+        #
+        #     min_z = front - padding_size
+        #     max_z = back + padding_size + 1
+        #
+        #     # Check the number of connected components before adding the mask
+        #     if compare_mode == 1:
+        #         roi_temp_before = padded_input[min_y:max_y, min_x:max_x, min_z:max_z]
+        #     else:
+        #         roi_temp_before = padded_target[min_y:max_y, min_x:max_x, min_z:max_z]
+        #     if apply_dilation_scope is True:
+        #         expand_mask = get_local_scope_mask(numpy_data=roi_temp_before, padding_size=padding_size)
+        #         apply_local_scope_mask(numpy_data=roi_temp_before, expand_mask=expand_mask)
+        #     (_, components_before) = connected_components_3d(data_3d=roi_temp_before,
+        #                                                      connectivity_type=connectivity_type)
+        #
+        #     # Create a temporary data with the component added
+        #     roi_temp_after = padded_output[min_y:max_y, min_x:max_x, min_z:max_z]
+        #     if apply_dilation_scope is True:
+        #         apply_local_scope_mask(numpy_data=roi_temp_after, expand_mask=expand_mask)
+        #     (_, components_after) = connected_components_3d(data_3d=roi_temp_after, connectivity_type=connectivity_type)
+        #
+        #     if compare_mode == 1:
+        #         condition = (components_after < components_before)
+        #     else:
+        #         condition = (components_after == components_before)
+        #
+        #     if condition:
+        #         filled_holes += 1
+        #     else:
+        #         # print("DEBUG")
+        #         pass
+        #
+        # reduction_percentage = filled_holes / total_holes
+        #
+        # print(
+        #     "Stats:\n"
+        #     f"Input Holes: {total_holes}\n"
+        #     f"Output Filled Holes: {filled_holes}\n"
+        #     f"Reduction Percentage: {reduction_percentage}"
+        # )
 
         # Option 4 - Check coverage percentage of the holes
 
