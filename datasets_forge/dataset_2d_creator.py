@@ -531,7 +531,7 @@ def create_2d_projections_and_3d_cubes_for_training():
         else:
             raise ValueError("Invalid Task Type")
 
-        print(f"Total Mini Cubes: {len(label_cubes)}\n")
+        # print(f"Total Mini Cubes: {len(label_cubes)}\n")  # Already appears on tqdm
 
         cubes_count = len(label_cubes)
         cubes_count_digits_count = len(str(cubes_count))
