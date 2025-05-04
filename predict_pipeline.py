@@ -175,6 +175,23 @@ def debug_2d(data_3d_stem: str, data_2d_input: torch.Tensor, data_2d_output: tor
     plt.close(fig)
 
 
+def export_output_2d(data_3d_stem, data_3d_filepath, data_2d_output: torch.Tensor):
+    numpy_data_2d_output = data_2d_output.clone().numpy()
+
+    source_data_filepath = "dummy.png"
+    save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d")
+    for view_idx, image_view in enumerate(IMAGES_6_VIEWS):
+        numpy_image = numpy_data_2d_output[view_idx]
+        numpy_image = np.round(numpy_image * 255).astype(np.uint8)
+
+        save_filename = os.path.join(save_path, f"{data_3d_stem}_{image_view}_output")
+        convert_numpy_to_data_file(
+            numpy_data=numpy_image,
+            source_data_filepath=source_data_filepath,
+            save_filename=save_filename,
+        )
+
+
 def naive_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
     # Define a 3x3x3 kernel that will be used to check 6 neighbors (left, right, up, down, front, back)
     kernel = np.zeros((3, 3, 3), dtype=int)
@@ -290,13 +307,13 @@ def debug_3d(data_3d_stem, data_3d_filepath, data_3d_input: torch.Tensor):
     )
 
 
-def export_output(data_3d_stem, data_3d_filepath, data_3d_output: torch.Tensor):
-    data_3d_output = data_3d_output.numpy()
+def export_output_3d(data_3d_stem, data_3d_filepath, data_3d_output: torch.Tensor):
+    numpy_data_3d_output = data_3d_output.numpy()
 
     save_path = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_3d")
     save_filename = os.path.join(save_path, f"{data_3d_stem}_output")
     convert_numpy_to_data_file(
-        numpy_data=data_3d_output,
+        numpy_data=numpy_data_3d_output,
         source_data_filepath=data_3d_filepath,
         save_filename=save_filename,
         apply_data_threshold=True
@@ -339,7 +356,10 @@ def init_pipeline_models():
         pass
 
 
-def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder, log_data=None, enable_debug=True):
+def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder,
+                   log_data=None, enable_debug=True,
+                   run_2d_flow=True, run_3d_flow=True,
+                   export_2d=True, export_3d=True):
     if not os.path.exists(data_3d_filepath):
         raise ValueError(f"File: {data_3d_filepath} doesn't exist!")
 
@@ -373,77 +393,95 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder, log_data=No
     with torch.no_grad():
         # TODO: Support 1D model TBD
 
-        ##############
-        # 2D Section #
-        ##############
-        data_2d_input = preprocess_2d(
-            data_3d_stem=data_3d_stem,
-            data_2d_folder=data_2d_folder,
-            apply_batch_merge=apply_batch_merge
-        )
+        if run_2d_flow is True:
+            ##############
+            # 2D Section #
+            ##############
 
-        # Predict 2D
-        if len(args.model_2d) > 0:
-            data_2d_output = args.model_2d_class(data_2d_input)
+            # Preprocess 2D
+            data_2d_input = preprocess_2d(
+                data_3d_stem=data_3d_stem,
+                data_2d_folder=data_2d_folder,
+                apply_batch_merge=apply_batch_merge
+            )
 
-            # Handle additional tasks
-            if "confidence map" in getattr(args.model_2d_class, "additional_tasks", list()):
-                data_2d_output, data_2d_output_confidence = data_2d_output
-                data_2d_output = torch.where(data_2d_output_confidence > 0.5, data_2d_output, 0)
+            # Predict 2D
+            if len(args.model_2d) > 0:
+                data_2d_output = args.model_2d_class(data_2d_input)
+
+                # Handle additional tasks
+                if "confidence map" in getattr(args.model_2d_class, "additional_tasks", list()):
+                    data_2d_output, data_2d_output_confidence = data_2d_output
+                    data_2d_output = torch.where(data_2d_output_confidence > 0.5, data_2d_output, 0)
+            else:
+                data_2d_output = data_2d_input.clone()
+
+            # Postprocess 2D
+            (data_2d_input, data_2d_output) = postprocess_2d(
+                data_3d_stem=data_3d_stem,
+                data_2d_input=data_2d_input,
+                data_2d_output=data_2d_output,
+                apply_input_merge_2d=apply_input_merge_2d,
+                apply_noise_filter_2d=apply_noise_filter_2d,
+                hard_noise_filter_2d=hard_noise_filter_2d,
+                connectivity_type_2d=connectivity_type_2d,
+                log_data=log_data
+            )
+
+            # DEBUG
+            if enable_debug is True:
+                debug_2d(data_3d_stem=data_3d_stem, data_2d_input=data_2d_input, data_2d_output=data_2d_output)
+
+            if export_2d is True:
+                export_output_2d(
+                    data_3d_stem=data_3d_stem,
+                    data_3d_filepath=data_3d_filepath,
+                    data_2d_output=data_2d_output
+                )
+
+            # Preprocess 3D
+            data_3d_input = preprocess_3d(
+                data_3d_filepath=data_3d_filepath,
+                data_2d_output=data_2d_output,
+                apply_fusion=apply_fusion,
+                apply_noise_filter_3d=apply_noise_filter_3d,
+                hard_noise_filter_3d=hard_noise_filter_3d,
+                connectivity_type_3d=connectivity_type_3d
+            )
         else:
-            data_2d_output = data_2d_input.clone()
+            data_3d_input = convert_data_file_to_numpy(data_filepath=data_3d_filepath, apply_data_threshold=True)
 
-        (data_2d_input, data_2d_output) = postprocess_2d(
-            data_3d_stem=data_3d_stem,
-            data_2d_input=data_2d_input,
-            data_2d_output=data_2d_output,
-            apply_input_merge_2d=apply_input_merge_2d,
-            apply_noise_filter_2d=apply_noise_filter_2d,
-            hard_noise_filter_2d=hard_noise_filter_2d,
-            connectivity_type_2d=connectivity_type_2d,
-            log_data=log_data
-        )
+        if run_3d_flow is True:
+            ##############
+            # 3D Section #
+            ##############
 
-        # DEBUG
-        if enable_debug is True:
-            debug_2d(data_3d_stem=data_3d_stem, data_2d_input=data_2d_input, data_2d_output=data_2d_output)
+            # Predict 3D
+            if len(args.model_3d) > 0:
+                data_3d_output = args.model_3d_class(data_3d_input)
+            else:
+                data_3d_output = data_3d_input.clone()
 
-        # TODO: Add export 2d
+            # Postprocess 3D
+            (data_3d_input, data_3d_output) = postprocess_3d(
+                data_3d_input=data_3d_input,
+                data_3d_output=data_3d_output,
+                apply_input_merge_3d=apply_input_merge_3d
+            )
 
-        ##############
-        # 3D Section #
-        ##############
-        data_3d_input = preprocess_3d(
-            data_3d_filepath=data_3d_filepath,
-            data_2d_output=data_2d_output,
-            apply_fusion=apply_fusion,
-            apply_noise_filter_3d=apply_noise_filter_3d,
-            hard_noise_filter_3d=hard_noise_filter_3d,
-            connectivity_type_3d=connectivity_type_3d
-        )
+            # DEBUG
+            if enable_debug is True:
+                debug_3d(data_3d_stem=data_3d_stem, data_3d_filepath=data_3d_filepath, data_3d_input=data_3d_input)
+                # TODO: Add matplotlib export
 
-        # Predict 3D
-        if len(args.model_3d) > 0:
-            data_3d_output = args.model_3d_class(data_3d_input)
+            if export_3d is True:
+                export_output_3d(
+                    data_3d_stem=data_3d_stem,
+                    data_3d_filepath=data_3d_filepath,
+                    data_3d_output=data_3d_output
+                )
         else:
-            data_3d_output = data_3d_input.clone()
-
-        (data_3d_input, data_3d_output) = postprocess_3d(
-            data_3d_input=data_3d_input,
-            data_3d_output=data_3d_output,
-            apply_input_merge_3d=apply_input_merge_3d
-        )
-
-        # DEBUG
-        if enable_debug is True:
-            debug_3d(data_3d_stem=data_3d_stem, data_3d_filepath=data_3d_filepath, data_3d_input=data_3d_input)
-            # TODO: Add matplotlib export
-
-        export_output(
-            data_3d_stem=data_3d_stem,
-            data_3d_filepath=data_3d_filepath,
-            data_3d_output=data_3d_output
-        )
+            pass
 
 
 def test_single_predict():
