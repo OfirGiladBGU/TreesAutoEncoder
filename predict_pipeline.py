@@ -691,6 +691,12 @@ def full_merge(data_3d_stem, data_type: DataType, log_data=None, source_data_3d_
 
 
 def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
+    # Baseline
+    # input_folder = PREDS_2D
+    # output_folder = PREDS_FIXED_2D
+    # input_folder = PREDS_ADVANCED_FIXED_2D
+    # output_filepaths = list(pathlib.Path(output_folder).glob(f"{data_3d_stem}*.*"))
+
     # Output
     output_folder = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d")
     output_filepaths = list(pathlib.Path(output_folder).glob(f"{data_3d_stem}_*_*_output.*"))
@@ -727,8 +733,8 @@ def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
         target_filepath = os.path.join(target_folder, output_filename)
         target_filepaths.append(target_filepath)
 
-
-    l1_errors_list = []
+    l1_avg_errors_list = []
+    l1_max_errors_list = []
     for idx in range(len(output_filepaths)):
         input_filepath_idx = input_filepaths[idx]
         target_filepath_idx = target_filepaths[idx]
@@ -739,18 +745,29 @@ def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
         output_data = convert_data_file_to_numpy(data_filepath=output_filepath_idx)
 
         delta_binary_mask = (np.abs(target_data - input_data) > 0.5)
+        if delta_binary_mask.sum() == 0:
+            continue
+
         masked_target = target_data[delta_binary_mask]
         masked_output = output_data[delta_binary_mask]
 
         l1_error = np.abs(masked_target - masked_output)
-        avg_l1_error = np.mean(l1_error)
-        l1_errors_list.append(avg_l1_error)
 
-    final_avg_l1_error = np.mean(np.array(l1_errors_list))
-    print(
-        "Stats:\n"
-        f"Average L1 Error: {final_avg_l1_error}\n"
-    )
+        avg_l1_error = np.mean(l1_error)
+        l1_avg_errors_list.append(avg_l1_error)
+        max_l1_error = np.max(l1_error)
+        l1_max_errors_list.append(max_l1_error)
+
+    if len(l1_avg_errors_list) > 0:
+        final_avg_l1_error = np.mean(np.array(l1_avg_errors_list))
+        final_max_l1_error = np.max(np.array(l1_max_errors_list))
+        print(
+            "Stats:\n"
+            f"Hole Average L1 Error: {final_avg_l1_error}\n"
+            f"Hole Max L1 Error: {final_max_l1_error}\n"
+        )
+    else:
+        print("No L1 Errors found")
 
 
 def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
@@ -1137,8 +1154,8 @@ def full_folder_predict(data_type: DataType):
 
     # Select which tests to run
     test_2d_avg_l1_error = True
-    test_dice_score = True
-    test_components_reduced = True
+    test_dice_score = False
+    test_components_reduced = False
 
     ################
     # Prepare Data #
