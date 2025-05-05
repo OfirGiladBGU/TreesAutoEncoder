@@ -80,7 +80,7 @@ def postprocess_2d(data_3d_stem: str,
         raise ValueError("Invalid shape")
 
     # TODO: Threshold
-    # apply_threshold(data_2d_output, threshold=0.2, keep_values=True)
+    apply_threshold(data_2d_output, threshold=0.2, keep_values=True)
 
     if log_data is not None:
         # Replace invalid data with original input
@@ -541,13 +541,13 @@ def full_predict(data_3d_stem, data_type: DataType, log_data=None, data_3d_folde
             log_data = pd.read_csv(TRAIN_LOG_PATH)
 
         if data_3d_folder is None:
-            data_3d_folder = PREDS_3D
-            # data_3d_folder = PREDS_FIXED_3D
+            # data_3d_folder = PREDS_3D
+            data_3d_folder = PREDS_FIXED_3D
             # data_3d_folder = PREDS_ADVANCED_FIXED_3D
 
         if data_2d_folder is None:
-            data_2d_folder = PREDS_2D
-            # data_2d_folder = PREDS_FIXED_2D
+            # data_2d_folder = PREDS_2D
+            data_2d_folder = PREDS_FIXED_2D
             # data_2d_folder = PREDS_ADVANCED_FIXED_2D
 
     else:
@@ -1323,9 +1323,10 @@ def main():
     # test_single_predict()
 
     data_type = DataType.TRAIN
+    # data_3d_stem = "PA000005"
     # data_3d_stem = "Hospital CUP 1in3"
 
-    # full_predict(data_3d_stem=data_3d_stem, data_type=data_type)
+    # full_predict(data_3d_stem=data_3d_stem, data_type=data_type, export_2d=False)
     # full_merge(data_3d_stem=data_3d_stem, data_type=data_type)
     # calculate_dice_scores(data_3d_stem=data_3d_stem)
 
