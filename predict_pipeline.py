@@ -214,66 +214,73 @@ def naive_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
 
 
 def preprocess_3d(data_3d_filepath: str,
-                  data_2d_output: torch.Tensor,
+                  data_2d_output: torch.Tensor = None,
                   apply_fusion: bool = False,
                   apply_noise_filter_3d: bool = False,
                   hard_noise_filter_3d: bool = True,
                   connectivity_type_3d: int = 6) -> torch.Tensor:
     pred_3d = convert_data_file_to_numpy(data_filepath=data_3d_filepath, apply_data_threshold=True)
-    data_2d_output = data_2d_output.numpy()
 
-    # Reconstruct 3D
-    data_3d_list = list()
-    for idx, image_view in enumerate(IMAGES_6_VIEWS):
-        numpy_image = data_2d_output[idx] * 255
-        data_3d = reverse_rotations(numpy_image=numpy_image, view_type=image_view, source_data_filepath=data_3d_filepath)
-        data_3d_list.append(data_3d)
+    # 2D flow was disabled
+    if data_2d_output is None:
+        data_3d_input = pred_3d
 
-    data_3d_reconstruct = data_3d_list[0]
-    for i in range(1, len(data_3d_list)):
-        data_3d_reconstruct = np.logical_or(data_3d_reconstruct, data_3d_list[i])
-    data_3d_reconstruct = data_3d_reconstruct.astype(np.float32)
-    apply_threshold(data_3d_reconstruct, threshold=0.5, keep_values=False)
-
-    # Fusion 3D
-    if apply_fusion is True:
-        data_3d_fusion = np.logical_or(data_3d_reconstruct, pred_3d)
-        data_3d_fusion = data_3d_fusion.astype(np.float32)
-        apply_threshold(data_3d_fusion, threshold=0.5, keep_values=False)
-        data_3d_input = data_3d_fusion
+    # Use 2D flow results
     else:
-        data_3d_input = data_3d_reconstruct
+        data_2d_output = data_2d_output.numpy()
 
-    # TODO: validate filters!!!
-    if apply_noise_filter_3d is True:
-        # data_3d_input = naive_noise_filter(data_3d_original=pred_3d, data_3d_input=data_3d_input)
+        # Reconstruct 3D
+        data_3d_list = list()
+        for idx, image_view in enumerate(IMAGES_6_VIEWS):
+            numpy_image = data_2d_output[idx] * 255
+            data_3d = reverse_rotations(numpy_image=numpy_image, view_type=image_view, source_data_filepath=data_3d_filepath)
+            data_3d_list.append(data_3d)
 
-        # if TASK_TYPE == TaskType.SINGLE_COMPONENT:
-        #     data_3d_input = components_continuity_3d_single_component(
-        #         label_cube=pred_3d,
-        #         pred_advanced_fixed_cube=data_3d_input,
-        #         reverse_mode=False,
-        #         connectivity_type=connectivity_type_3d,
-        #         hard_condition=hard_noise_filter_3d
-        #     )
-        # elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
-        #     data_3d_input = components_continuity_3d_local_connectivity(
-        #         label_cube=pred_3d,
-        #         pred_advanced_fixed_cube=data_3d_input,
-        #         reverse_mode=False,
-        #         connectivity_type=connectivity_type_3d,
-        #         hard_condition=hard_noise_filter_3d
-        #     )
-        # else:
-        #     pass
+        data_3d_reconstruct = data_3d_list[0]
+        for i in range(1, len(data_3d_list)):
+            data_3d_reconstruct = np.logical_or(data_3d_reconstruct, data_3d_list[i])
+        data_3d_reconstruct = data_3d_reconstruct.astype(np.float32)
+        apply_threshold(data_3d_reconstruct, threshold=0.5, keep_values=False)
 
-        data_3d_input = components_continuity_3d_local_connectivity(
-            label_cube=pred_3d,
-            pred_advanced_fixed_cube=data_3d_input,
-            reverse_mode=False,
-            connectivity_type=connectivity_type_3d,
-            hard_condition=hard_noise_filter_3d
-        )
+        # Fusion 3D
+        if apply_fusion is True:
+            data_3d_fusion = np.logical_or(data_3d_reconstruct, pred_3d)
+            data_3d_fusion = data_3d_fusion.astype(np.float32)
+            apply_threshold(data_3d_fusion, threshold=0.5, keep_values=False)
+            data_3d_input = data_3d_fusion
+        else:
+            data_3d_input = data_3d_reconstruct
+
+        # TODO: validate filters!!!
+        if apply_noise_filter_3d is True:
+            # data_3d_input = naive_noise_filter(data_3d_original=pred_3d, data_3d_input=data_3d_input)
+
+            # if TASK_TYPE == TaskType.SINGLE_COMPONENT:
+            #     data_3d_input = components_continuity_3d_single_component(
+            #         label_cube=pred_3d,
+            #         pred_advanced_fixed_cube=data_3d_input,
+            #         reverse_mode=False,
+            #         connectivity_type=connectivity_type_3d,
+            #         hard_condition=hard_noise_filter_3d
+            #     )
+            # elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
+            #     data_3d_input = components_continuity_3d_local_connectivity(
+            #         label_cube=pred_3d,
+            #         pred_advanced_fixed_cube=data_3d_input,
+            #         reverse_mode=False,
+            #         connectivity_type=connectivity_type_3d,
+            #         hard_condition=hard_noise_filter_3d
+            #     )
+            # else:
+            #     pass
+
+            data_3d_input = components_continuity_3d_local_connectivity(
+                label_cube=pred_3d,
+                pred_advanced_fixed_cube=data_3d_input,
+                reverse_mode=False,
+                connectivity_type=connectivity_type_3d,
+                hard_condition=hard_noise_filter_3d
+            )
 
     data_3d_input = torch.Tensor(data_3d_input).unsqueeze(0).unsqueeze(0)
     return data_3d_input
@@ -393,11 +400,11 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder,
     with torch.no_grad():
         # TODO: Support 1D model TBD
 
-        if run_2d_flow is True:
-            ##############
-            # 2D Section #
-            ##############
+        ##############
+        # 2D Section #
+        ##############
 
+        if run_2d_flow is True:
             # Preprocess 2D
             data_2d_input = preprocess_2d(
                 data_3d_stem=data_3d_stem,
@@ -438,7 +445,14 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder,
                     data_3d_filepath=data_3d_filepath,
                     data_2d_output=data_2d_output
                 )
+        else:
+            data_2d_output = None
 
+        ##############
+        # 3D Section #
+        ##############
+
+        if run_3d_flow is True:
             # Preprocess 3D
             data_3d_input = preprocess_3d(
                 data_3d_filepath=data_3d_filepath,
@@ -448,13 +462,6 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder,
                 hard_noise_filter_3d=hard_noise_filter_3d,
                 connectivity_type_3d=connectivity_type_3d
             )
-        else:
-            data_3d_input = convert_data_file_to_numpy(data_filepath=data_3d_filepath, apply_data_threshold=True)
-
-        if run_3d_flow is True:
-            ##############
-            # 3D Section #
-            ##############
 
             # Predict 3D
             if len(args.model_3d) > 0:
