@@ -388,6 +388,13 @@ def create_data_components(data_options):
 # 2D Projections and 3D Cubes #
 ###############################
 def create_2d_projections_and_3d_cubes_for_training():
+    if TASK_TYPE == TaskType.SINGLE_COMPONENT:
+        connectivity_type_3d = 26
+        connectivity_type_2d = 8
+    else:
+        connectivity_type_3d = 6
+        connectivity_type_2d = 4
+
     # Config
     projection_options = {
         "front": True,
@@ -692,7 +699,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                         label_cube=label_cube,
                         pred_advanced_fixed_cube=pred_advanced_fixed_cube,
                         reverse_mode=False,
-                        connectivity_type=26,
+                        connectivity_type=connectivity_type_3d,
                         hard_condition=False
                     )
 
@@ -706,7 +713,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                         label_cube=label_cube,
                         pred_advanced_fixed_cube=pred_advanced_fixed_cube,
                         reverse_mode=False,
-                        connectivity_type=26,
+                        connectivity_type=connectivity_type_3d,
                         hard_condition=False
                     )
 
@@ -752,7 +759,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                             label_image=label_image,
                             pred_advanced_fixed_image=pred_advanced_fixed_image,
                             reverse_mode=False,
-                            connectivity_type=4,
+                            connectivity_type=connectivity_type_2d,
                             binary_diff=False,
                             hard_condition=False
                         )
@@ -771,7 +778,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                             label_image=label_image,
                             pred_advanced_fixed_image=pred_advanced_fixed_image,
                             reverse_mode=False,
-                            connectivity_type=4,
+                            connectivity_type=connectivity_type_2d,
                             binary_diff=False,
                             hard_condition=False
                         )
