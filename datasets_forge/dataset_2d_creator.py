@@ -714,7 +714,8 @@ def create_2d_projections_and_3d_cubes_for_training():
                         pred_advanced_fixed_cube=pred_advanced_fixed_cube,
                         reverse_mode=False,
                         connectivity_type=connectivity_type_3d,
-                        hard_condition=False
+                        hard_condition=False,
+                        apply_dilation_scope=BINARY_DILATION
                     )
 
             elif TASK_TYPE == TaskType.PATCH_HOLES:
@@ -780,7 +781,8 @@ def create_2d_projections_and_3d_cubes_for_training():
                             reverse_mode=False,
                             connectivity_type=connectivity_type_2d,
                             binary_diff=False,
-                            hard_condition=False
+                            hard_condition=False,
+                            apply_dilation_scope=BINARY_DILATION
                         )
                     pred_advanced_fixed_projections[f"{image_view}_image"] = pred_advanced_fixed_image
 
