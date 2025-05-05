@@ -27,6 +27,10 @@ class TaskType(Enum):
     LOCAL_CONNECTIVITY = 2  # Assumption: Need to connect components on focused scope
     PATCH_HOLES = 3  # Assumption: Need to fix any type of holes
 
+class ProjectionMode(Enum):  # TODO: Not yet used
+    VISUAL_MODE = 1  # Same as looking on a Rubiks from 6 view direction (With rotation matrices)
+    MATHEMATICAL_MODE = 2  # Direct projection on each of the 6 planes
+
 # YAML text to Enum mapping
 task_type_map = {
     "SINGLE_COMPONENT": TaskType.SINGLE_COMPONENT,
@@ -78,15 +82,17 @@ RESULTS_PATH = os.path.join(DATA_RESULTS_PATH, DATASET_OUTPUT_FOLDER)
 # FLAGS #
 #########
 
+# Preparation
+APPLY_LOG_FILTER = True  # Helpful to reject projections with too dense or too sparse pixels from the training loader
+APPLY_MEDIAN_FILTER = False  # Sometimes helpful for PCDs to fill missing inner black pixels
+APPLY_CONTINUITY_FIX_3D = True  # The continuity filter for true holes detection in 3D
+APPLY_CONTINUITY_FIX_2D = False  # The continuity filter for true holes detection in 2D
+BINARY_DILATION = True  # Enable the usage local scope binary dilation mask (2D - 4 directions, 3D - 6 directions)
+
 # Dataset 1D
 V1_1D_DATASETS = ['Trees1DV1']
 
 # Dataset 2D
-APPLY_LOG_FILTER = True
-APPLY_MEDIAN_FILTER = False  # Sometimes helpful for PCDs
-APPLY_CONTINUITY_FIX_3D = True
-APPLY_CONTINUITY_FIX_2D = False
-BINARY_DILATION = True
 V1_2D_DATASETS = ['Trees2DV1', 'Trees2DV1S']
 V2_2D_DATASETS = ['Trees2DV2', 'Trees2DV2M']
 
@@ -96,7 +102,7 @@ V2_3D_DATASETS = ['Trees3DV2', 'Trees3DV2M', 'Trees3DV3', 'Trees3DV4']
 
 # Views Configurations
 IMAGES_6_VIEWS = ["top", "bottom", "front", "back", "left", "right"]
-PROJECTION_MODE = "visualization"  # "visualization" or "training"
+PROJECTION_MODE = ProjectionMode.VISUAL_MODE
 
 ###################
 # DATASET - PATHS #
