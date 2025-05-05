@@ -484,7 +484,7 @@ def connected_components_2d(data_2d: np.ndarray, connectivity_type: int = 4) -> 
         structure = None
 
     elif connectivity_type == 8:
-        structure = np.ones(shape=(3, 3, 3), dtype=np.int8)
+        structure = np.ones(shape=(3, 3), dtype=np.int8)
 
     else:
         raise ValueError("Invalid connectivity type")
