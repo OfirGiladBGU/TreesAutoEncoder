@@ -88,6 +88,8 @@ APPLY_MEDIAN_FILTER = False  # Sometimes helpful for PCDs to fill missing inner 
 APPLY_CONTINUITY_FIX_3D = True  # The continuity filter for true holes detection in 3D
 APPLY_CONTINUITY_FIX_2D = False  # The continuity filter for true holes detection in 2D
 BINARY_DILATION = True  # Enable the usage local scope binary dilation mask (2D - 4 directions, 3D - 6 directions)
+CONNECTIVITY_TYPE_3D = 6
+CONNECTIVITY_TYPE_2D = 4
 
 # Dataset 1D
 V1_1D_DATASETS = ['Trees1DV1']
