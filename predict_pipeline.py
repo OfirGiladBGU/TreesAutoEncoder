@@ -79,9 +79,6 @@ def postprocess_2d(data_3d_stem: str,
     else:
         raise ValueError("Invalid shape")
 
-    # TODO: Threshold
-    apply_threshold(data_2d_output, threshold=0.2, keep_values=True)
-
     if log_data is not None:
         # Replace invalid data with original input
         for idx, image_view in enumerate(IMAGES_6_VIEWS):
@@ -215,6 +212,7 @@ def naive_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
 
 def preprocess_3d(data_3d_filepath: str,
                   data_2d_output: torch.Tensor = None,
+                  apply_threshold_2d: bool = False,
                   apply_fusion: bool = False,
                   apply_noise_filter_3d: bool = False,
                   hard_noise_filter_3d: bool = True,
@@ -228,6 +226,10 @@ def preprocess_3d(data_3d_filepath: str,
     # Use 2D flow results
     else:
         data_2d_output = data_2d_output.numpy()
+
+        # TODO: Threshold
+        if apply_threshold_2d:
+            apply_threshold(data_2d_output, threshold=0.2, keep_values=True)
 
         # Reconstruct 3D
         data_3d_list = list()
@@ -371,8 +373,9 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder,
         raise ValueError(f"File: {data_3d_filepath} doesn't exist!")
 
     # CONFIGS
-    apply_input_merge_2d = False  # False - for PipeForge3DPCD
+    apply_input_merge_2d = False  # False - Doesn't work well with revealed occluded objects
     apply_input_merge_3d = True
+    apply_threshold_2d = True
     apply_fusion = True
 
     apply_noise_filter_2d = False  # Notice: Doesn't work well with revealed occluded objects
@@ -457,6 +460,7 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder,
             data_3d_input = preprocess_3d(
                 data_3d_filepath=data_3d_filepath,
                 data_2d_output=data_2d_output,
+                apply_threshold_2d=apply_threshold_2d,
                 apply_fusion=apply_fusion,
                 apply_noise_filter_3d=apply_noise_filter_3d,
                 hard_noise_filter_3d=hard_noise_filter_3d,
