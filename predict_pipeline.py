@@ -510,11 +510,11 @@ def test_single_predict():
         # data_3d_folder = PREDS_3D
         # data_2d_folder = PREDS_2D
 
-        # data_3d_folder = PREDS_FIXED_3D
-        # data_2d_folder = PREDS_FIXED_2D
+        data_3d_folder = PREDS_FIXED_3D
+        data_2d_folder = PREDS_FIXED_2D
 
-        data_3d_folder = PREDS_ADVANCED_FIXED_3D
-        data_2d_folder = PREDS_ADVANCED_FIXED_2D
+        # data_3d_folder = PREDS_ADVANCED_FIXED_3D
+        # data_2d_folder = PREDS_ADVANCED_FIXED_2D
     else:
         log_data = pd.read_csv(EVAL_LOG_PATH)
 
