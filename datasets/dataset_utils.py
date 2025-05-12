@@ -285,7 +285,7 @@ def _convert_numpy_to_obj(numpy_data: np.ndarray, source_data_filepath=None, sav
     else:
         min_bounds = np.array([0, 0, 0])
 
-    occupied_indices = np.argwhere(numpy_data == 1.0)  # Find occupied voxels (indices where numpy_data == 1)
+    occupied_indices = np.argwhere(numpy_data > 0.0)  # Find occupied voxels (indices where numpy_data == 1)
     centers = (occupied_indices + min_bounds)  # Apply shift (align with the original mesh space) and scale correctly
 
     # Create cube meshes for each occupied voxel
@@ -395,7 +395,7 @@ def _convert_numpy_to_pcd(numpy_data: np.ndarray, source_data_filepath=None, sav
     else:
         source_origin = np.array([0, 0, 0])
 
-    grid_indices = np.argwhere(numpy_data == 1.0)  # Find the indices of all non-zero voxels [Shape: (N, 3)]
+    grid_indices = np.argwhere(numpy_data > 0.0)  # Find the indices of all non-zero voxels [Shape: (N, 3)]
     voxels = (grid_indices + source_origin)  # Apply the inverse shift to recover the original coordinates
 
     pcd = o3d.geometry.PointCloud()  # Convert the points to Open3D PointCloud
