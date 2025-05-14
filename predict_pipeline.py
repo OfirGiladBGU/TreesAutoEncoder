@@ -749,6 +749,7 @@ def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
 
     total_hole_pixels = 0
     total_filled_pixels = 0
+    total_close_pixels = 0
     for idx in range(len(output_filepaths)):
         input_filepath_idx = input_filepaths[idx]
         target_filepath_idx = target_filepaths[idx]
@@ -774,18 +775,24 @@ def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
         l1_max_errors_list.append(max_l1_error)
 
         # Assumption: Filled holes should have higher pixel value than unfilled holes
-        total_filled_pixels += np.sum(masked_output > masked_input)
+        condition_matrix1 = (masked_output > masked_input)  # Increase in color
+        condition_matrix2 = (np.abs(masked_target - masked_output) < (255 * 0.5))  # Error is less than 50%
+
+        total_filled_pixels += np.sum(condition_matrix1)
+        total_close_pixels += np.sum(condition_matrix2)
         total_hole_pixels += np.sum(delta_binary_mask)
 
     if len(l1_avg_errors_list) > 0:
         final_avg_l1_error = np.mean(np.array(l1_avg_errors_list))
         final_max_l1_error = np.max(np.array(l1_max_errors_list))
         increase_percentage = total_filled_pixels / total_hole_pixels
+        close_percentage = total_close_pixels / total_hole_pixels
         print(
             "Stats:\n"
             f"Hole Average L1 Error: {final_avg_l1_error}\n"
             f"Hole Max L1 Error: {final_max_l1_error}\n"
-            f"Increase hole pixel value percentage: {increase_percentage}"
+            f"Increase hole pixel value percentage: {increase_percentage}\n"
+            f"Less than 50% error on hole pixel value: {close_percentage}"
         )
     else:
         print("No L1 Errors found")
