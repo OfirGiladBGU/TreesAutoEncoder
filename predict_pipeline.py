@@ -343,6 +343,7 @@ def init_pipeline_models():
         model_2d = init_model(args=args)
         model_2d_weights_filepath = f"{filepath}_{DATASET_OUTPUT_FOLDER}_{model_2d.model_name}{ext}"
         # TODO: model_2d_weights_filepath = f"{filepath}_PipeForge3DPCD_LC_32_{model_2d.model_name}{ext}"
+        # TODO: model_2d_weights_filepath = f"{filepath}_PipeForge3DMesh_LC_32_{model_2d.model_name}{ext}"
         model_2d.load_state_dict(torch.load(model_2d_weights_filepath))
         model_2d.eval()
         model_2d.to(args.device)
@@ -533,13 +534,7 @@ def test_single_predict():
 
 def full_predict(data_3d_stem, data_type: DataType, log_data=None, data_3d_folder=None, data_2d_folder=None,
                  run_2d_flow=True, run_3d_flow=True, export_2d=True, export_3d=True):
-    start_time = datetime.datetime.now()
-    start_timestamp = start_time.strftime('%Y-%m-%d_%H-%M-%S')
-    print(
-        f"[Full Predict] Started Predict... "
-        f"(Timestamp: {start_timestamp})"
-    )
-
+    # LOAD DATA #
     if data_type == DataType.TRAIN:
         if log_data is None:
             log_data = pd.read_csv(TRAIN_LOG_PATH)
@@ -578,6 +573,14 @@ def full_predict(data_3d_stem, data_type: DataType, log_data=None, data_3d_folde
 
         data_3d_file = list(pathlib.Path(data_3d_folder).glob(f"{row[col_0]}.*"))[0]
         data_3d_filepaths.append(data_3d_file)
+
+    # START #
+    start_time = datetime.datetime.now()
+    start_timestamp = start_time.strftime('%Y-%m-%d_%H-%M-%S')
+    print(
+        f"[Full Predict] Started Predict... "
+        f"(Timestamp: {start_timestamp})"
+    )
 
     # Single-threading - Sequential
     # for data_3d_filepath in tqdm(data_3d_filepaths):
@@ -621,13 +624,7 @@ def full_predict(data_3d_stem, data_type: DataType, log_data=None, data_3d_folde
 
 
 def full_merge(data_3d_stem, data_type: DataType, log_data=None, source_data_3d_folder=None):
-    start_time = datetime.datetime.now()
-    start_timestamp = start_time.strftime('%Y-%m-%d_%H-%M-%S')
-    print(
-        f"[Full Merge] Started Merge... "
-        f"(Timestamp: {start_timestamp})"
-    )
-
+    # LOAD DATA #
     if data_type == DataType.TRAIN:
         if log_data is None:
             log_data = pd.read_csv(TRAIN_LOG_PATH)
@@ -660,12 +657,19 @@ def full_merge(data_3d_stem, data_type: DataType, log_data=None, source_data_3d_
 
     # os.makedirs(output_folder, exist_ok=True)
 
-    # Start
     input_data = convert_data_file_to_numpy(data_filepath=input_filepath, apply_data_threshold=True)
 
     first_column = log_data.columns[0]
     regex_pattern = f"{data_3d_stem}_.*"
     matching_rows = log_data[log_data[first_column].str.contains(regex_pattern, regex=True, na=False)]
+
+    # START #
+    start_time = datetime.datetime.now()
+    start_timestamp = start_time.strftime('%Y-%m-%d_%H-%M-%S')
+    print(
+        f"[Full Merge] Started Merge... "
+        f"(Timestamp: {start_timestamp})"
+    )
 
     # Process the matching rows
     for row_idx, (_, row) in enumerate(matching_rows.iterrows()):
@@ -1191,7 +1195,7 @@ def full_folder_predict(data_type: DataType):
 
     # Select which tests to run
     test_2d_avg_l1_error = True
-    test_dice_score = False
+    test_dice_score = True
     test_components_reduced = False
 
     ################
