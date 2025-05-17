@@ -9,3 +9,5 @@ START_INDEX: -1
 STOP_INDEX: -1
 
 # PCDs from PipeForge3D
+# points scale 0.25
+# voxel size 1.0

@@ -11,5 +11,5 @@ START_INDEX: -1
 STOP_INDEX: -1
 
 # Meshes from PipeForge3D:
-# voxel size 2.0
-# voxel scale 0.5
+# voxel size 1.0
+# voxel scale 0.35

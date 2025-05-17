@@ -8,6 +8,4 @@ TASK_TYPE: "SINGLE_COMPONENT"
 START_INDEX: -1
 STOP_INDEX: -1
 
-# Meshes from PipeForge3D (in Tree Mode):
-# voxel size 2.0
-# voxel scale 0.5
+# Meshes from PipeForge3D (in Tree Mode)
