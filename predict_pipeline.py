@@ -343,8 +343,8 @@ def init_pipeline_models():
         args.model = args.model_2d
         model_2d = init_model(args=args)
         model_2d_weights_filepath = f"{filepath}_{DATASET_OUTPUT_FOLDER}_{model_2d.model_name}{ext}"
-        # TODO: model_2d_weights_filepath = f"{filepath}_PipeForge3DPCD_LC_32_{model_2d.model_name}{ext}"
-        # TODO: model_2d_weights_filepath = f"{filepath}_PipeForge3DMesh_LC_32_{model_2d.model_name}{ext}"
+        # TODO: model_2d_weights_filepath = f"{filepath}_PipeForge3DPCD_Best_LC_32_{model_2d.model_name}{ext}"
+        # TODO: model_2d_weights_filepath = f"{filepath}_PipeForge3DMesh_Base_LC_32_{model_2d.model_name}{ext}"
         model_2d.load_state_dict(torch.load(model_2d_weights_filepath))
         model_2d.eval()
         model_2d.to(args.device)
