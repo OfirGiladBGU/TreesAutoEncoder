@@ -11,6 +11,7 @@ from scipy.ndimage import convolve, label
 from typing import Tuple
 from concurrent.futures import ThreadPoolExecutor
 import datetime
+from statistics import mean
 
 from datasets_forge.dataset_configurations import *
 from datasets.dataset_utils import *
@@ -754,7 +755,7 @@ def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
     total_hole_pixels = 0
     total_detected_pixels = 0
     total_close_pixels = 0
-    total_close_filled_pixels = 0
+    total_fill_pixels = 0
 
     for idx in range(len(output_filepaths)):
         input_filepath_idx = input_filepaths[idx]
@@ -787,7 +788,7 @@ def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
 
         total_detected_pixels += np.sum(condition_matrix1)
         total_close_pixels += np.sum(condition_matrix2)
-        total_close_filled_pixels += np.sum(condition_matrix3)
+        total_fill_pixels += np.sum(condition_matrix3)
 
         total_hole_pixels += np.sum(delta_binary_mask)
 
@@ -796,8 +797,8 @@ def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
         final_max_l1_error = np.max(np.array(l1_max_errors_list))
         detected_percentage = total_detected_pixels / total_hole_pixels
         close_percentage = total_close_pixels / total_hole_pixels
-        close_filled_percentage = total_close_filled_pixels / total_hole_pixels
-        # close_filled_percentage = total_close_filled_pixels / total_detected_pixels
+        fill_percentage = total_fill_pixels / total_hole_pixels
+        # fill_percentage = total_fill_pixels / total_detected_pixels
 
         print(
             "Stats:\n"
@@ -805,8 +806,15 @@ def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
             f"Hole Max L1 Error: {final_max_l1_error}\n"
             f"Increase in hole pixel value % (Detect Rate): {detected_percentage}\n"
             f"Less than 25% error on hole pixel value % (Close Rate): {close_percentage}\n"
-            f"Detect and Close Rates combined % (Fill Rate): {close_filled_percentage}"
+            f"Detect and Close Rates combined % (Fill Rate): {fill_percentage}"
         )
+
+        output_dict = {
+            "Detect Rate": detected_percentage,
+            "Close Rate": close_percentage,
+            "Fill Pixels": fill_percentage,
+        }
+        return output_dict
     else:
         print("No L1 Errors found")
 
@@ -893,12 +901,18 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
     os.makedirs(name=os.path.dirname(save_filepath), exist_ok=True)
     pd.DataFrame(scores_dict.items()).to_csv(save_filepath)
     scores_list = list(scores_dict.values())
+    avg_dice =  sum(scores_list) / len(scores_list)
     print(
         "Stats:\n"
-        f"Average Dice Score: {sum(scores_list) / len(scores_list)}\n"
+        f"Average Dice Score: {avg_dice}\n"
         f"Max Dice Score: {max(scores_list)}\n"
         f"Min Dice Score: {min(scores_list)}"
     )
+
+    output_dict = {
+        "Dice Score": avg_dice,
+    }
+    return output_dict
 
 
 def calculate_reduced_connected_components(data_3d_stem, components_mode="global", source_data_3d_folder=None):
@@ -1245,6 +1259,11 @@ def full_folder_predict(data_type: DataType):
     # Test 2D Avg L1 Error #
     ########################
 
+    outputs = {
+        "Detect Rate": [],
+        "Close Rate": [],
+        "Fill Pixels": [],
+    }
     if test_2d_avg_l1_error:
         # TODO: Run the 2D models and compare the 2D results with the 2D GT
 
@@ -1262,7 +1281,15 @@ def full_folder_predict(data_type: DataType):
 
         for idx, data_3d_stem in enumerate(data_3d_stem_list):
             print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating 2D AVG L1 Error...")
-            calculate_2d_avg_l1_error(data_3d_stem=data_3d_stem, data_2d_folder=data_2d_folder)
+            output = calculate_2d_avg_l1_error(data_3d_stem=data_3d_stem, data_2d_folder=data_2d_folder)
+
+            for key in output.keys():
+                outputs[key].append(output[key])
+
+        output_str = "\n[AVG RESULTS]\n"
+        for key in outputs.keys():
+            output_str += f"AVG {key}: {mean(outputs[key])}\n"
+        print(output_str)
 
     ###################
     # Test Dice Score #
@@ -1294,9 +1321,20 @@ def full_folder_predict(data_type: DataType):
                     source_data_3d_folder=source_data_3d_folder
                 )
 
+        outputs = {
+            "Dice Score": []
+        }
         for idx, data_3d_stem in enumerate(data_3d_stem_list):
             print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating Dice Scores...")
-            calculate_dice_scores(data_3d_stem=data_3d_stem, compare_crops_mode=compare_crops_mode)
+            output = calculate_dice_scores(data_3d_stem=data_3d_stem, compare_crops_mode=compare_crops_mode)
+
+            for key in output.keys():
+                outputs[key].append(output[key])
+
+        output_str = "\n[AVG RESULTS]\n"
+        for key in outputs.keys():
+            output_str += f"AVG {key}: {mean(outputs[key])}\n"
+        print(output_str)
 
     ###########################
     # Test Components Reduced #
