@@ -63,10 +63,10 @@ from enum import Enum
 
 CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Base_LC_32.yaml"
 
-# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_LC_32_150.yaml"
-# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_LC_32_200.yaml"
-# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_LC_32_300.yaml"
-# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_LC_32_400.yaml"
+# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_150_LC_32.yaml"
+# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_200_LC_32.yaml"
+# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_300_LC_32.yaml"
+# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_400_LC_32.yaml"
 
 
 # TODO: Use for hyperparams tests:
