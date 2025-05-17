@@ -6,7 +6,69 @@ from enum import Enum
 
 
 # TODO: Setup Configurations File
-CONFIG_FILENAME = "parse2022_LC_32.yaml"
+# CONFIG_FILENAME = "parse2022_LC_32.yaml"
+
+
+# TODO: Use for results:
+
+# CONFIG_FILENAME = "PipeForge3DTree_32.yaml"
+# CONFIG_FILENAME = "PipeForge3DPCDCycles_48.yaml"
+
+# CONFIG_FILENAME = "parse2022_LC_32.yaml"
+# CONFIG_FILENAME = "parse2022_LC_48.yaml"
+
+# CONFIG_FILENAME = "PipeForge3DMesh_LC_32.yaml"
+# CONFIG_FILENAME = "PipeForge3DMesh_LC_48.yaml"
+# CONFIG_FILENAME = "PipeForge3DPCD_LC_32.yaml"
+# CONFIG_FILENAME = "PipeForge3DPCD_LC_48.yaml"
+
+
+# TODO: Use for Ex1:
+
+# V1 - Throw
+
+# CONFIG_FILENAME = "parse2022_LC_32_50.yaml"
+# CONFIG_FILENAME = "PipeForge3DMesh_LC_32.yaml"
+# CONFIG_FILENAME = "PipeForge3DPCD_LC_32.yaml"
+# CONFIG_FILENAME = "HospitalPCD.yaml"
+
+
+# V2 - Recalculate
+
+# CONFIG_FILENAME = "parse2022_LC_32_50.yaml"
+# CONFIG_FILENAME = "PipeForge3DMesh_V2_LC_32.yaml"
+# CONFIG_FILENAME = "PipeForge3DPCD_V2_LC_32.yaml"
+# CONFIG_FILENAME = "HospitalPCD.yaml"
+
+
+# TODO: Use for Ex2:
+
+# V1
+
+# CONFIG_FILENAME = "parse2022_LC_32.yaml"
+# CONFIG_FILENAME = "parse2022_LC_48.yaml"
+# CONFIG_FILENAME = "parse2022_LC_64.yaml"
+# CONFIG_FILENAME = "parse2022_LC_96.yaml"
+
+
+# V2
+
+# CONFIG_FILENAME = "parse2022_LC_32_50.yaml"
+# CONFIG_FILENAME = "parse2022_LC_48_50.yaml"
+# CONFIG_FILENAME = "parse2022_LC_64_50.yaml"
+# CONFIG_FILENAME = "parse2022_LC_96_50.yaml"
+
+
+# TODO: Use for Ex3:
+# REDO with trained PipeForge3DMesh_LC_32_Base - size 1.0 , scale 0.25
+
+CONFIG_FILENAME = "PipeForge3DMesh_LC_32_Base.yaml"
+
+# CONFIG_FILENAME = "PipeForge3DMesh_LC_32_150.yaml"
+# CONFIG_FILENAME = "PipeForge3DMesh_LC_32_200.yaml"
+# CONFIG_FILENAME = "PipeForge3DMesh_LC_32_300.yaml"
+# CONFIG_FILENAME = "PipeForge3DMesh_LC_32_400.yaml"
+
 
 #####################
 # Automatic Parsing #
