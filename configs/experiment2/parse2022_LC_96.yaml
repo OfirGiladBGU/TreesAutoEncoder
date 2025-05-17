@@ -7,3 +7,7 @@ UPPER_THRESHOLD_2D: 0.9
 TASK_TYPE: "LOCAL_CONNECTIVITY"
 START_INDEX: 1
 STOP_INDEX: 20
+
+
+# Predict Pipeline:
+# connectivity_type_3d = 6

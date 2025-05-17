@@ -17,3 +17,7 @@ STOP_INDEX: 20
 # BINARY_DILATION = True  # Enable the usage local scope binary dilation mask (2D - 4 directions, 3D - 6 directions)
 # CONNECTIVITY_TYPE_3D = 6
 # CONNECTIVITY_TYPE_2D = 4
+
+
+# Predict Pipeline:
+# connectivity_type_3d = 6

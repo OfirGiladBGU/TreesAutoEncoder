@@ -13,3 +13,7 @@ STOP_INDEX: -1
 # Meshes from PipeForge3D:
 # voxel size 1.0
 # voxel scale 0.70
+
+
+# Predict Pipeline:
+# connectivity_type_3d = 26
