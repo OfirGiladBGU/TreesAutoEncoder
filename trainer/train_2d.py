@@ -9,6 +9,7 @@ import numpy as np
 import wandb
 from tqdm import tqdm
 import datetime
+from matplotlib import gridspec
 
 from datasets_forge.dataset_configurations import V1_2D_DATASETS, V2_2D_DATASETS
 from datasets.dataset_utils import apply_threshold
@@ -675,9 +676,13 @@ class Trainer(object):
         subset_files = subset.dataset.data_files2
         subset_indices = subset.indices
         idx = -1
+        batch_data_files = []
         for data_idx in data_indices:
             idx += 1
-            print(f"File Index: {idx}, Filepath: {subset_files[subset_indices[data_idx]]}")
+            batch_data_file = subset_files[subset_indices[data_idx]]
+            print(f"File Index: {idx}, Filepath: {batch_data_file}")
+            batch_data_files.append(batch_data_file)
+        return batch_data_files
 
     # TODO: Handle V1 and V2 cases
     def predict(self, max_batches_to_plot=20):
@@ -733,7 +738,7 @@ class Trainer(object):
                     f"(Timestamp: {end_timestamp}, Predict Time Elapsed: {end_time - self.start_time})"
                 )
 
-                self._print_batch_data_files(
+                batch_data_files = self._print_batch_data_files(
                     subset=self.test_loader.dataset.dataset,
                     data_indices=data_indices
                 )
@@ -802,21 +807,59 @@ class Trainer(object):
                     # TODO: Remove noise created by the model that doesn't connect components (add to predict pipeline if works)
                     pass
 
+                ##########################
+                # V1 - without filepaths #
+                ##########################
+
+                # # Create a grid of images
+                # columns = len(plotting_data_list)
+                # rows = input_data.size(0)
+                # fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
+                # ax = []
+                # for row_idx in tqdm(range(rows)):
+                #     for col_idx in range(columns):
+                #         data: torch.Tensor = plotting_data_list[col_idx]["Data"]
+                #         ax.append(fig.add_subplot(rows, columns, row_idx * columns + col_idx + 1))
+                #         numpy_image = data[row_idx].numpy()
+                #         plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
+                #
+                # for col_idx in range(columns):
+                #     title: str = plotting_data_list[col_idx]["Title"]
+                #     ax[col_idx].set_title(f"{title}:")
+
+                #######################
+                # V2 - with filepaths #
+                #######################
+
                 # Create a grid of images
                 columns = len(plotting_data_list)
                 rows = input_data.size(0)
-                fig = plt.figure(figsize=(columns + 0.5, rows + 0.5))
-                ax = []
+                total_rows = rows * 2
+                fig = plt.figure(figsize=(columns + 0.5, rows + (rows / 2) + 0.5))
+                row_heights = [1.0 if i % 2 == 0 else 0.3 for i in range(total_rows)]  # Image: 1.0, Text: 0.3
+                gs = gridspec.GridSpec(total_rows, columns, figure=fig, height_ratios=row_heights)
+                title_axes = []
                 for row_idx in tqdm(range(rows)):
                     for col_idx in range(columns):
+                        ax = fig.add_subplot(gs[row_idx * 2, col_idx])
                         data: torch.Tensor = plotting_data_list[col_idx]["Data"]
-                        ax.append(fig.add_subplot(rows, columns, row_idx * columns + col_idx + 1))
                         numpy_image = data[row_idx].numpy()
-                        plt.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
+                        ax.imshow(np.transpose(numpy_image, (1, 2, 0)), cmap='gray')
 
-                for col_idx in range(columns):
+                        # Store first row axes for setting titles
+                        if row_idx == 0:
+                            title_axes.append(ax)
+
+                    # Add text below this row of images
+                    ax_text = fig.add_subplot(gs[row_idx * 2 + 1, :])  # span all columns
+                    ax_text.axis('off')
+                    relative_path = os.path.basename(batch_data_files[row_idx])
+                    ax_text.text(0.5, 0.5, f"Filepath: {relative_path}", fontsize=12, ha='center', va='center')
+
+                # Add titles to the top row of image columns
+                for col_idx, ax in enumerate(title_axes):
                     title: str = plotting_data_list[col_idx]["Title"]
-                    ax[col_idx].set_title(f"{title}:")
+                    ax.set_title(f"{title}:")
 
                 fig.tight_layout()
                 save_filename = os.path.join(self.args.results_path, f"{self.args.dataset}_{batch_num}.png")
