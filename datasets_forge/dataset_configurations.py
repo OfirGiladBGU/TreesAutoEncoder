@@ -6,7 +6,7 @@ from enum import Enum
 
 
 # TODO: Setup Configurations File
-# CONFIG_FILENAME = "parse2022_LC_32.yaml"
+# CONFIG_FILENAME = "parse2022_SC_32.yaml"
 
 
 # TODO: Use for examples:
@@ -37,7 +37,9 @@ from enum import Enum
 # CONFIG_FILENAME = "experiment1/parse2022_LC_32_50.yaml"
 # CONFIG_FILENAME = "experiment1/PipeForge3DMesh_Best_LC_32.yaml"
 # CONFIG_FILENAME = "experiment1/PipeForge3DPCD_Best_LC_32.yaml"
-# CONFIG_FILENAME = "experiment1/HospitalPCD.yaml"
+
+# CONFIG_FILENAME = "experiment1/PipeForge3DPCD_Best_LC_48.yaml"
+CONFIG_FILENAME = "experiment1/HospitalPCD_V3.yaml"
 
 
 # TODO: Use for Ex2:
@@ -61,7 +63,7 @@ from enum import Enum
 # TODO: Use for Ex3:
 # REDO with trained PipeForge3DMesh_LC_32_Base - size 1.0 , scale 0.25
 
-CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Base_LC_32.yaml"
+# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Base_LC_32.yaml"
 
 # CONFIG_FILENAME = "experiment3/PipeForge3DMesh_150_LC_32.yaml"
 # CONFIG_FILENAME = "experiment3/PipeForge3DMesh_200_LC_32.yaml"
@@ -181,6 +183,7 @@ PROJECTION_MODE = ProjectionMode.VISUAL_MODE
 ###################
 
 LABELS = os.path.join(DATASET_PATH, "labels")  # TARGET
+LABELS_COMPONENTS = os.path.join(DATASET_PATH, "labels_components")
 
 PREDS = os.path.join(DATASET_PATH, "preds")  # INPUT
 PREDS_COMPONENTS = os.path.join(DATASET_PATH, "preds_components")
@@ -199,6 +202,7 @@ EVALS_COMPONENTS = os.path.join(DATASET_PATH, "evals_components")
 
 # TRAINING
 LABELS_2D = os.path.join(CROPS_PATH, "labels_2d")  # TARGET
+LABELS_COMPONENTS_2D = os.path.join(CROPS_PATH, "labels_components_2d")
 
 PREDS_2D = os.path.join(CROPS_PATH, "preds_2d")  # INPUT
 PREDS_COMPONENTS_2D = os.path.join(CROPS_PATH, "preds_components_2d")
@@ -218,7 +222,7 @@ EVALS_COMPONENTS_2D = os.path.join(CROPS_PATH, "evals_components_2d")
 
 # TRAINING
 LABELS_3D = os.path.join(CROPS_PATH, "labels_3d")  # TARGET
-# NOTE: Labels components are not used
+LABELS_COMPONENTS_3D = os.path.join(CROPS_PATH, "labels_components_3d")
 
 PREDS_3D = os.path.join(CROPS_PATH, "preds_3d")  # INPUT
 PREDS_COMPONENTS_3D = os.path.join(CROPS_PATH, "preds_components_3d")
