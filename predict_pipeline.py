@@ -1195,9 +1195,12 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
         )
         delta_mask = delta_binary.astype(bool)
 
-        target_holes = target_data_3d[delta_mask]
-        output_holes = output_data_3d[delta_mask]
-        dice_score = 2 * np.sum(output_holes * target_holes) / (np.sum(output_holes) + np.sum(target_holes))
+        if delta_mask.sum() > 0:
+            target_holes = target_data_3d[delta_mask]
+            output_holes = output_data_3d[delta_mask]
+            dice_score = 2 * np.sum(output_holes * target_holes) / (np.sum(output_holes) + np.sum(target_holes))
+        else:
+            dice_score = 1.0
 
         print(
             "Stats:\n"
