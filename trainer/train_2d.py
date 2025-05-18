@@ -802,10 +802,10 @@ class Trainer(object):
 
                 plotting_data_list.append({"Title": "Merge", "Data": merge_data})
 
-                apply_cleanup = True
-                if apply_cleanup is True:
-                    # TODO: Remove noise created by the model that doesn't connect components (add to predict pipeline if works)
-                    pass
+                # apply_cleanup = True
+                # if apply_cleanup is True:
+                #     # TODO: Remove noise created by the model that doesn't connect components (add to predict pipeline if works)
+                #     pass
 
                 ##########################
                 # V1 - without filepaths #
