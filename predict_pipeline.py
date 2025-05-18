@@ -343,7 +343,7 @@ def init_pipeline_models():
         args.model = args.model_2d
         model_2d = init_model(args=args)
         model_2d_weights_filepath = f"{filepath}_{DATASET_OUTPUT_FOLDER}_{model_2d.model_name}{ext}"
-        # TODO: model_2d_weights_filepath = f"{filepath}_PipeForge3DPCD_Best_LC_32_{model_2d.model_name}{ext}"
+        # TODO: model_2d_weights_filepath = f"{filepath}_PipeForge3DPCD_Best_LC_48_{model_2d.model_name}{ext}"
         # TODO: model_2d_weights_filepath = f"{filepath}_PipeForge3DMesh_Base_LC_32_{model_2d.model_name}{ext}"
         model_2d.load_state_dict(torch.load(model_2d_weights_filepath))
         model_2d.eval()
@@ -812,12 +812,17 @@ def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
         output_dict = {
             "Detect Rate": detected_percentage,
             "Close Rate": close_percentage,
-            "Fill Pixels": fill_percentage,
+            "Fill Pixels": fill_percentage
         }
         return output_dict
     else:
         print("No L1 Errors found")
-
+        output_dict = {
+            "Detect Rate": 1.0,
+            "Close Rate": 1.0,
+            "Fill Pixels": 1.0
+        }
+        return output_dict
 
 def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
     #################
