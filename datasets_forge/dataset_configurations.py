@@ -11,7 +11,7 @@ from enum import Enum
 
 # TODO: Use for examples:
 
-# CONFIG_FILENAME = "examples/parse2022_LC_32.yaml"
+CONFIG_FILENAME = "examples/parse2022_LC_32.yaml"
 # CONFIG_FILENAME = "examples/parse2022_LC_48.yaml"
 
 # CONFIG_FILENAME = "examples/PipeForge3DMesh_LC_32.yaml"
@@ -39,7 +39,7 @@ from enum import Enum
 # CONFIG_FILENAME = "experiment1/PipeForge3DPCD_Best_LC_32.yaml"
 
 # CONFIG_FILENAME = "experiment1/PipeForge3DPCD_Best_LC_48.yaml"
-CONFIG_FILENAME = "experiment1/HospitalPCD_V3.yaml"
+# CONFIG_FILENAME = "experiment1/HospitalPCD_LC_32.yaml"
 
 
 # TODO: Use for Ex2:
