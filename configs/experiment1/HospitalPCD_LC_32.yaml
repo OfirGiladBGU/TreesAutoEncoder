@@ -1,0 +1,22 @@
+DATASET_INPUT_FOLDER: "HospitalCUP"
+DATASET_OUTPUT_FOLDER: "HospitalCUP_LC_32"
+DATA_CROP_STRIDE: 16  # 48
+DATA_CROP_SIZE: 32  # 96
+LOWER_THRESHOLD_2D: 0.0
+UPPER_THRESHOLD_2D: 1.0
+TASK_TYPE: "LOCAL_CONNECTIVITY"
+START_INDEX: -1
+STOP_INDEX: -1
+
+# Cropped PCD from Hospital CUP
+# voxel size 1.0
+# voxel scale 25.0
+
+
+# Predict Pipeline:
+# apply_noise_filter_3d = True
+# hard_noise_filter_3d = True
+# connectivity_type_3d = 6
+
+# Use weights:
+# PipeForge3DPCD_Best_LC_32.yaml
