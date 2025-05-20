@@ -1,27 +1,7 @@
 from datasets.dataset_utils import get_data_file_extension, convert_data_file_to_numpy, convert_numpy_to_data_file
 
 
-if __name__ == '__main__':
-    # Input
-    data_filepath = r".\46_071_pred.npy"
-    source_data_filepath = r"dummy.pcd"
-
-    src_kwargs = dict(
-        # Mesh
-        # mesh_scale=1.0, voxel_size=1.0,
-
-        # PCD
-        points_scale=1.0, voxel_size=1.0
-    )
-
-    dst_kwargs = dict(
-        # Mesh
-        # mesh_scale=0.5, voxel_size=2.0
-
-        # PCD
-        points_scale=0.25, voxel_size=1.0
-    )
-
+def convert():
     numpy_data = convert_data_file_to_numpy(
         data_filepath=data_filepath,
         **src_kwargs
@@ -36,3 +16,32 @@ if __name__ == '__main__':
         save_filename=save_filename,
         **dst_kwargs
     )
+
+
+if __name__ == '__main__':
+    # Input
+    data_filepath = r".\output.npy"
+    source_data_filepath = r"dummy.obj"
+    # source_data_filepath = r"dummy.pcd"
+
+    src_kwargs = dict(
+        # Mesh
+        mesh_scale=1.0,
+        voxel_size=1.0,
+
+        # PCD
+        # points_scale=1.0,
+        # voxel_size=1.0
+    )
+
+    dst_kwargs = dict(
+        # Mesh
+        mesh_scale=0.25,
+        voxel_size=1.0
+
+        # PCD
+        # points_scale=0.25,
+        # voxel_size=1.0
+    )
+
+    convert()
