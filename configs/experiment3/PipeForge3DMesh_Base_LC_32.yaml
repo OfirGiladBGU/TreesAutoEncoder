@@ -11,3 +11,9 @@ STOP_INDEX: -1
 # Meshes from PipeForge3D:
 # voxel size 1.0
 # voxel scale 0.25
+
+
+# Predict Pipeline:
+# apply_noise_filter_3d = True
+# hard_noise_filter_3d = False
+# connectivity_type_3d = 6

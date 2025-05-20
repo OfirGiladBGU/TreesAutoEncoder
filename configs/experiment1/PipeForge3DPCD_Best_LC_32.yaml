@@ -1,10 +1,10 @@
 DATASET_INPUT_FOLDER: "PipeForge3DPCD_Best"
 DATASET_OUTPUT_FOLDER: "PipeForge3DPCD_Best_LC_32"
-DATA_CROP_STRIDE: 16  # 48
-DATA_CROP_SIZE: 32  # 96
+DATA_CROP_STRIDE: 16
+DATA_CROP_SIZE: 32
 LOWER_THRESHOLD_2D: 0.1
 UPPER_THRESHOLD_2D: 0.9
-TASK_TYPE: "LOCAL_CONNECTIVITY"  # "PATCH_HOLES"
+TASK_TYPE: "LOCAL_CONNECTIVITY"
 START_INDEX: -1
 STOP_INDEX: -1
 
@@ -14,4 +14,6 @@ STOP_INDEX: -1
 
 
 # Predict Pipeline:
-# connectivity_type_3d = 26
+# apply_noise_filter_3d = True
+# hard_noise_filter_3d = False
+# connectivity_type_3d = 6
