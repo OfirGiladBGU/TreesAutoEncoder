@@ -6,12 +6,12 @@ from enum import Enum
 
 
 # TODO: Setup Configurations File
-# CONFIG_FILENAME = "parse2022_SC_32.yaml"
+CONFIG_FILENAME = "parse2022_SC_32.yaml"
 
 
 # TODO: Use for examples:
 
-CONFIG_FILENAME = "examples/parse2022_LC_32.yaml"
+# CONFIG_FILENAME = "examples/parse2022_LC_32.yaml"
 # CONFIG_FILENAME = "examples/parse2022_LC_48.yaml"
 
 # CONFIG_FILENAME = "examples/PipeForge3DMesh_LC_32.yaml"
@@ -24,21 +24,9 @@ CONFIG_FILENAME = "examples/parse2022_LC_32.yaml"
 
 # TODO: Use for Ex1:
 
-# V1 - Throw
-
-# CONFIG_FILENAME = "parse2022_LC_32_50.yaml"
-# CONFIG_FILENAME = "PipeForge3DMesh_LC_32.yaml"
-# CONFIG_FILENAME = "PipeForge3DPCD_LC_32.yaml"
-# CONFIG_FILENAME = "HospitalPCD.yaml"
-
-
-# V2 - Recalculate
-
 # CONFIG_FILENAME = "experiment1/parse2022_LC_32_50.yaml"
 # CONFIG_FILENAME = "experiment1/PipeForge3DMesh_Best_LC_32.yaml"
 # CONFIG_FILENAME = "experiment1/PipeForge3DPCD_Best_LC_32.yaml"
-
-# CONFIG_FILENAME = "experiment1/PipeForge3DPCD_Best_LC_48.yaml"
 # CONFIG_FILENAME = "experiment1/HospitalPCD_LC_32.yaml"
 
 
