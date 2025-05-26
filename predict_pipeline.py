@@ -873,9 +873,10 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
 
         # Ground Truth
         target_folder = LABELS
+        target_filepaths = list(pathlib.Path(target_folder).glob(f"{data_3d_stem}*.*"))
+
         # Patch for Parse2022 (Medpseg)
         # target_filepaths = list(pathlib.Path(target_folder).glob(f"{data_3d_stem.replace('_vessel', '')}*.*"))
-        target_filepaths = list(pathlib.Path(target_folder).glob(f"{data_3d_stem.replace('_vessel', '')}*.*"))
 
         # TODO: FOR SAFETY
         # target_filepaths = []
@@ -1409,7 +1410,7 @@ def main():
     # TODO: Requires Model Init
     # test_single_predict()
 
-    data_type = DataType.TRAIN
+    data_type = DataType.EVAL
     # data_3d_stem = "PA000005"
     # data_3d_stem = "Hospital CUP 1in3"
 
