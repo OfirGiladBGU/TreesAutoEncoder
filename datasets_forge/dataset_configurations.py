@@ -59,6 +59,10 @@ CONFIG_FILENAME = "parse2022_SC_32.yaml"
 # CONFIG_FILENAME = "experiment3/PipeForge3DMesh_400_LC_32.yaml"
 
 
+# TODO: Use for Parse2022 test:
+# CONFIG_FILENAME = "parse2022_test/parse2022_LC_32_test.yaml"
+
+
 # TODO: Use for hyperparams tests:
 
 # CONFIG_FILENAME = "tests/parse2022_LC_32_v1.yaml"
