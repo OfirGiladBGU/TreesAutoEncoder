@@ -343,6 +343,7 @@ def init_pipeline_models():
         args.model = args.model_2d
         model_2d = init_model(args=args)
         model_2d_weights_filepath = f"{filepath}_{DATASET_OUTPUT_FOLDER}_{model_2d.model_name}{ext}"
+        # TODO: model_2d_weights_filepath = f"{filepath}_parse2022_LC_32_{model_2d.model_name}{ext}"
         # TODO: model_2d_weights_filepath = f"{filepath}_PipeForge3DPCD_Best_LC_48_{model_2d.model_name}{ext}"
         # TODO: model_2d_weights_filepath = f"{filepath}_PipeForge3DMesh_Base_LC_32_{model_2d.model_name}{ext}"
         model_2d.load_state_dict(torch.load(model_2d_weights_filepath))
@@ -1223,6 +1224,7 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
 
 def full_folder_predict(data_type: DataType):
     run_full_predict = True
+    compare_crops_mode = True
     apply_abs = True
 
     # Select which tests to run
@@ -1318,8 +1320,6 @@ def full_folder_predict(data_type: DataType):
     ###################
 
     if test_dice_score:
-        compare_crops_mode = True
-
         if run_full_predict:
             for idx, data_3d_stem in enumerate(data_3d_stem_list):
                 print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Predicting...")
