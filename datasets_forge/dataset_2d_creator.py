@@ -6,6 +6,7 @@ from tqdm import tqdm
 from typing import Tuple, List
 from skimage import color
 import cv2
+from collections import defaultdict
 
 from datasets_forge.dataset_configurations import *
 from datasets.dataset_utils import *
@@ -994,6 +995,12 @@ def create_2d_projections_and_3d_cubes_for_evaluation(include_labels=False):
     for output_folder in output_folders.values():
         os.makedirs(output_folder, exist_ok=True)
 
+    # Evals cubes backup (for density filter)
+    if include_labels:
+        evals_cubes_backup = defaultdict(dict)
+    else:
+        evals_cubes_backup = None
+
     # Get the filepaths
     input_filepaths = dict()
     filepaths_found = list()
@@ -1020,20 +1027,20 @@ def create_2d_projections_and_3d_cubes_for_evaluation(include_labels=False):
             #############
 
             # Get index data:
-            eval_filepath = input_filepaths[data_key][filepath_idx]
+            data_filepath = input_filepaths[data_key][filepath_idx]
 
             # Original data
-            eval_numpy_data = convert_data_file_to_numpy(data_filepath=eval_filepath)
+            data_numpy_data = convert_data_file_to_numpy(data_filepath=data_filepath)
 
-            output_idx = get_data_file_stem(data_filepath=eval_filepath, relative_to=input_folders[data_key])
+            output_idx = get_data_file_stem(data_filepath=data_filepath, relative_to=input_folders[data_key])
             print(f"[File: {output_idx}, Number: {filepath_idx + 1}/{filepaths_count}]")
 
             #############
             # Crop Data #
             #############
 
-            eval_cubes, cubes_data = crop_mini_cubes(
-                data_3d=eval_numpy_data,
+            data_cubes, cubes_data = crop_mini_cubes(
+                data_3d=data_numpy_data,
                 cube_dim=DATA_3D_SIZE,
                 stride_dim=DATA_3D_STRIDE,
                 cubes_data=True,
@@ -1042,42 +1049,42 @@ def create_2d_projections_and_3d_cubes_for_evaluation(include_labels=False):
 
             if TASK_TYPE == TaskType.SINGLE_COMPONENT:
                 # Get index data:
-                eval_component_filepath = input_filepaths[f"{data_key}_components"][filepath_idx]
+                data_component_filepath = input_filepaths[f"{data_key}_components"][filepath_idx]
 
                 # Original data
-                eval_component_numpy_data = convert_data_file_to_numpy(data_filepath=eval_component_filepath)
+                data_component_numpy_data = convert_data_file_to_numpy(data_filepath=data_component_filepath)
 
                 # Crop Mini Cubes
-                eval_components_cubes = crop_mini_cubes(
-                    data_3d=eval_component_numpy_data,
+                data_components_cubes = crop_mini_cubes(
+                    data_3d=data_component_numpy_data,
                     cube_dim=DATA_3D_SIZE,
                     stride_dim=DATA_3D_STRIDE
                 )
 
             elif TASK_TYPE in [TaskType.LOCAL_CONNECTIVITY, TaskType.PATCH_HOLES]:
-                eval_component_filepath = None
-                eval_components_cubes = None
+                data_component_filepath = None
+                data_components_cubes = None
 
             else:
                 raise ValueError("Invalid Task Type")
 
-            # print(f"Total Mini Cubes: {len(eval_cubes)}\n")  # Already appears on tqdm
+            # print(f"Total Mini Cubes: {len(data_cubes)}\n")  # Already appears on tqdm
 
-            cubes_count = len(eval_cubes)
+            cubes_count = len(data_cubes)
             cubes_count_digits_count = len(str(cubes_count))
             for cube_idx in tqdm(range(cubes_count)):
                 # Get index data:
-                eval_cube = eval_cubes[cube_idx]
+                data_cube = data_cubes[cube_idx]
 
                 cube_idx_str = str(cube_idx).zfill(cubes_count_digits_count)
 
                 # TODO: enable 2 modes
                 if TASK_TYPE == TaskType.SINGLE_COMPONENT:
                     # Get index data:
-                    eval_components_cube = eval_components_cubes[cube_idx]
+                    data_components_cube = data_components_cubes[cube_idx]
 
                     # TASK CONDITION: The region has 2 or more different global components
-                    global_components_3d_indices = list(np.unique(eval_components_cube))
+                    global_components_3d_indices = list(np.unique(data_components_cube))
                     global_components_3d_indices.remove(0)
                     global_components_3d_count = len(global_components_3d_indices)
                     if global_components_3d_count < 2:
@@ -1090,12 +1097,12 @@ def create_2d_projections_and_3d_cubes_for_evaluation(include_labels=False):
                     })
 
                 elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
-                    eval_components_cube = None
+                    data_components_cube = None
 
                     # TASK CONDITION: NONE
 
                 elif TASK_TYPE == TaskType.PATCH_HOLES:
-                    eval_components_cube = None
+                    data_components_cube = None
 
                     # TASK CONDITION: NONE
 
@@ -1106,12 +1113,12 @@ def create_2d_projections_and_3d_cubes_for_evaluation(include_labels=False):
                 # Project 3D to 2D #
                 ####################
 
-                # Project 3D to 2D (Evals)
-                eval_projections = project_3d_to_2d(
-                    data_3d=eval_cube,
+                # Project 3D to 2D (data)
+                data_projections = project_3d_to_2d(
+                    data_3d=data_cube,
                     projection_options=projection_options,
-                    source_data_filepath=eval_filepath,
-                    component_3d=eval_components_cube
+                    source_data_filepath=data_filepath,
+                    component_3d=data_components_cube
                 )
 
                 ########################
@@ -1120,10 +1127,15 @@ def create_2d_projections_and_3d_cubes_for_evaluation(include_labels=False):
 
                 condition_list = [True] * len(IMAGES_6_VIEWS)
                 for view_idx, image_view in enumerate(IMAGES_6_VIEWS):
-                    eval_image = eval_projections[f"{image_view}_image"]
+                    # Calculate condition according to evals only!
+                    if evals_cubes_backup is not None and data_key == "evals":
+                        data_image = data_projections[f"{image_view}_image"]
+                        evals_cubes_backup[cube_idx][f"{image_view}_image"] = data_image
+                    else:
+                        data_image = evals_cubes_backup[cube_idx][f"{image_view}_image"]
 
                     condition = [
-                        not (UPPER_THRESHOLD_2D > np.count_nonzero(eval_image) > LOWER_THRESHOLD_2D)
+                        not (UPPER_THRESHOLD_2D > np.count_nonzero(data_image) > LOWER_THRESHOLD_2D)
                     ]
 
                     # Check Condition (If condition fails, skip the current view):
@@ -1149,21 +1161,21 @@ def create_2d_projections_and_3d_cubes_for_evaluation(include_labels=False):
                 for image_view in IMAGES_6_VIEWS:
                     output_2d_format = f"{output_idx}_{cube_idx_str}_{image_view}"
 
-                    # 2D Folders - evals
-                    eval_2d = eval_projections[f"{image_view}_image"]
+                    # 2D Folders - data
+                    data_2d = data_projections[f"{image_view}_image"]
                     save_filename = os.path.join(output_folders[f"{data_key}_2d"], output_2d_format)
                     convert_numpy_to_data_file(
-                        numpy_data=eval_2d,
+                        numpy_data=data_2d,
                         source_data_filepath="dumpy.png",
                         save_filename=save_filename
                     )
 
                     if TASK_TYPE == TaskType.SINGLE_COMPONENT:
-                        # 2D Folders - evals components
-                        eval_components_2d = eval_projections[f"{image_view}_components"]
+                        # 2D Folders - data components
+                        data_components_2d = data_projections[f"{image_view}_components"]
                         save_filename = os.path.join(output_folders[f"{data_key}_components_2d"], output_2d_format)
                         convert_numpy_to_data_file(
-                            numpy_data=eval_components_2d,
+                            numpy_data=data_components_2d,
                             source_data_filepath="dumpy.png",
                             save_filename=save_filename
                         )
@@ -1176,21 +1188,21 @@ def create_2d_projections_and_3d_cubes_for_evaluation(include_labels=False):
 
                 output_3d_format = f"{output_idx}_{cube_idx_str}"
 
-                # 3D Folders - evals
+                # 3D Folders - data
                 save_filename = os.path.join(output_folders[f"{data_key}_3d"], output_3d_format)
                 convert_numpy_to_data_file(
-                    numpy_data=eval_cube,
-                    source_data_filepath=eval_filepath,
+                    numpy_data=data_cube,
+                    source_data_filepath=data_filepath,
                     save_filename=save_filename,
                     apply_data_threshold=True
                 )
 
                 if TASK_TYPE == TaskType.SINGLE_COMPONENT:
-                    # 3D Folders - evals components
+                    # 3D Folders - data components
                     save_filename = os.path.join(output_folders[f"{data_key}_components_3d"], output_3d_format)
                     convert_numpy_to_data_file(
-                        numpy_data=eval_components_cube,
-                        source_data_filepath=eval_component_filepath,
+                        numpy_data=data_components_cube,
+                        source_data_filepath=data_component_filepath,
                         save_filename=save_filename
                     )
 
@@ -1229,7 +1241,7 @@ def main():
     # create_dataset_depth_2d_projections(data_options=data_options)
 
     create_2d_projections_and_3d_cubes_for_training()
-    # create_2d_projections_and_3d_cubes_for_evaluation(include_labels=False)
+    # create_2d_projections_and_3d_cubes_for_evaluation(include_labels=True)
 
 
 if __name__ == "__main__":
