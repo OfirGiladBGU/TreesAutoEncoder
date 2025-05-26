@@ -706,7 +706,7 @@ def full_merge(data_3d_stem, data_type: DataType, log_data=None, source_data_3d_
     )
 
 
-def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
+def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None, apply_abs: bool = True):
     # Baseline
     # input_folder = PREDS_2D
     # output_folder = PREDS_FIXED_2D
@@ -766,7 +766,10 @@ def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None):
         target_data = convert_data_file_to_numpy(data_filepath=target_filepath_idx)
         output_data = convert_data_file_to_numpy(data_filepath=output_filepath_idx)
 
-        delta_binary_mask = (np.abs(target_data - input_data) > 0.5)
+        if apply_abs:
+            delta_binary_mask = (np.abs(target_data - input_data) > 0.5)
+        else:
+            delta_binary_mask = (target_data - input_data) > 0.5
         if delta_binary_mask.sum() == 0:
             continue
 
@@ -920,13 +923,15 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
     return output_dict
 
 
-def calculate_reduced_connected_components(data_3d_stem, components_mode="global", source_data_3d_folder=None):
+def calculate_reduced_connected_components(data_3d_stem, components_mode="global", source_data_3d_folder=None,
+                                           apply_abs: bool = True):
     """
     Requires data_3d_stem result in MERGE_PIPELINE_RESULTS_PATH
     Works only for SINGLE_COMPONENT mode
     :param data_3d_stem:
     :param components_mode:
     :param source_data_3d_folder:
+    :param apply_abs
     :return:
     """
 
@@ -1187,8 +1192,12 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
 
         connectivity_type = 26
 
-        # delta_binary = ((target_data_3d - input_data_3d) > 0.5).astype(np.int16)
-        delta_binary = np.logical_xor(target_data_3d, input_data_3d).astype(np.int16)
+        if apply_abs:
+            # delta_binary = (abs(target_data_3d - input_data_3d) > 0.5).astype(np.int16)
+            delta_binary = np.logical_xor(target_data_3d, input_data_3d).astype(np.int16)
+        else:
+            delta_binary = ((target_data_3d - input_data_3d) > 0.5).astype(np.int16)
+
         (_, input_delta_num_components) = connected_components_3d(
             data_3d=delta_binary,
             connectivity_type=connectivity_type
@@ -1214,6 +1223,7 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
 
 def full_folder_predict(data_type: DataType):
     run_full_predict = True
+    apply_abs = True
 
     # Select which tests to run
     test_2d_avg_l1_error = True
@@ -1289,7 +1299,11 @@ def full_folder_predict(data_type: DataType):
 
         for idx, data_3d_stem in enumerate(data_3d_stem_list):
             print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating 2D AVG L1 Error...")
-            output = calculate_2d_avg_l1_error(data_3d_stem=data_3d_stem, data_2d_folder=data_2d_folder)
+            output = calculate_2d_avg_l1_error(
+                data_3d_stem=data_3d_stem,
+                data_2d_folder=data_2d_folder,
+                apply_abs=apply_abs
+            )
 
             for key in output.keys():
                 outputs[key].append(output[key])
@@ -1382,7 +1396,8 @@ def full_folder_predict(data_type: DataType):
             calculate_reduced_connected_components(
                 data_3d_stem=data_3d_stem,
                 components_mode=components_mode,
-                source_data_3d_folder=source_data_3d_folder
+                source_data_3d_folder=source_data_3d_folder,
+                apply_abs=apply_abs
             )
 
 
