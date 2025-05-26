@@ -835,7 +835,7 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
     if compare_crops_mode is True:
         # Baseline
         # output_folder = PREDS_3D
-        # output_folder = PREDS__FIXED_3D
+        # output_folder = PREDS_FIXED_3D
         # output_filepaths = list(pathlib.Path(output_folder).glob(f"{data_3d_stem}_*.*"))
 
         # Output
@@ -873,7 +873,9 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
 
         # Ground Truth
         target_folder = LABELS
-        target_filepaths = list(pathlib.Path(target_folder).glob(f"{data_3d_stem}*.*"))
+        # Patch for Parse2022 (Medpseg)
+        # target_filepaths = list(pathlib.Path(target_folder).glob(f"{data_3d_stem.replace('_vessel', '')}*.*"))
+        target_filepaths = list(pathlib.Path(target_folder).glob(f"{data_3d_stem.replace('_vessel', '')}*.*"))
 
         # TODO: FOR SAFETY
         # target_filepaths = []
