@@ -214,6 +214,7 @@ def naive_noise_filter(data_3d_original: np.ndarray, data_3d_input: np.ndarray):
 def preprocess_3d(data_3d_filepath: str,
                   data_2d_output: torch.Tensor = None,
                   apply_threshold_2d: bool = False,
+                  threshold_2d: float = 0.2,
                   apply_fusion: bool = False,
                   apply_noise_filter_3d: bool = False,
                   hard_noise_filter_3d: bool = True,
@@ -230,7 +231,7 @@ def preprocess_3d(data_3d_filepath: str,
 
         # TODO: Threshold
         if apply_threshold_2d:
-            apply_threshold(data_2d_output, threshold=0.2, keep_values=True)
+            apply_threshold(data_2d_output, threshold=threshold_2d, keep_values=True)
 
         # Reconstruct 3D
         data_3d_list = list()
@@ -291,12 +292,15 @@ def preprocess_3d(data_3d_filepath: str,
 
 def postprocess_3d(data_3d_input: torch.Tensor,
                    data_3d_output: torch.Tensor,
+                   apply_threshold_3d: bool = True,
+                   threshold_3d: float = 0.5,
                    apply_input_merge_3d: bool = False) -> Tuple[torch.Tensor, torch.Tensor]:
     data_3d_input = data_3d_input.squeeze().squeeze()
     data_3d_output = data_3d_output.squeeze().squeeze()
 
     # TODO: Threshold
-    apply_threshold(data_3d_output, threshold=0.5, keep_values=False)
+    if apply_threshold_3d:
+        apply_threshold(data_3d_output, threshold=threshold_3d, keep_values=False)
 
     if apply_input_merge_3d is True:
         data_3d_output = data_3d_input + torch.where(data_3d_input == 0, data_3d_output, 0)
@@ -378,8 +382,13 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder,
     # CONFIGS
     apply_input_merge_2d = False  # False - Doesn't work well with revealed occluded objects
     apply_input_merge_3d = True
-    apply_threshold_2d = True
     apply_fusion = True
+
+    apply_threshold_2d = True
+    threshold_2d = 0.2  # Threshold for 2D images, used to remove noise
+
+    apply_threshold_3d = True
+    threshold_3d = 0.5  # Threshold for 3D volumes, used to remove noise
 
     apply_noise_filter_2d = False  # Notice: Doesn't work well with revealed occluded objects
     hard_noise_filter_2d = True
@@ -464,6 +473,7 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder,
                 data_3d_filepath=data_3d_filepath,
                 data_2d_output=data_2d_output,
                 apply_threshold_2d=apply_threshold_2d,
+                threshold_2d=threshold_2d,
                 apply_fusion=apply_fusion,
                 apply_noise_filter_3d=apply_noise_filter_3d,
                 hard_noise_filter_3d=hard_noise_filter_3d,
@@ -480,6 +490,8 @@ def single_predict(data_3d_filepath, data_3d_folder, data_2d_folder,
             (data_3d_input, data_3d_output) = postprocess_3d(
                 data_3d_input=data_3d_input,
                 data_3d_output=data_3d_output,
+                apply_threshold_3d=apply_threshold_3d,
+                threshold_3d=threshold_3d,
                 apply_input_merge_3d=apply_input_merge_3d
             )
 
@@ -505,7 +517,7 @@ def test_single_predict():
     # base_filename = "PA000005_11899.nii.gz"
     # base_filename = "PA000078_11996.nii.gz"
     # base_filename = "47_52.npy"
-    base_filename = "46_301.npy"
+    base_filename = "46_053.npy"
 
     if data_type == DataType.TRAIN:
         log_data = pd.read_csv(TRAIN_LOG_PATH)
