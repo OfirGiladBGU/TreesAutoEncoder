@@ -188,6 +188,46 @@ class TreesDataset2DV1(IndexableDataset):
         )
 
 
+# Train with 2D preds fixed to predict 2D labels (with regression)
+class TreesDataset2DV1R(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(TreesDataset2DV1R, self).__init__(args=args)
+
+        self.input_size = (1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
+
+        # src_path = PREDS_FIXED_2D
+        src_path = PREDS_ADVANCED_FIXED_2D
+        dst_path = LABELS_2D
+        args.include_regression = True
+
+        data_paths = [src_path, dst_path]
+        trees_dataset = TreesCustomDataset2D(args=args, data_paths=data_paths)
+
+        self.init_dataloaders(
+            train_subset=trees_dataset.train_subset,
+            test_subset=trees_dataset.test_subset
+        )
+
+
+# Train with 6 2D labels (with random holes) to predict 2D labels
+class TreesDataset2DV2S(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(TreesDataset2DV2S, self).__init__(args=args)
+
+        self.input_size = (6, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
+
+        src_path = LABELS_2D
+        args.include_regression = False
+
+        data_paths = [src_path]
+        trees_dataset = TreesCustomDataset2D(args=args, data_paths=data_paths)
+
+        self.init_dataloaders(
+            train_subset=trees_dataset.train_subset,
+            test_subset=trees_dataset.test_subset
+        )
+
+
 # Train with 6 2D preds fixed to predict 6 2D labels
 class TreesDataset2DV2(IndexableDataset):
     def __init__(self, args: argparse.Namespace):
@@ -210,9 +250,9 @@ class TreesDataset2DV2(IndexableDataset):
 
 
 # Train with 6 2D preds fixed to predict 6 2D labels (with regression)
-class TreesDataset2DV2M(IndexableDataset):
+class TreesDataset2DV2R(IndexableDataset):
     def __init__(self, args: argparse.Namespace):
-        super(TreesDataset2DV2M, self).__init__(args=args)
+        super(TreesDataset2DV2R, self).__init__(args=args)
 
         self.input_size = (6, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
 
@@ -249,6 +289,25 @@ class TreesDataset3DV1(IndexableDataset):
             test_subset=trees_dataset.test_subset
         )
 
+# Train with 3D reconstructed labels to predict 3D labels (with regression)
+class TreesDataset3DV1R(IndexableDataset):
+    def __init__(self, args: argparse.Namespace):
+        super(TreesDataset3DV1R, self).__init__(args=args)
+
+        self.input_size = (6, 1, DATA_2D_SIZE[0], DATA_2D_SIZE[1])
+
+        src_path = LABELS_2D
+        dst_path = LABELS_3D
+        args.include_regression = True
+
+        data_paths = [src_path, dst_path]
+        trees_dataset = TreesCustomDataset3D(args=args, data_paths=data_paths)
+
+        self.init_dataloaders(
+            train_subset=trees_dataset.train_subset,
+            test_subset=trees_dataset.test_subset
+        )
+
 
 # Train with 3D reconstructed labels to predict 3D labels
 class TreesDataset3DV2(IndexableDataset):
@@ -271,9 +330,9 @@ class TreesDataset3DV2(IndexableDataset):
 
 
 # Train with 3D reconstructed labels to predict 3D labels (with regression)
-class TreesDataset3DV2M(IndexableDataset):
+class TreesDataset3DV2R(IndexableDataset):
     def __init__(self, args: argparse.Namespace):
-        super(TreesDataset3DV2M, self).__init__(args=args)
+        super(TreesDataset3DV2R, self).__init__(args=args)
 
         self.input_size = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
@@ -290,14 +349,14 @@ class TreesDataset3DV2M(IndexableDataset):
         )
 
 
-# Train with 3D preds fixed fusion to predict 3D labels
-class TreesDataset3DV3(IndexableDataset):
+# Train with 3D preds fixed to predict 3D labels (Direct Repair)
+class TreesDataset3DV2D(IndexableDataset):
     def __init__(self, args: argparse.Namespace):
-        super(TreesDataset3DV3, self).__init__(args=args)
+        super(TreesDataset3DV2D, self).__init__(args=args)
 
         self.input_size = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
-        src_path = PREDS_FIXED_3D_FUSION
+        src_path = PREDS_FIXED_3D
         dst_path = LABELS_3D
         args.include_regression = False
 
@@ -310,14 +369,14 @@ class TreesDataset3DV3(IndexableDataset):
         )
 
 
-# Train with 3D preds fixed to predict 3D labels (Direct Repair)
-class TreesDataset3DV4(IndexableDataset):
+# Train with 3D preds fixed fusion to predict 3D labels
+class TreesDataset3DV2F(IndexableDataset):
     def __init__(self, args: argparse.Namespace):
-        super(TreesDataset3DV4, self).__init__(args=args)
+        super(TreesDataset3DV2F, self).__init__(args=args)
 
         self.input_size = (1, DATA_3D_SIZE[0], DATA_3D_SIZE[1], DATA_3D_SIZE[2])
 
-        src_path = PREDS_FIXED_3D
+        src_path = PREDS_FIXED_3D_FUSION
         dst_path = LABELS_3D
         args.include_regression = False
 
@@ -346,15 +405,18 @@ def init_dataset(args: argparse.Namespace):
         # 2D Datasets
         "Trees2DV1S": TreesDataset2DV1S,
         "Trees2DV1": TreesDataset2DV1,
+        "Trees2DV1R": TreesDataset2DV1R,
+        "Trees2DV2S": TreesDataset2DV2S,
         "Trees2DV2": TreesDataset2DV2,
-        "Trees2DV2M": TreesDataset2DV2M,
+        "Trees2DV2R": TreesDataset2DV2R,
 
         # 3D Datasets
         "Trees3DV1": TreesDataset3DV1,
+        "Trees3DV1R": TreesDataset3DV1R,
         "Trees3DV2": TreesDataset3DV2,
-        "Trees3DV2M": TreesDataset3DV2M,
-        "Trees3DV3": TreesDataset3DV3,
-        "Trees3DV4": TreesDataset3DV4
+        "Trees3DV2R": TreesDataset3DV2R,
+        "Trees3DV2D": TreesDataset3DV2D,
+        "Trees3DV2F": TreesDataset3DV2F
     }
     if args.dataset in list(dataset_map.keys()):
         return dataset_map[args.dataset](args=args)

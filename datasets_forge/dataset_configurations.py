@@ -159,12 +159,14 @@ CONNECTIVITY_TYPE_2D = 4
 V1_1D_DATASETS = ['Trees1DV1']
 
 # Dataset 2D
-V1_2D_DATASETS = ['Trees2DV1', 'Trees2DV1S']
-V2_2D_DATASETS = ['Trees2DV2', 'Trees2DV2M']
+V1_2D_DATASETS = ['Trees2DV1S', 'Trees2DV1', 'Trees2DV1R']
+V2_2D_DATASETS = ['Trees2DV2S', 'Trees2DV2', 'Trees2DV2R']
+
+RANDOM_HOLES_DATASETS = ['MNIST', 'EMNIST', 'FashionMNIST', 'CIFAR10', 'Trees2DV1S', 'Trees2DV2S']
 
 # Dataset 3D
-V1_3D_DATASETS = ['Trees3DV1']
-V2_3D_DATASETS = ['Trees3DV2', 'Trees3DV2M', 'Trees3DV3', 'Trees3DV4']
+V1_3D_DATASETS = ['Trees3DV1', 'Trees3DV1R']
+V2_3D_DATASETS = ['Trees3DV2', 'Trees3DV2R', 'Trees3DV2D', 'Trees3DV2F']
 
 # Views Configurations
 IMAGES_6_VIEWS = ["top", "bottom", "front", "back", "left", "right"]

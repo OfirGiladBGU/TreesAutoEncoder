@@ -13,22 +13,23 @@ def _zero_out_radius(tensor, point, radius):
     for i in range(max(0, x - radius), min(tensor.size(1), x + radius + 1)):
         for j in range(max(0, y - radius), min(tensor.size(2), y + radius + 1)):
             if (i - x) ** 2 + (j - y) ** 2 <= radius ** 2:
-                tensor[0, i, j] = 0
+                tensor[i, j] = 0
 
 
 def create_2d_holes(input_data: torch.Tensor):
-    # input_data: (batch_size, 1, 32, 32)
-    for idx in range(len(input_data)):
-        white_points = torch.nonzero(input_data[idx] > 0.6)
+    # input_data: (batch_size, 1, 32, 32) / (batch_size, 6, 32, 32)
+    for idx1 in range(input_data.size(0)):
+        for idx2 in range(input_data[idx1].size(0)):
+            white_points = torch.nonzero(input_data[idx1][idx2] > 0.5)
 
-        if white_points.size(0) > 0:
-            # Randomly select one of the non-zero points
-            random_point = random.choice(white_points)
-            radius = random.randint(3, 5)
-            _zero_out_radius(tensor=input_data[idx], point=random_point, radius=radius)
+            if white_points.size(0) > 0:
+                # Randomly select one of the non-zero points
+                random_point = random.choice(white_points)
+                radius = random.randint(3, 5)
+                _zero_out_radius(tensor=input_data[idx1][idx2], point=random_point, radius=radius)
 
-            # plt.imshow(input_data[idx].permute(1, 2, 0))
-            # save_image(input_data[idx], 'img1.png')
+                # plt.imshow(input_data[idx].permute(1, 2, 0))
+                # save_image(input_data[idx], 'img1.png')
 
 
 ##################

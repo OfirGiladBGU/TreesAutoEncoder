@@ -11,7 +11,7 @@ from tqdm import tqdm
 import datetime
 from matplotlib import gridspec
 
-from datasets_forge.dataset_configurations import V1_2D_DATASETS, V2_2D_DATASETS
+from datasets_forge.dataset_configurations import V1_2D_DATASETS, V2_2D_DATASETS, RANDOM_HOLES_DATASETS
 from datasets.dataset_utils import apply_threshold
 from trainer import loss_functions
 from trainer import train_utils
@@ -35,7 +35,7 @@ class Trainer(object):
         self.train_loader = self.dataset.train_loader
         self.test_loader = self.dataset.test_loader
 
-        self.datasets_for_holes = ['MNIST', 'EMNIST', 'FashionMNIST', 'CIFAR10', 'TreesV1S']
+        self.datasets_for_holes = RANDOM_HOLES_DATASETS
 
         if self.args.dataset in self.datasets_for_holes:
             self.optimizer = optim.Adam(self.model.parameters(), lr=1e-3)
