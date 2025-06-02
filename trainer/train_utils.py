@@ -18,8 +18,8 @@ def _zero_out_radius(tensor, point, radius):
 
 def create_2d_holes(input_data: torch.Tensor):
     # input_data: (batch_size, 1, 32, 32) / (batch_size, 6, 32, 32)
-    for idx1 in range(input_data.size(0)):
-        for idx2 in range(input_data[idx1].size(0)):
+    for idx1 in range(len(input_data)):
+        for idx2 in range(len(input_data[idx1])):
             white_points = torch.nonzero(input_data[idx1][idx2] > 0.5)
 
             if white_points.size(0) > 0:
