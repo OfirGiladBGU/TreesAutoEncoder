@@ -79,8 +79,9 @@ class Trainer(object):
         fill_mask1 = (torch.abs(target_data - input_data) > 0).float()  # Area that should be filled
         black_mask1 = (target_data == 0).float()  # Area that should stay black
         keep_mask1 = 1.0 - (fill_mask1 + black_mask1)  # Area that should stay unchanged
+        lambda_1 = 10.0
 
-        weighted_mask1 = 8.0 * fill_mask1 + 1.5 * keep_mask1 + 0.5 * black_mask1
+        weighted_mask1 = lambda_1 * (0.80 * fill_mask1 + 0.15 * keep_mask1 + 0.05 * black_mask1)
         output_data_1 = output_data * weighted_mask1
         target_data_1 = target_data * weighted_mask1
 
