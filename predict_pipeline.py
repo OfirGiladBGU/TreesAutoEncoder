@@ -255,7 +255,6 @@ def preprocess_3d(data_3d_filepath: str,
         else:
             data_3d_input = data_3d_reconstruct
 
-        # TODO: validate filters!!!
         if apply_noise_filter_3d is True:
             # data_3d_input = naive_noise_filter(data_3d_original=pred_3d, data_3d_input=data_3d_input)
 
