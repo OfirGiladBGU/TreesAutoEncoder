@@ -7,6 +7,7 @@ from models.model_1d.cnn_2d_to_1d import Network1D as CNN_2D_TO_1D
 # 2D models
 from models.model_2d.ae import Network2D as AE
 from models.model_2d.ae_2d_to_2d import Network2D as AE_2D_TO_2D
+from models.model_2d.ae_2d_to_2d_multi_task import Network2D as AE_2D_TO_2D_MULTI_TASK
 from models.model_2d.ae_6_2d_to_6_2d import Network2D as AE_6_2D_TO_6_2D
 from models.model_2d.gap_cnn import Network2D as GAP_CNN
 from models.model_2d.vgg_ae_demo import Network2D as VGG_AE_DEMO
@@ -26,6 +27,7 @@ def init_model(args: argparse.Namespace):
         # 2D models
         "ae": AE,
         "ae_2d_to_2d": AE_2D_TO_2D,
+        "ae_2d_to_2d_multi_task": AE_2D_TO_2D_MULTI_TASK,
         "ae_6_2d_to_6_2d": AE_6_2D_TO_6_2D,
         "gap_cnn": GAP_CNN,
         "vgg_ae_demo": VGG_AE_DEMO,

@@ -1,7 +1,13 @@
 import argparse
-# import torch.nn as nn
-#
-#
+import torch
+import torch.nn as nn
+# import torch.nn.functional as F
+
+
+##########
+# Test 1 #
+##########
+
 # class Network3D(nn.Module):
 #     def __init__(self, args: argparse.Namespace):
 #         super(Network3D, self).__init__()
@@ -51,43 +57,38 @@ import argparse
 #         x = self.decoder3(x + x1)  # Skip connection
 #
 #         return x
-#
 
 ##########
 # Test 2 #
 ##########
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-
-class SelfAttention3D(nn.Module):
-    def __init__(self, in_channels):
-        super(SelfAttention3D, self).__init__()
-        self.query = nn.Conv3d(in_channels, in_channels // 8, kernel_size=1)
-        self.key = nn.Conv3d(in_channels, in_channels // 8, kernel_size=1)
-        self.value = nn.Conv3d(in_channels, in_channels, kernel_size=1)
-        self.gamma = nn.Parameter(torch.zeros(1))
-
-    def forward(self, x):
-        batch_size, C, D, H, W = x.size()
-
-        # Compute query, key, and value
-        query = self.query(x).view(batch_size, -1, D * H * W).permute(0, 2, 1)  # (batch_size, D*H*W, C//8)
-        key = self.key(x).view(batch_size, -1, D * H * W)  # (batch_size, C//8, D*H*W)
-        value = self.value(x).view(batch_size, -1, D * H * W)  # (batch_size, C, D*H*W)
-
-        # Compute attention map
-        attention = torch.softmax(torch.bmm(query, key), dim=-1)  # (batch_size, D*H*W, D*H*W)
-
-        # Apply attention to value
-        out = torch.bmm(value, attention.permute(0, 2, 1))  # (batch_size, C, D*H*W)
-        out = out.view(batch_size, C, D, H, W)
-
-        # Add residual connection
-        out = self.gamma * out + x
-
-        return out
+# class SelfAttention3D(nn.Module):
+#     def __init__(self, in_channels):
+#         super(SelfAttention3D, self).__init__()
+#         self.query = nn.Conv3d(in_channels, in_channels // 8, kernel_size=1)
+#         self.key = nn.Conv3d(in_channels, in_channels // 8, kernel_size=1)
+#         self.value = nn.Conv3d(in_channels, in_channels, kernel_size=1)
+#         self.gamma = nn.Parameter(torch.zeros(1))
+#
+#     def forward(self, x):
+#         batch_size, C, D, H, W = x.size()
+#
+#         # Compute query, key, and value
+#         query = self.query(x).view(batch_size, -1, D * H * W).permute(0, 2, 1)  # (batch_size, D*H*W, C//8)
+#         key = self.key(x).view(batch_size, -1, D * H * W)  # (batch_size, C//8, D*H*W)
+#         value = self.value(x).view(batch_size, -1, D * H * W)  # (batch_size, C, D*H*W)
+#
+#         # Compute attention map
+#         attention = torch.softmax(torch.bmm(query, key), dim=-1)  # (batch_size, D*H*W, D*H*W)
+#
+#         # Apply attention to value
+#         out = torch.bmm(value, attention.permute(0, 2, 1))  # (batch_size, C, D*H*W)
+#         out = out.view(batch_size, C, D, H, W)
+#
+#         # Add residual connection
+#         out = self.gamma * out + x
+#
+#         return out
 
 
 # class Network3D(nn.Module):
@@ -143,7 +144,6 @@ class SelfAttention3D(nn.Module):
 #         recon = self.decoder3(recon + x1)  # Skip connection
 #
 #         return recon
-
 
 ##########
 # Test 3 #
@@ -205,10 +205,37 @@ class SelfAttention3D(nn.Module):
 #
 #         return recon
 
-
 ##########
 # Test 4 #
 ##########
+
+class SelfAttention3D(nn.Module):
+    def __init__(self, in_channels):
+        super(SelfAttention3D, self).__init__()
+        self.query = nn.Conv3d(in_channels, in_channels // 8, kernel_size=1)
+        self.key = nn.Conv3d(in_channels, in_channels // 8, kernel_size=1)
+        self.value = nn.Conv3d(in_channels, in_channels, kernel_size=1)
+        self.gamma = nn.Parameter(torch.zeros(1))
+
+    def forward(self, x):
+        batch_size, C, D, H, W = x.size()
+
+        # Compute query, key, and value
+        query = self.query(x).view(batch_size, -1, D * H * W).permute(0, 2, 1)  # (batch_size, D*H*W, C//8)
+        key = self.key(x).view(batch_size, -1, D * H * W)  # (batch_size, C//8, D*H*W)
+        value = self.value(x).view(batch_size, -1, D * H * W)  # (batch_size, C, D*H*W)
+
+        # Compute attention map
+        attention = torch.softmax(torch.bmm(query, key), dim=-1)  # (batch_size, D*H*W, D*H*W)
+
+        # Apply attention to value
+        out = torch.bmm(value, attention.permute(0, 2, 1))  # (batch_size, C, D*H*W)
+        out = out.view(batch_size, C, D, H, W)
+
+        # Add residual connection
+        out = self.gamma * out + x
+
+        return out
 
 class Network3D(nn.Module):
     def __init__(self, args: argparse.Namespace):

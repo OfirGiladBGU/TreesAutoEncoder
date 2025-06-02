@@ -1,7 +1,12 @@
 import argparse
 import torch.nn as nn
+# import torch
+# import torch.nn.functional as F
 
-# Test 1
+
+##########
+# Test 1 #
+##########
 
 # class Network2D(nn.Module):
 #     def __init__(self, args: argparse.Namespace):
@@ -55,13 +60,10 @@ import torch.nn as nn
 #
 #         return z
 
-# Test 2
+##########
+# Test 2 #
+##########
 
-# import argparse
-# import torch
-# import torch.nn as nn
-# import torch.nn.functional as F
-#
 # class Network2D(nn.Module):
 #     def __init__(self, args: argparse.Namespace):
 #         super(Network2D, self).__init__()
@@ -147,11 +149,10 @@ import torch.nn as nn
 #     loss = reconstruction_loss(output, target_data) + masked_loss(output, target_data, hole_mask)
 #     print(f"Loss: {loss.item()}")
 
-# Test 3
+##########
+# Test 3 #
+##########
 
-# import torch
-# import torch.nn as nn
-#
 # class Encoder(nn.Module):
 #     def __init__(self):
 #         super(Encoder, self).__init__()
@@ -214,11 +215,15 @@ import torch.nn as nn
 #         z = self.encoder(x)
 #         return self.decoder(z)
 
-# Test 4
+##########
+# Test 4 #
+##########
+
+# TODO: check option that the original input is kept and only the holes are predicted and merged
 
 # DIPNet
 class Network2D(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args: argparse.Namespace):
         super(Network2D, self).__init__()
 
         self.model_name = 'ae_6_2d_to_6_2d'
@@ -243,5 +248,3 @@ class Network2D(nn.Module):
         x3 = self.conv3(x2)
 
         return x3
-
-# TODO: check option that the original input is kept and only the holes are predicted and merged

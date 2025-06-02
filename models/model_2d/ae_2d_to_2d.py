@@ -1,9 +1,14 @@
-# import argparse
-# import torch.nn as nn
-#
-#
-# # TODO: change kernel size
-# # TODO: attention check
+import argparse
+import torch
+import torch.nn as nn
+
+
+##########
+# Test 1 #
+##########
+
+# TODO: change kernel size
+# TODO: attention check
 # class Network2D(nn.Module):
 #     def __init__(self, args: argparse.Namespace):
 #         super(Network2D, self).__init__()
@@ -58,10 +63,6 @@
 # Test 2 #
 ##########
 
-# import argparse
-# import torch
-# import torch.nn as nn
-#
 # # Self-Attention Block
 # class SelfAttention(nn.Module):
 #     def __init__(self, in_channels):
@@ -143,10 +144,6 @@
 ##########
 # Test 3 #
 ##########
-
-import argparse
-import torch
-import torch.nn as nn
 
 # # Self-Attention Block
 # class SelfAttention(nn.Module):
@@ -242,56 +239,52 @@ import torch.nn as nn
 # Test 4 #
 ##########
 
-import argparse
-import torch
-import torch.nn as nn
-
-# Self-Attention Block
-class SelfAttention(nn.Module):
-    def __init__(self, in_channels):
-        super(SelfAttention, self).__init__()
-        self.query = nn.Conv2d(in_channels=in_channels, out_channels=in_channels // 8, kernel_size=1)
-        self.key = nn.Conv2d(in_channels=in_channels, out_channels=in_channels // 8, kernel_size=1)
-        self.value = nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=1)
-        self.gamma = nn.Parameter(torch.zeros(1))
-
-    # def forward(self, x):
-    #     batch_size, C, width, height = x.size()
-    #     query = self.query(x).view(batch_size, -1, width * height)  # B x C/8 x N
-    #     key = self.key(x).view(batch_size, -1, width * height)      # B x C/8 x N
-    #     value = self.value(x).view(batch_size, -1, width * height)  # B x C x N
-    #
-    #     attention = torch.bmm(query.permute(0, 2, 1), key)  # B x N x N
-    #     attention = torch.softmax(attention, dim=-1)
-    #
-    #     out = torch.bmm(value, attention.permute(0, 2, 1))  # B x C x N
-    #     out = out.view(batch_size, C, width, height)
-    #
-    #     out = self.gamma * out + x
-    #     return out
-
-    def forward(self, x):
-        batch_size, C, H, W = x.shape  # Extract batch, channels, height, width
-
-        # Compute Query, Key, and Value
-        query = self.query(x).view(batch_size, -1, H * W)  # (B, C/8, N)
-        key = self.key(x).view(batch_size, -1, H * W)  # (B, C/8, N)
-        value = self.value(x).view(batch_size, -1, H * W)  # (B, C, N)
-
-        # Compute Attention Map (Correct order)
-        attention = torch.bmm(query.permute(0, 2, 1), key)  # (B, N, N) spatial attention
-        attention = torch.softmax(attention, dim=-1)
-
-        # Apply attention to value
-        out = torch.bmm(value, attention.permute(0, 2, 1))  # (B, C, N)
-
-        # Reshape back to (B, C, H, W)
-        out = out.view(batch_size, C, H, W)
-
-        # Residual Connection
-        out = self.gamma * out + x
-
-        return out
+# # Self-Attention Block
+# class SelfAttention(nn.Module):
+#     def __init__(self, in_channels):
+#         super(SelfAttention, self).__init__()
+#         self.query = nn.Conv2d(in_channels=in_channels, out_channels=in_channels // 8, kernel_size=1)
+#         self.key = nn.Conv2d(in_channels=in_channels, out_channels=in_channels // 8, kernel_size=1)
+#         self.value = nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=1)
+#         self.gamma = nn.Parameter(torch.zeros(1))
+#
+#     # def forward(self, x):
+#     #     batch_size, C, width, height = x.size()
+#     #     query = self.query(x).view(batch_size, -1, width * height)  # B x C/8 x N
+#     #     key = self.key(x).view(batch_size, -1, width * height)      # B x C/8 x N
+#     #     value = self.value(x).view(batch_size, -1, width * height)  # B x C x N
+#     #
+#     #     attention = torch.bmm(query.permute(0, 2, 1), key)  # B x N x N
+#     #     attention = torch.softmax(attention, dim=-1)
+#     #
+#     #     out = torch.bmm(value, attention.permute(0, 2, 1))  # B x C x N
+#     #     out = out.view(batch_size, C, width, height)
+#     #
+#     #     out = self.gamma * out + x
+#     #     return out
+#
+#     def forward(self, x):
+#         batch_size, C, H, W = x.shape  # Extract batch, channels, height, width
+#
+#         # Compute Query, Key, and Value
+#         query = self.query(x).view(batch_size, -1, H * W)  # (B, C/8, N)
+#         key = self.key(x).view(batch_size, -1, H * W)  # (B, C/8, N)
+#         value = self.value(x).view(batch_size, -1, H * W)  # (B, C, N)
+#
+#         # Compute Attention Map (Correct order)
+#         attention = torch.bmm(query.permute(0, 2, 1), key)  # (B, N, N) spatial attention
+#         attention = torch.softmax(attention, dim=-1)
+#
+#         # Apply attention to value
+#         out = torch.bmm(value, attention.permute(0, 2, 1))  # (B, C, N)
+#
+#         # Reshape back to (B, C, H, W)
+#         out = out.view(batch_size, C, H, W)
+#
+#         # Residual Connection
+#         out = self.gamma * out + x
+#
+#         return out
 
 
 # class Network2D(nn.Module):
@@ -384,6 +377,71 @@ class SelfAttention(nn.Module):
 #         # recon = self.decoder3(d2)  # Output: (B, 1, H, W)
 #         return recon
 
+##########
+# Test 5 #
+##########
+#
+# import torch.nn.functional as F
+#
+# class Network2D(nn.Module):
+#     def __init__(self, args: argparse.Namespace):
+#         super(Network2D, self).__init__()
+#
+#         self.model_name = 'ae_2d_to_2d'
+#         self.input_size = args.input_size
+#
+#         # Encoder
+#         self.enc1 = self.conv_block(1, 64)
+#         self.enc2 = self.conv_block(64, 128)
+#         self.enc3 = self.conv_block(128, 256)
+#
+#         # Bottleneck
+#         self.bottleneck = self.conv_block(256, 512)
+#
+#         # Decoder
+#         self.dec3 = self.conv_block(512 + 256, 256)
+#         self.dec2 = self.conv_block(256 + 128, 128)
+#         self.dec1 = self.conv_block(128 + 64, 64)
+#
+#         # Final output
+#         self.final = nn.Conv2d(64, 1, kernel_size=1)
+#
+#     def conv_block(self, in_channels, out_channels):
+#         return nn.Sequential(
+#             nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+#             nn.ReLU(inplace=True),
+#             nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
+#             nn.ReLU(inplace=True)
+#         )
+#
+#     def forward(self, x):
+#         # Encoder
+#         c1 = self.enc1(x)
+#         p1 = F.max_pool2d(c1, kernel_size=2)
+#         c2 = self.enc2(p1)
+#         p2 = F.max_pool2d(c2, kernel_size=2)
+#         c3 = self.enc3(p2)
+#         p3 = F.max_pool2d(c3, kernel_size=2)
+#
+#         # Bottleneck
+#         bn = self.bottleneck(p3)
+#
+#         # Decoder
+#         u3 = F.interpolate(bn, scale_factor=2, mode='bilinear', align_corners=True)
+#         u3 = torch.cat([u3, c3], dim=1)
+#         d3 = self.dec3(u3)
+#
+#         u2 = F.interpolate(d3, scale_factor=2, mode='bilinear', align_corners=True)
+#         u2 = torch.cat([u2, c2], dim=1)
+#         d2 = self.dec2(u2)
+#
+#         u1 = F.interpolate(d2, scale_factor=2, mode='bilinear', align_corners=True)
+#         u1 = torch.cat([u1, c1], dim=1)
+#         d1 = self.dec1(u1)
+#
+#         # Final output
+#         output = self.final(d1)
+#         return torch.sigmoid(output)
 
 ##########
 # Test 6 #
@@ -442,10 +500,41 @@ class SelfAttention(nn.Module):
 #         recon = self.decoder3(recon + x1)  # Skip connection
 #         return recon
 
-
 ##########
 # Test 7 #
 ##########
+
+# Self-Attention Block
+class SelfAttention(nn.Module):
+    def __init__(self, in_channels):
+        super(SelfAttention, self).__init__()
+        self.query = nn.Conv2d(in_channels=in_channels, out_channels=in_channels // 8, kernel_size=1)
+        self.key = nn.Conv2d(in_channels=in_channels, out_channels=in_channels // 8, kernel_size=1)
+        self.value = nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=1)
+        self.gamma = nn.Parameter(torch.zeros(1))
+
+    def forward(self, x):
+        batch_size, C, H, W = x.shape  # Extract batch, channels, height, width
+
+        # Compute Query, Key, and Value
+        query = self.query(x).view(batch_size, -1, H * W)  # (B, C/8, N)
+        key = self.key(x).view(batch_size, -1, H * W)  # (B, C/8, N)
+        value = self.value(x).view(batch_size, -1, H * W)  # (B, C, N)
+
+        # Compute Attention Map (Correct order)
+        attention = torch.bmm(query.permute(0, 2, 1), key)  # (B, N, N) spatial attention
+        attention = torch.softmax(attention, dim=-1)
+
+        # Apply attention to value
+        out = torch.bmm(value, attention.permute(0, 2, 1))  # (B, C, N)
+
+        # Reshape back to (B, C, H, W)
+        out = out.view(batch_size, C, H, W)
+
+        # Residual Connection
+        out = self.gamma * out + x
+
+        return out
 
 # Creates Large Noise around thin connections
 
@@ -512,69 +601,3 @@ class Network2D(nn.Module):
         recon = self.decoder4(recon + x1)  # Skip connection
 
         return recon
-
-# ##########
-# # Test 5 #
-# ##########
-#
-# import torch.nn.functional as F
-#
-# class Network2D(nn.Module):
-#     def __init__(self, args: argparse.Namespace):
-#         super(Network2D, self).__init__()
-#
-#         self.model_name = 'ae_2d_to_2d'
-#         self.input_size = args.input_size
-#
-#         # Encoder
-#         self.enc1 = self.conv_block(1, 64)
-#         self.enc2 = self.conv_block(64, 128)
-#         self.enc3 = self.conv_block(128, 256)
-#
-#         # Bottleneck
-#         self.bottleneck = self.conv_block(256, 512)
-#
-#         # Decoder
-#         self.dec3 = self.conv_block(512 + 256, 256)
-#         self.dec2 = self.conv_block(256 + 128, 128)
-#         self.dec1 = self.conv_block(128 + 64, 64)
-#
-#         # Final output
-#         self.final = nn.Conv2d(64, 1, kernel_size=1)
-#
-#     def conv_block(self, in_channels, out_channels):
-#         return nn.Sequential(
-#             nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
-#             nn.ReLU(inplace=True),
-#             nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
-#             nn.ReLU(inplace=True)
-#         )
-#
-#     def forward(self, x):
-#         # Encoder
-#         c1 = self.enc1(x)
-#         p1 = F.max_pool2d(c1, kernel_size=2)
-#         c2 = self.enc2(p1)
-#         p2 = F.max_pool2d(c2, kernel_size=2)
-#         c3 = self.enc3(p2)
-#         p3 = F.max_pool2d(c3, kernel_size=2)
-#
-#         # Bottleneck
-#         bn = self.bottleneck(p3)
-#
-#         # Decoder
-#         u3 = F.interpolate(bn, scale_factor=2, mode='bilinear', align_corners=True)
-#         u3 = torch.cat([u3, c3], dim=1)
-#         d3 = self.dec3(u3)
-#
-#         u2 = F.interpolate(d3, scale_factor=2, mode='bilinear', align_corners=True)
-#         u2 = torch.cat([u2, c2], dim=1)
-#         d2 = self.dec2(u2)
-#
-#         u1 = F.interpolate(d2, scale_factor=2, mode='bilinear', align_corners=True)
-#         u1 = torch.cat([u1, c1], dim=1)
-#         d1 = self.dec1(u1)
-#
-#         # Final output
-#         output = self.final(d1)
-#         return torch.sigmoid(output)
