@@ -1,5 +1,7 @@
 # Trees Auto Encoder
 
+# TODO: Refactor README.md
+
 Commit with big change:
 11.04.2025 - configured new noise filters based on the Continuity fix 3D filters
 
@@ -18,7 +20,7 @@ points_scale = 0.25
 voxel_size = 1.0
 
 # Hospital CUP:
-points_scale = ~50
+points_scale = 25.0
 voxel_size = 1.0
 ```
 
@@ -49,8 +51,13 @@ scripts in the files, based on the `model_type` parameter in the relevant main s
 
 ## How to test the full predict pipeline:
 
-1. (For `data_crops`) Run the `predict_pipeline` script: [predict_pipeline.py](predict_pipeline.py)
-2. [TBD] (For `data`) Run the `online_pipeline` script: [online_pipeline.py](online_pipeline.py)
+
+### On training/evaluation local crops data:
+1. Run the `predict_pipeline` script: [predict_pipeline.py](predict_pipeline.py)
+
+
+### Directly on new full 3D data:
+1. [TBD]  Run the `online_pipeline` script: [online_pipeline.py](online_pipeline.py)
 
 
 ## Generate synthetic data with holes (Example for PipeForge3D):
@@ -72,6 +79,7 @@ scripts in the files, based on the `model_type` parameter in the relevant main s
 5. cropped 3d `labels`, `preds` -> Values: binary {0, 1}, Dim: 3
 6. cropped 3d `components` -> Values: grayscale (0-255), Dim: 3
 
+---
 
 # The Available Approaches:
 
@@ -143,13 +151,25 @@ Given the `3d ground truth` and the `3d predicted labels`:
 
 # Sources:
 
-
-## Source of AE
+## AE (As base model skeleton):
 
 https://github.com/dariocazzani/pytorch-AE
 
+## VGG loss:
 
-## Graph Generators
+https://github.com/crowsonkb/vgg_loss/tree/master
+
+## Tool to visualize projections on 3D cube:
+
+https://3dthis.com/photocube.htm
+
+## Configuring Matplotlib Plots to Display in a Window in PyCharm
+
+See the following question on [Stack Overflow](https://stackoverflow.com/questions/57015206/how-to-show-matplotlib-plots-in-a-window-instead-of-sciview-toolbar-in-pycharm-p).
+
+---
+
+## [NOT USED] Graph Generators
 
 https://github.com/networkx/grave
 
@@ -160,16 +180,3 @@ https://github.com/mlimbuu/random-graph-generator
 https://github.com/mlimbuu/TCGRE-graph-generator
 
 https://github.com/connectedcompany/alph
-
-
-## VGG loss:
-
-https://github.com/crowsonkb/vgg_loss/tree/master
-
-## Tool to visualize cube:
-
-https://3dthis.com/photocube.htm
-
-## Configuring Matplotlib Plots to Display in a Window in PyCharm
-
-See the following question on [Stack Overflow](https://stackoverflow.com/questions/57015206/how-to-show-matplotlib-plots-in-a-window-instead-of-sciview-toolbar-in-pycharm-p).
