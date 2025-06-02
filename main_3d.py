@@ -48,7 +48,7 @@ if __name__ == "__main__":
     args.model = 'ae_3d_to_3d'
     # args.dataset = 'Trees3DV2'
     # args.dataset = 'Trees3DV2D'
-    args.dataset = 'Trees3DVF'
+    args.dataset = 'Trees3DV2F'
 
     args.epochs = 10
 
