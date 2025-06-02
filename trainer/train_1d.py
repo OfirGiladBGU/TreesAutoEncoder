@@ -16,8 +16,6 @@ from datasets.dataset_utils import apply_threshold
 from trainer import loss_functions
 from trainer import train_utils
 
-# TODO: remove later
-import torch.nn.functional as F
 
 class Trainer(object):
     def __init__(self, args: argparse.Namespace, dataset, model):
@@ -44,7 +42,10 @@ class Trainer(object):
         :param input_data: the original input data for the model
         :return:
         """
-        LOSS = F.binary_cross_entropy(input=output_data, target=target_data)
+        ##########
+        # Test 1 #
+        ##########
+        LOSS = loss_functions.bce_loss(output=output_data, target=target_data)
 
         return LOSS
 

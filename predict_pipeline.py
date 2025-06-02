@@ -363,7 +363,6 @@ def init_pipeline_models():
         args.model = args.model_3d
         model_3d = init_model(args=args)
         model_3d_weights_filepath = f"{filepath}_{DATASET_OUTPUT_FOLDER}_{model_3d.model_name}{ext}"
-        # TODO: model_3d_weights_filepath = f"{filepath}_PipeForge3DPCD_LC_32_{model_3d.model_name}{ext}"
         model_3d.load_state_dict(torch.load(model_3d_weights_filepath))
         model_3d.eval()
         model_3d.to(args.device)

@@ -16,6 +16,8 @@ from datasets.dataset_utils import apply_threshold, convert_numpy_to_data_file
 from trainer import loss_functions
 from trainer import train_utils
 
+# TODO: remove later
+import torch.nn.functional as F
 
 class Trainer(object):
     def __init__(self, args: argparse.Namespace, dataset, model):
@@ -41,26 +43,49 @@ class Trainer(object):
         :param input_data: the original input data for the model
         :return:
         """
-        ##########
-        # Test 1 #
-        ##########
-        # LOSS = loss_functions.mse_loss(output_data, target_data, reduction='sum')
-
-        ##########
-        # Test 2 #
-        ##########
-        # LOSS = loss_functions.bce_dice_loss(output_data, target_data)
-
-        ##########
-        # Test 3 #
-        ##########
+        # Test 1
+        # LOSS = F.mse_loss(out, target, reduction='sum')
+        # LOSS = loss_functions.bce_dice_loss(out, target)
         # LOSS = loss_functions.weighted_bce_dice_loss(output_data, target_data)
 
-        ##########
-        # Test 4 #
-        ##########
-        lambda_value = 10.0
-        LOSS = loss_functions.weighted_mask_loss(output=output_data, target=target_data, input=input_data, lambda_value=lambda_value, reduction='sum')
+        # Test 2
+        # holes_mask = ((target_data - input_data) > 0)  # area that should be filled
+        # black_mask = (target_data == 0)  # area that should stay black
+        # LOSS = (0.6 * F.l1_loss(output_data[holes_mask], target_data[holes_mask]) +
+        #         0.4 * F.l1_loss(output_data[black_mask], target_data[black_mask]))
+
+        # Test 3
+        # keep_mask1 = (input_data > 0).float()  # Area that should stay unchanged
+        # black_mask1 = (target_data == 0).float()  # Area that should stay black
+        # fill_mask1 = ((target_data > 0) & (input_data == 0)).float()  # Area that should be filled
+        #
+        # weighted_mask1 = 0.8 * fill_mask1 + 0.15 * keep_mask1 + 0.05 * black_mask1
+
+        # abs_diff1 = torch.abs(output_data - target_data)
+        # masked_abs_diff1 = abs_diff1 * fill_mask1
+        # diff2 = torch.abs(output_data) * black_mask1 + torch.abs(output_data) * keep_mask1
+
+        # output_data_1 = output_data * weighted_mask1
+        # target_data_1 = target_data * weighted_mask1
+
+        # Normalize by the number of pixels in the mask
+        # LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
+
+        # Test 4
+        # LOSS = loss_functions.bce_dice_loss(out=output_data, target=target_data)
+
+
+        # Test 5
+        fill_mask1 = (torch.abs(target_data - input_data) > 0).float()  # Area that should be filled
+        black_mask1 = (target_data == 0).float()  # Area that should stay black
+        keep_mask1 = 1.0 - (fill_mask1 + black_mask1)  # Area that should stay unchanged
+        lambda_1 = 10.0
+
+        weighted_mask1 = lambda_1 * (0.80 * fill_mask1 + 0.15 * keep_mask1 + 0.05 * black_mask1)
+        output_data_1 = output_data * weighted_mask1
+        target_data_1 = target_data * weighted_mask1
+
+        LOSS = loss_functions.l1_loss(out=output_data_1, target=target_data_1, reduction='sum')
 
         return LOSS
 
