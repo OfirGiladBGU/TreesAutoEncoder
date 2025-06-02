@@ -28,7 +28,7 @@ voxel_size = 1.0
 1. Put the `parse2022` dataset with the `labels` and `preds` data on the path: `./data/parse2022`
    - `labels` - The ground truth
    - `preds` - The predicted labels by a model
-2. Create config file in `.yaml` format and put it in `configs` folder (see example: [parse2022.yaml](configs/parse2022.yaml)).
+2. Create config file in `.yaml` format and put it in `configs` folder (see example: [parse2022_SC_32.yaml](configs/parse2022_SC_32.yaml)).
 3. Build the `dataset_2d` (also `dataset_1d`) by running `dataset_2d_creator` script: [dataset_2d_creator.py](datasets_forge/dataset_2d_creator.py)
 4. Build the `dataset_3d` by running  `dataset_3d_creator` script: [dataset_3d_creator.py](datasets_forge/dataset_3d_creator.py)
 
@@ -46,9 +46,11 @@ scripts in the files, based on the `model_type` parameter in the relevant main s
 - [train_2d.py](trainer/train_2d.py)
 - [train_3d.py](trainer/train_3d.py)
 
-## How to test the full pipeline:
 
-1. Run the `predict_pipeline` script: [predict_pipeline.py](predict_pipeline.py)
+## How to test the full predict pipeline:
+
+1. (For `data_crops`) Run the `predict_pipeline` script: [predict_pipeline.py](predict_pipeline.py)
+2. [TBD] (For `data`) Run the `online_pipeline` script: [online_pipeline.py](online_pipeline.py)
 
 
 ## Generate synthetic data with holes (Example for PipeForge3D):
