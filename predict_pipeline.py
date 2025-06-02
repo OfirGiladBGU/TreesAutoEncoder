@@ -576,15 +576,15 @@ def full_predict(data_3d_stem, data_type: DataType, log_data=None, data_3d_folde
     # data_3d_filepaths = sorted(data_3d_filepaths)
 
     # Get filepath (based on csv)
-    data_3d_filepaths = []
+    data_3d_cube_filepaths = []
     col_0 = log_data.columns[0]
     for row_idx, row in log_data.iterrows():
         # Skip non relevant rows
         if data_3d_stem != str(row[col_0]).rsplit("_", maxsplit=1)[0]:
             continue
 
-        data_3d_file = list(pathlib.Path(data_3d_folder).glob(f"{row[col_0]}.*"))[0]
-        data_3d_filepaths.append(data_3d_file)
+        data_3d_cube_filepath = list(pathlib.Path(data_3d_folder).glob(f"{row[col_0]}.*"))[0]
+        data_3d_cube_filepaths.append(data_3d_cube_filepath)
 
     # START #
     start_time = datetime.datetime.now()
@@ -595,9 +595,9 @@ def full_predict(data_3d_stem, data_type: DataType, log_data=None, data_3d_folde
     )
 
     # Single-threading - Sequential
-    # for data_3d_filepath in tqdm(data_3d_filepaths):
+    # for data_3d_cube_filepath in tqdm(data_3d_cube_filepaths):
     #     single_predict(
-    #         data_3d_filepath=data_3d_filepath,
+    #         data_3d_filepath=data_3d_cube_filepath,
     #         data_3d_folder=data_3d_folder,
     #         data_2d_folder=data_2d_folder,
     #         log_data=log_data,
@@ -608,11 +608,11 @@ def full_predict(data_3d_stem, data_type: DataType, log_data=None, data_3d_folde
     futures = []
     with ThreadPoolExecutor() as executor:
         # Submit all tasks
-        for data_3d_filepath in data_3d_filepaths:
+        for data_3d_cube_filepath in data_3d_cube_filepaths:
             futures.append(
                 executor.submit(
                     single_predict,
-                    data_3d_filepath=data_3d_filepath,
+                    data_3d_filepath=data_3d_cube_filepath,
                     data_3d_folder=data_3d_folder,
                     data_2d_folder=data_2d_folder,
                     log_data=log_data,
