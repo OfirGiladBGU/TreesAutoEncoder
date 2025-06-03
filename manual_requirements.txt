@@ -1,4 +1,8 @@
-Python 3.10
+##################
+# Python 3.10.11 #
+##################
+
+# Core #
 
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 pip3 install imageio
@@ -7,14 +11,54 @@ pip install nibabel
 pip install matplotlib
 pip install opencv-python
 pip install pandas
-pip install git+https://github.com/Po-Hsun-Su/pytorch-ssim.git
-pip install torchmetrics
-pip install torcheval
 pip install scikit-image
 pip install open3d
 pip install trimesh
 pip install tqdm
-pip install wandb
-pip install pyglet==1.5.30  # required version < 2
-pip install einops
+pip install pyglet==1.5.30  # required version < 2 (for Mesh visualization)
 pip install PyYAML
+
+
+# Optional to connect to Weights and Biases #
+
+pip install wandb
+
+
+# Optional to use relevant loss function #
+
+pip install git+https://github.com/Po-Hsun-Su/pytorch-ssim.git
+pip install torchmetrics
+pip install torcheval
+
+
+# Optional for using ViT for model_1d #
+
+pip install einops
+
+
+####################
+# Tested versions: #
+####################
+
+einops	0.8.0
+imageio	2.34.1
+matplotlib	3.9.0
+nibabel	5.2.1
+numpy	1.26.3
+open3d	0.18.0
+opencv-python	4.9.0.80
+pandas	2.2.2
+pillow	10.2.0
+pygments	2.18.0
+pytorch-ssim	0.1
+pyyaml	6.0.2
+scikit-image	0.24.0
+scipy	1.13.1
+torch	2.3.1+cu121
+torchaudio	2.3.1+cu121
+torcheval	0.0.7
+torchmetrics	1.4.0.post0
+torchvision	0.18.1+cu121
+tqdm	4.66.5
+trimesh	4.4.3
+wandb	0.18.1
