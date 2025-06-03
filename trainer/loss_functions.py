@@ -3,10 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import pytorch_ssim
 from trainer import vgg_loss
-from torchmetrics.segmentation import MeanIoU
-from torcheval.metrics.functional import multiclass_f1_score
 
 
 #####################
@@ -136,6 +133,8 @@ def edge_loss(output, target, device):
 # Less common loss functions #
 ##############################
 def mean_iou(output, target):
+    from torchmetrics.segmentation import MeanIoU
+
     scaled_output = output * 255
     scaled_output = scaled_output.int()
 
@@ -170,10 +169,13 @@ def total_variation_loss_v2(output):
 
 
 def ssim_loss(output, target):
+    import pytorch_ssim
     return pytorch_ssim.ssim(output, target)
 
 
 def f1_loss(output, target):
+    from torcheval.metrics.functional import multiclass_f1_score
+
     scaled_output = output * 255
     scaled_output = scaled_output.int()
 

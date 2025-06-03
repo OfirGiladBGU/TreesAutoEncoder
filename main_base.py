@@ -1,7 +1,6 @@
 import argparse
 import os
 import datetime
-import wandb
 
 from datasets_forge.dataset_configurations import (ModelType, DATASET_INPUT_FOLDER, DATASET_OUTPUT_FOLDER,
                                                    MODELS_RESULTS_PATH)
@@ -9,18 +8,23 @@ from datasets.dataset_list import init_dataset
 from models.model_list import init_model
 
 
-def configure_wandb(args, model):
-    API_KEY = os.environ.get("WANDB_API_KEY")
-    wandb.login(key=API_KEY)
+def configure_wandb(args, model, init=True):
+    import wandb
+    if init:
+        API_KEY = os.environ.get("WANDB_API_KEY")
+        wandb.login(key=API_KEY)
 
-    wandb_project = "TreesAutoEncoder"
-    init_timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    wandb_name = f"{model.model_name}>{init_timestamp}"
-    wandb.init(
-        project=wandb_project,
-        name=wandb_name,
-        tags=[args.dataset, DATASET_INPUT_FOLDER, f"{args.epochs} epochs", f"size {args.input_size}"]
-    )
+        wandb_project = "TreesAutoEncoder"
+        init_timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        wandb_name = f"{model.model_name}>{init_timestamp}"
+        wandb.init(
+            project=wandb_project,
+            name=wandb_name,
+            tags=[args.dataset, DATASET_INPUT_FOLDER, f"{args.epochs} epochs", f"size {args.input_size}"]
+        )
+    else:
+        # wandb.finish()
+        pass
 
 
 def run_main(args: argparse.Namespace, model_type: ModelType):
@@ -41,7 +45,7 @@ def run_main(args: argparse.Namespace, model_type: ModelType):
     model = init_model(args=args)
 
     if args.wandb:
-        configure_wandb(args=args, model=model)
+        configure_wandb(args=args, model=model, init=True)
 
     # Update save path
     filepath, ext = os.path.splitext(args.weights_filepath)
@@ -60,5 +64,4 @@ def run_main(args: argparse.Namespace, model_type: ModelType):
         trainer.predict(max_batches_to_plot=args.max_batches_to_plot)
 
     if args.wandb:
-        # wandb.finish()
-        pass
+        configure_wandb(args=args, model=model, init=False)

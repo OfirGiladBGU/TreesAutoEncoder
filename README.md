@@ -1,10 +1,9 @@
 # Trees Auto Encoder
 
-# TODO: Refactor README.md
+# LOG:
 
 Commit with big change:
 11.04.2025 - configured new noise filters based on the Continuity fix 3D filters
-
 
 ## Config info:
 ```
@@ -24,22 +23,67 @@ points_scale = 25.0
 voxel_size = 1.0
 ```
 
+---
 
-## How to create the dataset (Example for Parse2022):
+# TODO: Refactor README.md
+
+## Description:
+
+The repository contains all the scripts that were used to get the novel results available on the paper: \
+`Learning Thin Structure Reconstruction from Sliding-Box 2D Projections`
+
+
+## Requirements:
+
+See the following file for full guidance: [manual_requirements.txt](manual_requirements.txt)
+
+---
+
+## Data Setup
+
+### How to set up a dataset (Example for Parse2022):
+
+In case that you have a dataset of 3D input files with holes and 3D ground truth files \
+(For example we used [Parse2022](https://grand-challenge.org/forums/forum/parse2022-623/) data and 
+used SOTA model results as our input data, along with the dataset labels as our ground truth data).
 
 1. Put the `parse2022` dataset with the `labels` and `preds` data on the path: `./data/parse2022`
-   - `labels` - The ground truth
-   - `preds` - The predicted labels by a model
+   - `labels` - The 3D ground truth
+   - `preds` - The 3D input
 2. Create config file in `.yaml` format and put it in `configs` folder (see example: [parse2022_SC_32.yaml](configs/parse2022_SC_32.yaml)).
 3. Build the `dataset_2d` (also `dataset_1d`) by running `dataset_2d_creator` script: [dataset_2d_creator.py](datasets_forge/dataset_2d_creator.py)
 4. Build the `dataset_3d` by running  `dataset_3d_creator` script: [dataset_3d_creator.py](datasets_forge/dataset_3d_creator.py)
 
 
-## How To train the models:
+### How to generate synthetic dataset (Example for PipeForge3D):
 
-- To train the `model_1d` run `main_1d` script: [main_1d.py](main_1d.py)
+In case you have only a dataset of 3D files, and you want to create random holes in them \
+(For example we used our own [PipeForge3D](https://github.com/OfirGiladBGU/PipeForge3D) dataset generator to create 3D model, and apply random holes on them).
+
+1. Put the `PipeForge3D` dataset with the `originals` data on the path: `./data/PipeForge3D`
+   - `originals` - The raw data, before voxelization
+2. Run either of the following scripts depending on your data type:
+   - [generate_3d_preds_from_mesh.py](datasets_forge/generate_3d_preds_from_mesh.py) - For mesh like data types: `_mesh.ply`, `.obj`, `.nii.gz` (annotations)
+   - [generate_3d_preds_from_pcd.py](datasets_forge/generate_3d_preds_from_pcd.py) - For point cloud like data types: `_pcd.ply`, `.pcd`
+3. Repeat the steps in `How to create the dataset`.
+
+---
+
+## Training:
+
+There are 3 types of model supported in this repo:
+
+- `1D Model` - Predicts a binary label of `True/False` if the given input contains interesting holes. 
+   The model purpose is to filter out the samples that will be sent to the `2D Model`. 
+- `2D Model` - Detect and fills holes on the given 2D orthographic depth projections.
+- `3D Model` - Detect and fill occluded holes that couldn't be detected by the `2D Model`
+
+
+### How to train the models:
+
+- To train the `model_1d` run `main_1d` script: [main_1d.py](main_1d.py) (Currently `NOT USED` for Full Pipeline)
 - To train the `model_2d` run `main_2d` script: [main_2d.py](main_2d.py)
-- To train the `model_3d` run `main_3d` script: [main_3d.py](main_3d.py)
+- To train the `model_3d` run `main_3d` script: [main_3d.py](main_3d.py) (Currently `DISABLED` for Full Pipeline)
 
 **Notice:** all scripts are calling the generic [main_base.py](main_base.py) scripts that call the matching training 
 scripts in the files, based on the `model_type` parameter in the relevant main script:
@@ -48,25 +92,22 @@ scripts in the files, based on the `model_type` parameter in the relevant main s
 - [train_2d.py](trainer/train_2d.py)
 - [train_3d.py](trainer/train_3d.py)
 
+---
 
-## How to test the full predict pipeline:
+## Prediction / Evaluation:
 
 
-### On training/evaluation local crops data:
+### How to test the full predict pipeline:
+
+#### On training/evaluation local crops data:
 1. Run the `predict_pipeline` script: [predict_pipeline.py](predict_pipeline.py)
 
 
-### Directly on new full 3D data:
+#### Directly on new full 3D data:
 1. [TBD]  Run the `online_pipeline` script: [online_pipeline.py](online_pipeline.py)
 
 
-## Generate synthetic data with holes (Example for PipeForge3D):
-1. Put the `PipeForge3D` dataset with the `originals` data on the path: `./data/PipeForge3D`
-   - `originals` - The raw data, before voxelization
-2. Run either of the following scripts depending on your data type:
-   - [generate_3d_preds_from_mesh.py](datasets_forge/generate_3d_preds_from_mesh.py) - For mesh like data types: `_mesh.ply`, `.obj`, `.nii.gz` (annotations)
-   - [generate_3d_preds_from_pcd.py](datasets_forge/generate_3d_preds_from_pcd.py) - For point clound like data types: `_pcd.ply`, `.pcd`
-3. Repeat the steps in `How to create the dataset`.
+
 
 ---
 

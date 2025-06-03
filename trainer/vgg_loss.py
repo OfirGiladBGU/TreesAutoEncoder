@@ -1,3 +1,5 @@
+# Notice: Copied from: https://github.com/crowsonkb/vgg_loss
+
 """A VGG-based perceptual loss function for PyTorch."""
 
 import torch
