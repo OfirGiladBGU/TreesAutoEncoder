@@ -4,25 +4,17 @@ import pathlib
 import torch
 import numpy as np
 from torchvision import transforms
-import matplotlib.pyplot as plt
-from tqdm import tqdm
-import pandas as pd
-from scipy.ndimage import convolve, label
-from typing import Tuple
-from concurrent.futures import ThreadPoolExecutor
-import datetime
-from statistics import mean
 
 from datasets_forge.dataset_configurations import *
 from datasets.dataset_utils import *
-from models.model_list import init_model
+
 # TODO: Debug Tools
 from datasets_visualize.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
 
-def preprocess_2d(data_3d_stem: str,
-                  data_2d_folder: str,
-                  apply_batch_merge: bool = False) -> torch.Tensor:
+def offline_preprocess_2d(data_3d_stem: str,
+                          data_2d_folder: str,
+                          apply_batch_merge: bool = False) -> torch.Tensor:
     data_2d_stem = f"{data_3d_stem}_<VIEW>"
 
     # # Get relative path parts
@@ -56,14 +48,14 @@ def preprocess_2d(data_3d_stem: str,
     return data_2d_input
 
 
-def preprocess_3d(data_3d_filepath: str,
-                  data_2d_output: torch.Tensor = None,
-                  apply_threshold_2d: bool = False,
-                  threshold_2d: float = 0.2,
-                  apply_fusion: bool = False,
-                  apply_noise_filter_3d: bool = False,
-                  hard_noise_filter_3d: bool = True,
-                  connectivity_type_3d: int = 6) -> torch.Tensor:
+def offline_preprocess_3d(data_3d_filepath: str,
+                          data_2d_output: torch.Tensor = None,
+                          apply_threshold_2d: bool = False,
+                          threshold_2d: float = 0.2,
+                          apply_fusion: bool = False,
+                          apply_noise_filter_3d: bool = False,
+                          hard_noise_filter_3d: bool = True,
+                          connectivity_type_3d: int = 6) -> torch.Tensor:
     pred_3d = convert_data_file_to_numpy(data_filepath=data_3d_filepath, apply_data_threshold=True)
 
     # 2D flow was disabled
