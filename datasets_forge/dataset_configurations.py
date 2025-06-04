@@ -77,7 +77,7 @@ CONFIG_FILENAME = "parse2022_SC_32.yaml"
 #####################
 
 # Util classes
-class ModelType:
+class ModelType(Enum):
     Model_1D = 1
     Model_2D = 2
     Model_3D = 3
@@ -120,6 +120,10 @@ UPPER_THRESHOLD_2D = config_data.get("UPPER_THRESHOLD_2D", 0.9)
 TASK_TYPE = task_type_map.get(config_data.get("TASK_TYPE", "PATCH_HOLES"))
 START_INDEX = config_data.get("START_INDEX", -1)
 STOP_INDEX = config_data.get("STOP_INDEX", -1)
+
+WEIGHTS_1D_PATH = config_data.get("WEIGHTS_1D_PATH", None)
+WEIGHTS_2D_PATH = config_data.get("WEIGHTS_2D_PATH", None)
+WEIGHTS_3D_PATH = config_data.get("WEIGHTS_3D_PATH", None)
 
 # Parse Data Configurations
 if DATASET_INPUT_FOLDER is None:

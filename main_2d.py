@@ -1,5 +1,4 @@
 import argparse
-import torch
 
 from datasets_forge.dataset_configurations import ModelType
 from main_base import run_main
@@ -21,8 +20,8 @@ if __name__ == "__main__":
                         help='embedding size for the model')
     parser.add_argument('--dataset', type=str, default='MNIST', metavar='N',
                         help='Which dataset to use')
-    parser.add_argument('--weights-filepath', type=str, default='./weights/Network.pth', metavar='N',
-                        help='Which weights to use')
+    # parser.add_argument('--weights-filepath', type=str, default='./weights/Network.pth', metavar='N',
+    #                     help='Which weights to use')  # Moved to YAML config
     parser.add_argument('--model', type=str, default='ae_2d_to_2d', metavar='N',
                         help='Which model to use')
     parser.add_argument('--wandb', type=bool, default=True,
@@ -33,12 +32,10 @@ if __name__ == "__main__":
                         help='Perform model prediction')
     parser.add_argument('--max_batches_to_plot', type=int, default=20,
                         help='Perform model prediction')
+    parser.add_argument('--use_weights', type=bool, default=False,
+                        help='Use weights for training')
 
     args = parser.parse_args()
-
-    args.cuda = not args.no_cuda and torch.cuda.is_available()
-    args.device = torch.device("cuda" if args.cuda else "cpu")
-    torch.manual_seed(args.seed)
 
     # Custom Edit:
 
@@ -53,11 +50,13 @@ if __name__ == "__main__":
 
     args.epochs = 20
 
+    run_main(args=args, model_type=ModelType.Model_2D)
+
+    # Notes:
+
     # TODO: check option that the original input is kept and only the holes are predicted and merged - V
     # TODO: filter noise
     # TODO: check option to add confidence/classification head for the model to threshold the pixels - V
     # TODO: remove punishment on input white area
 
     # TODO: In pipes dataset - since the pipes are circular, holes in the pipes are not necessarily holes in the image (because the other side of the pipe might be visible)
-
-    run_main(args=args, model_type=ModelType.Model_2D)

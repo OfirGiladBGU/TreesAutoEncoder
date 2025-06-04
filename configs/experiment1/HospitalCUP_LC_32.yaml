@@ -8,6 +8,8 @@ TASK_TYPE: "LOCAL_CONNECTIVITY"
 START_INDEX: -1
 STOP_INDEX: -1
 
+WEIGHTS_2D_PATH: "./weights/Network_PipeForge3DPCD_Best_LC_32_ae_2d_to_2d.pth"
+
 # Cropped PCD from Hospital CUP
 # voxel size 1.0
 # voxel scale 25.0
@@ -17,6 +19,7 @@ STOP_INDEX: -1
 # apply_noise_filter_3d = True
 # hard_noise_filter_3d = False
 # connectivity_type_3d = 6
+
 
 # Use weights:
 # PipeForge3DPCD_Best_LC_32.yaml

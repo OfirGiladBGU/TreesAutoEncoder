@@ -1,9 +1,9 @@
 import argparse
+import torch
 import os
 import datetime
 
-from datasets_forge.dataset_configurations import (ModelType, DATASET_INPUT_FOLDER, DATASET_OUTPUT_FOLDER,
-                                                   MODELS_RESULTS_PATH)
+from datasets_forge.dataset_configurations import *
 from datasets.dataset_list import init_dataset
 from models.model_list import init_model
 
@@ -28,36 +28,50 @@ def configure_wandb(args, model, init=True):
 
 
 def run_main(args: argparse.Namespace, model_type: ModelType):
-    # Import relevant Trainer
-    if model_type == ModelType.Model_1D:
-        from trainer.train_1d import Trainer
-    elif model_type == ModelType.Model_2D:
-        from trainer.train_2d import Trainer
-    elif model_type == ModelType.Model_3D:
-        from trainer.train_3d import Trainer
-    else:
-        raise ValueError(f"Model Type '{args.model_type}' is not supported.")
+    # Set device and random seed
+    args.cuda = not args.no_cuda and torch.cuda.is_available()
+    args.device = torch.device("cuda" if args.cuda else "cpu")
+    torch.manual_seed(args.seed)
 
+    # Initialize dataset
     dataset = init_dataset(args=args)
     args.input_size = dataset.input_size
 
     # TODO: Requires dataset
     model = init_model(args=args)
 
+    # Import relevant Trainer
+    if model_type == ModelType.Model_1D:
+        from trainer.train_1d import Trainer
+        weights_filepath = WEIGHTS_1D_PATH
+    elif model_type == ModelType.Model_2D:
+        from trainer.train_2d import Trainer
+        weights_filepath = WEIGHTS_2D_PATH
+    elif model_type == ModelType.Model_3D:
+        from trainer.train_3d import Trainer
+        weights_filepath = WEIGHTS_3D_PATH
+    else:
+        raise ValueError(f"Model Type '{args.model_type}' is not supported.")
+
+    # Set default weights filepath
+    if weights_filepath is None:
+        weights_name = f"Network_{DATASET_OUTPUT_FOLDER}_{model.model_name}.pth"
+        weights_filepath = os.path.join(ROOT_PATH, "weights", weights_name)
+
+    # Ensure the directory exists
+    os.makedirs(name=os.path.dirname(weights_filepath), exist_ok=True)
+
+    # Update args with paths information
+    args.weights_filepath = weights_filepath
+    args.results_path = os.path.join(MODELS_RESULTS_PATH, model.model_name)
+
     if args.wandb:
         configure_wandb(args=args, model=model, init=True)
 
-    # Update save path
-    filepath, ext = os.path.splitext(args.weights_filepath)
-    args.weights_filepath = f"{filepath}_{DATASET_OUTPUT_FOLDER}_{model.model_name}{ext}"
-    os.makedirs(name=os.path.dirname(args.weights_filepath), exist_ok=True)
-
-    # Update results path
-    args.results_path = os.path.join(MODELS_RESULTS_PATH, model.model_name)
-
+    # Initialize Trainer
     trainer = Trainer(args=args, dataset=dataset, model=model)
 
-    use_weights = False
+    use_weights = args.use_weights
     if args.train:
         trainer.train(use_weights=use_weights)
     if args.predict:

@@ -1,5 +1,4 @@
 import argparse
-import torch
 
 from datasets_forge.dataset_configurations import ModelType
 from main_base import run_main
@@ -21,8 +20,8 @@ if __name__ == "__main__":
                         help='embedding size for the model')
     parser.add_argument('--dataset', type=str, default='Trees3DV2', metavar='N',
                         help='Which dataset to use')
-    parser.add_argument('--weights-filepath', type=str, default='./weights/Network.pth', metavar='N',
-                        help='Which weights to use')
+    # parser.add_argument('--weights-filepath', type=str, default='./weights/Network.pth', metavar='N',
+    #                     help='Which weights to use')  # Moved to YAML config
     parser.add_argument('--model', type=str, default='ae_3d_to_3d', metavar='N',
                         help='Which model to use')
     parser.add_argument('--wandb', type=bool, default=True,
@@ -33,12 +32,10 @@ if __name__ == "__main__":
                         help='Perform model prediction')
     parser.add_argument('--max_batches_to_plot', type=int, default=2,
                         help='Perform model prediction')
+    parser.add_argument('--use_weights', type=bool, default=False,
+                        help='Use weights for training')
 
     args = parser.parse_args()
-
-    args.cuda = not args.no_cuda and torch.cuda.is_available()
-    args.device = torch.device("cuda" if args.cuda else "cpu")
-    torch.manual_seed(args.seed)
 
     # Custom Edit:
 
@@ -52,6 +49,8 @@ if __name__ == "__main__":
 
     args.epochs = 10
 
-    # TODO: add connected components head, and use it to take only the "result" largest connected components
-
     run_main(args=args, model_type=ModelType.Model_3D)
+
+    # Notes:
+
+    # TODO: add connected components head, and use it to take only the "result" largest connected components

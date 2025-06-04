@@ -10,6 +10,8 @@ TASK_TYPE: "LOCAL_CONNECTIVITY"  # "PATCH_HOLES"
 START_INDEX: -1
 STOP_INDEX: -1
 
+WEIGHTS_2D_PATH: "./weights/Network_PipeForge3DMesh_Base_LC_32_ae_2d_to_2d.pth"
+
 # Meshes from PipeForge3D:
 # voxel size 1.0
 # voxel scale 0.70
@@ -17,3 +19,7 @@ STOP_INDEX: -1
 
 # Predict Pipeline:
 # connectivity_type_3d = 26
+
+
+# Use weights:
+# PipeForge3DMesh_Base_LC_32.yaml
