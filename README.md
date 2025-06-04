@@ -100,11 +100,13 @@ scripts in the files, based on the `model_type` parameter in the relevant main s
 ### How to test the full predict pipeline:
 
 #### On training/evaluation local crops data:
-1. Run the `predict_pipeline` script: [predict_pipeline.py](predict_pipeline.py)
+
+- Run the `offline_pipeline` script: [offline_pipeline.py](offline_pipeline.py)
 
 
 #### Directly on new full 3D data:
-1. [TBD]  Run the `online_pipeline` script: [online_pipeline.py](online_pipeline.py)
+
+- [TBD]  Run the `online_pipeline` script: [online_pipeline.py](online_pipeline.py)
 
 
 
