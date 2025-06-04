@@ -27,7 +27,7 @@ CONFIG_FILENAME = "parse2022_SC_32.yaml"
 # CONFIG_FILENAME = "experiment1/parse2022_LC_32_50.yaml"
 # CONFIG_FILENAME = "experiment1/PipeForge3DMesh_Best_LC_32.yaml"
 # CONFIG_FILENAME = "experiment1/PipeForge3DPCD_Best_LC_32.yaml"
-# CONFIG_FILENAME = "experiment1/HospitalPCD_LC_32.yaml"
+# CONFIG_FILENAME = "experiment1/HospitalCUP_LC_32.yaml"
 
 
 # TODO: Use for Ex2:
