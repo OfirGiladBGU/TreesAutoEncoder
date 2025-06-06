@@ -15,5 +15,5 @@ STOP_INDEX: 20
 #APPLY_CONTINUITY_FIX_2D = True  # The continuity filter for true holes detection in 2D
 #BINARY_DILATION = False  # Enable the usage local scope binary dilation mask (2D - 4 directions, 3D - 6 directions)
 
-#4
-#6
+# CONNECTIVITY_TYPE_2D = 4
+# CONNECTIVITY_TYPE_3D = 6

@@ -20,7 +20,6 @@ CONFIG_FILENAME = "parse2022_SC_32.yaml"
 # CONFIG_FILENAME = "examples/PipeForge3DPCD_LC_32.yaml"
 # CONFIG_FILENAME = "examples/PipeForge3DPCD_LC_48.yaml"
 
-# CONFIG_FILENAME = "examples/PipeForge3DTree_32.yaml"
 
 # TODO: Use for Ex1:
 
@@ -49,7 +48,14 @@ CONFIG_FILENAME = "parse2022_SC_32.yaml"
 
 
 # TODO: Use for Ex3:
-# REDO with trained PipeForge3DMesh_LC_32_Base - size 1.0 , scale 0.25
+
+# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Holes10_LC_32.yaml"
+# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Holes15_LC_32.yaml"
+# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Holes20_LC_32.yaml"
+# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Holes25_LC_32.yaml"
+
+
+# TODO: Use for Ex4:
 
 # CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Base_LC_32.yaml"
 
@@ -60,6 +66,7 @@ CONFIG_FILENAME = "parse2022_SC_32.yaml"
 
 
 # TODO: Use for Parse2022 test:
+
 # CONFIG_FILENAME = "parse2022_test/parse2022_LC_32_test.yaml"
 
 
