@@ -273,20 +273,18 @@ def single_predict(args: argparse.Namespace,
         raise ValueError(f"File: {data_3d_filepath} doesn't exist!")
 
     # CONFIGS
-    apply_input_merge_2d = False  # False - Doesn't work well with revealed occluded objects
-    apply_input_merge_3d = True
     apply_fusion = True
 
+    apply_input_merge_2d = False  # False - Doesn't work well with revealed occluded objects
     apply_threshold_2d = True
     threshold_2d = 0.2  # Threshold for 2D images, used to remove noise
-
-    apply_threshold_3d = True
-    threshold_3d = 0.5  # Threshold for 3D volumes, used to remove noise
-
     apply_noise_filter_2d = False  # Notice: Doesn't work well with revealed occluded objects
     hard_noise_filter_2d = True
     connectivity_type_2d = 4
 
+    apply_input_merge_3d = True
+    apply_threshold_3d = True
+    threshold_3d = 0.5  # Threshold for 3D volumes, used to remove noise
     apply_noise_filter_3d = True
     hard_noise_filter_3d = True
     connectivity_type_3d = 6
