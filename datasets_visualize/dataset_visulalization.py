@@ -6,7 +6,7 @@ import cv2
 from PIL import Image, ImageDraw, ImageFont
 from skimage import color
 
-from datasets_forge.dataset_configurations import *
+from configs.configs_parser import *
 from datasets.dataset_utils import convert_data_file_to_numpy, connected_components_3d
 from datasets.dataset_utils import _interactive_plot_2d as interactive_plot_2d
 from datasets.dataset_utils import _interactive_plot_3d as interactive_plot_3d

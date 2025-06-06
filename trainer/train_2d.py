@@ -11,7 +11,7 @@ from tqdm import tqdm
 import datetime
 from matplotlib import gridspec
 
-from datasets_forge.dataset_configurations import V1_2D_DATASETS, V2_2D_DATASETS, RANDOM_HOLES_DATASETS, IMAGES_6_VIEWS
+from configs.configs_parser import V1_2D_DATASETS, V2_2D_DATASETS, RANDOM_HOLES_DATASETS, IMAGES_6_VIEWS
 from datasets.dataset_utils import apply_threshold
 from trainer import loss_functions
 from trainer import train_utils

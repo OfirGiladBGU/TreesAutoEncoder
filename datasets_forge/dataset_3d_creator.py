@@ -1,10 +1,10 @@
-import numpy as np
 import os
 import pathlib
 import pandas as pd
 from tqdm import tqdm
+import numpy as np
 
-from datasets_forge.dataset_configurations import *
+from configs.configs_parser import *
 from datasets.dataset_utils import (get_data_file_stem, convert_data_file_to_numpy, convert_numpy_to_data_file,
                                     project_3d_to_2d, get_images_6_views, reconstruct_3d_from_2d)
 # TODO: Debug Tools

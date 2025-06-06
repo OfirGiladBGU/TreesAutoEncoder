@@ -3,7 +3,7 @@ import torch
 import os
 import datetime
 
-from datasets_forge.dataset_configurations import *
+from configs.configs_parser import *
 from datasets.dataset_list import init_dataset
 from models.model_list import init_model
 

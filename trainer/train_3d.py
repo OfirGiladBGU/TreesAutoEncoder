@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
 import datetime
 
-from datasets_forge.dataset_configurations import V1_3D_DATASETS, V2_3D_DATASETS, IMAGES_6_VIEWS
+from configs.configs_parser import V1_3D_DATASETS, V2_3D_DATASETS, IMAGES_6_VIEWS
 from datasets.dataset_utils import apply_threshold, convert_numpy_to_data_file
 from trainer import loss_functions
 from trainer import train_utils

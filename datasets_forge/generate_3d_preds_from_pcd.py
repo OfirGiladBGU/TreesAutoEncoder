@@ -7,7 +7,7 @@ from scipy.ndimage import convolve, label, rotate
 import math
 import shutil
 
-from datasets_forge.dataset_configurations import DATA_PATH
+from configs.configs_parser import DATA_PATH
 from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file, get_data_file_stem
 
 # TODO: Debug Tools

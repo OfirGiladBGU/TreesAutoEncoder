@@ -1,14 +1,14 @@
-import numpy as np
 import os
 import pathlib
 import pandas as pd
 from tqdm import tqdm
+import numpy as np
 from typing import Tuple, List
 from skimage import color
 import cv2
 from collections import defaultdict
 
-from datasets_forge.dataset_configurations import *
+from configs.configs_parser import *
 from datasets.dataset_utils import *
 
 # TODO: Debug Tools

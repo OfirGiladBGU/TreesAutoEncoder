@@ -1,11 +1,10 @@
-import argparse
 import os
 import pathlib
 import torch
 import numpy as np
 from torchvision import transforms
 
-from datasets_forge.dataset_configurations import *
+from configs.configs_parser import IMAGES_6_VIEWS
 from datasets.dataset_utils import *
 # TODO: Debug Tools
 from datasets_visualize.dataset_visulalization import interactive_plot_2d, interactive_plot_3d

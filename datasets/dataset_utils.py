@@ -19,7 +19,7 @@ import nibabel as nib
 import trimesh
 import open3d as o3d
 
-from datasets_forge.dataset_configurations import IMAGES_6_VIEWS
+from configs.configs_parser import IMAGES_6_VIEWS
 
 
 ###################

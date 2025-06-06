@@ -7,7 +7,7 @@ from torchvision import transforms
 import pandas as pd
 import numpy as np
 
-from datasets_forge.dataset_configurations import TRAIN_LOG_PATH, V1_3D_DATASETS, V2_3D_DATASETS, IMAGES_6_VIEWS
+from configs.configs_parser import TRAIN_LOG_PATH, V1_3D_DATASETS, V2_3D_DATASETS, IMAGES_6_VIEWS
 from datasets.dataset_utils import get_data_file_stem, convert_data_file_to_numpy, validate_data_paths
 
 

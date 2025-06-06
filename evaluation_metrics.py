@@ -5,13 +5,12 @@ import torch
 import numpy as np
 from tqdm import tqdm
 import pandas as pd
-from typing import Tuple
 from concurrent.futures import ThreadPoolExecutor
 import datetime
 from statistics import mean
 from skimage.metrics import structural_similarity as ssim
 
-from datasets_forge.dataset_configurations import *
+from configs.configs_parser import *
 from datasets.dataset_utils import *
 from evaluator.predict_pipeline import init_pipeline_models, single_predict, full_merge
 

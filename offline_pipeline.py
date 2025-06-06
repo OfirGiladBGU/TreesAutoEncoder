@@ -1,15 +1,13 @@
 import argparse
-import os
 import pathlib
 import torch
 import numpy as np
 from tqdm import tqdm
 import pandas as pd
-from typing import Tuple
 from concurrent.futures import ThreadPoolExecutor
 import datetime
 
-from datasets_forge.dataset_configurations import *
+from configs.configs_parser import *
 from datasets.dataset_utils import *
 from evaluator.predict_pipeline import init_pipeline_models, single_predict, full_merge
 # TODO: Debug Tools
@@ -46,7 +44,7 @@ def test_single_predict():
         data_2d_folder = EVALS_2D
 
     # Get filepaths
-    data_3d_filepath = os.path.join(data_3d_folder, base_filename)
+    data_3d_filepath = pathlib.Path(data_3d_folder).joinpath(base_filename)
     single_predict(
         args=args,
         data_3d_filepath=data_3d_filepath,

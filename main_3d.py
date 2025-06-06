@@ -1,6 +1,6 @@
 import argparse
 
-from datasets_forge.dataset_configurations import ModelType
+from configs.configs_parser import ModelType
 from main_base import run_main
 
 

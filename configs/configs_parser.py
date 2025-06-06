@@ -1,7 +1,5 @@
-import os
 import pathlib
 import yaml
-import math
 from enum import Enum
 
 
@@ -114,7 +112,7 @@ task_type_map = {
 ROOT_PATH = pathlib.Path(__file__).resolve().parent.parent
 
 # Read configurations from config file
-CONFIG_FILEPATH = os.path.join(ROOT_PATH, "configs", CONFIG_FILENAME)
+CONFIG_FILEPATH = ROOT_PATH.joinpath("configs", CONFIG_FILENAME)
 with open(CONFIG_FILEPATH, 'r') as stream:
     config_data: dict = yaml.safe_load(stream)
 
@@ -129,9 +127,14 @@ TASK_TYPE = task_type_map.get(config_data.get("TASK_TYPE", "PATCH_HOLES"))
 START_INDEX = config_data.get("START_INDEX", -1)
 STOP_INDEX = config_data.get("STOP_INDEX", -1)
 
+# Read Weights Configurations
 WEIGHTS_1D_PATH = config_data.get("WEIGHTS_1D_PATH", None)
 WEIGHTS_2D_PATH = config_data.get("WEIGHTS_2D_PATH", None)
 WEIGHTS_3D_PATH = config_data.get("WEIGHTS_3D_PATH", None)
+
+# Read Predict Pipeline Configurations
+
+
 
 # Parse Data Configurations
 if DATASET_INPUT_FOLDER is None:
@@ -141,18 +144,18 @@ DATASET_OUTPUT_FOLDER = DATASET_INPUT_FOLDER if DATASET_OUTPUT_FOLDER is None el
 DATA_3D_STRIDE = (DATA_CROP_STRIDE, DATA_CROP_STRIDE, DATA_CROP_STRIDE)
 DATA_3D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE, DATA_CROP_SIZE)
 DATA_2D_SIZE = (DATA_CROP_SIZE, DATA_CROP_SIZE)
-LOWER_THRESHOLD_2D *= math.pow(DATA_CROP_SIZE, 2)
-UPPER_THRESHOLD_2D *= math.pow(DATA_CROP_SIZE, 2)
+LOWER_THRESHOLD_2D *= (DATA_CROP_SIZE ** 2)
+UPPER_THRESHOLD_2D *= (DATA_CROP_SIZE ** 2)
 
 # Data Folder Paths
-DATA_PATH = os.path.join(ROOT_PATH, "data")
-DATA_CROPS_PATH = os.path.join(ROOT_PATH, "data_crops")
-DATA_RESULTS_PATH = os.path.join(ROOT_PATH, "data_results")
+DATA_PATH = ROOT_PATH.joinpath("data")
+DATA_CROPS_PATH = ROOT_PATH.joinpath("data_crops")
+DATA_RESULTS_PATH = ROOT_PATH.joinpath("data_results")
 
 # Dataset Folder Paths
-DATASET_PATH = os.path.join(DATA_PATH, DATASET_INPUT_FOLDER)
-CROPS_PATH = os.path.join(DATA_CROPS_PATH, DATASET_OUTPUT_FOLDER)
-RESULTS_PATH = os.path.join(DATA_RESULTS_PATH, DATASET_OUTPUT_FOLDER)
+DATASET_PATH = DATA_PATH.joinpath(DATASET_INPUT_FOLDER)
+CROPS_PATH = DATA_CROPS_PATH.joinpath(DATASET_OUTPUT_FOLDER)
+RESULTS_PATH = DATA_RESULTS_PATH.joinpath(DATASET_OUTPUT_FOLDER)
 
 #########
 # FLAGS #
@@ -188,17 +191,17 @@ PROJECTION_MODE = ProjectionMode.VISUAL_MODE
 # DATASET - PATHS #
 ###################
 
-LABELS = os.path.join(DATASET_PATH, "labels")  # TARGET
-LABELS_COMPONENTS = os.path.join(DATASET_PATH, "labels_components")
+LABELS = DATASET_PATH.joinpath("labels")  # TARGET
+LABELS_COMPONENTS = DATASET_PATH.joinpath("labels_components")
 
-PREDS = os.path.join(DATASET_PATH, "preds")  # INPUT
-PREDS_COMPONENTS = os.path.join(DATASET_PATH, "preds_components")
+PREDS = DATASET_PATH.joinpath("preds")  # INPUT
+PREDS_COMPONENTS = DATASET_PATH.joinpath("preds_components")
 
-PREDS_FIXED = os.path.join(DATASET_PATH, "preds_fixed")  # INPUT (Outliers removed)
-PREDS_FIXED_COMPONENTS = os.path.join(DATASET_PATH, "preds_fixed_components")
+PREDS_FIXED = DATASET_PATH.joinpath("preds_fixed")  # INPUT (Outliers removed)
+PREDS_FIXED_COMPONENTS = DATASET_PATH.joinpath("preds_fixed_components")
 
-EVALS = os.path.join(DATASET_PATH, "evals")
-EVALS_COMPONENTS = os.path.join(DATASET_PATH, "evals_components")
+EVALS = DATASET_PATH.joinpath("evals")
+EVALS_COMPONENTS = DATASET_PATH.joinpath("evals_components")
 
 #########################
 # DATASET CROPS - PATHS #
@@ -207,66 +210,64 @@ EVALS_COMPONENTS = os.path.join(DATASET_PATH, "evals_components")
 # Data 2D - Paths
 
 # TRAINING
-LABELS_2D = os.path.join(CROPS_PATH, "labels_2d")  # TARGET
-LABELS_COMPONENTS_2D = os.path.join(CROPS_PATH, "labels_components_2d")
+LABELS_2D = CROPS_PATH.joinpath("labels_2d")  # TARGET
+LABELS_COMPONENTS_2D = CROPS_PATH.joinpath("labels_components_2d")
 
-PREDS_2D = os.path.join(CROPS_PATH, "preds_2d")  # INPUT
-PREDS_COMPONENTS_2D = os.path.join(CROPS_PATH, "preds_components_2d")
+PREDS_2D = CROPS_PATH.joinpath("preds_2d")  # INPUT
+PREDS_COMPONENTS_2D = CROPS_PATH.joinpath("preds_components_2d")
 
-PREDS_FIXED_2D = os.path.join(CROPS_PATH, "preds_fixed_2d")  # INPUT (Outliers removed)
-PREDS_FIXED_COMPONENTS_2D = os.path.join(CROPS_PATH, "preds_fixed_components_2d")
+PREDS_FIXED_2D = CROPS_PATH.joinpath("preds_fixed_2d")  # INPUT (Outliers removed)
+PREDS_FIXED_COMPONENTS_2D = CROPS_PATH.joinpath("preds_fixed_components_2d")
 
-PREDS_ADVANCED_FIXED_2D = os.path.join(CROPS_PATH, "preds_advanced_fixed_2d")  # INPUT (Continuity fixed)
-PREDS_ADVANCED_FIXED_COMPONENTS_2D = os.path.join(CROPS_PATH, "preds_advanced_fixed_components_2d")
+PREDS_ADVANCED_FIXED_2D = CROPS_PATH.joinpath("preds_advanced_fixed_2d")  # INPUT (Continuity fixed)
+PREDS_ADVANCED_FIXED_COMPONENTS_2D = CROPS_PATH.joinpath("preds_advanced_fixed_components_2d")
 
 # EVALUATION
-EVALS_2D = os.path.join(CROPS_PATH, "evals_2d")
-EVALS_COMPONENTS_2D = os.path.join(CROPS_PATH, "evals_components_2d")
+EVALS_2D = CROPS_PATH.joinpath("evals_2d")
+EVALS_COMPONENTS_2D = CROPS_PATH.joinpath("evals_components_2d")
 
 
 # Data 3D - Paths
 
 # TRAINING
-LABELS_3D = os.path.join(CROPS_PATH, "labels_3d")  # TARGET
-LABELS_COMPONENTS_3D = os.path.join(CROPS_PATH, "labels_components_3d")
+LABELS_3D = CROPS_PATH.joinpath("labels_3d")  # TARGET
+LABELS_COMPONENTS_3D = CROPS_PATH.joinpath("labels_components_3d")
 
-PREDS_3D = os.path.join(CROPS_PATH, "preds_3d")  # INPUT
-PREDS_COMPONENTS_3D = os.path.join(CROPS_PATH, "preds_components_3d")
+PREDS_3D = CROPS_PATH.joinpath("preds_3d")  # INPUT
+PREDS_COMPONENTS_3D = CROPS_PATH.joinpath("preds_components_3d")
 
-PREDS_FIXED_3D = os.path.join(CROPS_PATH, "preds_fixed_3d")  # INPUT (Outliers removed)
-PREDS_FIXED_COMPONENTS_3D = os.path.join(CROPS_PATH, "preds_fixed_components_3d")
+PREDS_FIXED_3D = CROPS_PATH.joinpath("preds_fixed_3d")  # INPUT (Outliers removed)
+PREDS_FIXED_COMPONENTS_3D = CROPS_PATH.joinpath("preds_fixed_components_3d")
 
-PREDS_ADVANCED_FIXED_3D = os.path.join(CROPS_PATH, "preds_advanced_fixed_3d")  # INPUT (Continuity fixed)
-PREDS_ADVANCED_FIXED_COMPONENTS_3D = os.path.join(CROPS_PATH, "preds_advanced_fixed_components_3d")
+PREDS_ADVANCED_FIXED_3D = CROPS_PATH.joinpath("preds_advanced_fixed_3d")  # INPUT (Continuity fixed)
+PREDS_ADVANCED_FIXED_COMPONENTS_3D = CROPS_PATH.joinpath("preds_advanced_fixed_components_3d")
 
 # RECONSTRUCT PATHS
-LABELS_3D_RECONSTRUCT = os.path.join(CROPS_PATH, "labels_3d_reconstruct")  # INPUT (Direct repair)
-PREDS_3D_RECONSTRUCT = os.path.join(CROPS_PATH, "preds_3d_reconstruct")  # INPUT (Direct repair)
-PREDS_FIXED_3D_RECONSTRUCT = os.path.join(CROPS_PATH, "preds_fixed_3d_reconstruct")  # INPUT (Direct repair)
-PREDS_ADVANCED_FIXED_3D_RECONSTRUCT = os.path.join(CROPS_PATH, "preds_advanced_fixed_3d_reconstruct")  # INPUT (Direct repair)
+LABELS_3D_RECONSTRUCT = CROPS_PATH.joinpath("labels_3d_reconstruct")  # INPUT (Direct repair)
+PREDS_3D_RECONSTRUCT = CROPS_PATH.joinpath("preds_3d_reconstruct")  # INPUT (Direct repair)
+PREDS_FIXED_3D_RECONSTRUCT = CROPS_PATH.joinpath("preds_fixed_3d_reconstruct")  # INPUT (Direct repair)
+PREDS_ADVANCED_FIXED_3D_RECONSTRUCT = CROPS_PATH.joinpath("preds_advanced_fixed_3d_reconstruct")  # INPUT (Direct repair)
 
 # FUSION PATHS
-PREDS_3D_FUSION = os.path.join(CROPS_PATH, "preds_3d_fusion")  # INPUT (Fusion data)
-PREDS_FIXED_3D_FUSION = os.path.join(CROPS_PATH, "preds_fixed_3d_fusion")  # INPUT (Fusion data)
-PREDS_ADVANCED_FIXED_3D_FUSION = os.path.join(CROPS_PATH, "preds_advanced_fixed_3d_fusion")  # INPUT (Fusion data)
+PREDS_3D_FUSION = CROPS_PATH.joinpath("preds_3d_fusion")  # INPUT (Fusion data)
+PREDS_FIXED_3D_FUSION = CROPS_PATH.joinpath("preds_fixed_3d_fusion")  # INPUT (Fusion data)
+PREDS_ADVANCED_FIXED_3D_FUSION = CROPS_PATH.joinpath("preds_advanced_fixed_3d_fusion")  # INPUT (Fusion data)
 
 # EVALUATION
-EVALS_3D = os.path.join(CROPS_PATH, "evals_3d")
-EVALS_COMPONENTS_3D = os.path.join(CROPS_PATH, "evals_components_3d")
+EVALS_3D = CROPS_PATH.joinpath("evals_3d")
+EVALS_COMPONENTS_3D = CROPS_PATH.joinpath("evals_components_3d")
 
 # LOGS
-TRAIN_LOG_PATH = os.path.join(CROPS_PATH, "train_log.csv")
-EVAL_LOG_PATH = os.path.join(CROPS_PATH, "eval_log.csv")
+TRAIN_LOG_PATH = CROPS_PATH.joinpath("train_log.csv")
+EVAL_LOG_PATH = CROPS_PATH.joinpath("eval_log.csv")
 
 ###########################
 # DATASET RESULTS - PATHS #
 ###########################
 
-MODELS_RESULTS_PATH = os.path.join(RESULTS_PATH, "models")
-PREDICT_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "predict_pipeline")
-MERGE_PIPELINE_RESULTS_PATH = os.path.join(RESULTS_PATH, "merge_pipeline")
-VISUALIZATION_RESULTS_PATH = os.path.join(RESULTS_PATH, "visualization")
+MODELS_RESULTS_PATH = RESULTS_PATH.joinpath("models")
+PREDICT_PIPELINE_RESULTS_PATH = RESULTS_PATH.joinpath("predict_pipeline")
+MERGE_PIPELINE_RESULTS_PATH = RESULTS_PATH.joinpath("merge_pipeline")
+VISUALIZATION_RESULTS_PATH = RESULTS_PATH.joinpath("visualization")
 
-PREDICT_PIPELINE_DICE_CSV_FILES_PATH = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "csv_files")
-
-# TODO: Add Predict Pipeline Configs
+PREDICT_PIPELINE_DICE_CSV_FILES_PATH = PREDICT_PIPELINE_RESULTS_PATH.joinpath("csv_files")
