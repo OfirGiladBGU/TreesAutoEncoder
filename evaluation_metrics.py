@@ -221,7 +221,7 @@ def calculate_2d_metrics(data_3d_stem, data_2d_folder=None, apply_abs: bool = Tr
         output_dict[key] = mean(results_list[key]) if results_list[key] else 0
 
     # Print results
-    print_str = "\n[AVG RESULTS]\n"
+    print_str = "[AVG RESULTS]\n"
     for key, value in output_dict.items():
         print_str += f"AVG {key}: {value}\n"
     print(print_str)
@@ -331,7 +331,7 @@ def calculate_2d_custom_metrics(data_3d_stem, data_2d_folder=None, apply_abs: bo
             f"Hole Max L1 Error: {final_max_l1_error}\n"
             f"Increase in hole pixel value % (Detect Rate): {detected_percentage}\n"
             f"Less than 25% error on hole pixel value % (Close Rate): {close_percentage}\n"
-            f"Detect and Close Rates combined % (Fill Rate): {fill_percentage}"
+            f"Detect and Close Rates combined % (Fill Rate): {fill_percentage}\n"
         )
 
         output_dict = {
@@ -440,7 +440,7 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
         "Stats:\n"
         f"Average Dice Score: {avg_dice}\n"
         f"Max Dice Score: {max(scores_list)}\n"
-        f"Min Dice Score: {min(scores_list)}"
+        f"Min Dice Score: {min(scores_list)}\n"
     )
 
     output_dict = {
@@ -501,7 +501,7 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
             f"Input Connected Components: {input_connected_components}\n"
             f"Output Connected Components: {output_connected_components}\n"
             f"Target Connected Components: {target_connected_components}\n"
-            f"Reduction Percentage: {reduction_percentage}"
+            f"Reduction Percentage: {reduction_percentage}\n"
         )
 
     elif components_mode == "local":
@@ -529,7 +529,7 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
         print(
             "Stats:\n"
             f"Input Holes: {input_delta_num_components}\n"
-            f"Coverage Percentage: {dice_score}"
+            f"Coverage Percentage: {dice_score}\n"
         )
 
     else:
@@ -621,7 +621,7 @@ def full_folder_predict(data_type: DataType):
                 else:
                     outputs[key] = [value]
 
-        output_str = "\n[AVG RESULTS]\n"
+        output_str = "[AVG RESULTS]\n"
         for key in outputs.keys():
             output_str += f"AVG {key}: {mean(outputs[key])}\n"
         print(output_str)
@@ -661,7 +661,7 @@ def full_folder_predict(data_type: DataType):
             for key in output.keys():
                 outputs[key].append(output[key])
 
-        output_str = "\n[AVG RESULTS]\n"
+        output_str = "[AVG RESULTS]\n"
         for key in outputs.keys():
             output_str += f"AVG {key}: {mean(outputs[key])}\n"
         print(output_str)
@@ -704,7 +704,7 @@ def full_folder_predict(data_type: DataType):
             for key in output.keys():
                 outputs[key].append(output[key])
 
-        output_str = "\n[AVG RESULTS]\n"
+        output_str = "[AVG RESULTS]\n"
         for key in outputs.keys():
             output_str += f"AVG {key}: {mean(outputs[key])}\n"
         print(output_str)
