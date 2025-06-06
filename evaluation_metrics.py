@@ -9,6 +9,7 @@ from typing import Tuple
 from concurrent.futures import ThreadPoolExecutor
 import datetime
 from statistics import mean
+from skimage.metrics import structural_similarity as ssim
 
 from datasets_forge.dataset_configurations import *
 from datasets.dataset_utils import *
@@ -128,14 +129,16 @@ def compute_depth_completion_metrics(output, target, mask, epsilon=1e-6):
     delta1 = np.mean(thresh < 1.25)
     delta2 = np.mean(thresh < 1.25 ** 2)
     delta3 = np.mean(thresh < 1.25 ** 3)
+    ssim_score = ssim(output, target, data_range=target.max() - target.min())
 
     results = {
-        'MAE': mae,
-        'RMSE': rmse,
-        'REL': rel,
-        'Delta1': delta1,
-        'Delta2': delta2,
-        'Delta3': delta3,
+        "Masked MAE": mae,
+        "Masked RMSE": rmse,
+        "Masked REL": rel,
+        "Masked Delta1": delta1,
+        "Masked Delta2": delta2,
+        "Masked Delta3": delta3,
+        "SSIM": ssim_score
     }
     return results
 
@@ -183,14 +186,7 @@ def calculate_2d_metrics(data_3d_stem, data_2d_folder=None, apply_abs: bool = Tr
         target_filepath = os.path.join(target_folder, output_filename)
         target_filepaths.append(target_filepath)
 
-    results_list = {
-        'MAE': [],
-        'RMSE': [],
-        'REL': [],
-        'Delta1': [],
-        'Delta2': [],
-        'Delta3': []
-    }
+    results_list = {}
     for idx in range(len(output_filepaths)):
         input_filepath_idx = input_filepaths[idx]
         target_filepath_idx = target_filepaths[idx]
@@ -219,23 +215,16 @@ def calculate_2d_metrics(data_3d_stem, data_2d_folder=None, apply_abs: bool = Tr
             else:
                 results_list[key] = [value]
 
-    output_dict = {
-        "MAE": mean(results_list['MAE']) if results_list['MAE'] else 0,
-        "RMSE": mean(results_list['RMSE']) if results_list['RMSE'] else 0,
-        "REL": mean(results_list['REL']) if results_list['REL'] else 0,
-        "Delta1": mean(results_list['Delta1']) if results_list['Delta1'] else 0,
-        "Delta2": mean(results_list['Delta2']) if results_list['Delta2'] else 0,
-        "Delta3": mean(results_list['Delta3']) if results_list['Delta3'] else 0
-    }
-    print(
-        "Stats:\n"
-        f"Masked MAE: {output_dict['MAE']}\n"
-        f"Masked RMSE: {output_dict['RMSE']}\n"
-        f"Masked REL: {output_dict['REL']}\n"
-        f"Masked Delta1: {output_dict['Delta1']}\n"
-        f"Masked Delta2: {output_dict['Delta2']}\n"
-        f"Masked Delta3: {output_dict['Delta3']}"
-    )
+    # Calculate average results
+    output_dict = {}
+    for key in results_list.keys():
+        output_dict[key] = mean(results_list[key]) if results_list[key] else 0
+
+    # Print results
+    print_str = "\n[AVG RESULTS]\n"
+    for key, value in output_dict.items():
+        print_str += f"AVG {key}: {value}\n"
+    print(print_str)
     return output_dict
 
 
@@ -604,14 +593,7 @@ def full_folder_predict(data_type: DataType):
     ###################
     # Test 2D Metrics #
     ###################
-    outputs = {
-        "MAE": [],
-        "RMSE": [],
-        "REL": [],
-        "Delta1": [],
-        "Delta2": [],
-        "Delta3": []
-    }
+    outputs = {}
     if test_2d_metrics:
         for idx, data_3d_stem in enumerate(data_3d_stem_list):
             print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Predicting...")
@@ -633,8 +615,11 @@ def full_folder_predict(data_type: DataType):
                 apply_abs=apply_abs
             )
 
-            for key in output.keys():
-                outputs[key].append(output[key])
+            for key, value in output.items():
+                if key in outputs:
+                    outputs[key].append(value)
+                else:
+                    outputs[key] = [value]
 
         output_str = "\n[AVG RESULTS]\n"
         for key in outputs.keys():
