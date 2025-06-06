@@ -82,6 +82,7 @@ CONFIG_FILENAME = "parse2022_SC_32.yaml"
 #####################
 # Automatic Parsing #
 #####################
+print(f"[Init] Configuration Filename: {CONFIG_FILENAME}")
 
 # Util classes
 class ModelType(Enum):
