@@ -237,6 +237,8 @@ def full_merge(data_3d_stem, data_type: DataType, log_data=None, source_data_3d_
 
 
 def compute_depth_completion_metrics(output, target, mask, epsilon=1e-6):
+    from skimage.metrics import structural_similarity as ssim
+
     # Apply mask
     masked_output = output[mask]
     masked_target = target[mask]
@@ -251,6 +253,7 @@ def compute_depth_completion_metrics(output, target, mask, epsilon=1e-6):
     delta1 = np.mean(thresh < 1.25)
     delta2 = np.mean(thresh < 1.25 ** 2)
     delta3 = np.mean(thresh < 1.25 ** 3)
+    ssim = ssim(masked_output, masked_target, data_range=target.max() - target.min())
 
     results = {
         'MAE': mae,
@@ -258,9 +261,112 @@ def compute_depth_completion_metrics(output, target, mask, epsilon=1e-6):
         'REL': rel,
         'Delta1': delta1,
         'Delta2': delta2,
-        'Delta3': delta3
+        'Delta3': delta3,
+        'SSIM': ssim
     }
     return results
+
+
+def calculate_2d_metrics(data_3d_stem, data_2d_folder=None, apply_abs: bool = True):
+    # Baseline
+    # input_folder = PREDS_2D
+    # output_folder = PREDS_FIXED_2D
+    # input_folder = PREDS_ADVANCED_FIXED_2D
+    # output_filepaths = list(pathlib.Path(output_folder).glob(f"{data_3d_stem}*.*"))
+
+    # Output
+    output_folder = os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d")
+    output_filepaths = list(pathlib.Path(output_folder).glob(f"{data_3d_stem}_*_*_output.*"))
+
+    # Input
+    if data_2d_folder is None:
+        # input_folder = PREDS_2D
+        input_folder = PREDS_FIXED_2D
+        # input_folder = PREDS_ADVANCED_FIXED_2D
+    else:
+        input_folder = data_2d_folder
+
+    input_filepaths = []
+    for output_filepath in output_filepaths:
+        output_filepath_extension = get_data_file_extension(data_filepath=output_filepath)
+        output_filepath_stem = get_data_file_stem(data_filepath=output_filepath, relative_to=output_folder)
+        if output_folder == os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d"):
+            output_filepath_stem = str(output_filepath_stem).rsplit('_output', maxsplit=1)[0]
+        output_filename = f"{output_filepath_stem}{output_filepath_extension}"
+
+        input_filepath = os.path.join(input_folder, output_filename)
+        input_filepaths.append(input_filepath)
+
+    # Ground Truth
+    target_folder = LABELS_2D
+    target_filepaths = []
+    for output_filepath in output_filepaths:
+        output_filepath_extension = get_data_file_extension(data_filepath=output_filepath)
+        output_filepath_stem = get_data_file_stem(data_filepath=output_filepath, relative_to=output_folder)
+        if output_folder == os.path.join(PREDICT_PIPELINE_RESULTS_PATH, "output_2d"):
+            output_filepath_stem = str(output_filepath_stem).rsplit('_output', maxsplit=1)[0]
+        output_filename = f"{output_filepath_stem}{output_filepath_extension}"
+
+        target_filepath = os.path.join(target_folder, output_filename)
+        target_filepaths.append(target_filepath)
+
+    results_list = {
+        'MAE': [],
+        'RMSE': [],
+        'REL': [],
+        'Delta1': [],
+        'Delta2': [],
+        'Delta3': [],
+        'SSIM': []
+    }
+    for idx in range(len(output_filepaths)):
+        input_filepath_idx = input_filepaths[idx]
+        target_filepath_idx = target_filepaths[idx]
+        output_filepath_idx = output_filepaths[idx]
+
+        input_data = convert_data_file_to_numpy(data_filepath=input_filepath_idx)
+        target_data = convert_data_file_to_numpy(data_filepath=target_filepath_idx)
+        output_data = convert_data_file_to_numpy(data_filepath=output_filepath_idx)
+
+        if apply_abs:
+            delta_binary_mask = (np.abs(target_data - input_data) > 0.5)
+        else:
+            delta_binary_mask = (target_data - input_data) > 0.5
+        if delta_binary_mask.sum() == 0:
+            continue
+
+        results = compute_depth_completion_metrics(
+            output=output_data,
+            target=target_data,
+            mask=delta_binary_mask
+        )
+
+        for key, value in results.items():
+            if key in results_list:
+                results_list[key].append(value)
+            else:
+                results_list[key] = [value]
+
+    output_dict = {
+        "MAE": mean(results_list['MAE']) if results_list['MAE'] else 0,
+        "RMSE": mean(results_list['RMSE']) if results_list['RMSE'] else 0,
+        "REL": mean(results_list['REL']) if results_list['REL'] else 0,
+        "Delta1": mean(results_list['Delta1']) if results_list['Delta1'] else 0,
+        "Delta2": mean(results_list['Delta2']) if results_list['Delta2'] else 0,
+        "Delta3": mean(results_list['Delta3']) if results_list['Delta3'] else 0,
+        "SSIM": mean(results_list['SSIM']) if results_list['SSIM'] else 0
+    }
+    print(
+        "Stats:\n"
+        f"Masked MAE: {output_dict['MAE']}\n"
+        f"Masked RMSE: {output_dict['RMSE']}\n"
+        f"Masked REL: {output_dict['REL']}\n"
+        f"Masked Delta1: {output_dict['Delta1']}\n"
+        f"Masked Delta2: {output_dict['Delta2']}\n"
+        f"Masked Delta3: {output_dict['Delta3']}\n"
+        f"Masked SSIM: {output_dict['SSIM']}"
+    )
+    return results_list
 
 
 def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None, apply_abs: bool = True):
@@ -333,13 +439,6 @@ def calculate_2d_avg_l1_error(data_3d_stem, data_2d_folder=None, apply_abs: bool
         masked_input = input_data[delta_binary_mask]
         masked_output = output_data[delta_binary_mask]
         masked_target = target_data[delta_binary_mask]
-
-        # TODO: IMPROVE HERE
-        results = compute_depth_completion_metrics(
-            output=output_data,
-            target=target_data,
-            mask=delta_binary_mask
-        )
 
         l1_error = np.abs(masked_target - masked_output)
 
@@ -584,7 +683,8 @@ def full_folder_predict(data_type: DataType):
     apply_abs = True
 
     # Select which tests to run
-    test_2d_avg_l1_error = True
+    test_2d_metrics = True
+    test_2d_avg_l1_error = False
     test_dice_score = True
     test_components_reduced = False
 
@@ -630,6 +730,47 @@ def full_folder_predict(data_type: DataType):
         data_3d_stem_list = test_stems
 
     data_3d_stem_count = len(data_3d_stem_list)
+
+    ###################
+    # Test 2D Metrics #
+    ###################
+    outputs = {
+        "MAE": [],
+        "RMSE": [],
+        "REL": [],
+        "Delta1": [],
+        "Delta2": [],
+        "Delta3": [],
+        "SSIM": []
+    }
+    if test_2d_metrics:
+        for idx, data_3d_stem in enumerate(data_3d_stem_list):
+            print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Predicting...")
+            full_predict(
+                data_3d_stem=data_3d_stem,
+                data_type=data_type,
+                log_data=log_data,
+                data_3d_folder=data_3d_folder,
+                data_2d_folder=data_2d_folder,
+                run_3d_flow=False,
+                export_3d=False
+            )
+
+        for idx, data_3d_stem in enumerate(data_3d_stem_list):
+            print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating 2D AVG L1 Error...")
+            output = calculate_2d_metrics(
+                data_3d_stem=data_3d_stem,
+                data_2d_folder=data_2d_folder,
+                apply_abs=apply_abs
+            )
+
+            for key in output.keys():
+                outputs[key].append(output[key])
+
+        output_str = "\n[AVG RESULTS]\n"
+        for key in outputs.keys():
+            output_str += f"AVG {key}: {mean(outputs[key])}\n"
+        print(output_str)
 
     ########################
     # Test 2D Avg L1 Error #
