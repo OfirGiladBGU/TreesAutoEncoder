@@ -626,7 +626,7 @@ def full_folder_predict(data_type: DataType):
             )
 
         for idx, data_3d_stem in enumerate(data_3d_stem_list):
-            print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating 2D AVG L1 Error...")
+            print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating 2D Metrics...")
             output = calculate_2d_metrics(
                 data_3d_stem=data_3d_stem,
                 data_2d_folder=data_2d_folder,
