@@ -8,7 +8,10 @@ TASK_TYPE: "LOCAL_CONNECTIVITY"
 START_INDEX: -1
 STOP_INDEX: -1
 
+
+# Using weights: PipeForge3DPCD_Best_LC_32.yaml
 WEIGHTS_2D_PATH: "./weights/Network_PipeForge3DPCD_Best_LC_32_ae_2d_to_2d.pth"
+
 
 # Cropped PCD from Hospital CUP
 # voxel size 1.0
@@ -16,10 +19,18 @@ WEIGHTS_2D_PATH: "./weights/Network_PipeForge3DPCD_Best_LC_32_ae_2d_to_2d.pth"
 
 
 # Predict Pipeline:
-# apply_noise_filter_3d = True
-# hard_noise_filter_3d = False
-# connectivity_type_3d = 6
+APPLY_FUSION: True
 
+APPLY_INPUT_MERGE_2D: False
+APPLY_THRESHOLD_2D: True
+THRESHOLD_2D: 0.2
+APPLY_NOISE_FILTER_2D: False
+HARD_NOISE_FILTER_2D: True
+PREDICT_CONNECTIVITY_TYPE_2D: 4
 
-# Use weights:
-# PipeForge3DPCD_Best_LC_32.yaml
+APPLY_INPUT_MERGE_3D: True
+APPLY_THRESHOLD_3D: True
+THRESHOLD_3D: 0.5
+APPLY_NOISE_FILTER_3D: True
+HARD_NOISE_FILTER_3D: False  # NOTICE
+PREDICT_CONNECTIVITY_TYPE_3D: 6

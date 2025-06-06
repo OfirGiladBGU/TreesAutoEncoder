@@ -133,8 +133,21 @@ WEIGHTS_2D_PATH = config_data.get("WEIGHTS_2D_PATH", None)
 WEIGHTS_3D_PATH = config_data.get("WEIGHTS_3D_PATH", None)
 
 # Read Predict Pipeline Configurations
+APPLY_FUSION = config_data.get("APPLY_FUSION", True)
 
+APPLY_INPUT_MERGE_2D = config_data.get("APPLY_INPUT_MERGE_2D", False)  # Notice: Doesn't work well with revealed occluded objects
+APPLY_THRESHOLD_2D = config_data.get("APPLY_THRESHOLD_2D", True)
+THRESHOLD_2D = config_data.get("THRESHOLD_2D", 0.2)  # Info: Threshold for 2D images, used to remove noise
+APPLY_NOISE_FILTER_2D = config_data.get("APPLY_NOISE_FILTER_2D", False)  # Notice: Doesn't work well with revealed occluded objects
+HARD_NOISE_FILTER_2D = config_data.get("HARD_NOISE_FILTER_2D", True)  # Info: True - for components_before >= components_after, False - for components_before > components_after
+PREDICT_CONNECTIVITY_TYPE_2D = config_data.get("PREDICT_CONNECTIVITY_TYPE_2D", 4)
 
+APPLY_INPUT_MERGE_3D = config_data.get("APPLY_INPUT_MERGE_3D", True)
+APPLY_THRESHOLD_3D = config_data.get("APPLY_THRESHOLD_3D", True)
+THRESHOLD_3D = config_data.get("THRESHOLD_3D", 0.5)  # Info: Threshold for 3D volumes, used to remove noise
+APPLY_NOISE_FILTER_3D = config_data.get("APPLY_NOISE_FILTER_3D", True)
+HARD_NOISE_FILTER_3D = config_data.get("HARD_NOISE_FILTER_3D", True)  # Info: True - for components_before >= components_after, False - for components_before > components_after
+PREDICT_CONNECTIVITY_TYPE_3D = config_data.get("PREDICT_CONNECTIVITY_TYPE_3D", 6)
 
 # Parse Data Configurations
 if DATASET_INPUT_FOLDER is None:
@@ -167,8 +180,8 @@ APPLY_MEDIAN_FILTER = False  # Sometimes helpful for PCDs to fill missing inner 
 APPLY_CONTINUITY_FIX_3D = True  # The continuity filter for true holes detection in 3D
 APPLY_CONTINUITY_FIX_2D = False  # The continuity filter for true holes detection in 2D
 BINARY_DILATION = True  # Enable the usage local scope binary dilation mask (2D - 4 directions, 3D - 6 directions)
-CONNECTIVITY_TYPE_3D = 6
-CONNECTIVITY_TYPE_2D = 4
+TRAIN_CONNECTIVITY_TYPE_3D = 6
+TRAIN_CONNECTIVITY_TYPE_2D = 4
 
 # Dataset 1D
 V1_1D_DATASETS = ['Trees1DV1']

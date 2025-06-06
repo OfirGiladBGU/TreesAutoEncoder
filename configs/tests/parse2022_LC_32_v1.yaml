@@ -9,11 +9,12 @@ START_INDEX: 1
 STOP_INDEX: 20
 
 
-#APPLY_LOG_FILTER = True  # Helpful to reject projections with too dense or too sparse pixels from the training loader
-#APPLY_MEDIAN_FILTER = False  # Sometimes helpful for PCDs to fill missing inner black pixels
-#APPLY_CONTINUITY_FIX_3D = True  # The continuity filter for true holes detection in 3D
-#APPLY_CONTINUITY_FIX_2D = True  # The continuity filter for true holes detection in 2D
-#BINARY_DILATION = True  # Enable the usage local scope binary dilation mask (2D - 4 directions, 3D - 6 directions)
+# CONFIG:
+# APPLY_LOG_FILTER = True  # Helpful to reject projections with too dense or too sparse pixels from the training loader
+# APPLY_MEDIAN_FILTER = False  # Sometimes helpful for PCDs to fill missing inner black pixels
+# APPLY_CONTINUITY_FIX_3D = True  # The continuity filter for true holes detection in 3D
+# APPLY_CONTINUITY_FIX_2D = True  # The continuity filter for true holes detection in 2D
+# BINARY_DILATION = True  # Enable the usage local scope binary dilation mask (2D - 4 directions, 3D - 6 directions)
 
-# CONNECTIVITY_TYPE_2D = 8
-# CONNECTIVITY_TYPE_3D = 26
+# CONNECTIVITY_TYPE_2D = 8 (Train and Predict)
+# CONNECTIVITY_TYPE_3D = 26 (Train and Predict)

@@ -76,16 +76,20 @@ def postprocess_2d(data_3d_stem: str,
             #         label_image=data_2d_input_idx,
             #         pred_advanced_fixed_image=data_2d_output_idx,
             #         reverse_mode=False,
+            #         connectivity_type=connectivity_type_2d,
             #         binary_diff=True,
-            #         hard_condition=hard_noise_filter_2d
+            #         hard_condition=hard_noise_filter_2d,
+            #         apply_dilation_scope=BINARY_DILATION
             #     )
             # elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
             #     filtered_output = components_continuity_2d_local_connectivity(
             #         label_image=data_2d_input_idx,
             #         pred_advanced_fixed_image=data_2d_output_idx,
             #         reverse_mode=False,
+            #         connectivity_type=connectivity_type_2d,
             #         binary_diff=True,
-            #         hard_condition=hard_noise_filter_2d
+            #         hard_condition=hard_noise_filter_2d,
+            #         apply_dilation_scope=BINARY_DILATION
             #     )
             # else:
             #     filtered_output = data_2d_output_idx
@@ -96,7 +100,8 @@ def postprocess_2d(data_3d_stem: str,
                 reverse_mode=False,
                 connectivity_type=connectivity_type_2d,
                 binary_diff=True,
-                hard_condition=hard_noise_filter_2d
+                hard_condition=hard_noise_filter_2d,
+                apply_dilation_scope=BINARY_DILATION
             )
 
             data_2d_output[idx] = torch.Tensor(filtered_output / 255.0)
@@ -273,21 +278,21 @@ def single_predict(args: argparse.Namespace,
         raise ValueError(f"File: {data_3d_filepath} doesn't exist!")
 
     # CONFIGS
-    apply_fusion = True
+    apply_fusion = APPLY_FUSION
 
-    apply_input_merge_2d = False  # False - Doesn't work well with revealed occluded objects
-    apply_threshold_2d = True
-    threshold_2d = 0.2  # Threshold for 2D images, used to remove noise
-    apply_noise_filter_2d = False  # Notice: Doesn't work well with revealed occluded objects
-    hard_noise_filter_2d = True
-    connectivity_type_2d = 4
+    apply_input_merge_2d = APPLY_INPUT_MERGE_2D
+    apply_threshold_2d = APPLY_THRESHOLD_2D
+    threshold_2d = THRESHOLD_2D
+    apply_noise_filter_2d = APPLY_NOISE_FILTER_2D
+    hard_noise_filter_2d = HARD_NOISE_FILTER_2D
+    connectivity_type_2d = PREDICT_CONNECTIVITY_TYPE_2D
 
-    apply_input_merge_3d = True
-    apply_threshold_3d = True
-    threshold_3d = 0.5  # Threshold for 3D volumes, used to remove noise
-    apply_noise_filter_3d = True
-    hard_noise_filter_3d = True
-    connectivity_type_3d = 6
+    apply_input_merge_3d = APPLY_INPUT_MERGE_3D
+    apply_threshold_3d = APPLY_THRESHOLD_3D
+    threshold_3d = THRESHOLD_3D
+    apply_noise_filter_3d = APPLY_NOISE_FILTER_3D
+    hard_noise_filter_3d = HARD_NOISE_FILTER_3D
+    connectivity_type_3d = PREDICT_CONNECTIVITY_TYPE_3D
 
     # INPUTS
     data_3d_filepath = str(data_3d_filepath)

@@ -710,7 +710,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                         label_cube=label_cube,
                         pred_advanced_fixed_cube=pred_advanced_fixed_cube,
                         reverse_mode=False,
-                        connectivity_type=CONNECTIVITY_TYPE_3D,
+                        connectivity_type=TRAIN_CONNECTIVITY_TYPE_3D,
                         hard_condition=False
                     )
 
@@ -724,7 +724,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                         label_cube=label_cube,
                         pred_advanced_fixed_cube=pred_advanced_fixed_cube,
                         reverse_mode=False,
-                        connectivity_type=CONNECTIVITY_TYPE_3D,
+                        connectivity_type=TRAIN_CONNECTIVITY_TYPE_3D,
                         hard_condition=False,
                         apply_dilation_scope=BINARY_DILATION
                     )
@@ -769,7 +769,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                             label_image=label_image,
                             pred_advanced_fixed_image=pred_advanced_fixed_image,
                             reverse_mode=False,
-                            connectivity_type=CONNECTIVITY_TYPE_2D,
+                            connectivity_type=TRAIN_CONNECTIVITY_TYPE_2D,
                             binary_diff=False,
                             hard_condition=False
                         )
@@ -788,7 +788,7 @@ def create_2d_projections_and_3d_cubes_for_training():
                             label_image=label_image,
                             pred_advanced_fixed_image=pred_advanced_fixed_image,
                             reverse_mode=False,
-                            connectivity_type=CONNECTIVITY_TYPE_2D,
+                            connectivity_type=TRAIN_CONNECTIVITY_TYPE_2D,
                             binary_diff=False,
                             hard_condition=False,
                             apply_dilation_scope=BINARY_DILATION

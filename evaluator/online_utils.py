@@ -4,7 +4,7 @@ import torch
 import numpy as np
 from torchvision import transforms
 
-from configs.configs_parser import IMAGES_6_VIEWS
+from configs.configs_parser import BINARY_DILATION, IMAGES_6_VIEWS
 from datasets.dataset_utils import *
 # TODO: Debug Tools
 from datasets_visualize.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
@@ -85,7 +85,8 @@ def online_preprocess_3d(data_3d_filepath: str,
             #         pred_advanced_fixed_cube=data_3d_input,
             #         reverse_mode=False,
             #         connectivity_type=connectivity_type_3d,
-            #         hard_condition=hard_noise_filter_3d
+            #         hard_condition=hard_noise_filter_3d,
+            #         apply_dilation_scope=BINARY_DILATION
             #     )
             # elif TASK_TYPE == TaskType.LOCAL_CONNECTIVITY:
             #     data_3d_input = components_continuity_3d_local_connectivity(
@@ -93,7 +94,8 @@ def online_preprocess_3d(data_3d_filepath: str,
             #         pred_advanced_fixed_cube=data_3d_input,
             #         reverse_mode=False,
             #         connectivity_type=connectivity_type_3d,
-            #         hard_condition=hard_noise_filter_3d
+            #         hard_condition=hard_noise_filter_3d,
+            #         apply_dilation_scope=BINARY_DILATION
             #     )
             # else:
             #     pass
@@ -103,7 +105,8 @@ def online_preprocess_3d(data_3d_filepath: str,
                 pred_advanced_fixed_cube=data_3d_input,
                 reverse_mode=False,
                 connectivity_type=connectivity_type_3d,
-                hard_condition=hard_noise_filter_3d
+                hard_condition=hard_noise_filter_3d,
+                apply_dilation_scope=BINARY_DILATION
             )
 
     data_3d_input = torch.Tensor(data_3d_input).unsqueeze(0).unsqueeze(0)
