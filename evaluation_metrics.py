@@ -220,7 +220,7 @@ def calculate_2d_metrics(data_3d_stem, data_2d_folder=None, apply_abs: bool = Tr
         output_dict[key] = mean(results_list[key]) if results_list[key] else 0
 
     # Print results
-    print_str = "[AVG RESULTS]\n"
+    print_str = "Stats:\n"
     for key, value in output_dict.items():
         print_str += f"AVG {key}: {value}\n"
     print(print_str)
