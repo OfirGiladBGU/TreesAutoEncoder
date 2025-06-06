@@ -3,27 +3,23 @@ import os
 import pathlib
 import torch
 import numpy as np
-from torchvision import transforms
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 import pandas as pd
-from scipy.ndimage import convolve, label
 from typing import Tuple
 from concurrent.futures import ThreadPoolExecutor
 import datetime
 
 from datasets_forge.dataset_configurations import *
 from datasets.dataset_utils import *
-from models.model_list import init_model
-
+from datasets_forge.dataset_2d_creator import crop_mini_cubes
+from evaluator.predict_pipeline import init_pipeline_models, single_predict, full_merge
 # TODO: Debug Tools
 from datasets_visualize.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
-from datasets_forge.dataset_2d_creator import crop_mini_cubes
 
-from evaluator.predict_pipeline import init_pipeline_models, single_predict
-
-
+##################
+# Core Functions #
+##################
 def prepare_2d_projections_and_3d_cubes(input_filepath, input_folder):
     # Config
     projection_options = {
@@ -263,6 +259,15 @@ def full_folder_predict(input_folder, run_2d_flow=True, run_3d_flow=True, export
             f"[Full Predict] Completed Predict... "
             f"(Timestamp: {end_timestamp}, Full Predict Time Elapsed: {end_time - start_time})"
         )
+
+        print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_count}] Merging...")
+        full_merge(
+            data_3d_stem=data_3d_stem,
+            data_type=DataType.EVAL,
+            log_data=log_data,
+            source_data_3d_folder=input_folder
+        )
+
 
 def main():
     # TODO: Update as required

@@ -4,8 +4,6 @@ import pathlib
 import torch
 import numpy as np
 from torchvision import transforms
-from tqdm import tqdm
-import pandas as pd
 
 from datasets_forge.dataset_configurations import *
 from datasets.dataset_utils import *

@@ -3,7 +3,6 @@ import os
 import pathlib
 import torch
 import numpy as np
-from torchvision import transforms
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import pandas as pd
@@ -11,7 +10,6 @@ from scipy.ndimage import convolve, label
 from typing import Tuple
 from concurrent.futures import ThreadPoolExecutor
 import datetime
-from statistics import mean
 
 from datasets_forge.dataset_configurations import *
 from datasets.dataset_utils import *
