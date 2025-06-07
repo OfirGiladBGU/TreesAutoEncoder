@@ -27,7 +27,7 @@ CONFIG_FILENAME = "parse2022_SC_32.yaml"
 # CONFIG_FILENAME = "experiment1/HospitalCUP_LC_32.yaml"
 
 
-# TODO: Use for Ex2:
+# TODO: Use for Ex2: - Need to check different size
 
 # V1 - 20 samples
 
