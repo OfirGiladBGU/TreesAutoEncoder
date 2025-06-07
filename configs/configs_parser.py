@@ -47,10 +47,10 @@ CONFIG_FILENAME = "parse2022_SC_32.yaml"
 
 # TODO: Use for Ex3:
 
-# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Holes10_LC_32.yaml"
-# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Holes15_LC_32.yaml"
-# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Holes20_LC_32.yaml"
-# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Holes25_LC_32.yaml"
+# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Hole_125_LC_32.yaml"
+# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Hole_250_LC_32.yaml"
+# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Hole_325_LC_32.yaml"
+# CONFIG_FILENAME = "experiment3/PipeForge3DMesh_Hole_450_LC_32.yaml"
 
 
 # TODO: Use for Ex4:

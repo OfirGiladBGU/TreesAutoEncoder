@@ -1,0 +1,43 @@
+DATASET_INPUT_FOLDER: "PipeForge3DMesh_Hole_125"
+DATASET_OUTPUT_FOLDER: "PipeForge3DMesh_Hole_125_LC_32"
+DATA_CROP_STRIDE: 16
+DATA_CROP_SIZE: 32
+LOWER_THRESHOLD_2D: 0.1
+UPPER_THRESHOLD_2D: 0.9
+TASK_TYPE: "LOCAL_CONNECTIVITY"  # "PATCH_HOLES"
+START_INDEX: -1
+STOP_INDEX: -1
+
+
+# Meshes from PipeForge3D:
+# voxel size 1.0
+# voxel scale 0.25
+
+
+# Predict Pipeline:
+APPLY_FUSION: True
+
+APPLY_INPUT_MERGE_2D: False
+APPLY_THRESHOLD_2D: True
+THRESHOLD_2D: 0.2
+APPLY_NOISE_FILTER_2D: False
+HARD_NOISE_FILTER_2D: True
+PREDICT_CONNECTIVITY_TYPE_2D: 4
+
+APPLY_INPUT_MERGE_3D: True
+APPLY_THRESHOLD_3D: True
+THRESHOLD_3D: 0.5
+APPLY_NOISE_FILTER_3D: True
+HARD_NOISE_FILTER_3D: False  # NOTICE
+PREDICT_CONNECTIVITY_TYPE_3D: 6
+
+
+# Function: generate_plane_holes_v5
+# num_of_centers = 10
+# plane_thickness = random.randint(1, 2)
+# size = random.randint(5, 10)  # Random size for the cube
+
+
+# [AVG RESULTS]
+# AVG Hole Count: 12.48
+# AVG Mean Hole Size: 125
