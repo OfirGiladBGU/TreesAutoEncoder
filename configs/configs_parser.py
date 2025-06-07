@@ -28,6 +28,7 @@ CONFIG_FILENAME = "parse2022_SC_32.yaml"
 
 
 # TODO: Use for Ex2: - Need to check different size
+# 16 - Too small, 40 - TEST, 56 - TEST, 72 - Acc Increase?, 96 - Acc Increase?
 
 # V1 - 20 samples
 
