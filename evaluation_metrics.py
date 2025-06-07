@@ -13,7 +13,6 @@ from skimage.metrics import structural_similarity as ssim
 from configs.configs_parser import *
 from datasets.dataset_utils import *
 from evaluator.predict_pipeline import init_pipeline_models, single_predict, full_merge
-
 # TODO: Debug Tools
 from datasets_visualize.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
@@ -229,9 +228,9 @@ def calculate_2d_metrics(data_3d_stem, data_2d_folder=None, apply_abs: bool = Tr
 
 def calculate_2d_custom_metrics(data_3d_stem, data_2d_folder=None, apply_abs: bool = True):
     # Baseline
-    # input_folder = PREDS_2D
+    # output_folder = PREDS_2D
     # output_folder = PREDS_FIXED_2D
-    # input_folder = PREDS_ADVANCED_FIXED_2D
+    # output_folder = PREDS_ADVANCED_FIXED_2D
     # output_filepaths = list(pathlib.Path(output_folder).glob(f"{data_3d_stem}*.*"))
 
     # Output
@@ -349,7 +348,7 @@ def calculate_2d_custom_metrics(data_3d_stem, data_2d_folder=None, apply_abs: bo
         return output_dict
 
 
-def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
+def calculate_3d_metrics(data_3d_stem, compare_crops_mode: bool = False):
     #################
     # CROPS COMPARE #
     #################
@@ -357,6 +356,7 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
         # Baseline
         # output_folder = PREDS_3D
         # output_folder = PREDS_FIXED_3D
+        # output_folder = PREDS_ADVANCED_FIXED_3D
         # output_filepaths = list(pathlib.Path(output_folder).glob(f"{data_3d_stem}_*.*"))
 
         # Output
@@ -386,6 +386,7 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
         # Baseline
         # output_folder = PREDS
         # output_folder = PREDS_FIXED
+        # output_folder = PREDS_ADVANCED_FIXED_3D
         # output_filepaths = list(pathlib.Path(output_folder).glob(f"{data_3d_stem}*.*"))
 
         # Output
@@ -448,8 +449,7 @@ def calculate_dice_scores(data_3d_stem, compare_crops_mode: bool = False):
     return output_dict
 
 
-def calculate_reduced_connected_components(data_3d_stem, components_mode="global", source_data_3d_folder=None,
-                                           apply_abs: bool = True):
+def calculate_3d_custom_metrics(data_3d_stem, components_mode="global", source_data_3d_folder=None, apply_abs: bool = True):
     """
     Requires data_3d_stem result in MERGE_PIPELINE_RESULTS_PATH
     Works only for SINGLE_COMPONENT mode
@@ -464,6 +464,7 @@ def calculate_reduced_connected_components(data_3d_stem, components_mode="global
     if source_data_3d_folder is None:
         # input_folder = PREDS
         input_folder = PREDS_FIXED
+        # input_folder = EVALS
     else:
         input_folder = source_data_3d_folder
     input_filepath = list(pathlib.Path(input_folder).glob(f"{data_3d_stem}*.*"))[0]
@@ -543,8 +544,8 @@ def full_folder_predict(data_type: DataType):
     # Select which tests to run
     test_2d_metrics = True
     test_2d_custom_metrics = False
-    test_dice_score = True
-    test_components_reduced = False
+    test_3d_metrics = True
+    test_3d_custom_metrics = False
 
     ################
     # Prepare Data #
@@ -621,19 +622,15 @@ def full_folder_predict(data_type: DataType):
                     outputs[key] = [value]
 
         output_str = "[AVG RESULTS]\n"
-        for key in outputs.keys():
-            output_str += f"AVG {key}: {mean(outputs[key])}\n"
+        for key, value in outputs.items():
+            output_str += f"AVG {key}: {mean(value)}\n"
         print(output_str)
 
     ##########################
     # Test 2D Custom Metrics #
     ##########################
 
-    outputs = {
-        "Detect Rate": [],
-        "Close Rate": [],
-        "Fill Pixels": [],
-    }
+    outputs = {}
     if test_2d_custom_metrics:
         # TODO: Run the 2D models and compare the 2D results with the 2D GT
 
@@ -657,19 +654,22 @@ def full_folder_predict(data_type: DataType):
                 apply_abs=apply_abs
             )
 
-            for key in output.keys():
-                outputs[key].append(output[key])
+            for key, value in output.items():
+                if key in outputs:
+                    outputs[key].append(value)
+                else:
+                    outputs[key] = [value]
 
         output_str = "[AVG RESULTS]\n"
-        for key in outputs.keys():
-            output_str += f"AVG {key}: {mean(outputs[key])}\n"
+        for key, value in outputs.items():
+            output_str += f"AVG {key}: {mean(value)}\n"
         print(output_str)
 
     ###################
     # Test Dice Score #
     ###################
 
-    if test_dice_score:
+    if test_3d_metrics:
         if run_full_predict:
             for idx, data_3d_stem in enumerate(data_3d_stem_list):
                 print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Predicting...")
@@ -693,26 +693,27 @@ def full_folder_predict(data_type: DataType):
                     source_data_3d_folder=source_data_3d_folder
                 )
 
-        outputs = {
-            "Dice Score": []
-        }
+        outputs = {}
         for idx, data_3d_stem in enumerate(data_3d_stem_list):
             print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating Dice Scores...")
-            output = calculate_dice_scores(data_3d_stem=data_3d_stem, compare_crops_mode=compare_crops_mode)
+            output = calculate_3d_metrics(data_3d_stem=data_3d_stem, compare_crops_mode=compare_crops_mode)
 
-            for key in output.keys():
-                outputs[key].append(output[key])
+            for key, value in output.items():
+                if key in outputs:
+                    outputs[key].append(value)
+                else:
+                    outputs[key] = [value]
 
         output_str = "[AVG RESULTS]\n"
-        for key in outputs.keys():
-            output_str += f"AVG {key}: {mean(outputs[key])}\n"
+        for key, value in outputs.items():
+            output_str += f"AVG {key}: {mean(value)}\n"
         print(output_str)
 
     ###########################
     # Test Components Reduced #
     ###########################
 
-    if test_components_reduced:
+    if test_3d_custom_metrics:
         if run_full_predict:
             for idx, data_3d_stem in enumerate(data_3d_stem_list):
                 print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Predicting...")
@@ -743,7 +744,7 @@ def full_folder_predict(data_type: DataType):
         components_mode = "local"
         for idx, data_3d_stem in enumerate(data_3d_stem_list):
             print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating Components Scores...")
-            calculate_reduced_connected_components(
+            calculate_3d_custom_metrics(
                 data_3d_stem=data_3d_stem,
                 components_mode=components_mode,
                 source_data_3d_folder=source_data_3d_folder,

@@ -8,6 +8,7 @@ TASK_TYPE: "LOCAL_CONNECTIVITY"
 START_INDEX: -1
 STOP_INDEX: -1
 
+# Notice: Run in EVAL mode
 
 # Using weights: PipeForge3DPCD_Best_LC_32.yaml
 WEIGHTS_2D_PATH: "./weights/Network_PipeForge3DPCD_Best_LC_32_ae_2d_to_2d.pth"
