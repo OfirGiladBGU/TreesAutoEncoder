@@ -68,8 +68,8 @@ def main():
     target_folder = DATASET_PATH.joinpath("labels")
 
     # Input data
-    # input_folder = DATASET_PATH.joinpath("preds")
-    input_folder = DATASET_PATH.joinpath("preds_fixed")
+    input_folder = DATASET_PATH.joinpath("preds")
+    # input_folder = DATASET_PATH.joinpath("preds_fixed")
 
     # Get 3d data filepaths
     data_3d_filepaths = list(input_folder.rglob("*.*"))
