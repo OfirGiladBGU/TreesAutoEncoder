@@ -9,12 +9,11 @@ import shutil
 
 from configs.configs_parser import DATA_PATH
 from datasets.dataset_utils import convert_data_file_to_numpy, convert_numpy_to_data_file, get_data_file_stem, connected_components_3d
-
 # TODO: Debug Tools
 from datasets_visualize.dataset_visulalization import interactive_plot_2d, interactive_plot_3d
 
 
-DATASET_PATH = os.path.join(DATA_PATH, "PipeForge3DMesh")
+DATASET_PATH = DATA_PATH.joinpath("PipeForge3DMesh")
 
 
 ###################
