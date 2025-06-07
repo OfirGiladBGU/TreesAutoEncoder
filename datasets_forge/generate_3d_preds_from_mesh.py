@@ -364,11 +364,6 @@ def generate_plane_holes_v5(numpy_data: np.ndarray):
     num_of_centers = 10
     white_points = np.argwhere(numpy_data > 0.5)  # Find all white points
 
-    def connected_components(data):
-        structure = np.ones((3, 3, 3), dtype=int)  # Define connectivity
-        labeled, num_components = label(data, structure=structure)
-        return num_components
-
     if len(white_points) > 0:
         for _ in range(num_of_centers):
             plane_thickness = random.randint(1, 2)
@@ -457,11 +452,6 @@ def generate_plane_holes_v6(numpy_data: np.ndarray):
     white_points = np.argwhere(numpy_data > 0.5)  # Find all white points
     created_holes = []
 
-    def connected_components(data):
-        structure = np.ones((3, 3, 3), dtype=int)  # Define connectivity
-        labeled, num_components = label(data, structure=structure)
-        return num_components
-
     def is_overlapping(new_hole, existing_holes):
         for hole in existing_holes:
             if not (
@@ -534,8 +524,8 @@ def generate_plane_holes_v6(numpy_data: np.ndarray):
                                         test_data[i, j, k] = 0
 
                 # Check if the crop created new connected components in cube area
-                original_components = connected_components(numpy_data[x_min:x_max, y_min:y_max, z_min:z_max])
-                new_components = connected_components(test_data[x_min:x_max, y_min:y_max, z_min:z_max])
+                (_, original_components) = connected_components_3d(data_3d=numpy_data[x_min:x_max, y_min:y_max, z_min:z_max], connectivity_type=26)
+                (_, new_components) = connected_components_3d(data_3d=test_data[x_min:x_max, y_min:y_max, z_min:z_max], connectivity_type=26)
 
                 if new_components > original_components:
                     numpy_data = test_data  # Apply the crop
