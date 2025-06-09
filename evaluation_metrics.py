@@ -112,10 +112,28 @@ def full_predict(data_3d_stem, data_type: DataType, log_data=None, data_3d_folde
     )
 
 
+def quantize_grayscale(image_array, current=256, levels=16):
+    # Calculate the size of each quantized bin
+    bin_size = current // levels
+
+    # Apply quantization
+    quantized = (image_array // bin_size) * bin_size
+
+    return quantized
+
+
 def compute_depth_completion_metrics(output, target, mask, epsilon=1e-6):
     # Apply mask
     masked_output = output[mask]
     masked_target = target[mask]
+
+    # Apply quantization
+    # masked_output = quantize_grayscale(masked_output)
+    # masked_target = quantize_grayscale(masked_target)
+
+    # Apply normalization
+    masked_output = masked_output / 255.0
+    masked_target = masked_target / 255.0
 
     # Basic metrics
     mae = np.mean(np.abs(masked_output - masked_target))
@@ -595,17 +613,17 @@ def full_folder_predict(data_type: DataType):
     ###################
     outputs = {}
     if test_2d_metrics:
-        for idx, data_3d_stem in enumerate(data_3d_stem_list):
-            print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Predicting...")
-            full_predict(
-                data_3d_stem=data_3d_stem,
-                data_type=data_type,
-                log_data=log_data,
-                data_3d_folder=data_3d_folder,
-                data_2d_folder=data_2d_folder,
-                run_3d_flow=False,
-                export_3d=False
-            )
+        # for idx, data_3d_stem in enumerate(data_3d_stem_list):
+        #     print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Predicting...")
+        #     full_predict(
+        #         data_3d_stem=data_3d_stem,
+        #         data_type=data_type,
+        #         log_data=log_data,
+        #         data_3d_folder=data_3d_folder,
+        #         data_2d_folder=data_2d_folder,
+        #         run_3d_flow=False,
+        #         export_3d=False
+        #     )
 
         for idx, data_3d_stem in enumerate(data_3d_stem_list):
             print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating 2D Metrics...")
