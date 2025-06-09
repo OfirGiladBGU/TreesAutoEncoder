@@ -613,17 +613,17 @@ def full_folder_predict(data_type: DataType):
     ###################
     outputs = {}
     if test_2d_metrics:
-        # for idx, data_3d_stem in enumerate(data_3d_stem_list):
-        #     print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Predicting...")
-        #     full_predict(
-        #         data_3d_stem=data_3d_stem,
-        #         data_type=data_type,
-        #         log_data=log_data,
-        #         data_3d_folder=data_3d_folder,
-        #         data_2d_folder=data_2d_folder,
-        #         run_3d_flow=False,
-        #         export_3d=False
-        #     )
+        for idx, data_3d_stem in enumerate(data_3d_stem_list):
+            print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Predicting...")
+            full_predict(
+                data_3d_stem=data_3d_stem,
+                data_type=data_type,
+                log_data=log_data,
+                data_3d_folder=data_3d_folder,
+                data_2d_folder=data_2d_folder,
+                run_3d_flow=False,
+                export_3d=False
+            )
 
         for idx, data_3d_stem in enumerate(data_3d_stem_list):
             print(f"[File: {data_3d_stem}, Number: {idx + 1}/{data_3d_stem_count}] Calculating 2D Metrics...")
