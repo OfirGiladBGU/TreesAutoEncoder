@@ -27,15 +27,13 @@ CONFIG_FILENAME = "parse2022_SC_32.yaml"
 # CONFIG_FILENAME = "experiment1/HospitalCUP_LC_32.yaml"
 
 
-# TODO: Use for Ex2: - Need to check different size
-# 16 - Too small, 40 - TEST, 56 - TEST, 72 - Acc Increase?, 96 - Acc Increase?
+# TODO: Use for Ex2:
 
 # V1 - 20 samples
 
 # CONFIG_FILENAME = "experiment2/parse2022_LC_32.yaml"
 # CONFIG_FILENAME = "experiment2/parse2022_LC_48.yaml"
 # CONFIG_FILENAME = "experiment2/parse2022_LC_64.yaml"
-# CONFIG_FILENAME = "experiment2/parse2022_LC_96.yaml"
 
 
 # V2 - 50 samples
@@ -43,7 +41,6 @@ CONFIG_FILENAME = "parse2022_SC_32.yaml"
 # CONFIG_FILENAME = "experiment2/parse2022_LC_32_50.yaml"
 # CONFIG_FILENAME = "experiment2/parse2022_LC_48_50.yaml"
 # CONFIG_FILENAME = "experiment2/parse2022_LC_64_50.yaml"
-# CONFIG_FILENAME = "experiment2/parse2022_LC_96_50.yaml"
 
 
 # TODO: Use for Ex3:
