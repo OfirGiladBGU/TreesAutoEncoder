@@ -1,8 +1,10 @@
 import os
 from PIL import Image
 
+
 def load_and_sort_images(folder):
     return sorted([(f, os.path.join(folder, f)) for f in os.listdir(folder) if f.endswith('.png')])
+
 
 def group_by_name(images):
     groups = {}
@@ -10,6 +12,7 @@ def group_by_name(images):
         base = fname.rsplit('_p', 1)[0]
         groups.setdefault(base, []).append((fname, path))
     return groups
+
 
 def stack_rows(image_groups, white_space=5, target_size=(100, 100)):
     rows = []
@@ -32,7 +35,8 @@ def stack_rows(image_groups, white_space=5, target_size=(100, 100)):
         rows.append(row_img)
     return rows
 
-def compose_image(folders, white_space=5, red_line_height=3, row_spacing=5, target_size=(100, 100)):
+
+def compose_image(folders, white_space=5, red_line_height=5, row_spacing=5, target_size=(100, 100)):
     all_rows = []
     for i, folder in enumerate(folders):
         images = load_and_sort_images(folder)
