@@ -59,7 +59,7 @@ In case you have only a dataset of 3D files, and you want to create random holes
 2. Run either of the following scripts depending on your data type:
    - [generate_3d_preds_from_mesh.py](datasets_forge/generate_3d_preds_from_mesh.py) - For mesh like data types: `_mesh.ply`, `.obj`, `.nii.gz` (annotations)
    - [generate_3d_preds_from_pcd.py](datasets_forge/generate_3d_preds_from_pcd.py) - For point cloud like data types: `_pcd.ply`, `.pcd`
-3. Repeat the steps in `How to create the dataset`.
+3. Repeat the steps in `How to set up a dataset` (Section Above).
 
 ---
 
