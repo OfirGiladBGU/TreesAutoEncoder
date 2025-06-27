@@ -53,6 +53,26 @@ used SOTA model results as our input data, along with the dataset labels as our 
 2. Create config file in `.yaml` format and put it in `configs` folder (see example: [parse2022_SC_32.yaml](configs/parse2022_SC_32.yaml)).
 3. Build the `dataset_2d` (also `dataset_1d`) by running `dataset_2d_creator` script: [dataset_2d_creator.py](datasets_forge/dataset_2d_creator.py)
 4. Build the `dataset_3d` by running  `dataset_3d_creator` script: [dataset_3d_creator.py](datasets_forge/dataset_3d_creator.py)
+5. Notice that the following structure will be created in the `DATASET_INPUT_FOLDER`:
+   - A new folder named `preds_fixed` will be created with the data from `preds` after outliers removal.
+   - For each `<folder>` in [`labels`, `preds`, `preds_fixed`]:
+     ```
+     ./data/parse2022
+     └── <folder>_components      // (Components of the 3D data)
+     ```
+6. Notice that the following structure will be created in the `DATASET_OUTPUT_FOLDER`:
+   - For each `<folder>` in [`labels`, `preds`, `preds_fixed`, `preds_advanced_fixed`]:
+     ```
+     ./data_crops/parse2022
+     # From 2D script:
+     ├── <folder>_3d              // (3D Box)
+     ├── <folder>_components_3d   // (Components of the 3D Box)
+     ├── <folder>_2d              // (2D orthographic projections of the 3D Box)
+     ├── <folder>_components_2d   // (Components of the 2D projections)
+     # From 3D script:
+     ├── <folder>_3d_reconstruct  // (2D projections reprojected back to 3D as Reprojected 3D Box)
+     └── <folder>_3d_fusion       // (Reprojected 3D Box fused with the original 3D Box - `labels_3d_fusion` excluded)
+     ```
 
 
 ### How to generate synthetic dataset (Example for PipeForge3D):
@@ -108,21 +128,32 @@ scripts in the files, based on the `model_type` parameter in the relevant main s
 
 - [TBD]  Run the `online_pipeline` script: [online_pipeline.py](online_pipeline.py)
 
+---
+
+## Data info:
 
 
+### Source data in `DATASET_INPUT_FOLDER`:
+
+For `<folder>` in [`labels`, `preds`, `preds_fixed`, `evals`]: 
+
+1. `<folder>` -> Values: binary {0, 1}, Dim: 3
+2. `<folder>_components` -> Values: grayscale (0-255), Dim: 3
+
+
+### Generated data in `DATASET_OUTPUT_FOLDER`:
+
+For `<folder>` in [`labels`, `preds`, `preds_fixed`, `evals`]:
+
+1. `<folder>_2d` -> Values: grayscale (0-255), Dim: 2
+2. `<folder>_components_2d` -> Values: RGB (0-255, 0-255, 0-255), Dim: 2
+3. `<folder>_3d` -> Values: binary {0, 1}, Dim: 3
+4. `<folder>_components_3d` -> Values: grayscale (0-255), Dim: 3
+5. `<folder>_3d_reconstruct` -> Values: binary {0, 1}, Dim: 3
+6. `<folder>_3d_fusion` -> Values: binary {0, 1}, Dim: 3  // (`labels` not included)
 
 ---
 
-# Data info:
-
-1. parse2022 `labels`, `preds` -> Values: binary {0, 1}, Dim: 3
-2. parse2022 `preds_compnents` -> Values: grayscale (0-255), Dim: 3
-3. cropped 2d `labels`, `preds` -> Values: grayscale (0-255), Dim: 2
-4. cropped 2d `components` -> Values: RGB (0-255, 0-255, 0-255), Dim: 2
-5. cropped 3d `labels`, `preds` -> Values: binary {0, 1}, Dim: 3
-6. cropped 3d `components` -> Values: grayscale (0-255), Dim: 3
-
----
 
 # The Available Approaches:
 
