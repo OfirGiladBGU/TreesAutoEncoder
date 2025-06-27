@@ -134,7 +134,7 @@ The flow is as follows for `preds` data (The follow for `evals` data is the same
 
 ---
 
-## Data info:
+## Data dimensions info:
 
 
 ### Source data in `DATASET_INPUT_FOLDER`:
@@ -160,7 +160,7 @@ For `<folder>` in [`labels`, `preds`, `preds_fixed`, `evals`]:
 
 ---
 
-## Data generation config info:
+## Data generation info:
 
 Parameters used for the data generation on the scripts: 
 - [generate_3d_preds_from_mesh.py](datasets_forge/generate_3d_preds_from_mesh.py)
