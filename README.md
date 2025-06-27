@@ -3,7 +3,7 @@
 
 ## Description:
 
-The repository contains all the scripts that were used to get the novel results available on the paper: \
+The repository contains all the scripts that were used to get the results available on the paper: \
 `Learning Thin Structure Reconstruction from Sliding-Box 2D Projections`
 
 
