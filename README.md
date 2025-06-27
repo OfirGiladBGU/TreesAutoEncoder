@@ -1,31 +1,5 @@
 # Trees Auto Encoder
 
-# LOG:
-
-Commit with big change:
-11.04.2025 - configured new noise filters based on the Continuity fix 3D filters
-
-## Config info:
-```
-# Parse2022:
-None
-
-# PipeForge3D - OBJ:
-mesh_scale = 0.25
-voxel_size = 1.0
-
-# PipeForge3D - PCD:
-points_scale = 0.25
-voxel_size = 1.0
-
-# Hospital CUP:
-points_scale = 25.0
-voxel_size = 1.0
-```
-
----
-
-# TODO: Refactor README.md
 
 ## Description:
 
@@ -71,9 +45,9 @@ used SOTA model results as our input data, along with the dataset labels as our 
      ├── <folder>_components_2d   // (Components of the 2D projections)
      # From 3D script:
      ├── <folder>_3d_reconstruct  // (2D projections reprojected back to 3D as Reprojected 3D Box)
-     └── <folder>_3d_fusion       // (Reprojected 3D Box fused with the original 3D Box - `labels_3d_fusion` excluded)
+     └── <folder>_3d_fusion       // (`labels_3d_reconstruct` Reprojected 3D Box fused with the `<folder>` 3D Box)
      ```
-
+     **Notice:** `labels_3d_fusion` is excluded as it has no meaning (it will be equal to `labels`).
 
 ### How to generate synthetic dataset (Example for PipeForge3D):
 
@@ -150,12 +124,70 @@ For `<folder>` in [`labels`, `preds`, `preds_fixed`, `evals`]:
 3. `<folder>_3d` -> Values: binary {0, 1}, Dim: 3
 4. `<folder>_components_3d` -> Values: grayscale (0-255), Dim: 3
 5. `<folder>_3d_reconstruct` -> Values: binary {0, 1}, Dim: 3
-6. `<folder>_3d_fusion` -> Values: binary {0, 1}, Dim: 3  // (`labels` not included)
+6. `<folder>_3d_fusion`* -> Values: binary {0, 1}, Dim: 3
+
+* `labels_3d_fusion` is excluded, as it has no meaning.
 
 ---
 
+## Data generation config info:
 
-# The Available Approaches:
+Parameters used for the data generation on the scripts: 
+- [generate_3d_preds_from_mesh.py](datasets_forge/generate_3d_preds_from_mesh.py)
+- [generate_3d_preds_from_pcd.py](datasets_forge/generate_3d_preds_from_pcd.py)
+
+```
+# Parse2022:
+None
+
+# PipeForge3D - OBJ:
+mesh_scale = 0.25
+voxel_size = 1.0
+
+# PipeForge3D - PCD:
+points_scale = 0.25
+voxel_size = 1.0
+
+# Hospital CUP:
+points_scale = 25.0
+voxel_size = 1.0
+```
+
+---
+
+# Predict Pipeline Flow:
+
+The results of the prediction pipeline are saved in `./data_results/{DATASET_OUTPUT_FOLDER}/predict_pipeline`.
+
+The prediction pipeline is designed to process 3D data and generate predictions using the trained models. \
+The flow is as follows for `preds` data (The follow for `evals` data is the same , with the relevant changes):
+
+1. `[Disabled]` Use `model 1D` on the `preds_fixed_2d` data to filter out the samples that will be sent to the `model 2D`.
+2. Use `model 2D` on the `preds_fixed_2d` data.
+3. Save the results in `output_2d`.
+4. Perform `fusion` on the `output_2d` data to get `input_3d` data.
+5. `[Disabled]` Use model 3D on the `input_3d`.
+6. Save the results in `output_3d`.
+7. Run steps 1-6 for all the cubes available at `preds`.
+8. Integrate all the results in `output_3d` and save them in: `./data_results/{DATASET_OUTPUT_FOLDER}/merge_pipeline`.
+
+---
+
+# Chosen Approach:
+
+- Flow: 
+   1. Crop and Project both the `3d ground truth` and `3d predicted labels`:
+      1. 6 views of `2d ground truth`
+      2. 6 views of `2d predicted labels`
+   2. Use `model 2D` as follows (2D to 2D):
+      1. Train with the `2d predicted labels` to **repair** and get `2d ground truth`
+      2. Predict with the `2d predicted labels` to get the `2d fixed labels`
+   3. Use direct fusion (6-2D to 3D):
+      1. Fuse the 6 `2d fixed labels` with the `3d predicted labels` to get the `3d fixed labels`
+
+---
+
+# Available Approaches:
 
 Given the `3d ground truth` and the `3d predicted labels`:
 
@@ -163,10 +195,10 @@ Given the `3d ground truth` and the `3d predicted labels`:
    1. Crop and Project both the `3d ground truth` and `3d predicted labels`:
       1. 6 views of `2d ground truth`
       2. 6 views of `2d predicted labels`
-   2. Use `model1` as follows (2D to 2D):
+   2. Use `model 2D` as follows (2D to 2D):
       1. Train with the 6 `2d predicted labels` to **repair** and get 6 `2d ground truth`
       2. Predict with the 6 `2d predicted labels` to get the 6 `2d fixed labels`
-   3. Use `model2` as follows (6-2D to 3D):
+   3. Use `model 3D` as follows (6-2D to 3D):
       1. Train with the 6 `2d ground truth` to **reconstruct** and get the `3d ground truth`
       2. Predict with the 6 `2d fixed labels` to get the `3d fixed labels`
       
@@ -176,7 +208,7 @@ Given the `3d ground truth` and the `3d predicted labels`:
    1. Crop and Project both the `3d ground truth` and `3d predicted labels` to `cropped`:
       1. 6 views of `2d ground truth`
       2. 6 views of `2d predicted labels`
-   2. Use `model1` as follows (2D to 2D):
+   2. Use `model 2D` as follows (2D to 2D):
       1. Train with the 6 `2d predicted labels` to **repair** and get 6 `2d ground truth`
       2. Predict with the 6 `2d predicted labels` to get the 6 `2d fixed labels`
       * **2 approaches available with the same data:**
@@ -193,7 +225,7 @@ Given the `3d ground truth` and the `3d predicted labels`:
          3. From `2d fixed labels` to get the `pre-3d fixed labels`
          4. Merge `3d predicted labels` and `pre-3d ground truth` to get the `fused pre-3d ground truth`
          5. Merge `3d predicted labels` and `pre-3d fixed labels` to get the `fused pre-3d fixed labels`
-   4. Use `model2` as follows (3D to 3D):
+   4. Use `model 3D` as follows (3D to 3D):
       1. Option 1 (Fill the whole internal space):
          1. Train with the `pre-3d ground truth` to **reconstruct** and get the `3d ground truth`
          2. Predict with the `pre-3d fixed labels` to get the `3d fixed labels`
@@ -206,20 +238,12 @@ Given the `3d ground truth` and the `3d predicted labels`:
    1. Crop both the `3d ground truth` and `3d predicted labels`:
       1. `cropped 3d ground truth`
       2. `cropped 3d predicted labels`
-   2. Use `model` as follows (3D to 3D):
+   2. Use `model 3D` as follows (3D to 3D):
       1. Train with the `cropped 3d predicted labels` to the `cropped 3d predicted labels` to **reconstruct** and get the `cropped 3d ground truth`
       2. Predict with the `cropped 3d predicted labels` to get the `cropped 3d fixed labels`
    3. Use all the `cropped 3d fixed label` to fix the `3d predicted labels`
 
-# Predict Pipeline Flow (Old):
-
-1. Use model 1 on the `parse_preds_mini_cropped`
-2. Save the results in `parse_fixed_mini_cropped`
-3. Perform direct `logical or` on `parse_fixed_mini_cropped` to get `parse_prefixed_mini_cropped_3d`
-4. Use model 2 on the `parse_prefixed_mini_cropped_3d`
-5. Save the results in `parse_fixed_mini_cropped_3d`
-6. Run steps 1-5 for mini cubes and combine all the results to get the final result
-7. Perform cleanup on the final result (delete small connected components)
+**Notice:** `Model 1D` doesn't appear in flows above, as it can either be used to filter out the samples that will be sent to the `model 2D` or not used at all.
 
 ---
 
@@ -240,6 +264,13 @@ https://3dthis.com/photocube.htm
 ## Configuring Matplotlib Plots to Display in a Window in PyCharm
 
 See the following question on [Stack Overflow](https://stackoverflow.com/questions/57015206/how-to-show-matplotlib-plots-in-a-window-instead-of-sciview-toolbar-in-pycharm-p).
+
+---
+
+# Log to myself:
+
+Commit with big change:
+11.04.2025 - configured new noise filters based on the Continuity fix 3D filters
 
 ---
 
