@@ -70,7 +70,7 @@ There are 3 types of model supported in this repo:
 - `1D Model` - Predicts a binary label of `True/False` if the given input contains interesting holes. 
    The model purpose is to filter out the samples that will be sent to the `2D Model`. 
 - `2D Model` - Detect and fills holes on the given 2D orthographic depth projections.
-- `3D Model` - Detect and fill occluded holes that couldn't be detected by the `2D Model`
+- `3D Model` - Detect and fill occluded holes that couldn't be detected by the `2D Model`.
 
 
 ### How to train the models:
