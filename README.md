@@ -88,19 +88,49 @@ scripts in the files, based on the `model_type` parameter in the relevant main s
 
 ---
 
-## Prediction / Evaluation:
+## Prediction Pipeline:
 
+The prediction pipeline is designed to process 3D data and generate predictions using the trained models. \
+It consists of two main scripts: 
 
-### How to test the full predict pipeline:
+- [offline_pipeline.py](offline_pipeline.py) - On training/evaluation local crops data.
+- [TBD] [online_pipeline.py](online_pipeline.py) - Directly on new full 3D data.
 
-#### On training/evaluation local crops data:
+---
 
-- Run the `offline_pipeline` script: [offline_pipeline.py](offline_pipeline.py)
+## Evaluation:
 
+We evaluate the performance of the trained models on the following metrics:
+- `MAE (masked)` - Mean Absolute Error
+- `RMSE (masked)` - Root Mean Square Error
+- `SSIM` - Structural Similarity Index
+- `δ_1 (maked)` - Delta 1 (See: [Pulling Things out of Perspective](https://ieeexplore.ieee.org/document/6909413))
+- `δ_2 (maked)` - Delta 2
+- `δ_3 (maked)` - Delta 3
+- `Dice` - Dice Score
 
-#### Directly on new full 3D data:
+The evaluation works only on training/evaluation local crops data, and can be run from the following script:
 
-- [TBD]  Run the `online_pipeline` script: [online_pipeline.py](online_pipeline.py)
+- [evaluation_metrics.py](evaluation_metrics.py)
+
+#### 
+
+---
+
+# Predict Pipeline Flow:
+
+The results of the prediction pipeline are saved in `./data_results/{DATASET_OUTPUT_FOLDER}/predict_pipeline`.
+
+The flow is as follows for `preds` data (The follow for `evals` data is the same , with the relevant changes):
+
+1. `[Disabled]` Use `model 1D` on the `preds_fixed_2d` data to filter out the samples that will be sent to the `model 2D`.
+2. Use `model 2D` on the `preds_fixed_2d` data.
+3. Save the results in `output_2d`.
+4. Perform `fusion` on the `output_2d` data to get `input_3d` data.
+5. `[Disabled]` Use model 3D on the `input_3d`.
+6. Save the results in `output_3d`.
+7. Run steps 1-6 for all the cubes available at `preds`.
+8. Integrate all the results in `output_3d` and save them in: `./data_results/{DATASET_OUTPUT_FOLDER}/merge_pipeline`.
 
 ---
 
@@ -152,24 +182,6 @@ voxel_size = 1.0
 points_scale = 25.0
 voxel_size = 1.0
 ```
-
----
-
-# Predict Pipeline Flow:
-
-The results of the prediction pipeline are saved in `./data_results/{DATASET_OUTPUT_FOLDER}/predict_pipeline`.
-
-The prediction pipeline is designed to process 3D data and generate predictions using the trained models. \
-The flow is as follows for `preds` data (The follow for `evals` data is the same , with the relevant changes):
-
-1. `[Disabled]` Use `model 1D` on the `preds_fixed_2d` data to filter out the samples that will be sent to the `model 2D`.
-2. Use `model 2D` on the `preds_fixed_2d` data.
-3. Save the results in `output_2d`.
-4. Perform `fusion` on the `output_2d` data to get `input_3d` data.
-5. `[Disabled]` Use model 3D on the `input_3d`.
-6. Save the results in `output_3d`.
-7. Run steps 1-6 for all the cubes available at `preds`.
-8. Integrate all the results in `output_3d` and save them in: `./data_results/{DATASET_OUTPUT_FOLDER}/merge_pipeline`.
 
 ---
 
