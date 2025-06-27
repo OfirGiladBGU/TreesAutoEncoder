@@ -117,7 +117,7 @@ The evaluation works only on training/evaluation local crops data, and can be ru
 
 ---
 
-# Predict Pipeline Flow:
+## Predict Pipeline Flow:
 
 The results of the prediction pipeline are saved in `./data_results/{DATASET_OUTPUT_FOLDER}/predict_pipeline`.
 
